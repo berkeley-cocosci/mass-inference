@@ -1,426 +1,368 @@
+import collections
+import matplotlib.cm as cm
 import numpy as np
-import scipy.stats
 import pdb
+import pickle
+import scipy.stats
+import os
+import time
+
+import cogphysics
+import cogphysics.lib.circ as circ
+import cogphysics.lib.nplib as npl
+import cogphysics.lib.rvs as rvs
+import cogphysics.lib.stats as stats
+import cogphysics.tower.analysis_tools as tat
+
 from matplotlib import rc
 from sklearn import linear_model
-import matplotlib.cm as cm
 
-import cogphysics.lib.dataio as dio
-import cogphysics.lib.funclib as fl
-import cogphysics.lib.circ as circ
-from cogphysics.lib.corr import greedycorr
-import rvs
+from cogphysics.lib.corr import xcorr
 
-rc('font', family='serif')
-rc('text', usetex=True)
 
-def load_model(name):
+mthresh = 0.095
+zscore = False
+ALPHAS = np.logspace(np.log10(0.0001), np.log10(120), 200)
+SEED = 0
+N_BOOT = 10000
 
-    # load model predictions
-    arr, meta = dio.load(name)
 
-    kappas = meta['dimvals']['kappa']
-    sigmas = meta['dimvals']['sigma']
-    mus = meta['dimvals']['mu']
+def order_by_trial(human, stimuli, order, model):
 
-    # shape variables
-    numkappa = arr.shape[0]
-    numsigma = arr.shape[1]
-    nummu    = arr.shape[2]
-    numstim  = arr.shape[3]
-    numsamp  = arr.shape[4]
+    n_subjs = human.shape[1]
+    n_stim = stimuli.size
+    n_rep = human.shape[2]
+
+    htrial = human.transpose((1, 0, 2)).reshape((n_subjs, -1))
+    horder = order.transpose((1, 0, 2)).reshape((n_subjs, -1))
+
+    trial_human = []
+    trial_order = []
+    trial_stim = []
+    trial_model = []
+
+    shape = np.ones((n_stim, n_rep))
+    sidx = list((np.arange(n_stim)[:, None] * shape).ravel())
     
-    # calculate stability
-    midx = mus.index(0.8)
-    posdiff = np.sum(
-        (arr[:, :, midx, ..., -1, :3] - arr[:, :, midx, ..., 2, :3]) ** 2,
-        axis=-1) ** 0.5
-    moved = posdiff > 0.1
-    pfell = (np.sum(moved, axis=-1) > 4).astype('f8')
-    nfell = np.sum(moved, axis=-1).astype('int')
+    for hidx in xrange(n_subjs):
+        hd = htrial[hidx]
+        ho = horder[hidx]
+        
+        sort = np.argsort(ho)
+        shuman = hd[sort]
+        sorder = ho[sort]
+        sstim = stimuli[..., sidx, :, :][..., sort, :, :]
+        smodel = model[..., sidx, :, :][..., sort, :, :]
+        
+        trial_human.append(shuman)
+        trial_order.append(sort)
+        trial_stim.append(sstim)
+        trial_model.append(smodel)
+        
+    trial_human = np.array(trial_human)
+    trial_order = np.array(trial_order)
+    trial_stim = np.array(trial_stim)
+    trial_model = np.array(trial_model)
 
-    # calculate direction
-    assign = np.array([[int(y) for y in x.split("_")[-1]]
-                       for x in meta['dimvals']['cpo']])
-    mass = assign[None, None, :, None, :]
-    mass = mass * (10**np.array(kappas, dtype='f8')[:, None, None, None, None])
-    mass = mass * np.ones(moved.shape)
-    mass[mass==0] = 1
+    out = (trial_human, trial_stim, trial_order, trial_model)
+    return out
 
-    movedweight = mass[..., None] * np.ones(moved.shape)[..., None]
-    movedweight[~moved] = np.nan
-    movedweight = movedweight / np.nansum(movedweight, axis=-2)[..., None, :]
 
-    allweight = mass[..., None] * np.ones(moved.shape)[..., None]
-    allweight = allweight / np.nansum(allweight, axis=-2)[..., None, :]
-    
-    com0 = np.nansum(arr[:, :, midx, ..., 2, :2] * allweight, axis=-2)
-    comt = np.nansum(arr[:, :, midx, ..., -1, :2] * movedweight, axis=-2)
-    comdiff = comt - com0
-    direction = np.arctan2(comdiff[..., 1], comdiff[..., 0])
+# Human
+rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
+    exp_ver=7, return_order=True)
+n_subjs, n_reps = rawhuman.shape[1:]
 
-    hans_pfell = pfell[:, sigmas.index('0.04')]
-    hans_nfell = nfell[:, sigmas.index('0.04')]
-    hans_dir = direction[:, sigmas.index('0.04')]
-    truefell = nfell[kappas.index('1.0'), sigmas.index('0.00'), :, 0] > 0
-    truedir = direction[kappas.index('1.0'), sigmas.index('0.00'), :, 0]
+# Model
+if os.path.exists("truth_samples.npy"):
+    truth_samples = np.load("truth_samples.npy")
+else:
+    rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=4)
+    sigmas = rawsmeta["sigmas"]
+    phis = rawsmeta["phis"]
+    kappas = rawsmeta["kappas"]
+    sigma0 = list(sigmas).index(0)
+    phi0 = list(phis).index(0)
+    rawmodel0 = rawmodel[sigma0, phi0][None, None]
+    pfell, nfell, truth_samples = tat.process_model_stability(
+        rawmodel0, mthresh=mthresh, zscore=zscore, pairs=False)
+    np.save("truth_samples.npy", truth_samples)
 
-    stims = meta['dimvals']['cpo']
-    kappas = [float(x) for x in meta['dimvals']['kappa']]
+rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=6)
+sigmas = rawsmeta["sigmas"]
+phis = rawsmeta["phis"]
+kappas = rawsmeta["kappas"]
+pfell, nfell, fell_sample = tat.process_model_stability(
+    rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
 
-    return hans_pfell, hans_nfell, truefell, hans_dir, truedir, stims, kappas
+all_model = np.array([truth_samples, fell_sample])
+fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3)).astype('int')
 
-def load_human(name):
+assert (rawhstim == rawsstim).all()
 
-    # load human data
-    harr, hmeta = dio.load(name)
+human, stimuli, sort, model = order_by_trial(rawhuman, rawhstim, raworder, fellsamp)
+kappa10 = list(kappas).index(1)
 
-    # shape variables
-    numsubj = harr.shape[0]
-    numstim = harr.shape[1]
-    numrep = harr.shape[2]
+######################################################################
 
-    # reshape the human trials so they're in order of the stimuli that people
-    # saw
-    harr2 = harr.reshape((numsubj, numstim*numrep))
-    trialsort = np.argsort(harr2['current_trial'], axis=-1)
-    harrsort = np.vstack([harr2[i, trialsort[i]][None] for i in xrange(numsubj)])
+class ModelObserver(object):
 
-    # get human responses and stimuli names
-    hans = harrsort['answer'] / 6.
-    stims = np.array([[y.split("~")[0] for y in x] for x in harrsort['stimulus']])
-    
-    return hans, stims
+    n_F = 11
+    n_R = 7
 
-def load_cues(name):
-    # load cues
-    carr, cmeta = dio.load(name)
-    cnames = list(carr.dtype.names)
-    carr = carr.view('f8').reshape((carr.shape[0], carr.shape[1], -1))
-    carr = carr.transpose((0, 2, 1))[0]
+    OUTCOMES = np.arange(n_F)
+    RESPONSES = np.arange(n_R)
 
-    dircues = ['light_skew_dir', 'heavy_skew_dir']
-    cdirnames = cnames[:]
-    cdirarr = carr.copy()
-    for cue in cnames:
-        if cue not in dircues:
-            cdirarr = np.delete(cdirarr, cdirnames.index(cue), axis=0)
-            cdirnames.remove(cue)
+    def __init__(self, ime_samples, kappas, N=1, Cf=10, Cr=6):
 
-    for cue in cnames[:]:
-        if cue.startswith("all") or cue.endswith("dir"):
-            carr = np.delete(carr, cnames.index(cue), axis=0)
-            cnames.remove(cue)
+        self.ime_samples = ime_samples.copy()
+
+        self.kappas = kappas.copy()
+        self.n_kappa = len(self.kappas)
+        self.thetas = [np.ones(self.n_kappa) / float(self.n_kappa)]
+
+        self.time = 0
+        self.stimuli = []
+
+        self._N = N
+        self._Cf = Cf
+        self._Cr = Cr
+        self._loss = None
+        self._risks = []
+
+        self._P_F_kappas = []
+        self._P_Fts = []
+        self._Pt_kappas = []
+
+    def IME(self):
+        samps = self.ime_samples[self.time]
+        shape = list(samps.shape[:-1]) + [n_F]
+        succ = samps[:, None, :] == self.OUTCOMES[None, :, None]
+        prior = rvs.Dirichlet(np.ones(shape))
+        post = prior.updateMultinomial(succ, axis=-1)
+        mle = post.mean.copy()
+        return mle
+
+    @property
+    def P_Ft_kappa(self):
+        """P(F_t | S_t, kappa)"""
+        
+        try:
+            dist = self._P_F_kappas[self.time]
+
+        except IndexError:
+            # Get the probability of outcomes from the IME
+            p_IME = self.IME()
+
+            # Make bernoulli distributions with these probabilities as
+            # parameters, and evaluate the likelihood of the true
+            # outcome
+            dist = rvs.Multinomial(np.ones(p_IME.shape), p_IME)
+            self._P_F_kappas.append(dist)
+        
+        return self._P_F_kappas[self.time]
+
+    @property
+    def Pt_kappa(self):
+        """P_t(kappa) = theta_t"""
+
+        try:
+            dist = self._Pt_kappas[self.time]
+
+        except:
+            p = self.thetas[self.time]
+            dist = rvs.Multinomial(np.ones(p.shape), p)
+            self._Pt_kappas.append(dist)
             
-    return carr, cdirarr, cnames, cdirnames
+        return self._Pt_kappas[self.time]
 
-################################################################################
+    @property
+    def P_Ft(self):
+        """P(F_t | S_t)"""
 
-# def model_direction(vals, truevals, trial_order):
-#     ntrial = trial_order.size
-#     nkappa = vals.shape[0]
+        try:
+            dist = self._P_Fts[self.time]
 
-#     # MAP probability of direction
-#     vm = rvs.VonMises.MAP(vals, axis=-1, nanrobust=True)
+        except IndexError:
+            p_F_kappa = np.log(self.P_Ft_kappa.p)
+            Pt_kappa = np.log(self.Pt_kappa.p)[:, None]
+            p_F = stats.normalize(p_F_kappa + Pt_kappa, axis=0)[0]
+            dist = rvs.Multinomial(np.ones(p_F.shape), np.exp(p_F))
+            self._P_Fts.append(dist)
 
-#     # compute probability of kappa given observed direction
-#     p_F = vm.logpdf(truevals[None]).T[trial_order]
-#     p_F[np.isnan(truevals[trial_order])] = 0
-#     pkappa = np.zeros((ntrial+1, nkappa))
-#     pkappa[0, :] = np.log(np.ones(nkappa) / nkappa)
-#     for itime in xrange(ntrial):
-#         pkappa[itime+1] = fl.normalize((pkappa[itime] + p_F[itime]))[1]
-
-#     return pkappa
-
-# def heuristic_direction(vals, truevals, trial_order):
-#     pass
-
-def stability_modelObserver(vals, truevals, hans, mtrial_order, stim_order):
-
-    vals = 1-pfell.copy()
-    truevals = 1-truefell.copy()
-    hans = stim_hpred.copy()
-
-    ntrial = mtrial_order.size
-    nkappa = vals.shape[0]
-    nsubj = hans.shape[0]
-
-    alpha = 1
-
-    htrial_order = np.argsort(stim_order)
-    mo_samples = vals[:, mtrial_order, :]
-    mo_truth = truevals[mtrial_order]
-    subj_response = hans.reshape((nsubj, ntrial))[:, htrial_order] * 6
-    subj_response_mn = (
-        subj_response[..., None] == np.arange(7)[None, None, :]).astype('i8')
-
-
-    # beta posterior for the binomial parameter, which specifies the probability
-    # of falling (for the model), using a Jeffreys prior
-    beta_prior = rvs.Beta(0.5, 0.5)
-    beta_posterior = beta_prior.updateBernoulli(mo_samples, axis=-1)
-
-    # log probability of falling, according to the model
-    P_fell = beta_posterior.mode
-    P_fell[np.isnan(P_fell)] = beta_posterior.mean[np.isnan(P_fell)]
-    P_fell = np.log(P_fell)
-    # posterior over stability (true/false), according to the model
-    binom_posterior = rvs.Binomial(1, np.exp(P_fell))
-
-    # find the weights of the 7 choices from the CDF of the beta posterior of
-    # falling
-    choices = np.linspace(0, 1, 8)[1:]
-    cweights = beta_posterior.CDF(choices[:, None, None]).transpose((1, 2, 0))
-    cweights[..., 1:] = cweights[..., 1:] - cweights[..., :-1]
-    cweights = cweights ** 1
-    # the distribution over responses is a multinomial parameterized by these
-    # weights
-    response_dist = rvs.Multinomial(1, cweights, axis=-1)
-
-    # the log likelihood of each possible response
-    L_response = response_dist.logPMF(np.eye(7)[:, None, None, :])
-    # log likelihood of true outcome given kappa, according to the model
-    L_truth = binom_posterior.logPMF(mo_truth)
-
-    # log probability of kappa given observed stability
-    P_kappa = np.zeros((nkappa, ntrial+1))
-    P_kappa.fill(-np.inf)
-    P_kappa[:, 0] = np.log(np.ones(nkappa) / nkappa)
-    for itime in xrange(ntrial):
-        P_kappa[:, itime+1] = fl.normalize(
-            P_kappa[:, itime] + L_truth[:, itime], axis=0)[1]
-
-    # log probability of kappa given observed stability
-    P_response = np.sum(np.exp(
-        P_kappa[None, :, :-1] + L_response), axis=1)
-    mo_response = np.argmax(P_response, axis=0).astype('f8') / 6.
-
-    print greedycorr(
-        np.mean(mo_response[stim_order].reshape((nstim, -1)), axis=-1),
-        np.mean(subj_response[:, stim_order].reshape(
-            (nsubj, nstim, -1)), axis=-1))
-
-    return P_kappa, mo_response
-
-def stability_experimenter(vals, truevals, responses, mtrial_order, stim_order):
-
-    vals = 1-pfell.copy()
-    truevals = 1-truefell.copy()
-    htrial_order = np.argsort(stim_order)
-    mo_samples = vals[:, mtrial_order, :]
-    mo_truth = truevals[mtrial_order]
-    subj_response = hans.reshape((nsubj, ntrial))[:, htrial_order] * 6
-    subj_response_mn = (
-        subj_response[..., None] == np.arange(7)[None, None, :]).astype('i8')
-    mo_response_mn = (mo_response[:, None]*6 == np.arange(7)[None, :]).astype('i8') 
-    responses = np.vstack((subj_response_mn, mo_response_mn[None]))
-
-    ntrial = mtrial_order.size
-    nkappa = vals.shape[0]
-    nsubj = hans.shape[0]
-
-    alpha = 1
-
-    # dirichlet posterior over the probability of responses for the model, again
-    # using a Jeffreys prior
-    dir_prior = rvs.Dirichlet(np.ones(choices.shape)*0.5)
-    dir_posterior = dir_prior.updateMultinomial(
-        np.round(cweights[..., None]*100), axis=-1)
-
-    # log probability of responses, according to the model
-    P_response = dir_posterior.mode
-    P_response[np.isnan(P_response)] = dir_posterior.mean[np.isnan(P_response)]
-    P_response /= np.sum(P_response, axis=-1)[..., None]
-    P_response = np.log(P_response)
-    # posterior over responses (0-6), according to the model
-    mn_posterior = rvs.Multinomial(1, np.exp(P_response))
-
-    # log likelihood of human and model responses under the model's multinomial
-    # posterior
-    L_response = mn_posterior.logPMF(responses[:, None, :, :])
-
-    # log probability of theta given observed responses
-    P_theta = np.zeros((nsubj+1, nkappa, ntrial+1))
-    P_theta.fill(-np.inf)
-    P_theta[..., 0] = np.log(np.ones((nsubj+1, nkappa)) / nkappa)
-    for itime in xrange(ntrial):
-        P_theta[..., itime+1] = fl.normalize(
-            P_theta[..., itime] + L_response[..., itime])[1]
-
-
+        return self._P_Fts[self.time]
         
-    plt.figure()
-    for i in xrange(nsubj+1):
-        plt.subplot(1, nsubj+2, i+1)
-        plt.imshow(P_theta[i], aspect='auto',
-                   interpolation='nearest', vmin=-300, vmax=0)
-        plt.xlabel("Trial Number")
-        if i == 0:
-            plt.ylabel("Mass Ratio")
-            plt.yticks(np.arange(nkappa), np.round(10**np.array(kappas), decimals=1))
-        else:
-            plt.yticks([], [])
-        title = "subject %d" % (i+1) if i < nsubj else "model observer (inferred)"
-        plt.title(title)
-    plt.subplot(1, nsubj+2, nsubj+2)
-    plt.imshow(P_kappa, aspect='auto',
-               interpolation='nearest', vmin=-300, vmax=0)
-    plt.xlabel("Trial Number")
-    plt.yticks([], [])
-    plt.title("model observer")
-    plt.subplots_adjust(left=0.05, right=0.95, wspace=0.1)
 
-    return pkappa, preds
+    @property
+    def Loss(self):
+        if self._loss is None:
+            N, Cf, Cr = self._N, self._Cf, self._Cr
+            f = self.OUTCOMES[:, None]
+            r = self.RESPONSES[None, :]
+            
+            sf = ((f + N).astype('f8') / n_F) - 0.5
+            sr = ((r - N).astype('f8') / n_R) - 0.5
+            ssf = 1.0 / (1 + np.exp(-Cf * sf))
+            ssr = 1.0 / (1 + np.exp(-Cr * sr))
+            self._loss = np.sqrt(np.abs(ssf - ssr))
 
-# def heuristic_stability(vals, truevals, hans, torder, sorder):
-
-#     ncue = vals.shape[0]
-#     ntrial = torder.size
+        return self._loss
     
-#     clf = linear_model.RidgeCV()
-#     clf.intercept_ = 0
-#     feats = vals.T[torder]
-#     true = truevals[torder]
+    def Risk(self):
+        try:
+            risk = self._risks[self.time]
 
-#     coeffs = np.zeros((ntrial+1, ncue))
-#     preds = np.zeros(ntrial)
+        except IndexError:
+            p_F = self.P_Ft.p[:, None]
+            loss = self.Loss
+            risk = np.sum(loss * p_F, axis=0)
+            self._risks.append(risk)
+            
+        return risk
 
-#     coeffs[0, :] = np.ones(ncue) / ncue
-#     clf.coef_ = coeffs[0, :].copy()
-#     preds[0] = clf.predict(feats[[0]])
-    
-#     coeffs[1, :] = np.ones(ncue) / ncue
-#     clf.coef_ = coeffs[1, :].copy()
-#     preds[1] = clf.predict(feats[[1]])
-    
-#     for itime in xrange(1, ntrial):
-#         clf.fit(feats[:itime+1], true[:itime+1])
-#         coeffs[itime+1] = clf.coef_
-#         if itime+1 < ntrial:
-#             preds[itime+1] = clf.predict(feats[[itime+1]])
+    ##################################################################
 
-#     ckappa = np.log10(coeffs[:, 4] / coeffs[:, 3])
-#     stim_cpred = preds[sorder].reshape((nstim, -1))
-#     print greedycorr(
-#         np.mean(stim_cpred, axis=-1),
-#         np.mean(hans, axis=-1))
+    def viewStimulus(self, S):
+        self.stimuli.append(S)
+        self.time = len(self.stimuli) - 1
 
-#     return coeffs, preds
-        
-################################################################################
+    def generateResponse(self):
+        """Compute optimal response to the current stimulus"""
+        response = np.argmin(self.Risk(), axis=0)
+        return response
 
-# load model samples and human judgments
-names = [
-    # ("s_predict-mass-towers",
-    #  "h_predict-stability-towers_experiment~kappa-1.0",
-    #  "s_mass-towers_heuristics"),
-    
-    ("s_predict-mass-new-stability-towers",
-     "h_predict-new-stability-towers_experiment~kappa-1.0",
-     "s_mass-new-stability-towers_heuristics"),
+    def viewFeedback(self, F):
+        # Likelihood of the true outcomes
+        lh_F_kappa = self.P_Ft_kappa.logPMF(F == self.OUTCOMES)
+        p_kappa = np.log(self.Pt_kappa.p)
 
-    # ("s_predict-mass-direction-towers",
-    #  "h_predict-direction-towers_experiment~kappa-1.0",
-    #  "s_mass-direction-towers_heuristics"),
+        ## Calculate theta_t = P_t(kappa)
+        joint = lh_F_kappa + p_kappa
+        Pt_kappa = stats.normalize(joint, axis=-1)[1]
+        self.thetas.append(np.exp(Pt_kappa))
+        self.time += 1
 
-    # ("s_predict-mass-new-direction-towers",
-    #  "h_predict-new-direction-towers_experiment~kappa-1.0",
-    #  "s_mass-new-direction-towers_heuristics"),
+        return np.exp(lh_F_kappa)
 
-    ]
+R = 6 - human.copy()
+S = stimuli[0].copy()
+F = model[0, 0, :, kappa10, 0].copy()
 
-sname, hname, cname = names[0] 
+assert R.shape[1:] == S.shape
+assert S.shape == F.shape
 
-for sname, hname, cname in names:
+n_subj = R.shape[0]
+n_T = R.shape[1]
+n_F = 11
+n_R = 7
+n_kappa = len(kappas)
+ratios = np.round(10 ** kappas, decimals=1)
 
-    pfell, nfell, truefell, dir, truedir, mstim, kappas = load_model(sname)
-    cfell, cdir, fellcues, dircues = load_cues(cname)
+MO = ModelObserver(
+    ime_samples=model[0, 1].copy(),
+    kappas=kappas,
+    N=1,
+    Cf=10,
+    Cr=6)
 
-    nstim = pfell.shape[1]
+R = []
+Pt_kappa = []
 
-    # stimuli ordering
-    hans, hstim = load_human(hname)
-    mtrial_order = np.array([mstim.index(i) for i in hstim[0]])
-    stim_order = np.argsort(mtrial_order)
-    stim_hpred = hans[:, stim_order].reshape((hans.shape[0], nstim, -1))
+plt.close('all')
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
 
-    # constants
-    ntrial = len(mtrial_order)
-    nkappa = len(kappas)
-    nstim = len(mstim)
-    nfellcue = len(fellcues)
-    ndircue = len(dircues)
+for t in xrange(n_T):
 
-    # if "direction" in sname:
-    #     model = model_direction(dir, truedir, mtrial_order)
+    MO.viewStimulus(S[t])
+    Pt_kappa.append(MO.Pt_kappa.p.copy())
+    R.append(MO.generateResponse())
+    lh_F_kappa = MO.viewFeedback(F[t])
 
-    #     plt.figure()
-    #     plt.imshow(pkappa.T, aspect='auto', interpolation='nearest', vmin=-300, vmax=0)
-    #     plt.xlabel("Trial Number")
-    #     plt.ylabel("Mass Ratio")
-    #     plt.yticks(np.arange(nkappa), np.round(10**np.array(kappas), decimals=1))
-    #     plt.title("%s (direction)" % sname.lstrip("s_").replace("_", " ").replace("-", " "))
+    print "Trial %d" % t
+    print "\tResponse = %d" % R[t]
+    print "\tFeedback = %d" % F[t]
 
-    # else:
+    # ax1.cla()
+    # ax1.set_xticks(np.arange(n_kappa))
+    # ax1.set_xticklabels(ratios)
+    # ax1.set_ylabel("P(kappa)")
+    # ax1.bar(np.arange(n_kappa), Pt_kappa[t], align='center')
+    # ax1.set_ylim(0, 1)
+    # ax1.set_title("Trial %s" % t)
 
-    #     mprob, mpred = model_stability(
-    #         1-pfell, 1-truefell, stim_hpred, mtrial_order, stim_order)
-    #     ccoeff, cpred = heuristic_stability(
-    #         cfell, 1-truefell, stim_hpred, mtrial_order, stim_order)
-        
-    #     plt.figure()
-    #     plt.imshow(mprob.T, aspect='auto', interpolation='nearest', vmin=-300, vmax=0)
-    #     plt.xlabel("Trial Number")
-    #     plt.ylabel("Mass Ratio")
-    #     plt.yticks(np.arange(nkappa), np.round(10**np.array(kappas), decimals=1))
-    #     plt.title("%s (stability)" % sname.lstrip("s_").replace("_", " ").replace("-", " "))
+    # ax2.cla()
+    # ax2.set_xticks(np.arange(n_kappa))
+    # ax2.set_xticklabels(ratios)
+    # ax2.set_ylabel("LH(F=%d | kappa)" % F[t])
+    # ax2.bar(np.arange(n_kappa), lh_F_kappa, align='center')
+    # ax2.set_ylim(0, 1)
 
-    #     plt.figure()
-    #     plt.imshow(ccoeff.T, aspect='auto', interpolation='nearest', vmin=-2, vmax=2)
-    #     plt.xlabel("Trial Number")
-    #     plt.ylabel("Heuristic")
-    #     plt.yticks(np.arange(nfellcue), [x.replace("_", " ") for x in fellcues])
-    #     plt.title("%s (stability)" % cname.lstrip("s_").replace("_", " ").replace("-", " "))
+    # ax3.cla()
+    # ax3.set_xticks(np.arange(n_kappa))
+    # ax3.set_xticklabels(ratios)
+    # ax3.set_ylabel("P(kappa | F)")
+    # ax3.bar(np.arange(n_kappa), MO.Pt_kappa.p, align='center')
+    # ax3.set_ylim(0, 1)
 
+    # ax4.cla()
+    # ax4.set_xticks(np.arange(n_F))
+    # ax4.set_xticklabels(np.arange(n_F))
+    # ax4.set_ylabel("P(F)")
+    # ax4.bar(np.arange(n_F), MO.P_Ft.p, align='center')
+    # ax4.set_ylim(0, 1)
 
+    # plt.draw()
+    # plt.draw()
 
+    # time.sleep(0.05)
+    # #pdb.set_trace()
 
+Pt_kappa = np.array(Pt_kappa)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+plt.figure()
+plt.imshow(
+    np.log(Pt_kappa.T),
+    aspect='auto', interpolation='nearest',
+    vmin=-250, vmax=0)
+plt.xlabel("Trial Number")
+plt.ylabel("Mass Ratio")
+plt.yticks(np.arange(n_kappa), ratios)
+plt.title("model observer")
 
 
 
-def L(F, R):
-    # F is in {0, 1}
-    # R is in {0, 1, 2, 3, 4, 5, 6}
-    r = R / 6.
-    #if F == 0:
-    C = r ** 3
-    #elif F == 1:
-    #    C = - (r ** 2)
-    risk = (F - r) - C
-    return risk
-F = np.linspace(0, 1, 11)
-R = np.arange(7)
-EU = (L(0, R)[:, None] * pF[None]) + (L(1, R)[:, None] * (1 - pF[None]))
-plt.figure(0)
-plt.clf()
-plt.plot(R, L(0, R), 'b'); plt.plot(R, L(1, R), 'r')
-plt.figure(1)
-plt.clf()
-plt.imshow(EU, cmap=cm.gray, interpolation='nearest')
-plt.xticks(np.arange(11), np.round(pF, decimals=1))
-plt.yticks(R, R)
+
+
+
+# N = np.arange(-3, 4, 1)
+# Cf = np.arange(2, 31, 2)
+# Cr = np.arange(1, 31, 2)
+# params = npl.vgrid(N, Cf, Cr).T
+# errs = []
+
+# def compute_response(lh_F, N, Cf, Cr):
+#     ## Calculate loss
+#     loss = L(outcomes[:, None], responses[None, :], N=N, Cf=Cf, Cr=Cr)
+#     risk = np.sum(loss[:, :, None, None] * np.exp(lh_F[:, None]), axis=0)
+#     ## Compute optimal responses
+#     mR = np.argmin(risk, axis=0)
+#     return mR
+
+# bcR = np.sum(R[None, :, :] == responses[:, None, None], axis=-1)
+# print len(params)
+# for pidx in xrange(len(params)):
+#     if pidx % 100 == 0:
+#         print pidx
+#     n, cf, cr = params[pidx]
+#     mR = compute_response(lh_F, n, cf, cr)
+#     bcmR = np.sum(mR[None, :, :] == responses[:, None, None], axis=-1)
+#     se = np.sum((bcmR - bcR) ** 2, axis=0)
+#     errs.append(se)
+
+# best = params[np.argmin(errs, axis=0)]
+
+# for sidx in xrange(n_subj):
+#     mR = compute_response(lh_F[:, [sidx]], *best[sidx])
+#     print "model ", np.bincount(mR[0].astype('int'))
+#     print "people", np.bincount(R[sidx].astype('int'))
+#     print
