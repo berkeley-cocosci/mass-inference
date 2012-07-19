@@ -19,13 +19,13 @@ from sklearn import linear_model
 
 from cogphysics.lib.corr import xcorr
 
+import model_observer as mo
 
 mthresh = 0.095
 zscore = False
 ALPHAS = np.logspace(np.log10(0.0001), np.log10(120), 200)
 SEED = 0
 N_BOOT = 10000
-
 
 def order_by_trial(human, stimuli, order, model):
 
@@ -45,8 +45,8 @@ def order_by_trial(human, stimuli, order, model):
     sidx = list((np.arange(n_stim)[:, None] * shape).ravel())
     
     for hidx in xrange(n_subjs):
-        hd = htrial[hidx]
-        ho = horder[hidx]
+        hd = htrial[hidx].copy()
+        ho = horder[hidx].copy()
         
         sort = np.argsort(ho)
         shuman = hd[sort]
@@ -59,10 +59,10 @@ def order_by_trial(human, stimuli, order, model):
         trial_stim.append(sstim)
         trial_model.append(smodel)
         
-    trial_human = np.array(trial_human)
-    trial_order = np.array(trial_order)
-    trial_stim = np.array(trial_stim)
-    trial_model = np.array(trial_model)
+    trial_human = np.array(trial_human, copy=True)
+    trial_order = np.array(trial_order, copy=True)
+    trial_stim = np.array(trial_stim, copy=True)
+    trial_model = np.array(trial_model, copy=True)
 
     out = (trial_human, trial_stim, trial_order, trial_model)
     return out
@@ -92,6 +92,7 @@ rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=6)
 sigmas = rawsmeta["sigmas"]
 phis = rawsmeta["phis"]
 kappas = rawsmeta["kappas"]
+ratios = np.round(10 ** kappas, decimals=1)
 pfell, nfell, fell_sample = tat.process_model_stability(
     rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
 
@@ -100,236 +101,159 @@ fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3)).astype('int')
 
 assert (rawhstim == rawsstim).all()
 
-human, stimuli, sort, model = order_by_trial(rawhuman, rawhstim, raworder, fellsamp)
-kappa10 = list(kappas).index(1)
+def random_order(n, shape1, shape2, axis=-1, seed=0):
+    tidx = np.arange(n)
+    RSO = np.random.RandomState(seed)
+    RSO.shuffle(tidx)
+    stidx = tidx.reshape(shape1)
+    order = stidx * np.ones(shape2)
+    return order
+
+######################################################################
+## Error checking
+
+nstim, nsubj, nrep = raworder.shape
+ntrial = nstim * nrep
+
+raworder0 = random_order(ntrial, (nstim, 1, nrep), raworder.shape)
+raworder1 = random_order(ntrial, (nstim, 1, nrep), raworder.shape)
+human0, stimuli0, sort0, model0 = order_by_trial(
+    rawhuman, rawhstim, raworder0, fellsamp)
+human1, stimuli1, sort1, model1 = order_by_trial(
+    rawhuman, rawhstim, raworder1, fellsamp)
+
+# make sure trials got reordered correctly
+assert (np.mean(human0, axis=-1) == np.mean(human1, axis=-1)).all()
+assert (np.mean(model0, axis=2) == np.mean(model1, axis=2)).all()
+
+for kidx, ratio in enumerate(ratios):
+
+    obs0 = mo.ModelObserver(
+        ime_samples=model0[0, 1].copy(),
+        kappas=kappas, n_F=11)
+    obs1 = mo.ModelObserver(
+        ime_samples=model1[0, 1].copy(),
+        kappas=kappas, n_F=11)
+
+    ime0 = obs0.IME(slice(None)).copy()
+    ime1 = obs1.IME(slice(None)).copy()
+
+    # make sure the IME calculations are the same
+    assert (np.abs(np.mean(ime0, axis=0) - np.mean(ime1, axis=0)) < 1e-6).all()
+
+    S0 = stimuli0[0].copy()
+    F0 = model0[0, 0, :, kidx, 0].copy()
+    S1 = stimuli1[0].copy()
+    F1 = model1[0, 0, :, kidx, 0].copy()
+
+    pkappa0 = obs0.learningCurve(F0)[1][-1]
+    pkappa1 = obs1.learningCurve(F1)[1][-1]
+    kdiff = np.abs(pkappa0 - pkappa1)
+
+    # make sure beliefs about kappa are independent of order
+    assert (kdiff < 1e-6).all()
 
 ######################################################################
 
-class ModelObserver(object):
+pltkwargs = {
+    'color': 'k',
+    'align': 'center'
+    }
 
-    n_F = 11
-    n_R = 7
+human, stimuli, sort, model = order_by_trial(
+    rawhuman, rawhstim, raworder, fellsamp)
 
-    OUTCOMES = np.arange(n_F)
-    RESPONSES = np.arange(n_R)
-
-    def __init__(self, ime_samples, kappas, N=1, Cf=10, Cr=6):
-
-        self.ime_samples = ime_samples.copy()
-
-        self.kappas = kappas.copy()
-        self.n_kappa = len(self.kappas)
-        self.thetas = [np.ones(self.n_kappa) / float(self.n_kappa)]
-
-        self.time = 0
-        self.stimuli = []
-
-        self._N = N
-        self._Cf = Cf
-        self._Cr = Cr
-        self._loss = None
-        self._risks = []
-
-        self._P_F_kappas = []
-        self._P_Fts = []
-        self._Pt_kappas = []
-
-    def IME(self):
-        samps = self.ime_samples[self.time]
-        shape = list(samps.shape[:-1]) + [n_F]
-        succ = samps[:, None, :] == self.OUTCOMES[None, :, None]
-        prior = rvs.Dirichlet(np.ones(shape))
-        post = prior.updateMultinomial(succ, axis=-1)
-        mle = post.mean.copy()
-        return mle
-
-    @property
-    def P_Ft_kappa(self):
-        """P(F_t | S_t, kappa)"""
-        
-        try:
-            dist = self._P_F_kappas[self.time]
-
-        except IndexError:
-            # Get the probability of outcomes from the IME
-            p_IME = self.IME()
-
-            # Make bernoulli distributions with these probabilities as
-            # parameters, and evaluate the likelihood of the true
-            # outcome
-            dist = rvs.Multinomial(np.ones(p_IME.shape), p_IME)
-            self._P_F_kappas.append(dist)
-        
-        return self._P_F_kappas[self.time]
-
-    @property
-    def Pt_kappa(self):
-        """P_t(kappa) = theta_t"""
-
-        try:
-            dist = self._Pt_kappas[self.time]
-
-        except:
-            p = self.thetas[self.time]
-            dist = rvs.Multinomial(np.ones(p.shape), p)
-            self._Pt_kappas.append(dist)
-            
-        return self._Pt_kappas[self.time]
-
-    @property
-    def P_Ft(self):
-        """P(F_t | S_t)"""
-
-        try:
-            dist = self._P_Fts[self.time]
-
-        except IndexError:
-            p_F_kappa = np.log(self.P_Ft_kappa.p)
-            Pt_kappa = np.log(self.Pt_kappa.p)[:, None]
-            p_F = stats.normalize(p_F_kappa + Pt_kappa, axis=0)[0]
-            dist = rvs.Multinomial(np.ones(p_F.shape), np.exp(p_F))
-            self._P_Fts.append(dist)
-
-        return self._P_Fts[self.time]
-        
-
-    @property
-    def Loss(self):
-        if self._loss is None:
-            N, Cf, Cr = self._N, self._Cf, self._Cr
-            f = self.OUTCOMES[:, None]
-            r = self.RESPONSES[None, :]
-            
-            sf = ((f + N).astype('f8') / n_F) - 0.5
-            sr = ((r - N).astype('f8') / n_R) - 0.5
-            ssf = 1.0 / (1 + np.exp(-Cf * sf))
-            ssr = 1.0 / (1 + np.exp(-Cr * sr))
-            self._loss = np.sqrt(np.abs(ssf - ssr))
-
-        return self._loss
-    
-    def Risk(self):
-        try:
-            risk = self._risks[self.time]
-
-        except IndexError:
-            p_F = self.P_Ft.p[:, None]
-            loss = self.Loss
-            risk = np.sum(loss * p_F, axis=0)
-            self._risks.append(risk)
-            
-        return risk
-
-    ##################################################################
-
-    def viewStimulus(self, S):
-        self.stimuli.append(S)
-        self.time = len(self.stimuli) - 1
-
-    def generateResponse(self):
-        """Compute optimal response to the current stimulus"""
-        response = np.argmin(self.Risk(), axis=0)
-        return response
-
-    def viewFeedback(self, F):
-        # Likelihood of the true outcomes
-        lh_F_kappa = self.P_Ft_kappa.logPMF(F == self.OUTCOMES)
-        p_kappa = np.log(self.Pt_kappa.p)
-
-        ## Calculate theta_t = P_t(kappa)
-        joint = lh_F_kappa + p_kappa
-        Pt_kappa = stats.normalize(joint, axis=-1)[1]
-        self.thetas.append(np.exp(Pt_kappa))
-        self.time += 1
-
-        return np.exp(lh_F_kappa)
-
-R = 6 - human.copy()
-S = stimuli[0].copy()
-F = model[0, 0, :, kappa10, 0].copy()
-
-assert R.shape[1:] == S.shape
-assert S.shape == F.shape
-
-n_subj = R.shape[0]
-n_T = R.shape[1]
+n_T = stimuli.shape[1]
 n_F = 11
 n_R = 7
 n_kappa = len(kappas)
-ratios = np.round(10 ** kappas, decimals=1)
+n_total_samp = model.shape[4]
+n_samp = 100
 
-MO = ModelObserver(
-    ime_samples=model[0, 1].copy(),
-    kappas=kappas,
-    N=1,
-    Cf=10,
-    Cr=6)
+RSO = np.random.RandomState(0)
+sidx = RSO.randint(0, n_total_samp, (n_T, n_kappa, n_samp))
+ime_samps = npl.choose(sidx, model[0, 1, :, :, :, None], axis=2)
 
-R = []
-Pt_kappa = []
+S   = stimuli[0].copy()
+#F   = (model[0, 0, :, :, 0] > 0).astype('int')
+#ime = (ime_samps > 0).astype('int')
+F   = model[0, 0, :, :, 0].copy()
+ime = ime_samps.astype('int')
 
 plt.close('all')
-fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
+fig1 = plt.figure()
+plt.suptitle("Posterior P(kappa|F)")
+fig2 = plt.figure()
+plt.suptitle("Likelihood P(F|kappa)")
 
-for t in xrange(n_T):
+for kidx, ratio in enumerate(ratios):
+    
+    obs = mo.ModelObserver(
+        ime_samples=ime,
+        kappas=kappas,
+        N=1,
+        Cf=10,
+        Cr=6,
+        n_F=11,
+        smooth=False)
+    lh, joint, Pt_kappa = obs.learningCurve(F[:, kidx])
 
-    MO.viewStimulus(S[t])
-    Pt_kappa.append(MO.Pt_kappa.p.copy())
-    R.append(MO.generateResponse())
-    lh_F_kappa = MO.viewFeedback(F[t])
+    ax = fig1.add_subplot(4, 3, kidx+1)
+    ax.cla()
+    ax.imshow(
+        np.exp(Pt_kappa.T),
+        aspect='auto', interpolation='nearest',
+        vmin=0, vmax=1, cmap='hot')
+    ax.set_xticks([])
+    ax.set_ylabel("Mass Ratio")
+    ax.set_yticks(np.arange(n_kappa))
+    ax.set_yticklabels(ratios)
+    ax.set_title("ratio = %.1f" % ratio)
 
-    print "Trial %d" % t
-    print "\tResponse = %d" % R[t]
-    print "\tFeedback = %d" % F[t]
+    ax = fig2.add_subplot(4, 3, kidx+1)
+    ax.cla()
+    ax.imshow(
+        np.exp(lh.T),
+        aspect='auto', interpolation='nearest',
+        vmin=0, vmax=1, cmap='gray')
+    ax.set_xticks([])
+    ax.set_ylabel("Mass Ratio")
+    ax.set_yticks(np.arange(n_kappa))
+    ax.set_yticklabels(ratios)
+    ax.set_title("ratio = %.1f" % ratio)
 
-    # ax1.cla()
-    # ax1.set_xticks(np.arange(n_kappa))
-    # ax1.set_xticklabels(ratios)
-    # ax1.set_ylabel("P(kappa)")
-    # ax1.bar(np.arange(n_kappa), Pt_kappa[t], align='center')
-    # ax1.set_ylim(0, 1)
-    # ax1.set_title("Trial %s" % t)
+plt.draw()
 
-    # ax2.cla()
-    # ax2.set_xticks(np.arange(n_kappa))
-    # ax2.set_xticklabels(ratios)
-    # ax2.set_ylabel("LH(F=%d | kappa)" % F[t])
-    # ax2.bar(np.arange(n_kappa), lh_F_kappa, align='center')
-    # ax2.set_ylim(0, 1)
+# obs = mo.ModelObserver(
+#     ime_samples=model[0, 1].copy(),
+#     kappas=kappas,
+#     N=1,
+#     Cf=10,
+#     Cr=6)
 
-    # ax3.cla()
-    # ax3.set_xticks(np.arange(n_kappa))
-    # ax3.set_xticklabels(ratios)
-    # ax3.set_ylabel("P(kappa | F)")
-    # ax3.bar(np.arange(n_kappa), MO.Pt_kappa.p, align='center')
-    # ax3.set_ylim(0, 1)
+# P_theta = rvs.Dirichlet(np.ones(n_kappa))
+# R = 6 - human.copy()
+# thetas = P_theta.sample((1000, n_kappa))
 
-    # ax4.cla()
-    # ax4.set_xticks(np.arange(n_F))
-    # ax4.set_xticklabels(np.arange(n_F))
-    # ax4.set_ylabel("P(F)")
-    # ax4.bar(np.arange(n_F), MO.P_Ft.p, align='center')
-    # ax4.set_ylim(0, 1)
+# # P(R_t | S_t, theta_t)
+# for t in xrange(n_T):
 
-    # plt.draw()
-    # plt.draw()
+#     mn = rvs.Multinomial(5, thetas)
+#     steps = mn.sample()
 
-    # time.sleep(0.05)
-    # #pdb.set_trace()
+#     P_theta_new = P_theta.updateMultinomial(steps)
 
-Pt_kappa = np.array(Pt_kappa)
+#     Rt = R[0, t]
+#     sRt = np.empty(thetas.shape[0])
+#     for i in xrange(thetas.shape[0]):
+#         rtheta = np.clip(thetas[i] + np.random.normal(0, 0.05, n_kappa), 0, 1)
+#         theta = rtheta / np.sum(rtheta)
+#         obs.thetas[t] = theta
+#         sRt[i] = obs.generateResponse()
+#     P_Rt = sRt == Rt
+#     print np.mean(P_Rt)
 
-plt.figure()
-plt.imshow(
-    np.log(Pt_kappa.T),
-    aspect='auto', interpolation='nearest',
-    vmin=-250, vmax=0)
-plt.xlabel("Trial Number")
-plt.ylabel("Mass Ratio")
-plt.yticks(np.arange(n_kappa), ratios)
-plt.title("model observer")
-
-
+# # P(theta_t | R_t, theta_t-1)
 
 
 
