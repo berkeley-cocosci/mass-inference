@@ -2,118 +2,215 @@ import numpy as np
 
 import cogphysics.lib.rvs as rvs
 import cogphysics.lib.stats as stats
+import cogphysics.lib.nplib as npl
 
 import pdb
 
-class ModelObserver(object):
+def IME(samps, n_outcomes, pseudocount=1):
+    """Compute the posterior probability of the outcome given
+    kappa using samples from the internal mechanics engine and a
+    Jeffrey's Dirichlet prior.
 
-    def __init__(self, ime_samples, kappas, N=1, Cf=10, Cr=6,
-                 pseudocount=1, n_F=2, n_R=7, smooth=False):
+    Parameters
+    ----------
+    samps : array-like (..., n_trials, n_kappas, n_samples)
+        samples from the IME
+    n_outcomes : int
+        number of possible outcomes
+    pseudocount : int (default=1)
+        number of pseudocounts
 
-        self.n_F = n_F
-        self.n_R = n_R
-        self.OUTCOMES = np.arange(n_F)
-        self.RESPONSES = np.arange(n_R)
+    Returns
+    -------
+    np.ndarray : (..., trials, kappas, outcomes)
 
-        self.ime_samples = ime_samples.copy()
-        self.ime_output = None
+    """
 
-        self.kappas = kappas.copy()
-        self.n_kappa = len(self.kappas)
-        self.thetas = [np.log(np.ones(self.n_kappa) / float(self.n_kappa))]
-        self.joint = self.thetas[0].copy()
+    # shape for the prior
+    shape = list(samps.shape[:-1]) + [n_outcomes]
+    # Jeffrey's prior
+    prior = rvs.Dirichlet(np.ones(shape) * pseudocount)
+    # conjugate update
+    vecs = samps[..., None] == np.arange(n_outcomes)
+    post = prior.updateMultinomial(vecs, axis=-2)
+    # take the MLE of the posterior's parameters
+    mle = np.log(post.mean.copy())
+    return mle
 
-        self.time = 0
-        self.stimuli = []
+def evaluateTruth(truth, p_outcomes):
+    """Evaluate the likelihood of the true outcomes given the
+    probability of each possible outcome.
 
-        self._N = N
-        self._Cf = Cf
-        self._Cr = Cr
+    Parameters
+    ----------
+    truth : array-like (..., n_trials)
+        True outcomes of each trial
+    p_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
+        Log probability of each possible outcome given kappa
 
-        self._pseudocount = pseudocount
-        self._smooth = smooth
-        self._loss = None
+    Returns
+    -------
+    np.ndarray : (..., n_trials, n_kappas)
 
-    def IME(self, t):
-        """P(F_t | S_t, kappa)"""
-        if self.ime_output is None:
-            samps = self.ime_samples
-            shape = list(samps.shape[:-1]) + [self.n_F]
-            alpha = np.ones(shape) * self._pseudocount
-            prior = rvs.Dirichlet(alpha)
-            if self._smooth:
-                diff = samps[:, :, None, :] - self.OUTCOMES[None, None, :, None]
-                succ = np.exp2(-np.abs(diff))
-                post = prior.updateMultinomial(succ, axis=-1)
-                mle = np.log(post.mode.copy())
-            else:
-                succ = samps[:, :, None, :] == self.OUTCOMES[None, None, :, None]
-                post = prior.updateMultinomial(succ, axis=-1)
-                mle = np.log(post.mean.copy())
-            self.ime_output = mle
-        return self.ime_output[t]
+    """
+    # total number of possible outcomes
+    n_outcomes = p_outcomes.shape[-1]
+    # multinomial random variable with parameters equal to P(kappa)
+    mn = rvs.Multinomial(1, np.exp(p_outcomes))
+    # turn truth values into multinomial vectors
+    vecs = (truth[..., None] == np.arange(n_outcomes)).astype('int')
+    # compute log likelihood of truth
+    lh = mn.logPMF(vecs[..., None, :])
+    return lh
 
-    def Pt_kappa(self, t):
-        """P_t(kappa) = theta_t"""
-        return self.thetas[t]
+def learningCurve(truth, theta0, p_outcomes):
+    """Computes a learning curve for a model observer, given raw
+    samples from their internal 'intuitive mechanics engine', the
+    prior over mass ratios, and the probability of each possible
+    outcome.
 
-    def P_Ft(self, t):
-        """P(F_t | S_t)"""
-        p_F_kappa = self.IME(t)
-        Pt_kappa = self.Pt_kappa(t)[:, None]
-        dist = stats.normalize(p_F_kappa + Pt_kappa, axis=0)[0]
-        return dist
+    Parameters
+    ----------
+    truth : array-like (..., n_trials)
+        True outcomes of each trial
+    theta0 : array-like (..., 1, n_kappas)
+        Log prior probability of each kappa
+    p_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
+        Log probability of each possible outcome given kappa
 
-    def Loss(self):
-        if self._loss is None:
-            N, Cf, Cr = self._N, self._Cf, self._Cr
-            f = self.OUTCOMES[:, None]
-            r = self.RESPONSES[None, :]
-            sf = ((f + N).astype('f8') / self.n_F) - 0.5
-            sr = ((r - N).astype('f8') / self.n_R) - 0.5
-            ssf = 1.0 / (1 + np.exp(-Cf * sf))
-            ssr = 1.0 / (1 + np.exp(-Cr * sr))
-            self._loss = np.sqrt(np.abs(ssf - ssr))
-        return self._loss
-    
-    def Risk(self, t):
-        p_F = np.exp(self.P_Ft(t)[:, None])
-        loss = self.Loss()
-        risk = np.sum(loss * p_F, axis=0)
-        return risk
+    Returns
+    -------
+    tuple : (likelihoods, joints, thetas)
+       likelihoods : np.ndarray (..., n_trials, n_kappas)
+       joints : np.ndarray (..., n_trials, n_kappas)
+       thetas : np.ndarray (..., n_trials, n_kappas)
 
-    ##################################################################
+    """
+    # the likelihood of the true outcome for each trial
+    lh = np.concatenate([
+        theta0, evaluateTruth(truth, p_outcomes)],
+                        axis=-2)
+    # unnormalized joint probability of outcomes and mass ratios 
+    joint = lh.cumsum(axis=-2)
+    # posterior probablity of mass ratios given the outcome 
+    thetas = stats.normalize(joint, axis=-1)[1]
+    return lh, joint, thetas
 
-    def viewStimulus(self, S):
-        self.stimuli.append(S)
-        self.time = len(self.stimuli) - 1
+def ModelObserver(ime_samples, truth, n_outcomes):
+    """Computes a learning curve for a model observer, given raw
+    samples from their internal 'intuitive mechanics engine', the
+    feedback that they see, and the total number of possible outcomes.
 
-    def generateResponse(self):
-        """Compute optimal response to the current stimulus"""
-        risk = self.Risk(self.time)
-        response = np.argmin(risk)
-        return response
+    Parameters
+    ----------
+    ime_samples : array-like (..., n_trials, n_kappas, n_samples)
+        Raw samples from the IME
+    truth : array-like (..., n_trials)
+        True outcomes of each trial
+    n_outcomes : int
+        Number of possible outcomes
 
-    def viewFeedback(self, F):
-        # Likelihood of the true outcomes
-        P_Ft_kappa = self.IME(self.time)
-        lh_F_kappa = P_Ft_kappa[:, F]
+    Returns
+    -------
+    tuple : (likelihoods, joints, thetas)
+       likelihoods : np.ndarray (..., n_trials, n_kappas)
+       joints : np.ndarray (..., n_trials, n_kappas)
+       thetas : np.ndarray (..., n_trials, n_kappas)
 
-        ## Calculate theta_t = P_t(kappa)
-        joint = lh_F_kappa + self.joint[self.time]
-        Pt_kappa = stats.normalize(joint, axis=-1)[1]
+    """
+    n_kappas = ime_samples.shape[1]
+    theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
+    p_outcomes = IME(ime_samples, n_outcomes)
+    lh, joint, thetas = learningCurve(
+        truth, theta0, p_outcomes)
+    return lh, joint, thetas
 
-        self.joint.append(joint)
-        self.thetas.append(Pt_kappa)
+######################################################################
 
-        return lh_F_kappa
+def predict(p_outcomes_given_kappa, p_kappas):
+    """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
 
-    def learningCurve(self, F):
-        ime = self.IME(slice(None))
-        lh = np.vstack([
-            self.thetas[0],
-            np.choose(F[:, None], ime.transpose((2, 0, 1)))])
-        self.joint = np.cumsum(lh, axis=0)
-        self.thetas = stats.normalize(self.joint, axis=1)[1]
-        self.time = len(self.thetas)
-        return lh, self.joint, self.thetas
+    Parameters
+    ----------
+    p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
+        log P(F_t | S_t, kappa), obtained from IME
+    p_kappas : array-like (..., n_kappas)
+        log theta_t = log P_t(kappa)
+    axis : int (default=0)
+        axis along which to normalize, i.e. kappa dimension
+
+    """
+    joint = p_outcomes_given_kappa + p_kappas[..., None]
+    p_outcomes = stats.normalize(joint, axis=-2)[0]
+    return p_outcomes
+
+def Loss(n_outcomes, n_responses, N=1, Cf=10, Cr=6):
+    """Loss function for outcomes and responses.
+
+    Parameters
+    ----------
+    n_outcomes : int
+        Number of possible outcomes
+    n_responses : int
+        Number of possible responses
+    N : number (default=1)
+        Amount to shift outcome/response values by
+    Cf : number (default=10)
+        Logistic coefficient for outcomes
+    Cr : number (default=6)
+        Logistic coefficient for responses
+
+    """
+
+    F = np.arange(n_outcomes)[:, None]
+    R = np.arange(n_responses)[None, :]
+    sf = ((F + N).astype('f8') / (n_outcomes-1)) - 0.5
+    sr = (R.astype('f8') / (n_responses-1)) - 0.5
+    ssf = 1.0 / (1 + np.exp(-Cf * sf))
+    ssr = 1.0 / (1 + np.exp(-Cr * sr))
+    loss = np.sqrt(np.abs(ssf - ssr))
+    return loss
+
+def Risk(p_kappas, p_outcomes_given_kappa, loss):
+    """Compute expected risk for each response given the
+    likelihood of each outcome, the probability of each mass
+    ratio, and the loss associated with each outcome/response
+    combination.
+
+    Parameters
+    ----------
+    p_kappas : array-like (..., n_kappas)
+        Probablity of each mass ratio
+    p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
+        Probability of each outcome given mass ratio
+    loss : array-like (..., n_outcomes, n_responses)
+        The loss associated with each outcome/response combo
+    kaxis : int (default=0)
+        kappa dimension
+    faxis : int (default=0)
+        outcome dimension
+
+    """
+
+    # compute marginal probability of outcomes
+    p_outcomes = np.exp(predict(p_outcomes_given_kappa, p_kappas))
+    # compute expected risk across outcomes
+    risk = (np.ma.masked_invalid(loss) * p_outcomes[..., None]).sum(axis=-2)
+    return np.ma.filled(risk, fill_value=np.inf)
+
+def response(p_kappas, p_outcomes, loss):
+    """Compute optimal responses based on the belief about mass ratio.
+
+    Parameters
+    ----------
+    p_kappas : array-like (..., n_kappas)
+        Probablity of each mass ratio
+    p_outcomes : array-like (..., n_kappas, n_outcomes)
+        Probability of each outcome given mass ratio
+    loss : array-like (..., n_outcomes, n_responses)
+        The loss associated with each outcome/response combo
+
+    """
+    risk = Risk(p_kappas, p_outcomes, loss)
+    responses = risk.argmin(axis=-1)
+    return responses
