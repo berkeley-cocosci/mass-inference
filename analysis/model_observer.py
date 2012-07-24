@@ -32,21 +32,29 @@ def IME(samps, n_outcomes, pseudocount=1):
     prior = rvs.Dirichlet(np.ones(shape) * pseudocount)
     # conjugate update
     vecs = samps[..., None] == np.arange(n_outcomes)
+    #vecs = 1.5**(-np.abs(samps[..., None] - np.arange(n_outcomes)))
     post = prior.updateMultinomial(vecs, axis=-2)
     # take the MLE of the posterior's parameters
     mle = np.log(post.mean.copy())
     return mle
 
-def evaluateTruth(truth, p_outcomes):
-    """Evaluate the likelihood of the true outcomes given the
-    probability of each possible outcome.
+def observationDensity(n_outcomes, exp=1e10):
+    # compute probability that each outcome is actually the outcome
+    outcomes = np.arange(n_outcomes)
+    negdiff = -np.abs(outcomes[:, None] - outcomes[None, :])
+    p_obs = stats.normalize(np.log(float(exp) ** negdiff), axis=-2)[1]
+    return p_obs
+
+def evaluateObserved(p_outcomes, exp=1e10):
+    """Evaluate the probability of an observed outcome given the
+    probability of each outcome according to the IME.
 
     Parameters
     ----------
-    truth : array-like (..., n_trials)
-        True outcomes of each trial
-    p_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
-        Log probability of each possible outcome given kappa
+    p_outcomes : array-like (..., n_trials, n_kappas, n_outcomes)
+        Log probability of each observed outcome given kappa
+    exp : number
+        P(F' | F) parameter
 
     Returns
     -------
@@ -55,15 +63,40 @@ def evaluateTruth(truth, p_outcomes):
     """
     # total number of possible outcomes
     n_outcomes = p_outcomes.shape[-1]
+    p_obs = observationDensity(n_outcomes, exp=exp)
+    # compute probability of each possible observed outcome (different
+    # from actual outcome)
+    joint = p_obs[..., None, :, :] + p_outcomes[..., None, :]
+    p_obs_outcomes = stats.normalize(joint, axis=-1)[0]
+    return p_obs_outcomes
+
+def evaluateTruth(truth, p_obs_outcomes):
+    """Evaluate the likelihood of the observed outcomes given the
+    probability of each possible outcome.
+
+    Parameters
+    ----------
+    truth : array-like (..., n_trials)
+        True outcomes of each trial
+    p_obs_outcomes : array-like (..., n_trials, n_kappas, n_outcomes)
+        Log probability of each observed outcome given kappa
+
+    Returns
+    -------
+    np.ndarray : (..., n_trials, n_kappas)
+
+    """
+    # total number of possible outcomes
+    n_outcomes = p_obs_outcomes.shape[-1]
     # multinomial random variable with parameters equal to P(kappa)
-    mn = rvs.Multinomial(1, np.exp(p_outcomes))
+    mn = rvs.Multinomial(1, np.exp(p_obs_outcomes))
     # turn truth values into multinomial vectors
     vecs = (truth[..., None] == np.arange(n_outcomes)).astype('int')
     # compute log likelihood of truth
     lh = mn.logPMF(vecs[..., None, :])
     return lh
 
-def learningCurve(truth, theta0, p_outcomes):
+def learningCurve(truth, theta0, p_obs_outcomes):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -75,7 +108,7 @@ def learningCurve(truth, theta0, p_outcomes):
         True outcomes of each trial
     theta0 : array-like (..., 1, n_kappas)
         Log prior probability of each kappa
-    p_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
+    p_obs_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
         Log probability of each possible outcome given kappa
 
     Returns
@@ -88,7 +121,7 @@ def learningCurve(truth, theta0, p_outcomes):
     """
     # the likelihood of the true outcome for each trial
     lh = np.concatenate([
-        theta0, evaluateTruth(truth, p_outcomes)],
+        theta0, evaluateTruth(truth, p_obs_outcomes)],
                         axis=-2)
     # unnormalized joint probability of outcomes and mass ratios 
     joint = lh.cumsum(axis=-2)
@@ -96,7 +129,7 @@ def learningCurve(truth, theta0, p_outcomes):
     thetas = stats.normalize(joint, axis=-1)[1]
     return lh, joint, thetas
 
-def ModelObserver(ime_samples, truth, n_outcomes):
+def ModelObserver(ime_samples, truth, n_outcomes, exp):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -121,8 +154,9 @@ def ModelObserver(ime_samples, truth, n_outcomes):
     n_kappas = ime_samples.shape[1]
     theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
     p_outcomes = IME(ime_samples, n_outcomes)
+    p_obs_outcomes = evaluateObserved(p_outcomes, exp)
     lh, joint, thetas = learningCurve(
-        truth, theta0, p_outcomes)
+        truth, theta0, p_obs_outcomes)
     return lh, joint, thetas
 
 ######################################################################

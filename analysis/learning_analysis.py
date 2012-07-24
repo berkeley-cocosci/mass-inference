@@ -21,95 +21,12 @@ from cogphysics.lib.corr import xcorr
 
 import model_observer as mo
 import dirichlet
-
-mthresh = 0.095
-zscore = False
-ALPHAS = np.logspace(np.log10(0.0001), np.log10(120), 200)
-SEED = 0
-N_BOOT = 10000
-
-def order_by_trial(human, stimuli, order, model):
-
-    n_subjs = human.shape[1]
-    n_stim = stimuli.size
-    n_rep = human.shape[2]
-
-    htrial = human.transpose((1, 0, 2)).reshape((n_subjs, -1))
-    horder = order.transpose((1, 0, 2)).reshape((n_subjs, -1))
-
-    trial_human = []
-    trial_order = []
-    trial_stim = []
-    trial_model = []
-
-    shape = np.ones((n_stim, n_rep))
-    sidx = list((np.arange(n_stim)[:, None] * shape).ravel())
-    
-    for hidx in xrange(n_subjs):
-        hd = htrial[hidx].copy()
-        ho = horder[hidx].copy()
-        
-        sort = np.argsort(ho)
-        shuman = hd[sort]
-        sorder = ho[sort]
-        sstim = stimuli[..., sidx, :, :][..., sort, :, :]
-        smodel = model[..., sidx, :, :][..., sort, :, :]
-        
-        trial_human.append(shuman)
-        trial_order.append(sort)
-        trial_stim.append(sstim)
-        trial_model.append(smodel)
-        
-    trial_human = np.array(trial_human, copy=True)
-    trial_order = np.array(trial_order, copy=True)
-    trial_stim = np.array(trial_stim, copy=True)
-    trial_model = np.array(trial_model, copy=True)
-
-    out = (trial_human, trial_stim, trial_order, trial_model)
-    return out
+import learning_analysis_tools as lat
 
 
-# Human
-rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
-    exp_ver=7, return_order=True)
-n_subjs, n_reps = rawhuman.shape[1:]
-hids = rawhmeta['dimvals']['id']
-
-# Model
-if os.path.exists("truth_samples.npy"):
-    truth_samples = np.load("truth_samples.npy")
-else:
-    rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=4)
-    sigmas = rawsmeta["sigmas"]
-    phis = rawsmeta["phis"]
-    kappas = rawsmeta["kappas"]
-    sigma0 = list(sigmas).index(0)
-    phi0 = list(phis).index(0)
-    rawmodel0 = rawmodel[sigma0, phi0][None, None]
-    pfell, nfell, truth_samples = tat.process_model_stability(
-        rawmodel0, mthresh=mthresh, zscore=zscore, pairs=False)
-    np.save("truth_samples.npy", truth_samples)
-
-rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=6)
-sigmas = rawsmeta["sigmas"]
-phis = rawsmeta["phis"]
-kappas = rawsmeta["kappas"]
+rawhuman, rawhstim, raworder, fellsamp, params = lat.load()
+sigmas, phis, kappas = params
 ratios = np.round(10 ** kappas, decimals=1)
-pfell, nfell, fell_sample = tat.process_model_stability(
-    rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
-
-all_model = np.array([truth_samples, fell_sample])
-fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3)).astype('int')
-
-assert (rawhstim == rawsstim).all()
-
-def random_order(n, shape1, shape2, axis=-1, seed=0):
-    tidx = np.arange(n)
-    RSO = np.random.RandomState(seed)
-    RSO.shuffle(tidx)
-    stidx = tidx.reshape(shape1)
-    order = stidx * np.ones(shape2)
-    return order
 
 ######################################################################
 ## Error checking
@@ -117,11 +34,11 @@ def random_order(n, shape1, shape2, axis=-1, seed=0):
 nstim, nsubj, nrep = raworder.shape
 ntrial = nstim * nrep
 
-raworder0 = random_order(ntrial, (nstim, 1, nrep), raworder.shape)
-raworder1 = random_order(ntrial, (nstim, 1, nrep), raworder.shape)
-human0, stimuli0, sort0, model0 = order_by_trial(
+raworder0 = lat.random_order(ntrial, (nstim, 1, nrep), raworder.shape)
+raworder1 = lat.random_order(ntrial, (nstim, 1, nrep), raworder.shape)
+human0, stimuli0, sort0, model0 = lat.order_by_trial(
     rawhuman, rawhstim, raworder0, fellsamp)
-human1, stimuli1, sort1, model1 = order_by_trial(
+human1, stimuli1, sort1, model1 = lat.order_by_trial(
     rawhuman, rawhstim, raworder1, fellsamp)
 
 # make sure trials got reordered correctly
@@ -136,11 +53,13 @@ for kidx, ratio in enumerate(ratios):
     lh0, joint0, pkappa0 = mo.ModelObserver(
         ime_samples=model0[0, 1].copy(),
         truth=F0.copy(),
-        n_outcomes=11)
+        n_outcomes=11,
+        exp=1e10)
     lh1, joint1, pkappa1 = mo.ModelObserver(
         ime_samples=model1[0, 1].copy(),
         truth=F1.copy(),
-        n_outcomes=11)
+        n_outcomes=11,
+        exp=1e10)
 
     kdiff = np.abs(pkappa0 - pkappa1)
 
@@ -148,101 +67,84 @@ for kidx, ratio in enumerate(ratios):
     assert (kdiff < 1e-6).all()
 
 ######################################################################
+# Model observers for each true mass ratio
 
-human, stimuli, sort, model = order_by_trial(
+human, stimuli, sort, model = lat.order_by_trial(
     rawhuman, rawhstim, raworder, fellsamp)
 
-n_trial = stimuli.shape[1]
-n_kappas = len(kappas)
-n_total_samp = model.shape[4]
-n_samp = 48
+reload(mo)
+reload(lat)
 
+# variables
+n_trial      = stimuli.shape[1]
+n_kappas     = len(kappas)
+
+# samples from the IME
 ime_samps = model[0, 1].copy().astype('int')
+# true outcomes for each mass ratio
 truth = model[0, 0, :, :, 0].copy().astype('int')
-
+# probability of each outcome given theta
 p_outcomes = mo.IME(ime_samps, 11)
+# loss function
 loss = mo.Loss(11, 7, N=2, Cf=10, Cr=6)
 
-# plt.close('all')
-# fig1 = plt.figure()
-# plt.suptitle("Posterior P(kappa|F)")
-# fig2 = plt.figure()
-# plt.suptitle("Likelihood P(F|kappa)")
-
+# arrays to hold the model observer data
+model_lh = np.empty((n_kappas, n_trial+1, n_kappas))
+model_joint = np.empty((n_kappas, n_trial+1, n_kappas))
+model_theta = np.empty((n_kappas, n_trial+1, n_kappas))
 model_subjects = np.empty((n_kappas, n_trial)).astype('int')
+
 for kidx, ratio in enumerate(ratios):
+    # compute belief over time
     lh, joint, theta = mo.ModelObserver(
         ime_samples=ime_samps,
         truth=truth[:, kidx],
-        n_outcomes=11)
-    model_subjects[kidx] = mo.response(
-        theta[:-1], p_outcomes, loss)[None]
+        n_outcomes=11,
+        exp=1e10)
+    # compute responses
+    response = mo.response(theta[:-1], p_outcomes, loss)[None]
+    # store data
+    model_lh[kidx] = lh
+    model_joint[kidx] = joint
+    model_theta[kidx] = theta
+    model_subjects[kidx] = response
 
-    # nlh = np.exp(lh.T) / np.sum(np.exp(lh.T), axis=0)
-
-    # ax = fig1.add_subplot(4, 3, kidx+1)
-    # ax.cla()
-    # ax.imshow(
-    #     #np.exp(Pt_kappa.T),
-    #     exp ** Pt_kappa.T,
-    #     aspect='auto', interpolation='nearest',
-    #     vmin=0, vmax=1, cmap='hot')
-    # ax.set_xticks([])
-    # ax.set_ylabel("Mass Ratio")
-    # ax.set_yticks(np.arange(n_kappas))
-    # ax.set_yticklabels(ratios)
-    # ax.set_title("ratio = %.1f" % ratio)
-
-    # ax = fig2.add_subplot(4, 3, kidx+1)
-    # ax.cla()
-    # ax.imshow(
-    #     nlh,
-    #     aspect='auto', interpolation='nearest',
-    #     vmin=0, vmax=nlh.max(), cmap='gray')
-    # ax.set_xticks([])
-    # ax.set_ylabel("Mass Ratio")
-    # ax.set_yticks(np.arange(n_kappas))
-    # ax.set_yticklabels(ratios)
-    # ax.set_title("ratio = %.1f" % ratio)
-
-# plt.draw() 
+# plot it
+plt.figure(1)
+plt.clf()
+plt.suptitle("Posterior P(kappa|F)")
+plt.subplots_adjust(wspace=0.3, hspace=0.2, left=0.1, right=0.9, top=0.9, bottom=0.1)
+for kidx, ratio in enumerate(ratios):
+    subjname = "Model Subj. r=%.1f" % ratios[kidx]
+    lat.plot_theta(
+        np.exp(model_theta[kidx]),
+        kidx+1, subjname, exp=np.e, ratios=ratios)
 
 ######################################################################
 
-def plot_theta(theta, idx, title, exp=2.718281828459045):
-    plt.subplot(4, 4, idx)
-    plt.cla()
-    plt.imshow(
-        exp ** np.log(theta.T),
-        aspect='auto', interpolation='nearest',
-        vmin=0, vmax=1, cmap='hot')
-    plt.xticks([], [])
-    plt.ylabel("Mass Ratio")
-    plt.yticks(np.arange(n_kappas), ratios)
-    plt.title(title)
-    plt.draw()
-    plt.draw()
-
 ratio = 10
-kidx = list(ratios).index(ratio)
+kidx  = list(ratios).index(ratio)
+exp   = np.e
 
-human, stimuli, sort, model = order_by_trial(
-    rawhuman, rawhstim, raworder, fellsamp)
-
-n_trial = stimuli.shape[1]
-n_kappas = len(kappas)
-n_part = 100
+n_trial     = stimuli.shape[1]
+n_kappas    = len(kappas)
+n_part      = 100
 n_responses = 7
 
 # compute probability of each outcome given kappa for each type of
 # predicate (either the number that fell or whether it fell)
 ime_samps = model[0, 1].copy().astype('int')
-p_outcomes_nfell = mo.IME(ime_samps, 11)
-p_outcomes_pfell = mo.IME((ime_samps > 0).astype('int'), 2)
+p_outcomes_nfell = mo.evaluateObserved(
+    mo.IME(ime_samps, 11), exp=exp)
+p_outcomes_pfell = mo.evaluateObserved(
+    mo.IME((ime_samps > 0).astype('int'), 2), exp=exp)
 p_outcomes = np.empty((2,) + p_outcomes_nfell.shape)
 p_outcomes.fill(-np.inf)
 p_outcomes[0] = p_outcomes_nfell
 p_outcomes[1, :, :, :2] = p_outcomes_pfell
+
+# observation density
+p_obs = mo.observationDensity(11, exp=exp)
 
 # truth values for each type of predicate
 truth_nfell = model[0, 0, :, kidx, 0].copy().astype('int')
@@ -258,12 +160,10 @@ loss[0] = loss_nfell
 loss[1, :2] = loss_pfell
 
 # model observer responses
-mo_lh, mo_joint, mo_theta = mo.ModelObserver(
-    ime_samples=ime_samps,
-    truth=truth_nfell,
-    n_outcomes=11)
-mo_responses = mo.response(
-    mo_theta[:-1], p_outcomes_nfell, loss_nfell)[None]
+mo_lh = model_lh[kidx].copy()
+mo_joint = model_joint[kidx].copy()
+mo_theta = model_theta[kidx].copy()
+mo_responses = model_subjects[kidx][None].copy()
 # actual human responses on a scale from 0 to 6
 subj_responses = 6 - human.copy()
 # responses = np.concatenate([mo_responses, subj_responses], axis=0)
@@ -305,25 +205,34 @@ for sidx in xrange(n_subj):
         p_outcomes_t = np.choose(
             pidx[:, None, None, None], p_outcomes[:, [t]])
         truth_t = np.choose(pidx[:, None], truth[:, [t]])
+        p_obs_t = np.choose(
+            truth_t[:, :, None], p_obs.T[:, None, None, :])
+        obs_t = stats.weightedSample(np.exp(p_obs_t), 1, axis=-1)[..., 0]
 
         # compute responses
         #m_response = mo.response(thetas_t, p_outcomes_t, loss_t)
         m_response = mo.response(thetas_t, p_nfell_t, loss_t)
         m_lh, m_joint, m_theta = mo.learningCurve(
-            truth_t, thetas_t, p_outcomes_t)
+            #truth_t, thetas_t, p_outcomes_t)
+            obs_t, thetas_t, p_outcomes_t)
 
-        mR = m_response[:, 0]
-        mT = m_theta[:, 1]
+        mR = m_response[:, 0].copy()
+        mT = m_theta[:, 1].copy()
 
         # calculate weights
         w = np.ones((n_part, n_responses))
+        #w = np.zeros((n_part, n_responses))
+        #w[mR[:, None] == np.arange(n_responses)] += 1e15
         w[mR[:, None] == np.arange(n_responses)] += 1
+        #w = np.exp2(-np.abs(mR[:, None] - np.arange(n_responses)))
         p = np.log(w / np.expand_dims(np.sum(w, axis=-1), axis=-1))
         weights_t = stats.normalize(p[:, true_responses[sidx, t]])[1]
 
         # sample new particles
         tidx = stats.weightedSample(
             np.exp(weights_t), n_part, rso=rso)
+
+        #pdb.set_trace()
 
         # update
         thetas[sidx, :, t+1] = mT[tidx]
@@ -334,29 +243,18 @@ for sidx in xrange(n_subj):
             print sidx, t, np.round(mle_theta, decimals=2)
 
 
-exp=np.e
+plt.figure(2)
 plt.clf()
-plot_theta(np.exp(mo_theta), 1, "Model Observer (true)", exp=exp)
 plt.subplots_adjust(wspace=0.3, hspace=0.2, left=0.1, right=0.9, top=0.9, bottom=0.1)
 for sidx in xrange(n_subj):
-    # if sidx > 0:
-    #     subjname = "Subject %d" % sidx
-    #     pidx = sidx+4
-    # else:
-    #     subjname = "Model Observer"
-    #     pidx = 2
     subjname = "Model Subj. r=%.1f" % ratios[sidx]
-    pidx = sidx + 2
     print subjname
-    #mle_theta = mle_alphas[sidx] / np.sum(mle_alphas[sidx], axis=-1)[..., None]
     mle_theta = np.mean(np.exp(thetas[sidx]), axis=0)
-    plot_theta(mle_theta, pidx, subjname, exp=exp)
+    plt.figure(2)
+    lat.plot_theta(mle_theta, sidx+1, subjname, exp=2, ratios=ratios)
     msubj_responses = mo.response(
         np.log(mle_theta[1:]), p_outcomes_nfell, loss_nfell)
-    subj_responses = responses[sidx]
+    subj_responses = true_responses[sidx]
     err0 = np.mean((subj_responses - mo_responses) ** 2)
     err1 = np.mean((subj_responses - msubj_responses) ** 2)
     print "%.2f --> %.2f (% .2f)" % (err0, err1, err1-err0)
-
-
-
