@@ -6,7 +6,7 @@ import cogphysics.lib.nplib as npl
 
 import pdb
 
-def IME(samps, n_outcomes, pseudocount=1):
+def IME(samps, n_outcomes, baserate, pseudocount=1):
     """Compute the posterior probability of the outcome given
     kappa using samples from the internal mechanics engine and a
     Jeffrey's Dirichlet prior.
@@ -26,26 +26,36 @@ def IME(samps, n_outcomes, pseudocount=1):
 
     """
 
-    # shape for the prior
-    shape = list(samps.shape[:-1]) + [n_outcomes]
-    # Jeffrey's prior
-    prior = rvs.Dirichlet(np.ones(shape) * pseudocount)
-    # conjugate update
-    vecs = samps[..., None] == np.arange(n_outcomes)
-    #vecs = 1.5**(-np.abs(samps[..., None] - np.arange(n_outcomes)))
-    post = prior.updateMultinomial(vecs, axis=-2)
-    # take the MLE of the posterior's parameters
-    mle = np.log(post.mean.copy())
+    # # shape for the prior
+    # shape = list(samps.shape[:-1]) + [n_outcomes]
+    # # Jeffrey's prior
+    # prior = rvs.Dirichlet(np.ones(shape) * pseudocount)
+    # # conjugate update
+    # vecs = samps[..., None] == np.arange(n_outcomes)
+    # post = prior.updateMultinomial(vecs, axis=-2)
+    # # take the MLE of the posterior's parameters
+    # mle = np.log(post.mean.copy())
+
+    counts = np.sum(samps[..., None] == np.arange(n_outcomes), axis=-2) + 1
+    #p_k = np.log(counts / np.sum(counts, axis=-2)[..., None, :].astype('f8'))
+    p_k = stats.normalize(np.log(counts), axis=-2)[1]
+    #baserate = np.sum(counts.reshape((-1, n_outcomes)), axis=0)
+    #baserate = baserate / np.sum(baserate).astype('f8')
+    mle = stats.normalize(p_k + baserate, axis=-1)[1]
     return mle
 
-def observationDensity(n_outcomes, exp=1e10):
+def observationDensity(n_outcomes, A=1e10):
     # compute probability that each outcome is actually the outcome
+    if not hasattr(A, '__iter__'):
+        exp = np.array([A])
+    else:
+        exp = np.array(A)
     outcomes = np.arange(n_outcomes)
     negdiff = -np.abs(outcomes[:, None] - outcomes[None, :])
-    p_obs = stats.normalize(np.log(float(exp) ** negdiff), axis=-2)[1]
+    p_obs = stats.normalize(negdiff * np.log(exp[..., None, None]), axis=-2)[1]
     return p_obs
 
-def evaluateObserved(p_outcomes, exp=1e10):
+def evaluateObserved(p_outcomes, A=1e10):
     """Evaluate the probability of an observed outcome given the
     probability of each outcome according to the IME.
 
@@ -53,7 +63,7 @@ def evaluateObserved(p_outcomes, exp=1e10):
     ----------
     p_outcomes : array-like (..., n_trials, n_kappas, n_outcomes)
         Log probability of each observed outcome given kappa
-    exp : number
+    A : number
         P(F' | F) parameter
 
     Returns
@@ -63,7 +73,7 @@ def evaluateObserved(p_outcomes, exp=1e10):
     """
     # total number of possible outcomes
     n_outcomes = p_outcomes.shape[-1]
-    p_obs = observationDensity(n_outcomes, exp=exp)
+    p_obs = observationDensity(n_outcomes, A=A)
     # compute probability of each possible observed outcome (different
     # from actual outcome)
     joint = p_obs[..., None, :, :] + p_outcomes[..., None, :]
@@ -93,7 +103,7 @@ def evaluateTruth(truth, p_obs_outcomes):
     # turn truth values into multinomial vectors
     vecs = (truth[..., None] == np.arange(n_outcomes)).astype('int')
     # compute log likelihood of truth
-    lh = mn.logPMF(vecs[..., None, :])
+    lh = stats.normalize(mn.logPMF(vecs[..., None, :]), axis=-1)[1]
     return lh
 
 def learningCurve(truth, theta0, p_obs_outcomes):
@@ -127,36 +137,6 @@ def learningCurve(truth, theta0, p_obs_outcomes):
     joint = lh.cumsum(axis=-2)
     # posterior probablity of mass ratios given the outcome 
     thetas = stats.normalize(joint, axis=-1)[1]
-    return lh, joint, thetas
-
-def ModelObserver(ime_samples, truth, n_outcomes, exp):
-    """Computes a learning curve for a model observer, given raw
-    samples from their internal 'intuitive mechanics engine', the
-    feedback that they see, and the total number of possible outcomes.
-
-    Parameters
-    ----------
-    ime_samples : array-like (..., n_trials, n_kappas, n_samples)
-        Raw samples from the IME
-    truth : array-like (..., n_trials)
-        True outcomes of each trial
-    n_outcomes : int
-        Number of possible outcomes
-
-    Returns
-    -------
-    tuple : (likelihoods, joints, thetas)
-       likelihoods : np.ndarray (..., n_trials, n_kappas)
-       joints : np.ndarray (..., n_trials, n_kappas)
-       thetas : np.ndarray (..., n_trials, n_kappas)
-
-    """
-    n_kappas = ime_samples.shape[1]
-    theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
-    p_outcomes = IME(ime_samples, n_outcomes)
-    p_obs_outcomes = evaluateObserved(p_outcomes, exp)
-    lh, joint, thetas = learningCurve(
-        truth, theta0, p_obs_outcomes)
     return lh, joint, thetas
 
 ######################################################################
@@ -248,3 +228,40 @@ def response(p_kappas, p_outcomes, loss):
     risk = Risk(p_kappas, p_outcomes, loss)
     responses = risk.argmin(axis=-1)
     return responses
+
+######################################################################
+
+def ModelObserver(ime_samples, truth, baserate, n_outcomes, A, loss=None):
+    """Computes a learning curve for a model observer, given raw
+    samples from their internal 'intuitive mechanics engine', the
+    feedback that they see, and the total number of possible outcomes.
+
+    Parameters
+    ----------
+    ime_samples : array-like (..., n_trials, n_kappas, n_samples)
+        Raw samples from the IME
+    truth : array-like (..., n_trials)
+        True outcomes of each trial
+    n_outcomes : int
+        Number of possible outcomes
+
+    Returns
+    -------
+    tuple : (likelihoods, joints, thetas)
+       likelihoods : np.ndarray (..., n_trials, n_kappas)
+       joints : np.ndarray (..., n_trials, n_kappas)
+       thetas : np.ndarray (..., n_trials, n_kappas)
+
+    """
+    n_kappas = ime_samples.shape[1]
+    theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
+    p_outcomes = IME(ime_samples, n_outcomes, baserate)
+    p_obs_outcomes = evaluateObserved(p_outcomes, A)
+    lh, joint, thetas = learningCurve(
+        truth, theta0, p_obs_outcomes)
+    if loss is not None:
+        resp = response(thetas[:-1], p_obs_outcomes, loss)
+        out = lh, joint, thetas, resp
+    else:
+        out = lh, joint, thetas
+    return out

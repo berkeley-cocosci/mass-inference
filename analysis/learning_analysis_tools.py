@@ -103,13 +103,13 @@ def load():
 
     return rawhuman, rawhstim, raworder, fellsamp, (sigmas, phis, kappas)
 
-def plot_theta(theta, idx, title, exp=2.718281828459045, ratios=None):
-    plt.subplot(4, 4, idx)
+def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, ratios=None, cmap='hot'):
+    plt.subplot(nrow, ncol, idx)
     plt.cla()
     plt.imshow(
         exp ** np.log(theta.T),
         aspect='auto', interpolation='nearest',
-        vmin=0, vmax=1, cmap='hot')
+        vmin=0, vmax=1, cmap=cmap)
     plt.xticks([], [])
     plt.ylabel("Mass Ratio")
     if ratios is not None:
