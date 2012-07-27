@@ -11,7 +11,6 @@ import cogphysics
 import cogphysics.lib.circ as circ
 import cogphysics.lib.nplib as npl
 import cogphysics.lib.rvs as rvs
-import cogphysics.lib.stats as stats
 import cogphysics.tower.analysis_tools as tat
 
 from matplotlib import rc
@@ -23,122 +22,40 @@ import model_observer as mo
 import dirichlet
 import learning_analysis_tools as lat
 
-
-rawhuman, rawhstim, raworder, fellsamp, params = lat.load()
-sigmas, phis, kappas = params
-ratios = np.round(10 ** kappas, decimals=1)
+normalize = rvs.util.normalize
+weightedSample = rvs.util.weightedSample
 
 ######################################################################
-## Error checking
-
-nstim, nsubj, nrep = raworder.shape
-ntrial = nstim * nrep
-
-raworder0 = lat.random_order(ntrial, (nstim, 1, nrep), raworder.shape)
-raworder1 = lat.random_order(ntrial, (nstim, 1, nrep), raworder.shape)
-human0, stimuli0, sort0, model0 = lat.order_by_trial(
-    rawhuman, rawhstim, raworder0, fellsamp)
-human1, stimuli1, sort1, model1 = lat.order_by_trial(
-    rawhuman, rawhstim, raworder1, fellsamp)
-
-# make sure trials got reordered correctly
-assert (np.mean(human0, axis=-1) == np.mean(human1, axis=-1)).all()
-assert (np.mean(model0, axis=2) == np.mean(model1, axis=2)).all()
-
-for kidx, ratio in enumerate(ratios):
-
-    F0 = model0[0, 0, :, kidx, 0]
-    F1 = model1[0, 0, :, kidx, 0]
-    br0 = np.mean(F0.ravel()[:, None] == np.arange(11), axis=0)
-    br1 = np.mean(F0.ravel()[:, None] == np.arange(11), axis=0)
-
-    lh0, joint0, pkappa0 = mo.ModelObserver(
-        ime_samples=model0[0, 1].copy(),
-        truth=F0.copy(),
-        baserate=br0,
-        n_outcomes=11,
-        A=1e10)
-    lh1, joint1, pkappa1 = mo.ModelObserver(
-        ime_samples=model1[0, 1].copy(),
-        truth=F1.copy(),
-        baserate=br1,
-        n_outcomes=11,
-        A=1e10)
-
-    kdiff = np.abs(pkappa0 - pkappa1)
-
-    # make sure beliefs about kappa are independent of order
-    assert (kdiff < 1e-6).all()
-
-######################################################################
-
-human, stimuli, sort, model = lat.order_by_trial(
-    rawhuman, rawhstim, raworder, fellsamp)
+## Load and process data
 
 reload(mo)
 reload(lat)
 
+rawhuman, rawhstim, raworder, msamp, params = lat.load('stability')
+sigmas, phis, kappas = params
+ratios = np.round(10 ** kappas, decimals=1)
+
+human, stimuli, sort, model = lat.order_by_trial(
+    rawhuman, rawhstim, raworder, msamp)
+
+predicates = list(model.dtype.names)
+predicates.remove('stability_pfell')
+
 # variables
 n_trial      = stimuli.shape[1]
 n_kappas     = len(kappas)
-n_outcomes   = 11
+#n_outcomes   = (11, 8)
+n_outcomes   = (5, 8)
+n_predicate  = len(predicates)
 
 # samples from the IME
-ime_samps = model[0, 1].copy().astype('int')
-#ime_samps = model[0, 0][:, :, [0]].copy().astype('int')
+ime_samps = model[0, 1].copy()
+#ime_samps = model[0, 0][:, :, [0]].copy()
 # true outcomes for each mass ratio
-truth = model[0, 0, :, :, 0].copy().astype('int')
+truth = model[0, 0, :, :, 0].copy()
+
 # loss function
-#loss = mo.Loss(11, 7, N=2, Cf=10, Cr=6)
-loss = mo.Loss(11, 7, N=0, Cf=5, Cr=6)
-# base outcome rate
-counts = np.sum(truth[..., None] == np.arange(11), axis=0) + 1
-baserate = stats.normalize(np.log(counts), axis=-1)[1]
-
-
-# # differences in feedback
-# plt.figure(100)
-# plt.clf()
-# msd = np.mean(np.abs(truth[:, :, None] - truth[:, None, :]), axis=0)
-# plt.imshow(msd, cmap='gray', interpolation='nearest', vmin=0, vmax=5)
-# plt.title("Differences in feedback for different kappas")
-# plt.xticks(np.arange(n_kappas), ratios)
-# plt.yticks(np.arange(n_kappas), ratios)
-
-# # differences in model predictions
-# plt.figure(101)
-# plt.clf()
-# ime_mean = np.mean(ime_samps, axis=-1)
-# msd = np.mean(np.abs(ime_mean[:, :, None] - ime_mean[:, None, :]), axis=0)
-# plt.imshow(msd, cmap='gray', interpolation='nearest', vmin=0, vmax=5)
-# plt.title("Differences in model predictions for different kappas")
-# plt.xticks(np.arange(n_kappas), ratios)
-# plt.yticks(np.arange(n_kappas), ratios)
-
-# # mean number of blocks that fall for each kappa
-# plt.figure(102)
-# plt.clf()
-# meanblocks0 = np.mean(truth, axis=0)
-# meanblocks = np.mean(
-#     ime_samps.transpose((1, 0, 2)).reshape((n_kappas, -1)), axis=-1)
-# plt.plot(ratios, meanblocks0, label="truth")
-# plt.plot(ratios, meanblocks, label="model")
-# plt.xticks(ratios, ratios)
-# plt.title("Mean number of blocks that fall for all stimuli")
-# plt.legend()
-
-# # base rates for the model
-# plt.figure(103)
-# plt.clf()
-# mbr = np.sum(
-#     ime_samps.transpose((1, 0, 2)).reshape(
-#         (n_kappas, -1))[..., None] == np.arange(11),
-#     axis=1)
-# mbr = mbr / np.sum(mbr, axis=-1).astype('f8')[..., None]
-# plt.imshow(mbr, cmap='gray', interpolation='nearest', vmin=0, vmax=1)
-# plt.title("Rates of outcomes for the model")
-# plt.xticks(np.arange(11), np.arange(11))
-# plt.yticks(np.arange(n_kappas), ratios)
+loss = mo.Loss(n_outcomes, 7, predicates, N=0, Cf=5, Cr=6)
 
 ######################################################################
 # Model observers for each true mass ratio
@@ -156,12 +73,12 @@ model_subjects = np.empty((n_kappas, n_trial)).astype('int')
 for kidx, ratio in enumerate(ratios):
     # compute belief over time
     lh, joint, theta, response = mo.ModelObserver(
-        ime_samples=ime_samps,
-        truth=truth[:, kidx],
-        n_outcomes=11,
-        baserate=baserate[kidx],
-        A=1e10,
+        ime_samples=ime_samps.copy(),
+        feedback=truth[:, kidx].copy(),
+        n_outcomes=n_outcomes,
+        predicates=predicates,
         loss=loss)
+
     # store data
     model_lh[kidx] = lh.copy()
     model_joint[kidx] = joint.copy()
@@ -169,7 +86,7 @@ for kidx, ratio in enumerate(ratios):
     model_subjects[kidx] = response.copy()
 
 # plot it
-plt.figure(1)
+plt.figure(10)
 plt.clf()
 plt.suptitle("Posterior P(kappa|F)")
 plt.subplots_adjust(wspace=0.3, hspace=0.2, left=0.1, right=0.9, top=0.9, bottom=0.1)
@@ -178,7 +95,9 @@ for kidx, ratio in enumerate(ratios):
     lat.plot_theta(
         3, 4, kidx+1,
         np.exp(model_theta[kidx]),
-        subjname, exp=np.e, ratios=ratios)
+        subjname,
+        exp=1.3,
+        ratios=ratios)
 
 plt.figure(2)
 plt.clf()
@@ -198,7 +117,6 @@ for kidx, ratio in enumerate(ratios):
 
 ratio = 10
 kidx  = list(ratios).index(ratio)
-A     = 3#np.e  # observation uncertainty
 B     = 10   # mixing parameter
 
 n_trial     = stimuli.shape[1]
@@ -207,8 +125,7 @@ n_part      = 100
 n_responses = 7
 
 # samples from the IME
-p_outcomes = mo.IME(ime_samps, 11, baserate[kidx])
-p_obs = mo.observationDensity(11, A)[0]
+p_outcomes = mo.IME(ime_samps, n_outcomes, predicates)
 
 # model observer responses
 mo_lh = model_lh[kidx].copy()
@@ -251,9 +168,9 @@ for sidx in xrange(n_subj):
         response_t = true_responses[sidx, t]
 
         # sample observations
-        p_obs_t = p_obs[:, truth_t]
-        obs_t = stats.weightedSample(
-            np.exp(p_obs_t), n_part, axis=0, rso=rso).T
+        # p_obs_t = p_obs[:, truth_t]
+        # obs_t = weightedSample(
+        #     np.exp(p_obs_t), n_part, axis=0, rso=rso).T
 
         # compute responses
         m_response = mo.response(thetas_t, p_outcomes_t, loss)
@@ -264,10 +181,10 @@ for sidx in xrange(n_subj):
         w = np.ones((n_part, n_responses))
         w[m_response[:, [0]] == np.arange(n_responses)] += B
         p = np.log(w / np.expand_dims(np.sum(w, axis=-1), axis=-1))
-        weights_t = stats.normalize(p[:, response_t])[1]
+        weights_t = normalize(p[:, response_t])[1]
 
         # sample new particles
-        tidx = stats.weightedSample(
+        tidx = weightedSample(
             np.exp(weights_t), n_part, rso=rso)
 
         # update
