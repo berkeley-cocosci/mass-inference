@@ -19,7 +19,6 @@ from sklearn import linear_model
 from cogphysics.lib.corr import xcorr
 
 import model_observer as mo
-import dirichlet
 import learning_analysis_tools as lat
 
 normalize = rvs.util.normalize
@@ -40,12 +39,17 @@ human, stimuli, sort, model = lat.order_by_trial(
 
 predicates = list(model.dtype.names)
 predicates.remove('stability_pfell')
+#predicates.remove('direction')
+predicates.remove('stability_nfell')
+predicates.remove('radius')
 
 # variables
 n_trial      = stimuli.shape[1]
 n_kappas     = len(kappas)
 #n_outcomes   = (11, 8)
-n_outcomes   = (5, 8)
+#n_outcomes   = (5, 8)
+#n_outcomes   = (11,)
+n_outcomes   = (16,)
 n_predicate  = len(predicates)
 
 # samples from the IME
@@ -126,6 +130,38 @@ n_responses = 7
 
 # samples from the IME
 p_outcomes = mo.IME(ime_samps, n_outcomes, predicates)
+
+
+from kde import gen_direction_edges
+edges, binsize, offset = gen_direction_edges(16)
+fig, axes = plt.subplots(3, 4, subplot_kw=dict(polar=True))
+
+def hist(ax, e, z, s, t, title=""):
+    plt.axes(ax)
+    ax.cla()
+    ax.bar(e, z, width=e[1]-e[0], bottom=0.3)
+    ax.plot(s['direction'], s['radius'], 'ro')
+    ax.plot([t['direction']]*2, [0, t['radius']], 'g-', linewidth=5)
+    ax.set_ylim(0,0.5)
+    ax.set_title(title)
+    plt.box(False)
+    plt.yticks([], [])
+    plt.draw()
+
+for i in xrange(384):
+
+    for j in xrange(n_kappas):
+        title = "r=%.1f" % ratios[j]
+        hist(axes.ravel()[j],
+             edges[:-1],
+             np.exp(p_outcomes[i,j]),
+             ime_samps[i,j],
+             truth[i,j],
+             title=title)
+        print title, model_subjects[j,i]
+    
+    pdb.set_trace()
+
 
 # model observer responses
 mo_lh = model_lh[kidx].copy()

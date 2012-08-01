@@ -80,7 +80,8 @@ def load(predicate):
     dtype = np.dtype([
         ('stability_nfell', 'i8'),
         ('stability_pfell', 'i8'),
-        ('direction', 'f8')])
+        ('direction', 'f8'),
+        ('radius', 'f8')])
     
     # Human
     rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
@@ -98,30 +99,39 @@ def load(predicate):
         kappas = rawsmeta["kappas"]
         sigma0 = list(sigmas).index(0)
         phi0 = list(phis).index(0)
+        mass, cpoids, assigns, intassigns = tat.stimnames2mass(
+            rawsstim, kappas)
         rawmodel0 = rawmodel[sigma0, phi0][None, None]
         pfell, nfell, truth_samplesS = tat.process_model_stability(
             rawmodel0, mthresh=mthresh, zscore=zscore, pairs=False)
         dirs, truth_samplesD, dirs_perblock = tat.process_model_direction(
-            rawmodel0, mthresh=mthresh, pairs=False)
+            rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
+        radii, truth_samplesR, radii_perblock = tat.process_model_radius(
+            rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
         truth_samples = np.empty(truth_samplesS.shape, dtype=dtype)
         truth_samples['stability_nfell'] = truth_samplesS.astype('i8')
         truth_samples['stability_pfell'] = (truth_samplesS > 0).astype('i8')
         truth_samples['direction'] = truth_samplesD
+        truth_samples['radius'] = truth_samplesR
         np.save("truth_samples_%s.npy" % predicate, truth_samples)
 
     rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)
     sigmas = rawsmeta["sigmas"]
     phis = rawsmeta["phis"]
     kappas = rawsmeta["kappas"]
-
+    mass, cpoids, assigns, intassigns = tat.stimnames2mass(
+        rawsstim, kappas)
     pfell, nfell, samplesS = tat.process_model_stability(
         rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
     dirs, samplesD, dirs_perblock = tat.process_model_direction(
-        rawmodel, mthresh=mthresh, pairs=False)
+        rawmodel, mthresh=mthresh, pairs=False, mass=mass)
+    radii, samplesR, radii_perblock = tat.process_model_radius(
+        rawmodel, mthresh=mthresh, pairs=False, mass=mass)
     samples = np.empty(samplesS.shape, dtype=dtype)
     samples['stability_nfell'] = samplesS.astype('i8')
     samples['stability_pfell'] = (samplesS > 0).astype('i8')
     samples['direction'] = samplesD
+    samples['radius'] = samplesR
 
     all_model = np.array([truth_samples, samples], dtype=dtype)
     fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3))

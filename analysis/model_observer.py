@@ -109,11 +109,11 @@ def evaluateFeedback(feedback, p_outcomes, predicates):
             hi = nfb < edges[1:][tuple(rsl)]
             pidx = lo & hi
 
-        idx &= pidx.filled(True)
+        idx &= pidx.filled(False)
 
     each = np.expand_dims(idx, axis=-npred-1) * np.exp(p_outcomes)
     shape = p_outcomes.shape[:-npred] + (-1,)
-    lh = np.log(np.mean(each.reshape(shape), axis=-1))
+    lh = np.log(np.sum(each.reshape(shape), axis=-1))
 
     return lh
 
@@ -211,7 +211,7 @@ def Loss(n_outcomes, n_responses, predicates, N=1, Cf=10, Cr=6):
             l = np.sqrt(np.abs(ssf - ssr))
 
         elif pred == 'direction':
-            l = np.zeros((n, n_responses))
+            l = np.ones((n, n_responses))
 
         sl = [None]*len(predicates) + [slice(None)]
         sl[pidx] = slice(None)
@@ -272,7 +272,7 @@ def response(p_kappas, p_outcomes, loss, predicates):
 ######################################################################
 
 def ModelObserver(ime_samples, feedback, n_outcomes,
-                  predicates, A=1e10, loss=None):
+                  predicates, loss=None):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -287,8 +287,6 @@ def ModelObserver(ime_samples, feedback, n_outcomes,
         Number of possible outcomes
     predicates : string ('stability' or 'direction')
         the predicates under which to compute the value
-    A : number
-        Smoothing parameter
     loss : array-like (..., n_outcomes, n_responses)
         The loss associated with each outcome/response combo
 
