@@ -131,35 +131,77 @@ n_responses = 7
 # samples from the IME
 p_outcomes = mo.IME(ime_samps, n_outcomes, predicates)
 
+import kde
+#from kde import gen_direction_edges
+#edges, binsize, offset = gen_direction_edges(16)
+fig, axes = plt.subplots(3, 4)#, subplot_kw=dict(polar=True))
 
-from kde import gen_direction_edges
-edges, binsize, offset = gen_direction_edges(16)
-fig, axes = plt.subplots(3, 4, subplot_kw=dict(polar=True))
+# def hist(ax, e, z, s, t, title=""):
+#     plt.axes(ax)
+#     ax.cla()
+#     ax.bar(e, z, width=e[1]-e[0], bottom=0.3)
+#     ax.plot(s['direction'], s['radius'], 'ro')
+#     ax.plot([t['direction']]*2, [0, t['radius']], 'g-', linewidth=5)
+#     ax.set_ylim(0,0.5)
+#     ax.set_title(title)
+#     plt.box(False)
+#     plt.yticks([], [])
+#     plt.draw()
 
-def hist(ax, e, z, s, t, title=""):
-    plt.axes(ax)
-    ax.cla()
-    ax.bar(e, z, width=e[1]-e[0], bottom=0.3)
-    ax.plot(s['direction'], s['radius'], 'ro')
-    ax.plot([t['direction']]*2, [0, t['radius']], 'g-', linewidth=5)
-    ax.set_ylim(0,0.5)
-    ax.set_title(title)
-    plt.box(False)
-    plt.yticks([], [])
-    plt.draw()
+t = ime_samps['direction']
+r = ime_samps['radius']
 
-for i in xrange(384):
+tt = truth['direction']
+tr = truth['radius']
 
-    for j in xrange(n_kappas):
+x = np.cos(t)*r
+y = np.sin(t)*r
+
+tx = np.cos(tt)*tr
+ty = np.sin(tt)*tr
+
+# x = np.empty((1, 1, 48))
+# x[:, :, :24] = 0.2205
+# x[:, :, 24:] = -0.2205
+# y = np.empty((1, 1, 48))
+# y[:, :, :24] = -0.2205
+# y[:, :, 24:] = 0.2205
+
+# tx = np.zeros((1, 1))
+# ty = np.zeros((1, 1))
+
+data = np.concatenate([x[..., None], y[..., None]], axis=-1)
+
+n = (20, 20)
+edges, binsize = kde.gen_xy_edges(n)
+mids = (edges[:, 1:] + edges[:, :-1]) / 2.
+
+sclx = lambda x: (((x - edges[0,0]) / (edges[0,-1]-edges[0,0])) * (edges.shape[1]-1)) - 0.5
+scly = lambda y: (((y - edges[1,0]) / (edges[1,-1]-edges[1,0])) * (edges.shape[1]-1)) - 0.5
+
+for i in xrange(data.shape[0]):
+    bx = 1.3**kde.xy_kde(data[i], n, h=0.2, s=-.35, t=.35)
+    for j in xrange(data.shape[1]):
         title = "r=%.1f" % ratios[j]
-        hist(axes.ravel()[j],
-             edges[:-1],
-             np.exp(p_outcomes[i,j]),
-             ime_samps[i,j],
-             truth[i,j],
-             title=title)
-        print title, model_subjects[j,i]
-    
+        ax = axes.ravel()[j]
+        plt.axes(ax)
+        ax.cla()
+        ax.imshow(bx[j].T, interpolation='nearest', vmin=0, vmax=1)
+        ax.plot(sclx(x[i,j]), scly(y[i,j]), 'ro')
+        ax.plot(sclx(tx[i,j]), scly(ty[i,j]), 'yo')
+        ax.set_xticks(np.arange(len(edges[0]))-0.5)
+        ax.set_xticklabels(edges[0])
+        ax.set_yticks((np.arange(len(edges[0]))-0.5))
+        ax.set_yticklabels(edges[1])
+        ax.set_title(title)
+        plt.draw()
+        # hist(axes.ravel()[j],
+        #      edges[:-1],
+        #      np.exp(p_outcomes[i,j]),
+        #      ime_samps[i,j],
+        #      truth[i,j],
+        #      title=title)
+        print title#, model_subjects[j,i]
     pdb.set_trace()
 
 
