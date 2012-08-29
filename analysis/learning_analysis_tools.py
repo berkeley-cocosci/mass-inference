@@ -81,7 +81,9 @@ def load(predicate):
         ('stability_nfell', 'i8'),
         ('stability_pfell', 'i8'),
         ('direction', 'f8'),
-        ('radius', 'f8')])
+        ('radius', 'f8'),
+        ('x', 'f8'),
+        ('y', 'f8')])
     
     # Human
     rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
@@ -108,35 +110,59 @@ def load(predicate):
             rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
         radii, truth_samplesR, radii_perblock = tat.process_model_radius(
             rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
+        truth_samplesX = np.cos(truth_samplesD) * truth_samplesR
+        truth_samplesY = np.sin(truth_samplesD) * truth_samplesR
         truth_samples = np.empty(truth_samplesS.shape, dtype=dtype)
         truth_samples['stability_nfell'] = truth_samplesS.astype('i8')
         truth_samples['stability_pfell'] = (truth_samplesS > 0).astype('i8')
         truth_samples['direction'] = truth_samplesD
         truth_samples['radius'] = truth_samplesR
+        truth_samples['x'] = truth_samplesX
+        truth_samples['y'] = truth_samplesY
         np.save("truth_samples_%s.npy" % predicate, truth_samples)
 
-    rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)
-    sigmas = rawsmeta["sigmas"]
-    phis = rawsmeta["phis"]
-    kappas = rawsmeta["kappas"]
-    mass, cpoids, assigns, intassigns = tat.stimnames2mass(
-        rawsstim, kappas)
-    pfell, nfell, samplesS = tat.process_model_stability(
-        rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
-    dirs, samplesD, dirs_perblock = tat.process_model_direction(
-        rawmodel, mthresh=mthresh, pairs=False, mass=mass)
-    radii, samplesR, radii_perblock = tat.process_model_radius(
-        rawmodel, mthresh=mthresh, pairs=False, mass=mass)
-    samples = np.empty(samplesS.shape, dtype=dtype)
-    samples['stability_nfell'] = samplesS.astype('i8')
-    samples['stability_pfell'] = (samplesS > 0).astype('i8')
-    samples['direction'] = samplesD
-    samples['radius'] = samplesR
+    if os.path.exists("model_samples_%s.npz" % predicate):
+        data = np.load("model_samples_%s.npz" % predicate)
+        samples = data['samples']
+        sigmas = data['sigmas']
+        phis = data['phis']
+        kappas = data['kappas']
+        rawsstim = data['rawsstim']
+        
+    else:
+        rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)
+        sigmas = rawsmeta["sigmas"]
+        phis = rawsmeta["phis"]
+        kappas = rawsmeta["kappas"]
+        mass, cpoids, assigns, intassigns = tat.stimnames2mass(
+            rawsstim, kappas)
+        pfell, nfell, samplesS = tat.process_model_stability(
+            rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
+        dirs, samplesD, dirs_perblock = tat.process_model_direction(
+            rawmodel, mthresh=mthresh, pairs=False, mass=mass)
+        radii, samplesR, radii_perblock = tat.process_model_radius(
+            rawmodel, mthresh=mthresh, pairs=False, mass=mass)
+        samplesX = np.cos(samplesD) * samplesR
+        samplesY = np.sin(samplesD) * samplesR
+        samples = np.empty(samplesS.shape, dtype=dtype)
+        samples['stability_nfell'] = samplesS.astype('i8')
+        samples['stability_pfell'] = (samplesS > 0).astype('i8')
+        samples['direction'] = samplesD
+        samples['radius'] = samplesR
+        samples['x'] = samplesX
+        samples['y'] = samplesY
+
+        np.savez("model_samples_%s.npz" % predicate,
+                 samples=samples,
+                 sigmas=sigmas,
+                 phis=phis,
+                 kappas=kappas,
+                 rawsstim=rawsstim)
+
+    assert (rawhstim == rawsstim).all()
 
     all_model = np.array([truth_samples, samples], dtype=dtype)
     fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3))
-
-    assert (rawhstim == rawsstim).all()
 
     return rawhuman, rawhstim, raworder, fellsamp, (sigmas, phis, kappas)
 

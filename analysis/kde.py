@@ -30,8 +30,7 @@ def mv_gaussian_kde(vals, h=0.5):
     k = rvs.MVGaussian([0,0], np.eye(2))
     n = np.sum(np.sum(~np.isnan(vals), axis=-1), axis=-1)[..., None]
     def f(x):
-        diff = np.ma.masked_invalid(
-            x[..., None, :] - vals[..., None, :, :])
+        diff = x[..., None, :] - vals[..., None, :, :]
         pdf = np.ma.masked_invalid(k.PDF(diff / h))
         summed = pdf.filled(0.000001).sum(axis=-1)
         normed = summed / (n*h)
@@ -83,12 +82,20 @@ def gen_radius_edges(n):
     edges, mids, binsize = makeBins(-.015, .315, n)
     return edges, binsize
 
-def gen_xy_edges(n):
-    xedges, xmids, xbinsize = makeBins(-.315, .315, n[0])
-    yedges, ymids, ybinsize = makeBins(-.315, .315, n[1])
-    #edges = np.array(np.meshgrid(xedges, yedges))
-    edges = np.array([xedges, yedges])
-    binsize = (xbinsize, ybinsize)
+def gen_xy_edges(n, which='xy'):
+    if which == 'xy':
+        xedges, xmids, xbinsize = makeBins(-.315, .315, n[0])
+        yedges, ymids, ybinsize = makeBins(-.315, .315, n[1])
+        edges = (xedges, yedges)
+        binsize = (xbinsize, ybinsize)
+    elif which == 'x':
+        xedges, xmids, xbinsize = makeBins(-.315, .315, n)
+        edges = xedges
+        binsize = xbinsize
+    elif which == 'y':
+        yedges, ymids, ybinsize = makeBins(-.315, .315, n)
+        edges = yedges
+        binsize = ybinsize
     return edges, binsize
 
 def gen_direction_edges(n):
@@ -125,8 +132,9 @@ def radius_kde(vals, n, h=0.2, s=-.15, t=.45):
         dx=binsize, axis=0)), axis=-1)[1]
     return bx
 
-def xy_kde(vals, n, h=0.1, s=-.35, t=.35):
+def xy_kde(x_vals, y_vals, n, h=0.2, s=-.35, t=.35):
 
+    vals = np.concatenate([x_vals[..., None], y_vals[..., None]], axis=-1)
     lvals = logit(vals, s, t)
     f = mv_gaussian_kde(lvals, h=h)
     (x0, x1), (b0, b1) = gen_xy_edges(n)

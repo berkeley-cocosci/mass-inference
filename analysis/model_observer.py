@@ -10,8 +10,8 @@ import pdb
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
-from kde import gen_stability_edges, gen_direction_edges
-from kde import stability_nfell_kde, direction_kde
+from kde import gen_stability_edges, gen_direction_edges, gen_xy_edges
+from kde import stability_nfell_kde, direction_kde, xy_kde
 
 def IME(samps, n_outcomes, predicates):
     """Compute the posterior probability of the outcome given
@@ -39,6 +39,19 @@ def IME(samps, n_outcomes, predicates):
     ssl = tuple([Ellipsis] + [None]*npred)
     p_outcomes = np.zeros(samps.shape[:-1] + n_outcomes)
 
+    if 'x' in predicates and 'y' in predicates:
+        x = predicates.index('x')
+        y = predicates.index('y')
+        n = (n_outcomes[x], n_outcomes[y])
+        sx = np.ma.masked_invalid(samps['x']).filled(0)
+        sy = np.ma.masked_invalid(samps['y']).filled(0)
+        rsl = list(ssl)
+        rsl[x+1] = slice(None)
+        rsl[y+1] = slice(None)
+
+        p = xy_kde(sx, sy, n)[rsl]
+        p_outcomes += p
+        
     for i in xrange(len(predicates)):
         pred = predicates[i]
         n = n_outcomes[i]
@@ -48,10 +61,10 @@ def IME(samps, n_outcomes, predicates):
 
         if pred == 'stability_nfell':
             p = stability_nfell_kde(s, n)[rsl]
-            r = gen_stability_edges(n)[0]
         elif pred == 'direction':
             p = direction_kde(s, n)[rsl]
-            t = gen_direction_edges(n)[0]
+        elif pred == 'x' or pred == 'y':
+            continue
         else:
             raise ValueError, pred
 
@@ -100,16 +113,28 @@ def evaluateFeedback(feedback, p_outcomes, predicates):
             edges, binsize = gen_stability_edges(n)
             lo = fb >= edges[:-1][tuple(rsl)]
             hi = fb < edges[1:][tuple(rsl)]
-            pidx = lo & hi
+            pidx = (lo & hi).filled(False)
         
         elif pred == 'direction':
             edges, binsize, offset = gen_direction_edges(n)
             nfb = circ.normalize(fb) + offset
             lo = nfb >= edges[:-1][tuple(rsl)]
             hi = nfb < edges[1:][tuple(rsl)]
+            pidx = (lo & hi).filled(False)
+
+        elif pred == 'x':
+            edges, binsize = gen_xy_edges(n, which='x')
+            lo = fb.filled(0) >= edges[:-1][tuple(rsl)]
+            hi = fb.filled(0) < edges[1:][tuple(rsl)]
             pidx = lo & hi
 
-        idx &= pidx.filled(False)
+        elif pred == 'y':
+            edges, binsize = gen_xy_edges(n, which='y')
+            lo = fb.filled(0) >= edges[:-1][tuple(rsl)]
+            hi = fb.filled(0) < edges[1:][tuple(rsl)]
+            pidx = lo & hi
+
+        idx &= pidx
 
     each = np.expand_dims(idx, axis=-npred-1) * np.exp(p_outcomes)
     shape = p_outcomes.shape[:-npred] + (-1,)
@@ -210,7 +235,7 @@ def Loss(n_outcomes, n_responses, predicates, N=1, Cf=10, Cr=6):
             ssr = 1.0 / (1 + np.exp(-Cr * sr))
             l = np.sqrt(np.abs(ssf - ssr))
 
-        elif pred == 'direction':
+        else:
             l = np.ones((n, n_responses))
 
         sl = [None]*len(predicates) + [slice(None)]
@@ -272,7 +297,7 @@ def response(p_kappas, p_outcomes, loss, predicates):
 ######################################################################
 
 def ModelObserver(ime_samples, feedback, n_outcomes,
-                  predicates, loss=None):
+                  predicates, p_outcomes=None, loss=None):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -303,7 +328,8 @@ def ModelObserver(ime_samples, feedback, n_outcomes,
     """
     n_kappas = ime_samples.shape[1]
     theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
-    p_outcomes = IME(ime_samples, n_outcomes, predicates)
+    if p_outcomes is None:
+        p_outcomes = IME(ime_samples, n_outcomes, predicates)
     lh, joint, thetas = learningCurve(
         feedback, theta0, p_outcomes, predicates)
     if loss is not None:
