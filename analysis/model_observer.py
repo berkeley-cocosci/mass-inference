@@ -10,10 +10,10 @@ import pdb
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
-from kde import gen_stability_edges, gen_direction_edges, gen_xy_edges
-from kde import stability_nfell_kde, direction_kde, xy_kde
+# from kde import gen_stability_edges, gen_direction_edges, gen_xy_edges
+# from kde import stability_nfell_kde, direction_kde, xy_kde
 
-def IPE(samps, n_outcomes, predicates):
+def IPE(samps, h, u):
     """Compute the posterior probability of the outcome given
     kappa using samples from the internal mechanics engine.
 
@@ -21,61 +21,49 @@ def IPE(samps, n_outcomes, predicates):
 
     Parameters
     ----------
-    samps : array-like (..., n_trials, n_kappas, n_samples)
+    samps : array-like (..., n_kappa, n_samples, n_predicates)
         samples from the IPE
-    n_outcomes : int
-        number of possible outcomes
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+    h : number, h != 0
+        kernel density estimator smoothing parameter
+    u : number, 0 <= u <= 1
+        mixture parameter specifying the relationship between the
+        kernel density estimator and a uniform distribution (a low
+        value gives higher weight to the KDE)
 
     Returns
     -------
-    np.ndarray : (..., trials, kappas, outcomes)
+    function
+        takes values of the form (..., 1, n_conditions, n_predicates) and
+        evaluates P(F | S, k)
 
     """
 
-    npred = len(predicates)
-    ssl = tuple([Ellipsis] + [None]*npred)
-    p_outcomes = np.zeros(samps.shape[:-1] + n_outcomes)
+    # # using center of mass
+    # k = rvs.MVGaussian(np.zeros(samps.shape[-1]), np.eye(samps.shape[-1]))
+    # n = np.sum(np.any(~np.isnan(samps), axis=-1), axis=-1)[..., None]
 
-    if 'x' in predicates and 'y' in predicates:
-        x = predicates.index('x')
-        y = predicates.index('y')
-        n = (n_outcomes[x], n_outcomes[y])
-        sx = np.ma.masked_invalid(samps['x']).filled(0)
-        sy = np.ma.masked_invalid(samps['y']).filled(0)
-        rsl = list(ssl)
-        rsl[x+1] = slice(None)
-        rsl[y+1] = slice(None)
+    # def f(x):
+    #     diff = x[..., None, :] - samps[..., None, :, :]
+    #     pdf = ((1-u)*np.ma.masked_invalid(k.PDF(diff / h))) + u
+    #     summed = pdf.filled(0).sum(axis=-1)
+    #     normed = np.swapaxes(summed / (n*h), -2, -1)
+    #     return normed
 
-        p = xy_kde(sx, sy, n)[rsl]
-        p_outcomes += p
+    # using bernoilli fall/not fall
+    n = np.sum(~np.isnan(samps), axis=-2)[..., None, :]
+    pfell = (np.sum(samps, axis=-2) + 1.)[..., None, :] / (n+2.)
+
+    def f(x):
+        # likelihood of 1 = pfell
+        lh1 = x[..., None, :] * pfell[..., None, :, :]
+        # likelihood of 0 = 1-pfell
+        lh0 = (1-x)[..., None, :] * (1-pfell)[..., None, :, :]
+        pdf = ((1-u)*np.swapaxes((lh1 + lh0)[..., 0, 0], -2, -1)) + u
+        return pdf
         
-    for i in xrange(len(predicates)):
-        pred = predicates[i]
-        n = n_outcomes[i]
-        s = samps[pred]
-        rsl = list(ssl)
-        rsl[i+1] = slice(None)
+    return f
 
-        if pred == 'stability_nfell':
-            p = stability_nfell_kde(s, n)[rsl]
-        elif pred == 'direction':
-            p = direction_kde(s, n)[rsl]
-        elif pred == 'x' or pred == 'y':
-            continue
-        else:
-            raise ValueError, pred
-
-        p_outcomes += p
-
-    p_outcomes = normalize(p_outcomes.reshape(
-        samps.shape[:-1] + (-1,)), axis=-1)[1].reshape(
-        p_outcomes.shape)
-
-    return p_outcomes
-
-def evaluateFeedback(feedback, p_outcomes, predicates):
+def evaluateFeedback(feedback, P_outcomes):
     """Evaluate the likelihood of the observed outcomes given the
     probability of each possible outcome.
 
@@ -83,65 +71,24 @@ def evaluateFeedback(feedback, p_outcomes, predicates):
 
     Parameters
     ----------
-    feedback : array-like (..., n_trials)
-        True outcomes of each trial
-    p_outcomes : array-like (..., n_trials, n_kappas, n_outcomes)
-        Log probability of each observed outcome given kappa
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+    feedback : array-like (..., 1, n_conditions, n_predicates)
+        True outcomes of each trial (n_conditions is probably n_kappas)
+    P_outcomes : function
+        should take values of the form (..., n_kappas, n_samples, n_predicates)
+        and evaluate the log probability of the outcome given the data
+        and kappa P(F | S, k)
 
     Returns
     -------
-    np.ndarray : (..., n_trials, n_kappas)
+    np.ndarray : (..., n_values, n_kappas)
 
     """
 
-    npred = len(predicates)
-    n_outcomes = p_outcomes.shape[-npred:]
-    ssl = tuple([Ellipsis] + [None]*npred)
-    idx = np.ones(feedback.shape + n_outcomes, dtype='bool')
-
-    for i in xrange(len(predicates)):
-        pred = predicates[i]
-        n = n_outcomes[i]
-        rsl = [None]*npred
-        rsl[i] = slice(None)
-        fb = np.ma.masked_invalid(feedback[pred][ssl])
-
-        if pred == 'stability_nfell':
-            edges, binsize = gen_stability_edges(n)
-            lo = fb >= edges[:-1][tuple(rsl)]
-            hi = fb < edges[1:][tuple(rsl)]
-            pidx = (lo & hi).filled(False)
-        
-        elif pred == 'direction':
-            edges, binsize, offset = gen_direction_edges(n)
-            nfb = circ.normalize(fb) + offset
-            lo = nfb >= edges[:-1][tuple(rsl)]
-            hi = nfb < edges[1:][tuple(rsl)]
-            pidx = (lo & hi).filled(False)
-
-        elif pred == 'x':
-            edges, binsize = gen_xy_edges(n, which='x')
-            lo = fb.filled(0) >= edges[:-1][tuple(rsl)]
-            hi = fb.filled(0) < edges[1:][tuple(rsl)]
-            pidx = lo & hi
-
-        elif pred == 'y':
-            edges, binsize = gen_xy_edges(n, which='y')
-            lo = fb.filled(0) >= edges[:-1][tuple(rsl)]
-            hi = fb.filled(0) < edges[1:][tuple(rsl)]
-            pidx = lo & hi
-
-        idx &= pidx
-
-    each = np.expand_dims(idx, axis=-npred-1) * np.exp(p_outcomes)
-    shape = p_outcomes.shape[:-npred] + (-1,)
-    lh = np.log(np.sum(each.reshape(shape), axis=-1))
-
+    pf = P_outcomes(feedback)
+    lh = np.log(pf)
     return lh
 
-def learningCurve(feedback, theta0, p_outcomes, predicates):
+def learningCurve(feedback, ipe_samps, h, u, decay):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -153,12 +100,16 @@ def learningCurve(feedback, theta0, p_outcomes, predicates):
     ----------
     feedback : array-like (..., n_trials)
         True outcomes of each trial
-    theta0 : array-like (..., 1, n_kappas)
-        Log prior probability of each kappa
-    p_outcomes : array-like(..., n_trials, n_kappas, n_outcomes)
-        Log probability of each possible outcome given kappa
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+    ipe_samps : array-like (..., n_samples, n_predicates)
+        samples from the IPE
+    h : number, h != 0
+        kernel density estimator smoothing parameter
+    u : number, 0 <= u <= 1
+        mixture parameter specifying the relationship between the
+        kernel density estimator and a uniform distribution (a low
+        value gives higher weight to the KDE)
+    decay : number, 0 <= decay <= 1
+        how much to decay the weights on each time step
 
     Returns
     -------
@@ -168,38 +119,57 @@ def learningCurve(feedback, theta0, p_outcomes, predicates):
        thetas : np.ndarray (..., n_trials, n_kappas)
 
     """
-    # the likelihood of the true outcome for each trial
-    lh = np.concatenate([
-        theta0, evaluateFeedback(feedback, p_outcomes, predicates)],
-                        axis=-2)
-    # unnormalized joint probability of outcomes and mass ratios 
-    joint = lh.cumsum(axis=-2)
+
+    n_trial = feedback.shape[0]
+    n_kappas = ipe_samps.shape[-3]
+    lh = None
+
+    for t in xrange(0, n_trial):
+
+        # estimate the density from ipe samples and evaluate the
+        # likelihood of the feedback
+        f = IPE(ipe_samps[t], h=h, u=u)
+        ef = evaluateFeedback(feedback[t], f)
+
+        # allocate arrays
+        if lh is None:
+            lh = np.empty(ef.shape[:-1] + (n_trial+1, n_kappas))
+            lh[..., 0, :] = np.log(1. / n_kappas)
+            joint = np.empty(lh.shape)
+            joint[..., 0, :] = lh[..., 0, :].copy()
+
+        # the likelihood of the true outcome for each trial
+        lh[..., t+1, :] = ef
+        # unnormalized joint probability of outcomes and mass ratios
+        joint[..., t+1, :] = decay * joint[..., t, :] + lh[..., t+1, :]
+
     # posterior probablity of mass ratios given the outcome 
     thetas = normalize(joint, axis=-1)[1]
+
     return lh, joint, thetas
 
 ######################################################################
 
-def predict(p_outcomes_given_kappa, p_kappas, predicates):
-    """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
+# def predict(p_outcomes_given_kappa, p_kappas, predicates):
+#     """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
 
-    Parameters
-    ----------
-    p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
-        log P(F_t | S_t, kappa), obtained from IPE
-    p_kappas : array-like (..., n_kappas)
-        log theta_t = log P_t(kappa)
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+#     Parameters
+#     ----------
+#     p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
+#         log P(F_t | S_t, kappa), obtained from IPE
+#     p_kappas : array-like (..., n_kappas)
+#         log theta_t = log P_t(kappa)
+#     predicates : string ('stability' or 'direction')
+#         the predicates under which to compute the value
 
-    """
-    npred = len(predicates)
-    sl = [Ellipsis] + [None]*npred
-    joint = p_outcomes_given_kappa + p_kappas[sl]
-    p_outcomes = normalize(joint, axis=-npred-1)[0]
-    return p_outcomes
+#     """
+#     npred = len(predicates)
+#     sl = [Ellipsis] + [None]*npred
+#     joint = p_outcomes_given_kappa + p_kappas[sl]
+#     p_outcomes = normalize(joint, axis=-npred-1)[0]
+#     return p_outcomes
 
-def Loss(n_outcomes, n_responses, predicates, N=1, Cf=10, Cr=6):
+def Loss(outcomes, n_responses, N=1, Cf=10, Cr=6):
     """Loss function for outcomes and responses.
 
     Parameters
@@ -218,6 +188,23 @@ def Loss(n_outcomes, n_responses, predicates, N=1, Cf=10, Cr=6):
         Logistic coefficient for responses
 
     """
+
+
+    # transform = lambda x: 1 - np.exp(-x)
+    # invtransform = lambda y: -np.log(1 - y)
+    
+    # d0 = np.sqrt(np.sum(outcomes**2, axis=-1)).ravel()
+    # d0 = np.sort(transform(d0[~np.isnan(d0)]))
+    # arrs = np.array_split(d0, n_responses)
+    # edges = invtransform(np.array(
+    #     [transform(0)] +
+    #     [(arrs[i][-1] + arrs[i+1][0]) / 2.
+    #      for i in xrange(n_responses-1)] +
+    #     [transform(3)]))
+
+    # centers = (edges[1:] + edges[:-1]) / 2.
+
+    # loss = (centers[:, None] - centers[None, :])**2
 
     loss = np.zeros(n_outcomes + (n_responses,))
 
@@ -243,76 +230,77 @@ def Loss(n_outcomes, n_responses, predicates, N=1, Cf=10, Cr=6):
             
     return loss
 
-def Risk(p_kappas, p_outcomes_given_kappa, loss, predicates):
-    """Compute expected risk for each response given the
-    likelihood of each outcome, the probability of each mass
-    ratio, and the loss associated with each outcome/response
-    combination.
+# def Risk(p_kappas, p_outcomes_given_kappa, loss, predicates):
+#     """Compute expected risk for each response given the
+#     likelihood of each outcome, the probability of each mass
+#     ratio, and the loss associated with each outcome/response
+#     combination.
 
-    Parameters
-    ----------
-    p_kappas : array-like (..., n_kappas)
-        Probablity of each mass ratio
-    p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
-        Probability of each outcome given mass ratio
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+#     Parameters
+#     ----------
+#     p_kappas : array-like (..., n_kappas)
+#         Probablity of each mass ratio
+#     p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
+#         Probability of each outcome given mass ratio
+#     loss : array-like (..., n_outcomes, n_responses)
+#         The loss associated with each outcome/response combo
+#     predicates : string ('stability' or 'direction')
+#         the predicates under which to compute the value
 
-    """
+#     """
 
-    # compute marginal probability of outcomes
-    p_outcomes = np.exp(predict(
-        p_outcomes_given_kappa, p_kappas, predicates))
-    # compute expected risk across outcomes
-    n_outcomes = p_outcomes.shape[-len(predicates):]
-    n_response = loss.shape[-1]
-    shape = (p_outcomes.shape[:-len(predicates)] +
-             (np.prod(n_outcomes), n_response))
-    r = loss * p_outcomes[..., None]
-    risk = np.sum(r.reshape(shape), axis=-2)
-    return risk
+#     # compute marginal probability of outcomes
+#     p_outcomes = np.exp(predict(
+#         p_outcomes_given_kappa, p_kappas, predicates))
+#     # compute expected risk across outcomes
+#     n_outcomes = p_outcomes.shape[-len(predicates):]
+#     n_response = loss.shape[-1]
+#     shape = (p_outcomes.shape[:-len(predicates)] +
+#              (np.prod(n_outcomes), n_response))
+#     r = loss * p_outcomes[..., None]
+#     risk = np.sum(r.reshape(shape), axis=-2)
+#     return risk
 
-def response(p_kappas, p_outcomes, loss, predicates):
-    """Compute optimal responses based on the belief about mass ratio.
+# def response(p_kappas, p_outcomes, loss, predicates):
+#     """Compute optimal responses based on the belief about mass ratio.
 
-    Parameters
-    ----------
-    p_kappas : array-like (..., n_kappas)
-        Probablity of each mass ratio
-    p_outcomes : array-like (..., n_kappas, n_outcomes)
-        Probability of each outcome given mass ratio
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
+#     Parameters
+#     ----------
+#     p_kappas : array-like (..., n_kappas)
+#         Probablity of each mass ratio
+#     p_outcomes : array-like (..., n_kappas, n_outcomes)
+#         Probability of each outcome given mass ratio
+#     loss : array-like (..., n_outcomes, n_responses)
+#         The loss associated with each outcome/response combo
+#     predicates : string ('stability' or 'direction')
+#         the predicates under which to compute the value
 
-    """
-    risk = Risk(p_kappas, p_outcomes, loss, predicates)
-    responses = risk.argmin(axis=-1)
-    return responses
+#     """
+#     risk = Risk(p_kappas, p_outcomes, loss, predicates)
+#     responses = risk.argmin(axis=-1)
+#     return responses
 
 ######################################################################
 
-def ModelObserver(ipe_samples, feedback, n_outcomes,
-                  predicates, p_outcomes=None, loss=None):
+def ModelObserver(ipe_samples, feedback, h=0.5, u=0.1, decay=0.99):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
 
     Parameters
     ----------
-    ipe_samples : array-like (..., n_trials, n_kappas, n_samples)
+    ipe_samples : array-like (..., n_trials, n_kappas, n_samples, n_predicates)
         Raw samples from the IPE
-    feedback : array-like (..., n_trials)
-        True outcomes of each trial
-    n_outcomes : int
-        Number of possible outcomes
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
+    feedback : array-like (..., n_trials, 1, n_conditions, n_predicates)
+        True outcomes of each trial (n_conditions is probably n_kappas)
+    h : number, h != 0 (default=0.5)
+        kernel density estimator smoothing parameter
+    u : number, 0 <= u <= 1 (default=0.1)
+        mixture parameter specifying the relationship between the
+        kernel density estimator and a uniform distribution (a low
+        value gives higher weight to the KDE)
+    decay : number, 0 <= decay <= 1 (default=0.99)
+        how much to decay the weights on each time step
 
     Returns
     -------
@@ -326,14 +314,10 @@ def ModelObserver(ipe_samples, feedback, n_outcomes,
 
     """
     n_kappas = ipe_samples.shape[1]
-    theta0 = np.log(np.ones(n_kappas, dtype='f8') / n_kappas)[None, :]
-    if p_outcomes is None:
-        p_outcomes = IPE(ipe_samples, n_outcomes, predicates)
-    lh, joint, thetas = learningCurve(
-        feedback, theta0, p_outcomes, predicates)
-    if loss is not None:
-        resp = response(thetas[:-1], p_outcomes, loss, predicates)
-        out = lh, joint, thetas, resp
-    else:
-        out = lh, joint, thetas
+    lh, joint, thetas = learningCurve(feedback, ipe_samples, h, u, decay)
+    # if loss is not None:
+    #     resp = response(thetas[:-1], p_outcomes, loss, predicates)
+    #     out = lh, joint, thetas, resp
+    # else:
+    out = lh, joint, thetas
     return out

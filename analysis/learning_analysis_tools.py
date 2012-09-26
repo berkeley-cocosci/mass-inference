@@ -174,6 +174,7 @@ def summarize(samps, mass, assigns):
     # calculate individual block displacements
     pos0 = samps[..., 1, :3].transpose((1, 0, 2, 3, 4))
     posT = samps[..., 2, :3].transpose((1, 0, 2, 3, 4))
+    posT[np.any(posT[..., 2] < mthresh, axis=-1)] = np.nan
     posdiff = posT - pos0
 
     m = mass[0,0].transpose((1, 0, 2, 3, 4))
@@ -189,8 +190,10 @@ def summarize(samps, mass, assigns):
     fellA = np.abs(((a == 0) * posdiff)[..., 2]) > mthresh
     fellB = np.abs(((a == 1) * posdiff)[..., 2]) > mthresh
     assert (~(fellA & fellB)).all()
-    nfellA = np.sum(fellA, axis=-1)
-    nfellB = np.sum(fellB, axis=-1)
+    nfellA = np.sum(fellA, axis=-1).astype('f8')
+    nfellB = np.sum(fellB, axis=-1).astype('f8')
+    nfellA[np.isnan(comdiff).any(axis=-1)] = np.nan
+    nfellB[np.isnan(comdiff).any(axis=-1)] = np.nan
 
     return posdiff, comdiff, nfellA, nfellB
 
@@ -198,10 +201,10 @@ def load(predicate):
 
     if predicate == 'stability':
         exp_ver = 7
-        sim_ver = 6
+        sim_ver = 14 #6
     elif predicate == 'direction':
         exp_ver = 8
-        sim_ver = 7
+        sim_ver = 15 #7
     else:
         raise ValueError, predicate
 
@@ -214,7 +217,7 @@ def load(predicate):
     # Model
     mname = "ipe_data.npz"
     if not os.path.exists(mname):
-        rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver-2)
+        rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)#-2)
         sigmas = rawsmeta["sigmas"]
         phis = rawsmeta["phis"]
         kappas = rawsmeta["kappas"]
@@ -225,7 +228,7 @@ def load(predicate):
         truth = rawmodel[sigma0, phi0][:, :, [0]]
 
         # IPE samples
-        sigma1 = list(sigmas).index(0.04)
+        sigma1 = list(sigmas).index(0.05)#0.04)
         ipe = rawmodel[sigma1, phi0]
 
         # Summarize data
@@ -238,8 +241,8 @@ def load(predicate):
 
         # Save it
         dtype = np.dtype([
-            ('nfellA', 'i8'),
-            ('nfellB', 'i8'),
+            ('nfellA', 'f8'),
+            ('nfellB', 'f8'),
             ('comdiff', [('x', 'f8'), ('y', 'f8'), ('z', 'f8')])])
 
         data_true = np.empty(nfellA_true.shape, dtype=dtype)
@@ -277,10 +280,8 @@ def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, ratios=None
     plt.ylabel("Mass Ratio")
     if ratios is not None:
         n_kappas = len(ratios)
-        plt.yticks(np.arange(n_kappas), ratios)
+        plt.yticks(np.arange(0, n_kappas, 2), ratios[::2], fontsize=8)
     plt.title(title)
-    plt.draw()
-    plt.draw()
 
 def plot_polar():
 
@@ -298,3 +299,26 @@ def plot_polar():
         ax.set_rmax(r[-1] + 1)
         ax.set_rmin(r[0] - 1)
         pdb.set_trace()
+
+# def faster_inverse(M):
+#     # sanity check the shape
+#     oldshape = M.shape
+#     assert oldshape[-2] == oldshape[-1]
+#     # find out dimensions and reshape array
+#     nm = np.prod(oldshape[:-2])
+#     n = oldshape[-1]
+#     A = M.reshape((nm, n, n))
+#     # determin pivots
+#     pivots = zeros(n, np.intc)
+#     # allocate for inverse
+#     AI = np.zeros(A.shape) + np.identity(n)
+#     # find inverse of each matrix
+#     for i in xrange(nm):
+#         results = lapack_lite.dgesv(
+#             n, n, A[i], n, np.copy(pivots), AI[i], n, 0)
+#         if results['info'] > 0:
+#             print 'Warning: %d, Singular matrix' % i
+#             AI[i] = np.nan
+#     # reshape array to original shape
+#     MI = AI.reshape(oldshape)
+#     return MI
