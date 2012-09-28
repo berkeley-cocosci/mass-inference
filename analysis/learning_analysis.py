@@ -65,23 +65,9 @@ ipe = ipe[0]
 n_trial      = stimuli.shape[1]
 n_kappas     = len(kappas)
 
-## P(F | S, k)
-ipe_samps = np.concatenate([
-    #ipe['nfellA'][..., None],
-    #ipe['nfellB'][..., None],
-    # ipe['comdiff']['x'][..., None],
-    # ipe['comdiff']['y'][..., None],
-    # ipe['comdiff']['z'][..., None],
-    ((ipe['nfellA'] + ipe['nfellB']) > 4).astype('int')[..., None],
-    ], axis=-1)
-feedback = np.concatenate([
-    #truth['nfellA'],
-    #truth['nfellB'],
-    # truth['comdiff']['x'],
-    # truth['comdiff']['y'],
-    # truth['comdiff']['z'],
-    ((truth['nfellA'] + truth['nfellB']) > 4).astype('int'),
-    ], axis=-1)
+nthresh0 = 0
+nthresh = 0
+
 
 ######################################################################
 # Model observers for each true mass ratio
@@ -89,49 +75,111 @@ feedback = np.concatenate([
 cmap = make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 vals = {}
 
-def run_and_plot(decay, h, u, fignum):
+def run_and_plot(decay, h, u, fignum, nthresh0, nthresh):
     # memoize
     params = (decay, h, u)
-    if params not in vals:
+    if (nthresh0, nthresh) not in vals:
+        vals[(nthresh0, nthresh)] = {}
+    if params not in vals[(nthresh0, nthresh)]:
         out = mo.ModelObserver(
             ipe_samps,
             feedback[:, None],
             h=h,
             u=u,
             decay=decay)
-        vals[params] = out
+        vals[(nthresh0, nthresh)][params] = out
 
-    model_lh, model_joint, model_theta = vals[params]
+    model_lh, model_joint, model_theta = vals[(nthresh0, nthresh)][params]
 
     # plot it
-    plt.figure(fignum)
-    plt.clf()
-    plt.suptitle("Posterior P(kappa|F)\ndecay=%.2f, smooth=%.2f, mix=%.2f" % (decay, h, u))
-    plt.subplots_adjust(wspace=0.3, hspace=0.2, left=0.08, right=0.95, top=0.92, bottom=0.05)
-    for kidx, ratio in enumerate(ratios):
-        subjname = "Model Subj. r=%.2f" % ratios[kidx]
-        lat.plot_theta(
-            6, 5, kidx+1,
-            np.exp(model_theta[kidx]),
-            subjname,
-            exp=1.234,
-            ratios=ratios,
-            cmap=cmap)
-        plt.ylabel('')
-        plt.plot(np.arange(n_trial), np.ones(n_trial)*kidx, 'y--', linewidth=3)
-        plt.draw()
+    if fignum is not None:
+        plt.figure(fignum)
+        plt.clf()
+        plt.suptitle("Posterior P(kappa|F)\ndecay=%.2f, smooth=%.2f, mix=%.2f" % (decay, h, u))
+        plt.subplots_adjust(wspace=0.3, hspace=0.2, left=0.08, right=0.95, top=0.92, bottom=0.05)
+        for kidx, ratio in enumerate(ratios):
+            subjname = "Model Subj. r=%.2f" % ratios[kidx]
+            lat.plot_theta(
+                6, 5, kidx+1,
+                np.exp(model_theta[kidx]),
+                subjname,
+                exp=1.234,
+                ratios=ratios,
+                cmap=cmap)
+            plt.ylabel('')
+            plt.plot(np.arange(n_trial), np.ones(n_trial)*kidx, 'y--', linewidth=3)
+            plt.draw()
 
-    plt.colorbar()
+        plt.colorbar()
 
     return model_lh, model_joint, model_theta
+
+plt.clf()
+i=0
+n=8
+for nthresh0 in xrange(0, n):
+    for nthresh in xrange(0, n):
+
+        ## P(F | S, k)
+        ipe_samps = np.concatenate([
+            #ipe['nfellA'][..., None],
+            #ipe['nfellB'][..., None],
+            # ipe['comdiff']['x'][..., None],
+            # ipe['comdiff']['y'][..., None],
+            # ipe['comdiff']['z'][..., None],
+            ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype('int')[..., None],
+            ], axis=-1)
+        feedback = np.concatenate([
+            #truth['nfellA'],
+            #truth['nfellB'],
+            # truth['comdiff']['x'],
+            # truth['comdiff']['y'],
+            # truth['comdiff']['z'],
+            ((truth['nfellA'] + truth['nfellB']) > nthresh0).astype('int'),
+            ], axis=-1)
+
+        ipe_baserate = np.swapaxes(ipe_samps, 0, 1).reshape((n_kappas, -1)).mean(axis=1)
+        fb_baserate = np.swapaxes(feedback, 0, 1).reshape((n_kappas, -1)).mean(axis=1)
+        diff_baserate = np.abs(ipe_baserate - fb_baserate)
+
+        lh, jnt, th = run_and_plot(
+            decay=1.0,   # weight decay rate
+            h=0.5,       # gaussian kernel smoothing parameter
+            u=0.0,       # mixture parameter for uniform component
+            fignum=None,#10
+            nthresh0=nthresh0,
+            nthresh=nthresh
+            )
+
+        plt.figure(1)
+        plt.subplot(n, n, i+1)
+        plt.cla()
+        plt.plot([0, n_kappas-1], [0.5, 0.5], 'k--')
+        plt.plot(ipe_baserate, 'r', label="ipe")
+        plt.plot(fb_baserate, 'b', label="feedback")
+        plt.plot(np.mean(np.exp(th[:, -1]), axis=0),
+                 'm-', label="mean ratio posterior")
+        #plt.xticks(np.arange(n_kappas), ratios)
+        plt.xticks([], [])
+        plt.yticks([], [])
+        plt.xlim(0, n_kappas-1)
+        plt.ylim(0, 1)
+        plt.title("model=%d, fb=%d" % (nthresh, nthresh0))
+        plt.draw()
+
+        i+=1
+
+plt.subplots_adjust(hspace=0.5, top=0.95, bottom=0.05, left=0.05, right=0.95, wspace=0.4)
 
 
 lh, jnt, th = run_and_plot(
     decay=1.0,   # weight decay rate
     h=0.5,       # gaussian kernel smoothing parameter
     u=0.0,       # mixture parameter for uniform component
-    fignum=10
-)
+    fignum=10,
+    nthresh0=0,
+    nthresh=0,
+    )
 
 lh, jnt, th = run_and_plot(
     decay=1.0,   # weight decay rate
