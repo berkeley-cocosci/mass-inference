@@ -27,37 +27,30 @@ def order_by_trial(human, stimuli, order, truth, ipe):
     htrial = human.transpose((1, 0, 2)).reshape((n_subjs, -1))
     horder = order.transpose((1, 0, 2)).reshape((n_subjs, -1))
 
-    trial_human = []
-    trial_order = []
-    trial_stim = []
-    trial_truth = []
-    trial_ipe = []
-
     shape = np.ones((n_stim, n_rep))
     sidx = list((np.arange(n_stim)[:, None] * shape).ravel())
     
+    ho = horder[0]
+    assert (ho == horder).all()
+
+    sort = np.argsort(ho)
+    sorder = ho[sort]
+    sstim = stimuli[..., sidx, :, :][..., sort, :, :]
+    struth = truth[..., sidx, :, :][..., sort, :, :]
+    sipe = ipe[..., sidx, :, :][..., sort, :, :]
+
+    trial_human = None
+    trial_order = sort[None].copy()
+    trial_stim = sstim[None].copy()
+    trial_truth = struth[None].copy()
+    trial_ipe = sipe[None].copy()
+        
     for hidx in xrange(n_subjs):
-        hd = htrial[hidx].copy()
-        ho = horder[hidx].copy()
-        
-        sort = np.argsort(ho)
+        hd = htrial[hidx]
         shuman = hd[sort]
-        sorder = ho[sort]
-        sstim = stimuli[..., sidx, :, :][..., sort, :, :]
-        struth = truth[..., sidx, :, :][..., sort, :, :]
-        sipe = ipe[..., sidx, :, :][..., sort, :, :]
-        
-        trial_human.append(shuman)
-        trial_order.append(sort)
-        trial_stim.append(sstim)
-        trial_truth.append(struth)
-        trial_ipe.append(sipe)
-        
-    trial_human = np.array(trial_human, copy=True)
-    trial_order = np.array(trial_order, copy=True)
-    trial_stim = np.array(trial_stim, copy=True)
-    trial_truth = np.array(trial_truth, copy=True, dtype=truth.dtype)
-    trial_ipe = np.array(trial_ipe, copy=True, dtype=ipe.dtype)
+        if trial_human is None:
+            trial_human = np.empty((n_subjs,) + shuman.shape, dtype=shuman.dtype)
+        trial_human[hidx] = shuman
 
     out = (trial_human, trial_stim, trial_order, trial_truth, trial_ipe)
     return out
@@ -269,7 +262,7 @@ def load(predicate):
 
     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
 
-def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, ratios=None, cmap='hot'):
+def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot'):
     plt.subplot(nrow, ncol, idx)
     plt.cla()
     plt.imshow(
@@ -277,10 +270,8 @@ def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, ratios=None
         aspect='auto', interpolation='nearest',
         vmin=0, vmax=1, cmap=cmap)
     plt.xticks([], [])
+    plt.yticks([], [])
     plt.ylabel("Mass Ratio")
-    if ratios is not None:
-        n_kappas = len(ratios)
-        plt.yticks(np.arange(0, n_kappas, 2), ratios[::2], fontsize=8)
     plt.title(title)
 
 def plot_polar():

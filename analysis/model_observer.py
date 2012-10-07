@@ -13,7 +13,27 @@ weightedSample = rvs.util.weightedSample
 # from kde import gen_stability_edges, gen_direction_edges, gen_xy_edges
 # from kde import stability_nfell_kde, direction_kde, xy_kde
 
-def IPE(samps, h, u):
+def make_rbf_kernel(alpha, ell):
+    def kern(x1, x2):
+        term1 = alpha * np.exp((-0.5 * (x1 - x2)**2) / float(ell))
+        term2 = 1e-6 * np.abs(x1 - x2)
+        k = term1 + term2
+        return k
+    return kern
+
+def make_gp(x, y, alpha, ell, eps):
+    kernel = make_rbf_kernel(alpha=alpha, ell=ell)
+    K = kernel(x[:, None], x[None, :]) + (eps * np.eye(x.size))
+    Kinv = np.linalg.inv(K)
+    def gp(xn):
+        Kn = kernel(xn[:, None], x[None, :])
+        Knn = kernel(xn[:, None], xn[None, :]) + (eps * np.eye(xn.size))
+        y_mean = np.dot(np.dot(Kn, Kinv), y)
+        y_cov = Knn - np.dot(np.dot(Kn, Kinv), Kn.T)
+        return y_mean, y_cov
+    return gp    
+
+def IPE(samps, smooth):
     """Compute the posterior probability of the outcome given
     kappa using samples from the internal mechanics engine.
 
@@ -23,12 +43,8 @@ def IPE(samps, h, u):
     ----------
     samps : array-like (..., n_kappa, n_samples, n_predicates)
         samples from the IPE
-    h : number, h != 0
-        kernel density estimator smoothing parameter
-    u : number, 0 <= u <= 1
-        mixture parameter specifying the relationship between the
-        kernel density estimator and a uniform distribution (a low
-        value gives higher weight to the KDE)
+    smooth : boolean
+        whether to smooth the IPE estimates
 
     Returns
     -------
@@ -49,17 +65,47 @@ def IPE(samps, h, u):
     #     normed = np.swapaxes(summed / (n*h), -2, -1)
     #     return normed
 
-    # using bernoilli fall/not fall
-    n = np.sum(~np.isnan(samps), axis=-2)[..., None, :]
-    pfell = (np.sum(samps, axis=-2) + 1.)[..., None, :] / (n+2.)
+    if not smooth:
+        # using bernoilli fall/not fall
+        n = np.sum(~np.isnan(samps), axis=-2)[..., None, :]
+        alpha = np.sum(samps, axis=-2)[..., None, :] + 0.5
+        beta = np.sum(1-samps, axis=-2)[..., None, :] + 0.5
+        pfell = alpha / (alpha + beta)
 
-    def f(x):
-        # likelihood of 1 = pfell
-        lh1 = x[..., None, :] * pfell[..., None, :, :]
-        # likelihood of 0 = 1-pfell
-        lh0 = (1-x)[..., None, :] * (1-pfell)[..., None, :, :]
-        pdf = ((1-u)*np.swapaxes((lh1 + lh0)[..., 0, 0], -2, -1)) + u
-        return pdf
+        def f(x):
+            # likelihood of 1 = pfell
+            lh1 = x[..., None, :] * pfell[..., None, :, :]
+            # likelihood of 0 = 1-pfell
+            lh0 = (1-x)[..., None, :] * (1-pfell)[..., None, :, :]
+            pdf = np.swapaxes((lh1 + lh0)[..., 0, 0], -2, -1)
+            return pdf
+
+    else:
+        # using bernoulli fall/not fall plus gaussian process
+        # regression
+        alpha = np.sum(samps[..., 0], axis=-1) + 0.5
+        beta = np.sum(1-samps[..., 0], axis=-1) + 0.5
+        pfell_mean = alpha / (alpha + beta)
+        pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+        pfell_std = np.sqrt(pfell_var)
+        pfell_meanstd = np.mean(pfell_std, axis=-1)
+
+        alph = pfell_meanstd * 10
+        ell = 1. - np.std(pfell_mean)
+        eps = pfell_meanstd ** 2
+
+        x = np.arange(0, pfell_mean.size*0.1, 0.1)
+        gp = make_gp(x, pfell_mean, alph, ell, eps)
+        pfell = np.clip(gp(x)[0][:, None, None], 0, 1)
+        assert ((pfell >= 0) & (pfell <= 1)).all()
+
+        def f(x):
+            # likelihood of 1 = pfell
+            lh1 = x[..., None, :] * pfell[..., None, :, :]
+            # likelihood of 0 = 1-pfell
+            lh0 = (1-x)[..., None, :] * (1-pfell)[..., None, :, :]
+            pdf = np.swapaxes((lh1 + lh0)[..., 0, 0], -2, -1)
+            return pdf
         
     return f
 
@@ -88,7 +134,7 @@ def evaluateFeedback(feedback, P_outcomes):
     lh = np.log(pf)
     return lh
 
-def learningCurve(feedback, ipe_samps, h, u, decay):
+def learningCurve(feedback, ipe_samps, smooth, decay):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -102,12 +148,8 @@ def learningCurve(feedback, ipe_samps, h, u, decay):
         True outcomes of each trial
     ipe_samps : array-like (..., n_samples, n_predicates)
         samples from the IPE
-    h : number, h != 0
-        kernel density estimator smoothing parameter
-    u : number, 0 <= u <= 1
-        mixture parameter specifying the relationship between the
-        kernel density estimator and a uniform distribution (a low
-        value gives higher weight to the KDE)
+    smooth : boolean
+        whether to smooth the IPE estimates
     decay : number, 0 <= decay <= 1
         how much to decay the weights on each time step
 
@@ -128,7 +170,7 @@ def learningCurve(feedback, ipe_samps, h, u, decay):
 
         # estimate the density from ipe samples and evaluate the
         # likelihood of the feedback
-        f = IPE(ipe_samps[t], h=h, u=u)
+        f = IPE(ipe_samps[t], smooth=smooth)
         ef = evaluateFeedback(feedback[t], f)
 
         # allocate arrays
@@ -282,7 +324,7 @@ def Loss(outcomes, n_responses, N=1, Cf=10, Cr=6):
 
 ######################################################################
 
-def ModelObserver(ipe_samples, feedback, h=0.5, u=0.1, decay=0.99):
+def ModelObserver(ipe_samples, feedback, smooth=True, decay=0.99):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -293,12 +335,8 @@ def ModelObserver(ipe_samples, feedback, h=0.5, u=0.1, decay=0.99):
         Raw samples from the IPE
     feedback : array-like (..., n_trials, 1, n_conditions, n_predicates)
         True outcomes of each trial (n_conditions is probably n_kappas)
-    h : number, h != 0 (default=0.5)
-        kernel density estimator smoothing parameter
-    u : number, 0 <= u <= 1 (default=0.1)
-        mixture parameter specifying the relationship between the
-        kernel density estimator and a uniform distribution (a low
-        value gives higher weight to the KDE)
+    smooth : boolean
+        whether to smooth the IPE estimates
     decay : number, 0 <= decay <= 1 (default=0.99)
         how much to decay the weights on each time step
 
@@ -314,7 +352,7 @@ def ModelObserver(ipe_samples, feedback, h=0.5, u=0.1, decay=0.99):
 
     """
     n_kappas = ipe_samples.shape[1]
-    lh, joint, thetas = learningCurve(feedback, ipe_samples, h, u, decay)
+    lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth, decay)
     # if loss is not None:
     #     resp = response(thetas[:-1], p_outcomes, loss, predicates)
     #     out = lh, joint, thetas, resp
