@@ -31,7 +31,15 @@ def make_gp(x, y, alpha, ell, eps):
         y_mean = np.dot(np.dot(Kn, Kinv), y)
         y_cov = Knn - np.dot(np.dot(Kn, Kinv), Kn.T)
         return y_mean, y_cov
-    return gp    
+    return gp
+
+def make_kde_smoother(x, y, lam):
+    def kde_smoother(xn):
+        dists = np.abs(xn[:, None] - x[None, :]) / lam
+        pdist = np.exp(-0.5 * dists**2) / np.sqrt(2)
+        est = np.sum(pdist * y, axis=-1) / np.sum(pdist, axis=-1)
+        return est
+    return kde_smoother
 
 def IPE(samps, smooth):
     """Compute the posterior probability of the outcome given
@@ -90,14 +98,18 @@ def IPE(samps, smooth):
         pfell_std = np.sqrt(pfell_var)
         pfell_meanstd = np.mean(pfell_std, axis=-1)
 
-        alph = pfell_meanstd * 10
-        ell = 1. - np.std(pfell_mean)
-        eps = pfell_meanstd ** 2
-
         x = np.arange(0, pfell_mean.size*0.1, 0.1)
-        gp = make_gp(x, pfell_mean, alph, ell, eps)
-        pfell = np.clip(gp(x)[0][:, None, None], 0, 1)
-        assert ((pfell >= 0) & (pfell <= 1)).all()
+
+        # alph = pfell_meanstd * 10
+        # ell = 1. - np.std(pfell_mean)
+        # eps = pfell_meanstd ** 2
+        # gp = make_gp(x, pfell_mean, alph, ell, eps)
+        # pfell = np.clip(gp(x)[0][:, None, None], 0, 1)
+        # assert ((pfell >= 0) & (pfell <= 1)).all()
+
+        lam = 0.2
+        kde_smoother = make_kde_smoother(x, pfell_mean, lam)
+        pfell = kde_smoother(x)[:, None, None]
 
         def f(x):
             # likelihood of 1 = pfell

@@ -1,5 +1,6 @@
 import collections
 import matplotlib.cm as cm
+import matplotlib.gridspec as gridspec
 import numpy as np
 import pdb
 import pickle
@@ -44,12 +45,15 @@ def make_cmap(name, c1, c2, c3):
     cmap = matplotlib.colors.LinearSegmentedColormap(name, colors, 1024)
     return cmap
 
-def save(path, fignum=None, close=True, width=None, height=None):
+def save(path, fignum=None, close=True, width=None, height=None, ext=None):
     """Save a figure from pyplot"""
     if fignum is None:
         fig = plt.gcf()
     else:
         fig = plt.figure(fignum)
+
+    if ext is None:
+        ext = ['']
 
     if width:
         fig.set_figwidth(width)
@@ -64,21 +68,30 @@ def save(path, fignum=None, close=True, width=None, height=None):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-    print "Saving figure to '" + os.path.join(directory, filename) + "'...", 
-    plt.savefig(os.path.join(directory, filename))
+    for ex in ext:
+        if ex == '':
+            name = filename
+        else:
+            name = filename + "." + ex
+
+        print "Saving figure to %s...'" % (
+            os.path.join(directory, name)),
+        plt.savefig(os.path.join(directory, name))
+        print "Done"
 
     if close:
         plt.clf()
         plt.cla()
         plt.close()
-        
-    print "Done"
 
 ######################################################################
 ## Load and process data
 
 rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = lat.load('stability')
-ratios = np.round(10 ** kappas, decimals=2)
+#ratios = np.round(10 ** kappas, decimals=2)
+ratios = 10 ** kappas
+ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
+ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
 human, stimuli, sort, truth, ipe = lat.order_by_trial(
     rawhuman, rawhstim, raworder, rawtruth, rawipe)
@@ -122,107 +135,106 @@ def run_and_plot(smooth, decay, fignum, nthresh0, nthresh, nsamps):
     model_lh, model_joint, model_theta = vals[dparams][params]
 
     # plot it
-    r, c = 3, 5
+    r, c = 3, 3
     n = r*c
-    i = 0
-    exp = np.exp(np.log(0.5) / np.log(1./27))
+    exp = np.exp(np.log(0.5) / np.log(1./27))    
+    
     if fignum is not None:
-        plt.figure(fignum)
-        plt.clf()
-        plt.suptitle(
-            "Posterior belief about mass ratio over time, "
-            "$P_t(\kappa|F^{(r)})$, for various feedback conditions "
-            "(%d samples, %s)" % (
-                nsamps, "smoothed" if smooth else "unsmoothed"),
-            fontsize=20)
-        plt.subplots_adjust(
-            wspace=0.1,
-            hspace=0.3,
-            left=0.08,
-            right=0.95,
-            top=0.92,
-            bottom=0.05)
 
-        kidxs = [0] + list(np.linspace(1, n_kappas-2, 13).astype('i8')) + [n_kappas-1]
-        for kidx in kidxs:
+        fig = plt.figure(fignum)
+        plt.clf()
+        gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
+        plt.suptitle(
+            "Posterior belief about mass ratio over time\n"
+            "(%d samples, %s, model thresh=%d blocks, fb thresh=%d blocks)" % (
+                nsamps, "smoothed" if smooth else "unsmoothed", nthresh, nthresh0),
+            fontsize=16)
+        plt.subplots_adjust(
+            wspace=0.2,
+            hspace=0.3,
+            left=0.1,
+            right=0.93,
+            top=0.85,
+            bottom=0.1)
+
+        # kidxs = ([0] +
+        #          list(np.linspace(1, n_kappas-2, 13).astype('i8')) +
+        #          [n_kappas-1])
+        kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
+        for i, kidx in enumerate(kidxs):
+            irow, icol = np.unravel_index(i, (r, c))
+            ax = plt.subplot(gs[irow, icol])
             kappa = kappas[kidx]
-            subjname = "Feedback ratio $r=%.2f$" % ratios[kidx]
-            lat.plot_theta(
-                r, c, i+1,
+            subjname = "True $\kappa=%s$" % float(ratios[kidx])
+            img = lat.plot_theta(
+                #r, c, i+1,
+                None, None, ax,
                 np.exp(model_theta[kidx]),
                 subjname,
                 exp=exp,
-                cmap=cmap)
-            plt.plot(np.arange(n_trial),
-                     np.ones(n_trial)*kidx,
-                     '--', color="#ffff00",
-                     linewidth=3, label="true ratio")
+                cmap=cmap,
+                fontsize=14)
+            # plt.plot(np.arange(n_trial),
+            #          np.ones(n_trial)*kidx,
+            #          '--', color="#ffff00",
+            #          linewidth=3, label="true ratio")
 
-            yticks = np.round(np.linspace(0, n_kappas-1, 5)).astype('i8')
+            yticks = np.round(
+                np.linspace(0, n_kappas-1, 5)).astype('i8')
             if (i%c) == 0:
-                plt.yticks(yticks, ratios[yticks], fontsize=12)
-                plt.ylabel("Mass ratio ($\kappa$)")
+                plt.yticks(yticks, ratios[yticks], fontsize=14)
+                plt.ylabel("Mass ratio ($\kappa$)", fontsize=14)
             else:
                 plt.yticks(yticks, [])
                 plt.ylabel("")
             
             xticks = np.linspace(0, n_trial, 4).astype('i8')
             if (n-i) <= c:
-                plt.xticks(xticks, xticks)
-                plt.xlabel("Trial number ($t$)")
+                plt.xticks(xticks, xticks, fontsize=14)
+                plt.xlabel("Trial number ($t$)", fontsize=14)
             else:
                 plt.xticks(xticks, [])
 
-            i += 1
-
-        plt.legend()
-        cticks = np.linspace(0, 1, 5)
-        logcticks = np.round(np.exp(np.log(cticks) / np.log(exp)), decimals=4)
-        cb = plt.colorbar(ticks=cticks)
+        # plt.legend()
+        # cticks = np.linspace(0, 1, 5)
+        # logcticks = np.round(
+        #     np.exp(np.log(cticks) / np.log(exp)), decimals=4)
+        logcticks = np.array([0, 0.001, 0.05, 0.25, 1])
+        cticks = np.exp(np.log(logcticks) * np.log(exp))
+        cax = plt.subplot(gs[:, -1])
+        cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
         cb.set_ticklabels(logcticks)
+        cax.set_title("$P_t(\kappa)$", fontsize=14)
 
     return model_lh, model_joint, model_theta
     
-def plot_baserates(fignum, nsamps):
+def plot_baserates(fignum, nsamps, smooth):
 
     plt.figure(fignum)
     plt.clf()
     plt.subplots_adjust(
         hspace=0.5,
-        top=0.87,
+        top=0.85,
         bottom=0.1,
         left=0.1,
-        right=0.9,
-        wspace=0.2)
+        right=0.93,
+        wspace=0.1)
     plt.suptitle(
         "Effect of model/feedback baserates on "
-        "marginal posterior over mass ratio (%d samples)" % (nsamps),
+        "posterior over mass ratio\n(%d samples)" % (nsamps),
         fontsize=20)
-    
+
+    rows = np.array([0, 2, 4, 5])
+    cols = np.array([0, 2, 4, 5])
     i=0
-    r, c = 4, 5
+    r, c = rows.size, cols.size
     n = r*c
-    for nthresh0 in np.arange(0, 9, 2):
-        for nthresh in np.arange(0, 9, 2):
 
-            # feedback, ipe_samps = make_data(nthresh0, nthresh, nsamps)
-            # ipe_baserate = np.swapaxes(ipe_samps, 0, 1).reshape(
-            #     (n_kappas, -1)).mean(axis=1)
-            # fb_baserate = np.swapaxes(feedback, 0, 1).reshape(
-            #     (n_kappas, -1)).mean(axis=1)
+    for nthresh0 in rows:
+        for nthresh in cols:
             
-            plt.subplot(r, c, i+1)
-            # plt.plot(ipe_baserate,
-            #          'r--',
-            #          label="model baserate $P(fall|\kappa)$",
-            #          linewidth=3)
-            # plt.plot(fb_baserate,
-            #          'm--',
-            #          label="feedback baserate $P(fall|\kappa)$",
-            #          linewidth=3)
-
             lh, jnt, th = run_and_plot(
-                smooth=False,
+                smooth=True,
                 decay=1.0,
                 fignum=None,
                 nthresh0=nthresh0,
@@ -230,12 +242,21 @@ def plot_baserates(fignum, nsamps):
                 nsamps=nsamps
                 )
 
+            plt.subplot(r, c, i+1)
             exp = np.exp(np.log(0.5) / np.log(1. / n_kappas))
-            plt.imshow(exp**normalize(th[:, -1].T, axis=-1)[1],
+            nth = normalize(th[:, -1].T, axis=0)[1]
+            post = np.mean(np.exp(nth), axis=-1)
+            plt.imshow(exp**nth,
                        cmap=cmap,
                        interpolation='nearest')
+            # plt.plot(post*(th.shape[0]-1),
+            #          np.arange(post.size),
+            #          'b', linewidth=2)
+            plt.xlim(0, post.size-1)
+            plt.ylim(0, post.size-1)
 
-            yticks = np.round(np.linspace(0, n_kappas-1, 5)).astype('i8')
+            yticks = np.round(
+                np.linspace(0, n_kappas-1, 5)).astype('i8')
             if (i%c) == 0:
                 plt.yticks(yticks, ratios[yticks], fontsize=12)
                 plt.ylabel("Mass ratio ($\kappa$)")
@@ -243,69 +264,28 @@ def plot_baserates(fignum, nsamps):
                 plt.yticks(yticks, [])
                 plt.ylabel("")
             
-            xticks = np.round(np.linspace(0, n_kappas-1, 5)).astype('i8')
+            xticks = np.round(
+                np.linspace(0, n_kappas-1, 5)).astype('i8')
             if (n-i) <= c:
                 plt.xticks(xticks, ratios[xticks], fontsize=12)
                 plt.xlabel("Feedback condition ($r$)")
             else:
                 plt.xticks(xticks, [])
                 plt.xlabel("")
+            plt.title("Model thresh=%d\n"
+                      "  Fb    thresh=%d" % (
+                          nthresh, nthresh0),
+                      fontsize=12)
 
-            # plt.plot(np.mean(np.exp(th[:, -1]), axis=0),
-            #          'b-',
-            #          label=r"unsmoothed marginal posterior $P_{t=384}(\kappa)$",
-            #          linewidth=3)
-
-            # lh, jnt, th = run_and_plot(
-            #     smooth=True,
-            #     decay=1.0,
-            #     fignum=None,
-            #     nthresh0=nthresh0,
-            #     nthresh=nthresh,
-            #     nsamps=nsamps
-            #     )
-
-            # plt.plot(np.mean(np.exp(th[:, -1]), axis=0),
-            #          'c-',
-            #          label=r"smoothed marginal posterior $P_{t=384}(\kappa)$",
-            #          linewidth=3)
-
-
-            # plt.xlim(0, n_kappas-1)
-            # plt.ylim(0, 1)
-            plt.title("Model \"fall\">%d blocks\n"
-                      "Feedback \"fall\">%d blocks" % (
-                          nthresh, nthresh0))
-
-            # yticks = np.linspace(0, 1, 3)
-            # if (i%c) == 0:
-            #     plt.yticks(yticks, yticks)
-            #     plt.ylabel("Probability")
-            # else:
-            #     plt.yticks(yticks, [])
-            
-            # xticks = (np.linspace(-1, 1, 3) + 1.3) * 10
-            # xticklabels = np.round(10**np.linspace(-1, 1, 3), decimals=2)
-            # if (n-i) <= c:
-            #     plt.xticks(xticks, xticklabels)
-            #     plt.xlabel("Mass ratio ($\kappa$)")
-            # else:
-            #     plt.xticks(xticks, [])
-
-            #plt.grid(True)
             i+=1
 
-    plt.legend(prop={'size': 12})
-
-def plot_smoothing(fignum, nthresh, nsamps):
+def plot_smoothing(nstim, fignum, nthresh, nsamps):
 
     samps = np.concatenate([
-        ((rawipe['nfellA'] + rawipe['nfellB']) > nthresh).astype('int')[..., None],
-        ], axis=-1)[..., 0].reshape(
-        (rawipe.shape[0]/2, 2) + rawipe.shape[1:])[..., :nsamps]
+        ((rawipe['nfellA'] + rawipe['nfellB']) > nthresh).astype(
+            'int')[..., None]], axis=-1)[..., 0]
     stims = np.array([int(x.split("_")[1])
-                      for x in rawhstim]).reshape(
-        (samps.shape[:2]))[:, 0]
+                      for x in rawhstim])
 
     alpha = np.sum(samps, axis=-1) + 0.5
     beta = np.sum(1-samps, axis=-1) + 0.5
@@ -314,125 +294,116 @@ def plot_smoothing(fignum, nthresh, nsamps):
     pfell_std = np.sqrt(pfell_var)
     pfell_meanstd = np.mean(pfell_std, axis=-1)
 
-    colors = ['r', 'b']
+    colors = cm.hsv(np.round(np.linspace(0, 220, nstim)).astype('i8'))
+    xticks = np.linspace(-1.3, 1.3, 7)
+    xticks10 = 10 ** xticks
+    xticks10[xticks < 0] = np.round(xticks10[xticks < 0], decimals=2)
+    xticks10[xticks >= 0] = np.round(xticks10[xticks >= 0], decimals=1)
+    yticks = np.linspace(0, 1, 3)
 
     plt.figure(fignum)
     plt.clf()
     plt.suptitle(
-        "Estimated likelihood of feedback given mass ratio "
-        "for several pairs of stimuli (%d samples)" % (nsamps),
-        fontsize=20)
-    plt.subplots_adjust(
-        hspace=0.2,
-        wspace=0.2,
-        top=0.9,
-        bottom=0.1,
-        left=0.07,
-        right=0.95)
+        "Likelihood function for feedback given mass ratio\n"
+        "(%d IPE samples, threshold=%d blocks)" % (nsamps, nthresh),
+        fontsize=16)
+    plt.ylim(-0.2, 1)
+    plt.xticks(xticks, xticks10)
+    plt.xlabel("Mass ratio ($\kappa$)", fontsize=14)
+    plt.yticks(yticks, yticks)
+    plt.ylabel("P(fall|$\kappa$, $S$)", fontsize=14)
+    plt.grid(True)
 
+    order = (range(0, stims.size, 2) + range(1, stims.size, 2))[:nstim]
 
-    r, c = 3, 4
-    n = r*c
-    for i in xrange(n):#n_trial):
+    for idx in xrange(nstim):
 
-        plt.subplot(r, c, i+1)
-        plt.cla()
-        
-        for j in xrange(2):
-
-            alpha = pfell_meanstd[i,j] * 10
-            ell = 1. - np.std(pfell_mean[i,j])
-            eps = pfell_meanstd[i,j] ** 2
-
-            x = kappas
-            xn = np.linspace(-1.5, 1.5, 100)
+        i = order[idx]
+        x = kappas
+        xn = np.linspace(-1.5, 1.5, 100)
     
-            gp = mo.make_gp(x, pfell_mean[i,j], alpha, ell, eps)
-            y_mean, y_cov = gp(xn)
+        # alpha = pfell_meanstd[i] * 10
+        # ell = 1. - np.std(pfell_mean[i,j])
+        # eps = pfell_meanstd[i,j] ** 2
+        # gp = mo.make_gp(x, pfell_mean[i,j], alpha, ell, eps)
+        # y_mean, y_cov = gp(xn)
 
-            plt.plot(xn, y_mean,
-                     color=colors[j],
-                     linewidth=3,
-                     label="smoothing, assign %d" % (j+1))
-            plt.errorbar(x, pfell_mean[i,j], pfell_std[i,j], None,
-                         color=colors[j], fmt='o',
-                         markeredgecolor=colors[j],
-                         markersize=5,
-                         label=("proportion \"fall\", "
-                                "assign %d" % (j+1)))
-            # plt.plot(x, pfell_mean[i,j], color=colors[j],
-            #          linestyle='', marker='o',
-            #          markeredgecolor=colors[j],
-            #          markersize=5)
+        lam = pfell_meanstd[i] * 10
+        kde_smoother = mo.make_kde_smoother(x, pfell_mean[i,j], lam)
+        y_mean = kde_smoother(xn)
 
-        plt.ylim(0, 1)
-        plt.title("$S=$Tower %d" % (stims[i]))
+        plt.plot(xn, y_mean,
+                 color=colors[idx],
+                 linewidth=3)        
+        plt.errorbar(x, pfell_mean[i], pfell_std[i], None,
+                     color=colors[idx], fmt='o',
+                     markeredgecolor=colors[idx],
+                     markersize=5,
+                     label="Tower %d" % stims[i])
 
-        yticks = np.linspace(0, 1, 3)
-        if (i%c) == 0:
-            plt.yticks(yticks, yticks)
-            plt.ylabel("$\Pr(fall|\kappa, S)$")
-        else:
-            plt.yticks(yticks, [])
+    plt.legend(loc=8, prop={'size':12}, numpoints=1,
+               scatterpoints=1, ncol=3, title="Stimuli ($S$)")
 
-        xticks = np.linspace(-1, 1, 3)
-        if (n-i) <= c:
-            plt.xticks(xticks, np.round(10**xticks, decimals=2))
-            plt.xlabel("Mass ratio ($\kappa$)")
-        else:
-            plt.xticks(xticks, [])
+ext = ['png', 'pdf']
 
-        plt.grid(True)
+plot_baserates(1, nsamps=48, smooth=True)
+save("images/baserates_048samples",
+     ext=ext, width=10, height=10)
+plot_baserates(3, nsamps=300, smooth=True)
+save("images/baserates_300samples",
+     ext=ext, width=10, height=10)
 
-    plt.legend(loc=0, prop={'size':12})
-
-plot_baserates(1, nsamps=48)
-save("images/baserates_048samples.png", width=18, height=10)
-plot_baserates(3, nsamps=300)
-save("images/baserates_300samples.png", width=18, height=10)
+nthresh0 = 1
+nthresh = 4
 
 lh, jnt, th = run_and_plot(
     smooth=False,
     decay=1.0,
     fignum=5,
-    nthresh0=0,
-    nthresh=4,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
     nsamps=48
     )
-save("images/belief_raw_048samples.png", width=18, height=12)
+save("images/belief_raw_048samples",
+     ext=ext, width=9, height=7)
 lh, jnt, th = run_and_plot(
     smooth=True,
     decay=1.0,
     fignum=6,
-    nthresh0=0,
-    nthresh=4,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
     nsamps=48
     )
-save("images/belief_smoothed_048samples.png", width=18, height=12)
+save("images/belief_smoothed_048samples",
+     ext=ext, width=9, height=7)
 lh, jnt, th = run_and_plot(
     smooth=False,
     decay=1.0,
     fignum=7,
-    nthresh0=0,
-    nthresh=4,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
     nsamps=300
     )
-save("images/belief_raw_300samples.png", width=18, height=12)
+save("images/belief_raw_300samples",
+     ext=ext, width=9, height=7)
 lh, jnt, th = run_and_plot(
     smooth=True,
     decay=1.0,
     fignum=8,
-    nthresh0=0,
-    nthresh=4,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
     nsamps=300
     )
-save("images/belief_smoothed_300samples.png", width=18, height=12)
+save("images/belief_smoothed_300samples",
+     ext=ext, width=9, height=7)
 
 
-plot_smoothing(fignum=9, nthresh=4, nsamps=48)
-save("images/likelihood_smoothing_048samples.png", width=18, height=10)
-plot_smoothing(fignum=9, nthresh=4, nsamps=300)
-save("images/likelihood_smoothing_300samples.png", width=18, height=10)
+plot_smoothing(6, fignum=9, nthresh=nthresh, nsamps=48)
+save("images/likelihood_smoothing_048samples",
+     ext=ext, width=9, height=7)
+plot_smoothing(6, fignum=9, nthresh=nthresh, nsamps=300)
+save("images/likelihood_smoothing_300samples",
+     ext=ext, width=9, height=7)
 
 
 

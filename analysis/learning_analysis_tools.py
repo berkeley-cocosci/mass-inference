@@ -262,17 +262,25 @@ def load(predicate):
 
     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
 
-def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot'):
-    plt.subplot(nrow, ncol, idx)
-    plt.cla()
-    plt.imshow(
+def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot', fontsize=12):
+    try:
+        idx.cla()
+    except AttributeError:
+        ax = plt.subplot(nrow, ncol, idx)
+    else:
+        ax = idx
+    ax.cla()
+    img = ax.imshow(
         exp ** np.log(theta.T),
         aspect='auto', interpolation='nearest',
         vmin=0, vmax=1, cmap=cmap)
-    plt.xticks([], [])
-    plt.yticks([], [])
-    plt.ylabel("Mass Ratio")
-    plt.title(title)
+    ax.set_xticks([])
+    ax.set_xticklabels([])
+    ax.set_yticks([])
+    ax.set_yticklabels([])
+    ax.set_ylabel("Mass Ratio", fontsize=fontsize)
+    ax.set_title(title, fontsize=fontsize)
+    return img
 
 def plot_polar():
 
