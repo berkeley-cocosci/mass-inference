@@ -18,6 +18,68 @@ import cogphysics.tower.analysis_tools as tat
 mthresh = 0.095
 zscore = False
 
+def make_cmap(name, c1, c2, c3):
+
+    colors = {
+        'red'   : (
+            (0.0, c1[0], c1[0]),
+            (0.50, c2[0], c2[0]),
+            (1.0, c3[0], c3[0]),
+            ),
+        'green' : (
+            (0.0, c1[1], c1[1]),
+            (0.50, c2[1], c2[1]),
+            (1.0, c3[1], c3[1]),
+            ),
+        'blue'  : (
+            (0.0, c1[2], c1[2]),
+            (0.50, c2[2], c2[2]),
+            (1.0, c3[2], c3[2])
+            )
+        }
+    
+    cmap = matplotlib.colors.LinearSegmentedColormap(name, colors, 1024)
+    return cmap
+
+def save(path, fignum=None, close=True, width=None, height=None, ext=None):
+    """Save a figure from pyplot"""
+    if fignum is None:
+        fig = plt.gcf()
+    else:
+        fig = plt.figure(fignum)
+
+    if ext is None:
+        ext = ['']
+
+    if width:
+        fig.set_figwidth(width)
+    if height:
+        fig.set_figheight(height)
+
+    directory = os.path.split(path)[0]
+    filename = os.path.split(path)[1]
+    if directory == '':
+        directory = '.'
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    for ex in ext:
+        if ex == '':
+            name = filename
+        else:
+            name = filename + "." + ex
+
+        print "Saving figure to %s...'" % (
+            os.path.join(directory, name)),
+        plt.savefig(os.path.join(directory, name))
+        print "Done"
+
+    if close:
+        plt.clf()
+        plt.cla()
+        plt.close()
+
 def order_by_trial(human, stimuli, order, truth, ipe):
 
     n_subjs = human.shape[1]

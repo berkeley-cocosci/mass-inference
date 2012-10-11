@@ -10,9 +10,6 @@ import pdb
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
-# from kde import gen_stability_edges, gen_direction_edges, gen_xy_edges
-# from kde import stability_nfell_kde, direction_kde, xy_kde
-
 def make_rbf_kernel(alpha, ell):
     def kern(x1, x2):
         term1 = alpha * np.exp((-0.5 * (x1 - x2)**2) / float(ell))
