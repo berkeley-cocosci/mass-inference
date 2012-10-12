@@ -1,6 +1,7 @@
 import collections
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import pdb
 import pickle

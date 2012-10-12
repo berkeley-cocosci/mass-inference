@@ -201,139 +201,109 @@ def learningCurve(feedback, ipe_samps, smooth, decay):
 
 ######################################################################
 
-# def predict(p_outcomes_given_kappa, p_kappas, predicates):
-#     """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
+def predict(p_kappas, outcomes, ipe_samps, smooth):
+    """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
 
-#     Parameters
-#     ----------
-#     p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
-#         log P(F_t | S_t, kappa), obtained from IPE
-#     p_kappas : array-like (..., n_kappas)
-#         log theta_t = log P_t(kappa)
-#     predicates : string ('stability' or 'direction')
-#         the predicates under which to compute the value
+    Parameters
+    ----------
+    p_kappas : array-like (..., n_kappas)
+        log theta_t = log P_t(kappa)
+    outcomes : array-like (n_outcomes,)
+        Possible outcomes of each trial
+    ipe_samps : array-like (..., n_samples, n_predicates)
+        samples from the IPE
+    smooth : boolean
+        whether to smooth the IPE estimates
 
-#     """
-#     npred = len(predicates)
-#     sl = [Ellipsis] + [None]*npred
-#     joint = p_outcomes_given_kappa + p_kappas[sl]
-#     p_outcomes = normalize(joint, axis=-npred-1)[0]
-#     return p_outcomes
+    """
 
-def Loss(outcomes, n_responses, N=1, Cf=10, Cr=6):
+    f = IPE(ipe_samps, smooth=smooth)
+    p_outcomes_given_kappa = np.vstack(
+        [evaluateFeedback(outcomes[i], f)
+         for i in xrange(len(outcomes))])
+    joint = p_outcomes_given_kappa + p_kappas[:, None]
+    p_outcomes = normalize(joint, axis=-1)[0]
+    return p_outcomes
+
+def Loss(outcomes, responses):
     """Loss function for outcomes and responses.
 
     Parameters
     ----------
-    n_outcomes : int
-        Number of possible outcomes
-    n_responses : int
-        Number of possible responses
-    predicates : string ('stability' or 'direction')
-        the predicates under which to compute the value
-    N : number (default=1)
-        Amount to shift outcome/response values by
-    Cf : number (default=10)
-        Logistic coefficient for outcomes
-    Cr : number (default=6)
-        Logistic coefficient for responses
+    outcomes : array-like
+        List of possible outcomes
+    responses : array-like
+        List of possible responses
 
     """
 
-
-    # transform = lambda x: 1 - np.exp(-x)
-    # invtransform = lambda y: -np.log(1 - y)
-    
-    # d0 = np.sqrt(np.sum(outcomes**2, axis=-1)).ravel()
-    # d0 = np.sort(transform(d0[~np.isnan(d0)]))
-    # arrs = np.array_split(d0, n_responses)
-    # edges = invtransform(np.array(
-    #     [transform(0)] +
-    #     [(arrs[i][-1] + arrs[i+1][0]) / 2.
-    #      for i in xrange(n_responses-1)] +
-    #     [transform(3)]))
-
-    # centers = (edges[1:] + edges[:-1]) / 2.
-
-    # loss = (centers[:, None] - centers[None, :])**2
-
-    loss = np.zeros(n_outcomes + (n_responses,))
-
-    for pidx in xrange(len(predicates)):
-        n = n_outcomes[pidx]
-        pred = predicates[pidx]
-
-        if pred == 'stability_nfell':
-            F = np.arange(n)[:, None]
-            R = np.arange(n_responses)[None, :]
-            sf = ((F + N).astype('f8') / (n-1)) - 0.5
-            sr = (R.astype('f8') / (n-1)) - 0.5
-            ssf = 1.0 / (1 + np.exp(-Cf * sf))
-            ssr = 1.0 / (1 + np.exp(-Cr * sr))
-            l = np.sqrt(np.abs(ssf - ssr))
-
-        else:
-            l = np.ones((n, n_responses))
-
-        sl = [None]*len(predicates) + [slice(None)]
-        sl[pidx] = slice(None)
-        loss += l[sl]
-            
+    eq = np.array(outcomes)[:, None] == np.array(responses)[None, :]
+    #loss = (eq.astype('f8')*2) - 1
+    loss = eq.astype('f8')
     return loss
 
-# def Risk(p_kappas, p_outcomes_given_kappa, loss, predicates):
-#     """Compute expected risk for each response given the
-#     likelihood of each outcome, the probability of each mass
-#     ratio, and the loss associated with each outcome/response
-#     combination.
+def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
+    """Compute expected risk for each response given the
+    likelihood of each outcome, the probability of each mass
+    ratio, and the loss associated with each outcome/response
+    combination.
 
-#     Parameters
-#     ----------
-#     p_kappas : array-like (..., n_kappas)
-#         Probablity of each mass ratio
-#     p_outcomes_given_kappa : array-like (..., n_kappas, n_outcomes)
-#         Probability of each outcome given mass ratio
-#     loss : array-like (..., n_outcomes, n_responses)
-#         The loss associated with each outcome/response combo
-#     predicates : string ('stability' or 'direction')
-#         the predicates under which to compute the value
+    Parameters
+    ----------
+    p_kappas : array-like (..., n_kappas)
+        log theta_t = log P_t(kappa)
+    outcomes : array-like (n_outcomes,)
+        Possible outcomes of each trial
+    ipe_samps : array-like (..., n_samples, n_predicates)
+        samples from the IPE
+    loss : array-like (..., n_outcomes, n_responses)
+        The loss associated with each outcome/response combo
+    smooth : boolean
+        whether to smooth the IPE estimates
 
-#     """
+    """
 
-#     # compute marginal probability of outcomes
-#     p_outcomes = np.exp(predict(
-#         p_outcomes_given_kappa, p_kappas, predicates))
-#     # compute expected risk across outcomes
-#     n_outcomes = p_outcomes.shape[-len(predicates):]
-#     n_response = loss.shape[-1]
-#     shape = (p_outcomes.shape[:-len(predicates)] +
-#              (np.prod(n_outcomes), n_response))
-#     r = loss * p_outcomes[..., None]
-#     risk = np.sum(r.reshape(shape), axis=-2)
-#     return risk
+    # compute marginal probability of outcomes
+    p_outcomes = np.exp(predict(
+        p_kappas, outcomes, ipe_samps, smooth))
+    r = loss * p_outcomes[..., None]
+    risk = np.sum(r, axis=-1)
+    return risk
 
-# def response(p_kappas, p_outcomes, loss, predicates):
-#     """Compute optimal responses based on the belief about mass ratio.
+def response(p_kappas, outcomes, ipe_samps, loss, smooth):
+    """Compute optimal responses based on the belief about mass ratio.
 
-#     Parameters
-#     ----------
-#     p_kappas : array-like (..., n_kappas)
-#         Probablity of each mass ratio
-#     p_outcomes : array-like (..., n_kappas, n_outcomes)
-#         Probability of each outcome given mass ratio
-#     loss : array-like (..., n_outcomes, n_responses)
-#         The loss associated with each outcome/response combo
-#     predicates : string ('stability' or 'direction')
-#         the predicates under which to compute the value
+    Parameters
+    ----------
+    p_kappas : array-like (..., n_kappas)
+        log theta_t = log P_t(kappa)
+    outcomes : array-like (n_outcomes,)
+        Possible outcomes of each trial
+    ipe_samps : array-like (..., n_samples, n_predicates)
+        samples from the IPE
+    loss : array-like (..., n_outcomes, n_responses)
+        The loss associated with each outcome/response combo
+    smooth : boolean
+        whether to smooth the IPE estimates
 
-#     """
-#     risk = Risk(p_kappas, p_outcomes, loss, predicates)
-#     responses = risk.argmin(axis=-1)
-#     return responses
+    """
+    risk = Risk(p_kappas, outcomes, ipe_samps, loss, smooth)
+    responses = risk.argmin(axis=-1)
+    return responses
+
+def responses(p_kappas, outcomes, ipe_samps, loss, smooth):
+    n_trial = ipe_samps.shape[0]
+    n_response = loss.shape[1]
+    responses = np.empty(p_kappas.shape[:-2] + (n_trial,))
+    for t in xrange(n_trial):
+        resp = response(
+            p_kappas[:, t], outcomes, ipe_samps[t], loss, smooth)
+        responses[:, t] = resp
+    return responses
 
 ######################################################################
 
-def ModelObserver(ipe_samples, feedback, smooth=True, decay=0.99):
+def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True, decay=0.99):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -344,6 +314,10 @@ def ModelObserver(ipe_samples, feedback, smooth=True, decay=0.99):
         Raw samples from the IPE
     feedback : array-like (..., n_trials, 1, n_conditions, n_predicates)
         True outcomes of each trial (n_conditions is probably n_kappas)
+    outcomes : array-like (n_outcomes,)
+        Possible outcomes of each trial
+    loss : array-like (..., n_outcomes, n_responses)
+        The loss associated with each outcome/response combo
     smooth : boolean
         whether to smooth the IPE estimates
     decay : number, 0 <= decay <= 1 (default=0.99)
@@ -362,9 +336,9 @@ def ModelObserver(ipe_samples, feedback, smooth=True, decay=0.99):
     """
     n_kappas = ipe_samples.shape[1]
     lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth, decay)
-    # if loss is not None:
-    #     resp = response(thetas[:-1], p_outcomes, loss, predicates)
-    #     out = lh, joint, thetas, resp
-    # else:
-    out = lh, joint, thetas
+    if loss is not None:
+        resp = responses(thetas, outcomes, ipe_samples, loss, smooth)
+        out = lh, joint, thetas, resp
+    else:
+        out = lh, joint, thetas
     return out

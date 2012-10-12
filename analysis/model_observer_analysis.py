@@ -64,6 +64,8 @@ def mem_model_observer(nthresh0, nthresh, nsamps, smooth, decay):
         out = mo.ModelObserver(
             ipe_samps,
             feedback[:, None],
+            outcomes=None,
+            loss=None,
             smooth=smooth,
             decay=decay)
         vals[dparams][params] = out
