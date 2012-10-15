@@ -27,7 +27,8 @@ cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 ######################################################################
 ## Load and process data
 
-rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = lat.load('stability')
+out = lat.load('stability')
+rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
 ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
@@ -44,46 +45,20 @@ n_kappas     = len(kappas)
 ######################################################################
 # Model observer for each true mass ratio
 
-def make_data(nthresh0, nthresh, nsamps):
-    ipe_samps = np.concatenate([
-        ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype('int')[..., None],
-        ], axis=-1)[..., :nsamps, :]
-    feedback = np.concatenate([
-        ((truth['nfellA'] + truth['nfellB']) > nthresh0).astype('int'),
-        ], axis=-1)
-    return feedback, ipe_samps
-
 outcomes = np.array([0, 1])
 responses = np.array([0, 1])
 loss = mo.Loss(outcomes, responses)
 
-vals = {}
-def mem_model_observer(nthresh0, nthresh, nsamps, smooth, decay):
-    dparams = (nthresh0, nthresh, nsamps)
-    params = (smooth, decay)
-    if dparams not in vals:
-        vals[dparams] = {}
-    if params not in vals[dparams]:
-        feedback, ipe_samps = make_data(*dparams)
-        out = mo.ModelObserver(
-            ipe_samps,
-            feedback[:, None],
-            outcomes=outcomes[:, None],
-            loss=loss,
-            smooth=smooth,
-            decay=decay)
-        vals[dparams][params] = out
-    return vals[dparams][params]
-
 nthresh0, nthresh, nsamps = 1, 4, 300
 smooth, decay = True, 1.0
-feedback, ipe_samps = make_data(nthresh0, nthresh, nsamps)
-lh, joint, p_kappas, responses = mem_model_observer(
-    nthresh0=nthresh0,
-    nthresh=nthresh,
-    nsamps=nsamps,
-    smooth=smooth,
-    decay=decay)
+feedback, ipe_samps = lat.make_observer_data(
+    nthresh0, nthresh, nsamps)
+lh, joint, p_kappas, responses = mo.ModelObserver(
+    ipe_samps,
+    feedback[:, None],
+    outcomes=outcomes,
+    loss=loss,
+    smooth=smooth)
 
 h_responses = (human > 4).astype('f8')
 h_responses[human == 4] = np.nan

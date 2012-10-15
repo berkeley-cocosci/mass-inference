@@ -7,6 +7,9 @@ import cogphysics.lib.circ as circ
 
 import pdb
 
+from joblib import Memory
+memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
+
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
@@ -38,6 +41,7 @@ def make_kde_smoother(x, y, lam):
         return est
     return kde_smoother
 
+#@memory.cache
 def IPE(samps, smooth):
     """Compute the posterior probability of the outcome given
     kappa using samples from the internal mechanics engine.
@@ -118,7 +122,8 @@ def IPE(samps, smooth):
         
     return f
 
-def evaluateFeedback(feedback, P_outcomes):
+@memory.cache
+def evaluateFeedback(feedback, samps, smooth):#, P_outcomes):
     """Evaluate the likelihood of the observed outcomes given the
     probability of each possible outcome.
 
@@ -139,11 +144,13 @@ def evaluateFeedback(feedback, P_outcomes):
 
     """
 
+    P_outcomes = IPE(samps, smooth)
     pf = P_outcomes(feedback)
     lh = np.log(pf)
     return lh
 
-def learningCurve(feedback, ipe_samps, smooth, decay):
+@memory.cache
+def learningCurve(feedback, ipe_samps, smooth):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -159,8 +166,6 @@ def learningCurve(feedback, ipe_samps, smooth, decay):
         samples from the IPE
     smooth : boolean
         whether to smooth the IPE estimates
-    decay : number, 0 <= decay <= 1
-        how much to decay the weights on each time step
 
     Returns
     -------
@@ -179,8 +184,8 @@ def learningCurve(feedback, ipe_samps, smooth, decay):
 
         # estimate the density from ipe samples and evaluate the
         # likelihood of the feedback
-        f = IPE(ipe_samps[t], smooth=smooth)
-        ef = evaluateFeedback(feedback[t], f)
+        #f = IPE(ipe_samps[t], smooth=smooth)
+        ef = evaluateFeedback(feedback[t], ipe_samps[t], smooth)
 
         # allocate arrays
         if lh is None:
@@ -192,7 +197,7 @@ def learningCurve(feedback, ipe_samps, smooth, decay):
         # the likelihood of the true outcome for each trial
         lh[..., t+1, :] = ef
         # unnormalized joint probability of outcomes and mass ratios
-        joint[..., t+1, :] = decay * joint[..., t, :] + lh[..., t+1, :]
+        joint[..., t+1, :] = joint[..., t, :] + lh[..., t+1, :]
 
     # posterior probablity of mass ratios given the outcome 
     thetas = normalize(joint, axis=-1)[1]
@@ -201,6 +206,7 @@ def learningCurve(feedback, ipe_samps, smooth, decay):
 
 ######################################################################
 
+@memory.cache
 def predict(p_kappas, outcomes, ipe_samps, smooth):
     """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
 
@@ -217,14 +223,17 @@ def predict(p_kappas, outcomes, ipe_samps, smooth):
 
     """
 
-    f = IPE(ipe_samps, smooth=smooth)
-    p_outcomes_given_kappa = np.vstack(
-        [evaluateFeedback(outcomes[i], f)
-         for i in xrange(len(outcomes))])
+    #f = IPE(ipe_samps, smooth=smooth)
+    #p_outcomes_given_kappa = np.vstack(
+    #    [evaluateFeedback(outcomes[i], f)
+    #     for i in xrange(len(outcomes))])
+    p_outcomes_given_kappa = evaluateFeedback(
+        outcomes[i], ipe_samps, smooth)
     joint = p_outcomes_given_kappa + p_kappas[:, None]
     p_outcomes = normalize(joint, axis=-1)[0]
     return p_outcomes
 
+@memory.cache
 def Loss(outcomes, responses):
     """Loss function for outcomes and responses.
 
@@ -242,6 +251,7 @@ def Loss(outcomes, responses):
     loss = eq.astype('f8')
     return loss
 
+@memory.cache
 def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
     """Compute expected risk for each response given the
     likelihood of each outcome, the probability of each mass
@@ -270,6 +280,7 @@ def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
     risk = np.sum(r, axis=-1)
     return risk
 
+@memory.cache
 def response(p_kappas, outcomes, ipe_samps, loss, smooth):
     """Compute optimal responses based on the belief about mass ratio.
 
@@ -291,6 +302,7 @@ def response(p_kappas, outcomes, ipe_samps, loss, smooth):
     responses = risk.argmin(axis=-1)
     return responses
 
+@memory.cache
 def responses(p_kappas, outcomes, ipe_samps, loss, smooth):
     n_trial = ipe_samps.shape[0]
     n_response = loss.shape[1]
@@ -303,7 +315,8 @@ def responses(p_kappas, outcomes, ipe_samps, loss, smooth):
 
 ######################################################################
 
-def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True, decay=0.99):
+@memory.cache
+def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -320,8 +333,6 @@ def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True, decay=0.99
         The loss associated with each outcome/response combo
     smooth : boolean
         whether to smooth the IPE estimates
-    decay : number, 0 <= decay <= 1 (default=0.99)
-        how much to decay the weights on each time step
 
     Returns
     -------
@@ -335,7 +346,7 @@ def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True, decay=0.99
 
     """
     n_kappas = ipe_samples.shape[1]
-    lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth, decay)
+    lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth)
     if loss is not None:
         resp = responses(thetas, outcomes, ipe_samples, loss, smooth)
         out = lh, joint, thetas, resp

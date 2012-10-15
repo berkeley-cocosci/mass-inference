@@ -27,7 +27,8 @@ cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 ######################################################################
 ## Load and process data
 
-rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = lat.load('stability')
+out = lat.load('stability')
+rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
 ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
@@ -42,45 +43,16 @@ n_trial      = stimuli.shape[1]
 n_kappas     = len(kappas)
 
 ######################################################################
-# Model observer for each true mass ratio
 
-def make_data(nthresh0, nthresh, nsamps):
-    ipe_samps = np.concatenate([
-        ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype('int')[..., None],
-        ], axis=-1)[..., :nsamps, :]
-    feedback = np.concatenate([
-        ((truth['nfellA'] + truth['nfellB']) > nthresh0).astype('int'),
-        ], axis=-1)
-    return feedback, ipe_samps
-
-vals = {}
-def mem_model_observer(nthresh0, nthresh, nsamps, smooth, decay):
-    dparams = (nthresh0, nthresh, nsamps)
-    params = (smooth, decay)
-    if dparams not in vals:
-        vals[dparams] = {}
-    if params not in vals[dparams]:
-        feedback, ipe_samps = make_data(*dparams)
-        out = mo.ModelObserver(
-            ipe_samps,
-            feedback[:, None],
-            outcomes=None,
-            loss=None,
-            smooth=smooth,
-            decay=decay)
-        vals[dparams][params] = out
-    return vals[dparams][params]
-
-######################################################################
-# Plotting code
-
-def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth, decay):
-    model_lh, model_joint, model_theta = mem_model_observer(
-        nthresh0=nthresh0,
-        nthresh=nthresh,
-        nsamps=nsamps,
-        smooth=smooth,
-        decay=decay)
+def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth):
+    feedback, ipe_samps = lat.make_observer_data(
+        nthresh0, nthresh, nsamps)
+    model_lh, model_joint, model_theta = mo.ModelObserver(
+        ipe_samps,
+        feedback[:, None],
+        outcomes=None,
+        loss=None,
+        smooth=smooth)
     r, c = 3, 3
     n = r*c
     exp = np.exp(np.log(0.5) / np.log(1./27))    
@@ -134,6 +106,7 @@ def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth, decay):
     cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
     cb.set_ticklabels(logcticks)
     cax.set_title("$P_t(\kappa)$", fontsize=14)
+    return model_lh, model_joint, model_theta
     
 def plot_baserates(fignum, nsamps, smooth):
     plt.figure(fignum)
@@ -156,13 +129,14 @@ def plot_baserates(fignum, nsamps, smooth):
     n = r*c
     for nthresh0 in rows:
         for nthresh in cols:
-            lh, jnt, th = mem_model_observer(
-                nthresh0=nthresh0,
-                nthresh=nthresh,
-                nsamps=nsamps
-                smooth=True,
-                decay=1.0,
-                )
+            feedback, ipe_samps = lat.make_observer_data(
+                nthresh0, nthresh, nsamps)
+            lh, jnt, th = mo.ModelObserver(
+                ipe_samps,
+                feedback[:, None],
+                outcomes=None,
+                loss=None,
+                smooth=True)
             plt.subplot(r, c, i+1)
             exp = np.exp(np.log(0.5) / np.log(1. / n_kappas))
             nth = normalize(th[:, -1].T, axis=0)[1]
@@ -230,7 +204,7 @@ def plot_smoothing(nstim, fignum, nthresh, nsamps):
         x = kappas
         xn = np.linspace(-1.5, 1.5, 100)
         lam = pfell_meanstd[i] * 10
-        kde_smoother = mo.make_kde_smoother(x, pfell_mean[i,j], lam)
+        kde_smoother = mo.make_kde_smoother(x, pfell_mean[i], lam)
         y_mean = kde_smoother(xn)
         plt.plot(xn, y_mean,
                  color=colors[idx],
@@ -258,36 +232,32 @@ lh, jnt, th = plot_belief(
     fignum=5,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=48
-    smooth=False,
-    decay=1.0)
+    nsamps=48,
+    smooth=False)
 lat.save("images/belief_raw_048samples",
      ext=ext, width=9, height=7)
 lh, jnt, th = plot_belief(
     fignum=6,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=48
-    smooth=True,
-    decay=1.0)
+    nsamps=48,
+    smooth=True)
 lat.save("images/belief_smoothed_048samples",
      ext=ext, width=9, height=7)
 lh, jnt, th = plot_belief(
     fignum=7,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=300
-    smooth=False,
-    decay=1.0)
+    nsamps=300,
+    smooth=False)
 lat.save("images/belief_raw_300samples",
      ext=ext, width=9, height=7)
 lh, jnt, th = plot_belief(
     fignum=8,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=300
-    smooth=True,
-    decay=1.0)
+    nsamps=300,
+    smooth=True)
 lat.save("images/belief_smoothed_300samples",
      ext=ext, width=9, height=7)
 

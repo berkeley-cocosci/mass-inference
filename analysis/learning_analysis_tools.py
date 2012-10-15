@@ -16,71 +16,13 @@ import cogphysics.lib.rvs as rvs
 import cogphysics.lib.stats as stats
 import cogphysics.tower.analysis_tools as tat
 
-mthresh = 0.095
-zscore = False
+from joblib import Memory
+memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 
-def make_cmap(name, c1, c2, c3):
+######################################################################
+# Data handling
 
-    colors = {
-        'red'   : (
-            (0.0, c1[0], c1[0]),
-            (0.50, c2[0], c2[0]),
-            (1.0, c3[0], c3[0]),
-            ),
-        'green' : (
-            (0.0, c1[1], c1[1]),
-            (0.50, c2[1], c2[1]),
-            (1.0, c3[1], c3[1]),
-            ),
-        'blue'  : (
-            (0.0, c1[2], c1[2]),
-            (0.50, c2[2], c2[2]),
-            (1.0, c3[2], c3[2])
-            )
-        }
-    
-    cmap = matplotlib.colors.LinearSegmentedColormap(name, colors, 1024)
-    return cmap
-
-def save(path, fignum=None, close=True, width=None, height=None, ext=None):
-    """Save a figure from pyplot"""
-    if fignum is None:
-        fig = plt.gcf()
-    else:
-        fig = plt.figure(fignum)
-
-    if ext is None:
-        ext = ['']
-
-    if width:
-        fig.set_figwidth(width)
-    if height:
-        fig.set_figheight(height)
-
-    directory = os.path.split(path)[0]
-    filename = os.path.split(path)[1]
-    if directory == '':
-        directory = '.'
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    for ex in ext:
-        if ex == '':
-            name = filename
-        else:
-            name = filename + "." + ex
-
-        print "Saving figure to %s...'" % (
-            os.path.join(directory, name)),
-        plt.savefig(os.path.join(directory, name))
-        print "Done"
-
-    if close:
-        plt.clf()
-        plt.cla()
-        plt.close()
-
+@memory.cache
 def order_by_trial(human, stimuli, order, truth, ipe):
 
     n_subjs = human.shape[1]
@@ -118,115 +60,8 @@ def order_by_trial(human, stimuli, order, truth, ipe):
     out = (trial_human, trial_stim, trial_order, trial_truth, trial_ipe)
     return out
 
-def random_order(n, shape1, shape2, axis=-1, seed=0):
-    tidx = np.arange(n)
-    RSO = np.random.RandomState(seed)
-    RSO.shuffle(tidx)
-    stidx = tidx.reshape(shape1)
-    order = stidx * np.ones(shape2)
-    return order
-
-# def load(predicate):
-
-#     if predicate == 'stability':
-#         exp_ver = 7
-#         sim_ver = 6
-#     elif predicate == 'direction':
-#         exp_ver = 8
-#         sim_ver = 7
-#     else:
-#         raise ValueError, predicate
-    
-#     dtype = np.dtype([
-#         ('stability_nfell', 'i8'),
-#         ('stability_pfell', 'i8'),
-#         ('direction', 'f8'),
-#         ('radius', 'f8'),
-#         ('x', 'f8'),
-#         ('y', 'f8')])
-    
-#     # Human
-#     rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
-#         exp_ver=exp_ver, return_order=True)
-#     n_subjs, n_reps = rawhuman.shape[1:]
-#     hids = rawhmeta['dimvals']['id']
-
-#     # Model
-#     if os.path.exists("truth_samples_%s.npy" % predicate):
-#         truth_samples = np.load("truth_samples_%s.npy" % predicate)
-#     else:
-#         rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver-2)
-#         sigmas = rawsmeta["sigmas"]
-#         phis = rawsmeta["phis"]
-#         kappas = rawsmeta["kappas"]
-#         sigma0 = list(sigmas).index(0)
-#         phi0 = list(phis).index(0)
-#         mass, cpoids, assigns, intassigns = tat.stimnames2mass(
-#             rawsstim, kappas)
-#         rawmodel0 = rawmodel[sigma0, phi0][None, None]
-#         pfell, nfell, truth_samplesS = tat.process_model_stability(
-#             rawmodel0, mthresh=mthresh, zscore=zscore, pairs=False)
-#         dirs, truth_samplesD, dirs_perblock = tat.process_model_direction(
-#             rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
-#         radii, truth_samplesR, radii_perblock = tat.process_model_radius(
-#             rawmodel0, mthresh=mthresh, pairs=False, mass=mass)
-#         truth_samplesX = np.cos(truth_samplesD) * truth_samplesR
-#         truth_samplesY = np.sin(truth_samplesD) * truth_samplesR
-#         truth_samples = np.empty(truth_samplesS.shape, dtype=dtype)
-#         truth_samples['stability_nfell'] = truth_samplesS.astype('i8')
-#         truth_samples['stability_pfell'] = (truth_samplesS > 0).astype('i8')
-#         truth_samples['direction'] = truth_samplesD
-#         truth_samples['radius'] = truth_samplesR
-#         truth_samples['x'] = truth_samplesX
-#         truth_samples['y'] = truth_samplesY
-#         np.save("truth_samples_%s.npy" % predicate, truth_samples)
-
-#     if os.path.exists("model_samples_%s.npz" % predicate):
-#         data = np.load("model_samples_%s.npz" % predicate)
-#         samples = data['samples']
-#         sigmas = data['sigmas']
-#         phis = data['phis']
-#         kappas = data['kappas']
-#         rawsstim = data['rawsstim']
-        
-#     else:
-#         rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)
-#         sigmas = rawsmeta["sigmas"]
-#         phis = rawsmeta["phis"]
-#         kappas = rawsmeta["kappas"]
-#         mass, cpoids, assigns, intassigns = tat.stimnames2mass(
-#             rawsstim, kappas)
-#         pfell, nfell, samplesS = tat.process_model_stability(
-#             rawmodel, mthresh=mthresh, zscore=zscore, pairs=False)
-#         dirs, samplesD, dirs_perblock = tat.process_model_direction(
-#             rawmodel, mthresh=mthresh, pairs=False, mass=mass)
-#         radii, samplesR, radii_perblock = tat.process_model_radius(
-#             rawmodel, mthresh=mthresh, pairs=False, mass=mass)
-#         samplesX = np.cos(samplesD) * samplesR
-#         samplesY = np.sin(samplesD) * samplesR
-#         samples = np.empty(samplesS.shape, dtype=dtype)
-#         samples['stability_nfell'] = samplesS.astype('i8')
-#         samples['stability_pfell'] = (samplesS > 0).astype('i8')
-#         samples['direction'] = samplesD
-#         samples['radius'] = samplesR
-#         samples['x'] = samplesX
-#         samples['y'] = samplesY
-
-#         np.savez("model_samples_%s.npz" % predicate,
-#                  samples=samples,
-#                  sigmas=sigmas,
-#                  phis=phis,
-#                  kappas=kappas,
-#                  rawsstim=rawsstim)
-
-#     assert (rawhstim == rawsstim).all()
-
-#     all_model = np.array([truth_samples, samples], dtype=dtype)
-#     fellsamp = all_model[:, 0, 0].transpose((0, 2, 1, 3))
-
-#     return rawhuman, rawhstim, raworder, fellsamp, (sigmas, phis, kappas)
-
-def summarize(samps, mass, assigns):
+@memory.cache
+def summarize(samps, mass, assigns, mthresh=0.095):
     # calculate individual block displacements
     pos0 = samps[..., 1, :3].transpose((1, 0, 2, 3, 4))
     posT = samps[..., 2, :3].transpose((1, 0, 2, 3, 4))
@@ -253,6 +88,7 @@ def summarize(samps, mass, assigns):
 
     return posdiff, comdiff, nfellA, nfellB
 
+@memory.cache
 def load(predicate):
 
     if predicate == 'stability':
@@ -325,6 +161,91 @@ def load(predicate):
 
     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
 
+@memory.cache
+def make_observer_data(nthresh0, nthresh, nsamps):
+    out = load('stability')
+    rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+    human, stimuli, sort, truth, ipe = order_by_trial(
+        rawhuman, rawhstim, raworder, rawtruth, rawipe)
+    truth = truth[0]
+    ipe = ipe[0]
+
+    ipe_samps = np.concatenate([
+        ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype(
+            'i8')[..., None],
+        ], axis=-1)[..., :nsamps, :]
+    feedback = np.concatenate([
+        ((truth['nfellA'] + truth['nfellB']) > nthresh0).astype(
+            'i8'),
+        ], axis=-1)
+
+    return feedback, ipe_samps
+
+######################################################################
+# Plotting functions
+
+def make_cmap(name, c1, c2, c3):
+
+    colors = {
+        'red'   : (
+            (0.0, c1[0], c1[0]),
+            (0.50, c2[0], c2[0]),
+            (1.0, c3[0], c3[0]),
+            ),
+        'green' : (
+            (0.0, c1[1], c1[1]),
+            (0.50, c2[1], c2[1]),
+            (1.0, c3[1], c3[1]),
+            ),
+        'blue'  : (
+            (0.0, c1[2], c1[2]),
+            (0.50, c2[2], c2[2]),
+            (1.0, c3[2], c3[2])
+            )
+        }
+    
+    cmap = matplotlib.colors.LinearSegmentedColormap(name, colors, 1024)
+    return cmap
+
+def save(path, fignum=None, close=True, width=None, height=None, ext=None):
+    """Save a figure from pyplot"""
+    if fignum is None:
+        fig = plt.gcf()
+    else:
+        fig = plt.figure(fignum)
+
+    if ext is None:
+        ext = ['']
+
+    if width:
+        fig.set_figwidth(width)
+    if height:
+        fig.set_figheight(height)
+
+    directory = os.path.split(path)[0]
+    filename = os.path.split(path)[1]
+    if directory == '':
+        directory = '.'
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    for ex in ext:
+        if ex == '':
+            name = filename
+        else:
+            name = filename + "." + ex
+
+        print "Saving figure to %s...'" % (
+            os.path.join(directory, name)),
+        plt.savefig(os.path.join(directory, name))
+        print "Done"
+
+    if close:
+        plt.clf()
+        plt.cla()
+        plt.close()
+
 def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot', fontsize=12):
     try:
         idx.cla()
@@ -361,26 +282,3 @@ def plot_polar():
         ax.set_rmax(r[-1] + 1)
         ax.set_rmin(r[0] - 1)
         pdb.set_trace()
-
-# def faster_inverse(M):
-#     # sanity check the shape
-#     oldshape = M.shape
-#     assert oldshape[-2] == oldshape[-1]
-#     # find out dimensions and reshape array
-#     nm = np.prod(oldshape[:-2])
-#     n = oldshape[-1]
-#     A = M.reshape((nm, n, n))
-#     # determin pivots
-#     pivots = zeros(n, np.intc)
-#     # allocate for inverse
-#     AI = np.zeros(A.shape) + np.identity(n)
-#     # find inverse of each matrix
-#     for i in xrange(nm):
-#         results = lapack_lite.dgesv(
-#             n, n, A[i], n, np.copy(pivots), AI[i], n, 0)
-#         if results['info'] > 0:
-#             print 'Warning: %d, Singular matrix' % i
-#             AI[i] = np.nan
-#     # reshape array to original shape
-#     MI = AI.reshape(oldshape)
-#     return MI
