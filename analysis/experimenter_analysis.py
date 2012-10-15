@@ -56,7 +56,7 @@ feedback, ipe_samps = lat.make_observer_data(
 lh, joint, p_kappas, responses = mo.ModelObserver(
     ipe_samps,
     feedback[:, None],
-    outcomes=outcomes,
+    outcomes=outcomes[:, None],
     loss=loss,
     smooth=smooth)
 
@@ -131,8 +131,8 @@ for idx, sidx in enumerate(sidxs):
             #m_response = (tm_response + r) % 2
             m_response = tm_response.copy()
 
-            f = mo.IPE(samps_t, smooth=smooth)
-            ef = mo.evaluateFeedback(obs_t, f)
+            #f = mo.IPE(samps_t, smooth=smooth)
+            ef = mo.evaluateFeedback(obs_t, samps_t, smooth)
             noise = prior(n_part)
             #noise = np.zeros(thetas_t.shape)
             m_theta = normalize(thetas_t + ef + noise, axis=-1)[1]

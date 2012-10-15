@@ -206,7 +206,6 @@ def learningCurve(feedback, ipe_samps, smooth):
 
 ######################################################################
 
-@memory.cache
 def predict(p_kappas, outcomes, ipe_samps, smooth):
     """Predict the likelihood outcome given the stimulus, P(F_t | S_t)
 
@@ -228,7 +227,7 @@ def predict(p_kappas, outcomes, ipe_samps, smooth):
     #    [evaluateFeedback(outcomes[i], f)
     #     for i in xrange(len(outcomes))])
     p_outcomes_given_kappa = evaluateFeedback(
-        outcomes[i], ipe_samps, smooth)
+        outcomes, ipe_samps, smooth)
     joint = p_outcomes_given_kappa + p_kappas[:, None]
     p_outcomes = normalize(joint, axis=-1)[0]
     return p_outcomes
@@ -251,7 +250,6 @@ def Loss(outcomes, responses):
     loss = eq.astype('f8')
     return loss
 
-@memory.cache
 def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
     """Compute expected risk for each response given the
     likelihood of each outcome, the probability of each mass
@@ -280,7 +278,6 @@ def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
     risk = np.sum(r, axis=-1)
     return risk
 
-@memory.cache
 def response(p_kappas, outcomes, ipe_samps, loss, smooth):
     """Compute optimal responses based on the belief about mass ratio.
 
@@ -302,7 +299,6 @@ def response(p_kappas, outcomes, ipe_samps, loss, smooth):
     responses = risk.argmin(axis=-1)
     return responses
 
-@memory.cache
 def responses(p_kappas, outcomes, ipe_samps, loss, smooth):
     n_trial = ipe_samps.shape[0]
     n_response = loss.shape[1]
