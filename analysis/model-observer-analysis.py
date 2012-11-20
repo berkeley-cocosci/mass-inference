@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# <nbformat>3.0</nbformat>
+
+# <codecell>
+
+# imports
 import collections
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
@@ -19,16 +25,23 @@ import cogphysics.tower.mass.learning_analysis_tools as lat
 
 from cogphysics.lib.corr import xcorr
 
+# <codecell>
+
+# global variables
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 
+# <codecell>
+
 ######################################################################
 ## Load and process data
-
 out = lat.load('stability')
 rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+
+# <codecell>
+
 ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
@@ -37,14 +50,23 @@ human, stimuli, sort, truth, ipe = lat.order_by_trial(
     rawhuman, rawhstim, raworder, rawtruth, rawipe)
 truth = truth[0]
 ipe = ipe[0]
-
-pdb.set_trace()
  
 # variables
 n_trial      = stimuli.shape[1]
 n_kappas     = len(kappas)
 
-######################################################################
+# <codecell>
+
+def calc_baserates(nthresh0, nthresh, nsamps):
+    feedback, ipe_samps = lat.make_observer_data(
+        nthresh0, nthresh, nsamps)
+
+    fbbr = np.mean(np.swapaxes(feedback, 0, 1).reshape((-1, n_kappas)))
+    ipebr = np.mean(np.swapaxes(ipe_samps[..., 0], 0, 1).reshape((-1, n_kappas)))
+
+    return fbbr, ipebr
+
+# <codecell>
 
 def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth):
     feedback, ipe_samps = lat.make_observer_data(
@@ -109,7 +131,9 @@ def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth):
     cb.set_ticklabels(logcticks)
     cax.set_title("$P_t(\kappa)$", fontsize=14)
     return model_lh, model_joint, model_theta
-    
+
+# <codecell>
+
 def plot_baserates(fignum, nsamps, smooth):
     plt.figure(fignum)
     plt.clf()
@@ -170,10 +194,12 @@ def plot_baserates(fignum, nsamps, smooth):
                       fontsize=12)
             i+=1
 
+# <codecell>
+
 def plot_smoothing(nstim, fignum, nthresh, nsamps):
     samps = np.concatenate([
         ((rawipe['nfellA'] + rawipe['nfellB']) > nthresh).astype(
-            'int')[..., None]], axis=-1)[..., 0]
+            'int')[..., None]], axis=-1)[..., 0][..., :nsamps]
     stims = np.array([int(x.split("_")[1])
                       for x in rawhstim])
     alpha = np.sum(samps, axis=-1) + 0.5
@@ -188,6 +214,7 @@ def plot_smoothing(nstim, fignum, nthresh, nsamps):
     xticks10[xticks < 0] = np.round(xticks10[xticks < 0], decimals=2)
     xticks10[xticks >= 0] = np.round(xticks10[xticks >= 0], decimals=1)
     yticks = np.linspace(0, 1, 3)
+
     plt.figure(fignum)
     plt.clf()
     plt.suptitle(
@@ -219,54 +246,92 @@ def plot_smoothing(nstim, fignum, nthresh, nsamps):
     plt.legend(loc=8, prop={'size':12}, numpoints=1,
                scatterpoints=1, ncol=3, title="Stimuli ($S$)")
 
+# <codecell>
+
 nthresh0 = 1
 nthresh = 4
 ext = ['png', 'pdf']
+f_save = True
+f_close = False
+
+fbbr, ipebr = calc_baserates(nthresh0, nthresh, nsamps=300)
+
+# <codecell>
 
 plot_baserates(1, nsamps=48, smooth=True)
-lat.save("images/baserates_048samples",
-     ext=ext, width=10, height=10)
-plot_baserates(3, nsamps=300, smooth=True)
-lat.save("images/baserates_300samples",
-     ext=ext, width=10, height=10)
+if f_save:
+   lat.save("images/baserates_048samples",
+	ext=ext, width=10, height=10, close=f_close)
+
+# <codecell>
+
+plot_baserates(2, nsamps=300, smooth=True)
+if f_save:
+   lat.save("images/baserates_300samples",
+        ext=ext, width=10, height=10, close=f_close)
+
+# <codecell>
+
+lh, jnt, th = plot_belief(
+    fignum=3,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
+    nsamps=48,
+    smooth=False)
+if f_save:
+   lat.save("images/belief_raw_048samples",
+        ext=ext, width=9, height=7, close=f_close)
+
+# <codecell>
+
+lh, jnt, th = plot_belief(
+    fignum=4,
+    nthresh0=nthresh0,
+    nthresh=nthresh,
+    nsamps=48,
+    smooth=True)
+if f_save:
+   lat.save("images/belief_smoothed_048samples",
+        ext=ext, width=9, height=7, close=f_close)
+
+# <codecell>
 
 lh, jnt, th = plot_belief(
     fignum=5,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=48,
+    nsamps=300,
     smooth=False)
-lat.save("images/belief_raw_048samples",
-     ext=ext, width=9, height=7)
+if f_save:
+   lat.save("images/belief_raw_300samples",
+        ext=ext, width=9, height=7, close=f_close)
+
+# <codecell>
+
 lh, jnt, th = plot_belief(
     fignum=6,
     nthresh0=nthresh0,
     nthresh=nthresh,
-    nsamps=48,
-    smooth=True)
-lat.save("images/belief_smoothed_048samples",
-     ext=ext, width=9, height=7)
-lh, jnt, th = plot_belief(
-    fignum=7,
-    nthresh0=nthresh0,
-    nthresh=nthresh,
-    nsamps=300,
-    smooth=False)
-lat.save("images/belief_raw_300samples",
-     ext=ext, width=9, height=7)
-lh, jnt, th = plot_belief(
-    fignum=8,
-    nthresh0=nthresh0,
-    nthresh=nthresh,
     nsamps=300,
     smooth=True)
-lat.save("images/belief_smoothed_300samples",
-     ext=ext, width=9, height=7)
+if f_save:
+   lat.save("images/belief_smoothed_300samples",
+        ext=ext, width=9, height=7, close=f_close)
 
-plot_smoothing(6, fignum=9, nthresh=nthresh, nsamps=48)
-lat.save("images/likelihood_smoothing_048samples",
-     ext=ext, width=9, height=7)
-plot_smoothing(6, fignum=9, nthresh=nthresh, nsamps=300)
-lat.save("images/likelihood_smoothing_300samples",
-     ext=ext, width=9, height=7)
+# <codecell>
+
+plot_smoothing(6, fignum=7, nthresh=nthresh, nsamps=48)
+if f_save:
+   lat.save("images/likelihood_smoothing_048samples",
+	ext=ext, width=9, height=7, close=f_close)
+
+# <codecell>
+
+plot_smoothing(6, fignum=8, nthresh=nthresh, nsamps=300)
+if f_save:
+   lat.save("images/likelihood_smoothing_300samples",
+        ext=ext, width=9, height=7, close=f_close)
+
+# <codecell>
+
 

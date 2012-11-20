@@ -232,53 +232,53 @@ def predict(p_kappas, outcomes, ipe_samps, smooth):
     p_outcomes = normalize(joint, axis=-1)[0]
     return p_outcomes
 
-@memory.cache
-def Loss(outcomes, responses):
-    """Loss function for outcomes and responses.
+# @memory.cache
+# def Loss(outcomes, responses):
+#     """Loss function for outcomes and responses.
 
-    Parameters
-    ----------
-    outcomes : array-like
-        List of possible outcomes
-    responses : array-like
-        List of possible responses
+#     Parameters
+#     ----------
+#     outcomes : array-like
+#         List of possible outcomes
+#     responses : array-like
+#         List of possible responses
 
-    """
+#     """
 
-    eq = np.array(outcomes)[:, None] == np.array(responses)[None, :]
-    #loss = (eq.astype('f8')*2) - 1
-    loss = eq.astype('f8')
-    return loss
+#     eq = np.array(outcomes)[:, None] == np.array(responses)[None, :]
+#     #loss = (eq.astype('f8')*2) - 1
+#     loss = eq.astype('f8')
+#     return loss
 
-def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
-    """Compute expected risk for each response given the
-    likelihood of each outcome, the probability of each mass
-    ratio, and the loss associated with each outcome/response
-    combination.
+# def Risk(p_kappas, outcomes, ipe_samps, loss, smooth):
+#     """Compute expected risk for each response given the
+#     likelihood of each outcome, the probability of each mass
+#     ratio, and the loss associated with each outcome/response
+#     combination.
 
-    Parameters
-    ----------
-    p_kappas : array-like (..., n_kappas)
-        log theta_t = log P_t(kappa)
-    outcomes : array-like (n_outcomes,)
-        Possible outcomes of each trial
-    ipe_samps : array-like (..., n_samples, n_predicates)
-        samples from the IPE
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
-    smooth : boolean
-        whether to smooth the IPE estimates
+#     Parameters
+#     ----------
+#     p_kappas : array-like (..., n_kappas)
+#         log theta_t = log P_t(kappa)
+#     outcomes : array-like (n_outcomes,)
+#         Possible outcomes of each trial
+#     ipe_samps : array-like (..., n_samples, n_predicates)
+#         samples from the IPE
+#     loss : array-like (..., n_outcomes, n_responses)
+#         The loss associated with each outcome/response combo
+#     smooth : boolean
+#         whether to smooth the IPE estimates
 
-    """
+#     """
 
-    # compute marginal probability of outcomes
-    p_outcomes = np.exp(predict(
-        p_kappas, outcomes, ipe_samps, smooth))
-    r = loss * p_outcomes[..., None]
-    risk = np.sum(r, axis=-1)
-    return risk
+#     # compute marginal probability of outcomes
+#     p_outcomes = np.exp(predict(
+#         p_kappas, outcomes, ipe_samps, smooth))
+#     r = loss * p_outcomes[..., None]
+#     risk = np.sum(r, axis=-1)
+#     return risk
 
-def response(p_kappas, outcomes, ipe_samps, loss, smooth):
+def response(p_kappas, outcomes, ipe_samps, p_ignore_stimulus, smooth):
     """Compute optimal responses based on the belief about mass ratio.
 
     Parameters
@@ -289,30 +289,50 @@ def response(p_kappas, outcomes, ipe_samps, loss, smooth):
         Possible outcomes of each trial
     ipe_samps : array-like (..., n_samples, n_predicates)
         samples from the IPE
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
+    p_ignore_stimulus : float in [0, 1]
+        probability of ignoring the stimulus and choosing a random
+        answer
     smooth : boolean
         whether to smooth the IPE estimates
 
     """
-    risk = Risk(p_kappas, outcomes, ipe_samps, loss, smooth)
-    responses = risk.argmin(axis=-1)
+    #risk = Risk(p_kappas, outcomes, ipe_samps, loss, smooth)
+    #responses = risk.argmin(axis=-1)
+
+    # compute probability of each outcome
+    p_outcomes = np.exp(predict(
+        p_kappas, outcomes, ipe_samps, smooth))
+
+    # get true responses (probability match) and random responses
+    rand = np.random.rand(*p_outcomes.shape)
+    tr = np.sum(rand > np.cumsum(p_outcomes, axis=-1), axis=-1)
+    ir = np.random.randint(0, p_outcomes.shape[-1], tr.shape)
+
+    # figure out which trials to ignore on
+    ignore = np.random.rand(*p_outcomes.shape[:-1]) < p_ignore_stimulus
+
+    # fill in responses
+    responses = np.empty(tr.shape)
+    responses[ignore] = ir[ignore]
+    responses[~ignore] = tr[~ignore]
     return responses
 
-def responses(p_kappas, outcomes, ipe_samps, loss, smooth):
+def responses(p_kappas, outcomes, ipe_samps, p_ignore_stimulus, smooth):
     n_trial = ipe_samps.shape[0]
-    n_response = loss.shape[1]
+    #n_response = loss.shape[1]
     responses = np.empty(p_kappas.shape[:-2] + (n_trial,))
     for t in xrange(n_trial):
         resp = response(
-            p_kappas[:, t], outcomes, ipe_samps[t], loss, smooth)
+            p_kappas[:, t], outcomes, ipe_samps[t], 
+            p_ignore_stimulus, smooth)
         responses[:, t] = resp
     return responses
 
 ######################################################################
 
 @memory.cache
-def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True):
+def ModelObserver(ipe_samples, feedback, outcomes, respond=False, 
+                  p_ignore_stimulus=0.0, smooth=True):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -325,8 +345,10 @@ def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True):
         True outcomes of each trial (n_conditions is probably n_kappas)
     outcomes : array-like (n_outcomes,)
         Possible outcomes of each trial
-    loss : array-like (..., n_outcomes, n_responses)
-        The loss associated with each outcome/response combo
+    respond : boolean
+        Whether to generate responses
+    p_ignore_stimulus : float
+        Probability of ignoring the stimulus and generating a random response
     smooth : boolean
         whether to smooth the IPE estimates
 
@@ -343,8 +365,9 @@ def ModelObserver(ipe_samples, feedback, outcomes, loss, smooth=True):
     """
     n_kappas = ipe_samples.shape[1]
     lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth)
-    if loss is not None:
-        resp = responses(thetas, outcomes, ipe_samples, loss, smooth)
+    if respond:
+        resp = responses(
+            thetas, outcomes, ipe_samples, p_ignore_stimulus, smooth)
         out = lh, joint, thetas, resp
     else:
         out = lh, joint, thetas
