@@ -231,11 +231,11 @@ def plot_smoothing(nstim, fignum, nthresh, nsamps):
     for idx in xrange(nstim):
         i = order[idx]
         x = kappas
-        xn = np.linspace(-1.5, 1.5, 100)
+        #xn = np.linspace(-1.5, 1.5, 100)
         lam = pfell_meanstd[i] * 10
-        kde_smoother = mo.make_kde_smoother(x, pfell_mean[i], lam)
-        y_mean = kde_smoother(xn)
-        plt.plot(xn, y_mean,
+        kde_smoother = mo.make_kde_smoother(x, lam)
+        y_mean = kde_smoother(pfell_mean[i])
+        plt.plot(x, y_mean,
                  color=colors[idx],
                  linewidth=3)        
         plt.errorbar(x, pfell_mean[i], pfell_std[i], None,

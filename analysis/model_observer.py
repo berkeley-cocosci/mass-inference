@@ -13,31 +13,32 @@ memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 normalize = rvs.util.normalize
 weightedSample = rvs.util.weightedSample
 
-def make_rbf_kernel(alpha, ell):
-    def kern(x1, x2):
-        term1 = alpha * np.exp((-0.5 * (x1 - x2)**2) / float(ell))
-        term2 = 1e-6 * np.abs(x1 - x2)
-        k = term1 + term2
-        return k
-    return kern
+# def make_rbf_kernel(alpha, ell):
+#     def kern(x1, x2):
+#         term1 = alpha * np.exp((-0.5 * (x1 - x2)**2) / float(ell))
+#         term2 = 1e-6 * np.abs(x1 - x2)
+#         k = term1 + term2
+#         return k
+#     return kern
 
-def make_gp(x, y, alpha, ell, eps):
-    kernel = make_rbf_kernel(alpha=alpha, ell=ell)
-    K = kernel(x[:, None], x[None, :]) + (eps * np.eye(x.size))
-    Kinv = np.linalg.inv(K)
-    def gp(xn):
-        Kn = kernel(xn[:, None], x[None, :])
-        Knn = kernel(xn[:, None], xn[None, :]) + (eps * np.eye(xn.size))
-        y_mean = np.dot(np.dot(Kn, Kinv), y)
-        y_cov = Knn - np.dot(np.dot(Kn, Kinv), Kn.T)
-        return y_mean, y_cov
-    return gp
+# def make_gp(x, y, alpha, ell, eps):
+#     kernel = make_rbf_kernel(alpha=alpha, ell=ell)
+#     K = kernel(x[:, None], x[None, :]) + (eps * np.eye(x.size))
+#     Kinv = np.linalg.inv(K)
+#     def gp(xn):
+#         Kn = kernel(xn[:, None], x[None, :])
+#         Knn = kernel(xn[:, None], xn[None, :]) + (eps * np.eye(xn.size))
+#         y_mean = np.dot(np.dot(Kn, Kinv), y)
+#         y_cov = Knn - np.dot(np.dot(Kn, Kinv), Kn.T)
+#         return y_mean, y_cov
+#     return gp
 
-def make_kde_smoother(x, y, lam):
-    def kde_smoother(xn):
-        dists = np.abs(xn[:, None] - x[None, :]) / lam
-        pdist = np.exp(-0.5 * dists**2) / np.sqrt(2)
-        est = np.sum(pdist * y, axis=-1) / np.sum(pdist, axis=-1)
+def make_kde_smoother(x, lam):
+    dists = np.abs(x[:, None] - x[None, :]) / lam
+    pdist = np.exp(-0.5 * dists**2) / np.sqrt(2)
+    sum_pdist = np.sum(pdist, axis=-1)
+    def kde_smoother(y):
+        est = np.sum(pdist * y, axis=-1) / sum_pdist
         return est
     return kde_smoother
 
@@ -109,8 +110,8 @@ def IPE(samps, smooth):
         # assert ((pfell >= 0) & (pfell <= 1)).all()
 
         lam = 0.2
-        kde_smoother = make_kde_smoother(x, pfell_mean, lam)
-        pfell = kde_smoother(x)[:, None, None]
+        kde_smoother = make_kde_smoother(x, lam)
+        pfell = kde_smoother(pfell_mean)[:, None, None]
 
         def f(x):
             # likelihood of 1 = pfell
