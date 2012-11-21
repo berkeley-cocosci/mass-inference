@@ -110,10 +110,10 @@ plt.xlim(-1, 11)
 
 # model observer parameters
 nthresh0          = 1                            # feedback threshold for "fall"
-nthresh           = 4                            # ipe threshold for "fall"
+nthresh           = 1                            # ipe threshold for "fall"
 nsamps            = 300                          # number of ipe samples
 f_smooth          = True                         # smooth ipe likelihoods
-p_ignore_stimulus = 0.1                          # probability of ignoring stimulus
+p_ignore_stimulus = 0.0                          # probability of ignoring stimulus
 
 # <codecell>
 
@@ -162,12 +162,13 @@ plt.ylim(0, 1)
 ##################################
 
 # particle filter parameters
-n_part       = 1                               # number of particles
-neffthresh   = n_part * 1.0                     # number of effective particles threshold
+n_part       = 500                               # number of particles
+neffthresh   = n_part * 0.75                     # number of effective particles threshold
 kw           = 0.1                               # kernel width for smoothing
-pn           = 0.1                               # noise
+pn           = 2.0                               # noise
 f_use_model  = True                              # if True, use responses from model observer,
                                                  # if False, use responses from human data
+f_plot_particle = False
 
 # for smoothing likelihoods
 smoother = mo.make_kde_smoother(np.arange(0, n_kappas*0.1, 0.1), kw)
@@ -180,8 +181,11 @@ rso = np.random.RandomState(50)
 
 if f_use_model:
     true_responses = m_responses.copy().astype('i8')
-    #sidxs = [0, 3, 6, 8, 10, 13, 16, 18, 20, 23, 26]
-    sidxs = [0]#, 13, 26]
+    # true_responses = mo.responses(
+    #     m_kappas[:, [-1]]*np.ones(m_kappas.shape),
+    #     outcomes[:, None], ipe_samps, p_ignore_stimulus, f_smooth)
+    sidxs = [0, 3, 6, 8, 10, 13, 16, 18, 20, 23, 26]
+    #sidxs = [0]#, 13, 26]
 
 else:
     true_responses = h_responses.copy()
@@ -197,18 +201,109 @@ thetas = np.empty((n_subj, n_part, n_trial+1, n_kappas)) * np.nan
 weights = np.empty((n_subj, n_part, n_trial+1)) * np.nan
 mle_alphas = np.empty((n_subj, n_trial+1, n_kappas)) * np.nan
 
-thetas[:, :, 0] = np.log(smoother(rso.dirichlet(np.ones(n_kappas), (n_subj, n_part))[..., None, :]))
+thetas[:, :, 0] = np.log(smoother(
+    rso.dirichlet(np.ones(n_kappas), (n_subj, n_part))[..., None, :]))
 #thetas[:, :, 0] = np.log(1. / n_kappas)
 weights[:, :, 0] = np.log(np.ones((n_subj, n_part)) / n_part)
 mle_alphas[:, 0] = np.ones((n_subj, n_kappas)) / n_kappas
 
 # <codecell>
 
+###########################
+##### PARTICLE FILTER #####
+###########################
+
+if f_plot_particle:
+    x = np.arange(n_kappas)
+    plt.close('all')
+    plt.figure(1)
+    n = 4
+    pp = []
+    pl = []
+    for i in xrange(n):
+        plt.subplot(1, n, i+1)
+        pp.append(plt.plot(x, np.zeros(n_kappas), 'b.')[0])
+        pl.append(plt.plot(x, np.zeros(n_kappas), 'b-')[0])
+        plt.ylim(0, 1)
+    plt.show()
+    plt.draw()
+    plt.draw()
+
+for idx, sidx in enumerate(sidxs):
+
+    print idx
+    rso.seed(100)
+        
+    for t in xrange(0, n_trial):
+
+        thetas_t = thetas[idx, :, t].copy()
+        weights_t = weights[idx, :, t].copy()
+        samps_t = ipe_samps[t]
+
+        # compute likelihood of outcomes
+        p_outcomes = np.exp(mo.predict(
+            thetas_t, outcomes[:, None], samps_t, f_smooth))
+
+        # observe response
+        response_t = int(true_responses[sidx, t])
+
+        # compute likelihood of response
+        p_response = (p_outcomes[:, response_t]*(1-p_ignore_stimulus) + 
+                      (1./n_responses)*(p_ignore_stimulus))
+
+        # observe feedback
+        #obs_t = feedback[t, sidx]
+        #obs_t = feedback[t, ikappa0]
+        obs_t = feedback[t, -1]
+
+        # update mass ratio belief
+        ef = mo.evaluateFeedback(obs_t, samps_t, f_smooth)
+        us_noise = pn*rso.dirichlet(np.ones(n_kappas), (n_part,))
+        noise = smoother(us_noise[:, None, :])
+        v = np.exp(normalize(thetas_t + ef + np.log(noise), axis=-1)[1])
+        #m_theta = normalize(np.log(smoother(v[:, None])), axis=-1)[1]
+        #m_theta = np.log(smoother(v[:, None]))
+        m_theta = np.log(v)
+
+        # weight particles
+        weights_t = normalize(np.log(p_response) + weights_t)[1]
+        
+        # compute number of effective particles
+        neff = 1. / np.sum(np.exp(weights_t)**2)
+
+        # resample particles
+        if neff < neffthresh:
+            tidx = weightedSample(
+                np.exp(weights_t), n_part, rso=rso)
+            thetas[idx, :, t+1] = m_theta[tidx]
+            weights[idx, :, t+1] = np.log(
+                np.ones(n_part, dtype='f8') / n_part)
+        else:
+            thetas[idx, :, t+1] = m_theta
+            weights[idx, :, t+1] = weights_t
+
+        # plot
+        if f_plot_particle:
+            pp[0].set_ydata(np.exp(thetas_t)[0])
+            pl[0].set_ydata(np.exp(thetas_t)[0])
+            pp[1].set_ydata(np.exp(ef)[0])
+            pl[1].set_ydata(np.exp(ef)[0])
+            pp[2].set_ydata(us_noise[0])
+            pl[2].set_ydata(noise[0])
+            pp[3].set_ydata(v[0])
+            pl[3].set_ydata(v[0])
+            plt.draw()
+
+
+# <codecell>
+
+plt.close('all')
 fig = plt.figure(3)
 plt.clf()
-fig.set_figwidth(9)
-fig.set_figheight(3)
-r, c = 1, 3
+#fig.set_figwidth(9)
+#fig.set_figheight(3)
+#r, c = 1, 3
+r, c = 3, 4
 n = r*c
 exp = np.exp(np.log(0.5) / np.log(1./27))    
 gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
@@ -222,7 +317,7 @@ for i, sidx in enumerate(sidxs):
     subjname = "Observed $\kappa=%s$" % float(ratios[sidx])
     img = lat.plot_theta(
         None, None, ax,
-        np.mean(np.exp(thetas[i]), axis=0),
+        np.sum(np.exp(thetas[i]) * np.exp(weights[i,...,None]), axis=0),
         subjname,
         exp=exp,
         cmap=cmap,
@@ -248,6 +343,8 @@ cax = plt.subplot(gs[:, -1])
 cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
 cb.set_ticklabels(logcticks)
 cax.set_title("$P_t(\kappa)$", fontsize=14)
+plt.draw()
+plt.draw()
 
     # subjname = "Model Subj. r=%.1f" % ratios[sidx]
     # print subjname
@@ -259,87 +356,6 @@ cax.set_title("$P_t(\kappa)$", fontsize=14)
 
 # <codecell>
 
-###########################
-##### PARTICLE FILTER #####
-###########################
-x = np.arange(n_kappas)
-
-plt.close('all')
-plt.figure(1)
-plt.subplot(1, 3, 1)
-pp1 = plt.plot(x, np.zeros(n_kappas), 'b.')[0]
-pl1 = plt.plot(x, np.zeros(n_kappas), 'b-')[0]
-plt.ylim(0, 1)
-plt.subplot(1, 3, 2)
-pp2 = plt.plot(x, np.zeros(n_kappas), 'b.')[0]
-pl2 = plt.plot(x, np.zeros(n_kappas), 'b-')[0]
-plt.ylim(0, 1)
-plt.subplot(1, 3, 3)
-pp3 = plt.plot(x, np.zeros(n_kappas), 'b.')[0]
-pl3 = plt.plot(x, np.zeros(n_kappas), 'b-')[0]
-plt.ylim(0, 1)
-plt.show()
-plt.draw()
-plt.draw()
-
-for idx, sidx in enumerate(sidxs):
-
-    print idx
-    rso.seed(100)
-        
-    for t in xrange(0, n_trial):
-
-        thetas_t = thetas[idx, :, t].copy()
-        weights_t = weights[idx, :, t].copy()
-        samps_t = ipe_samps[t]
-        #obs_t = feedback[t, sidx]
-        obs_t = feedback[t, ikappa0]
-        response_t = true_responses[sidx, t]
-
-        if not np.isnan(response_t):
-            response_t = int(response_t)
-             
-            # propagate particles
-            ef = mo.evaluateFeedback(obs_t, samps_t, f_smooth)
-            noise = rso.dirichlet(np.ones(n_kappas), (n_part,))
-            #v = np.exp(normalize(np.log((1-pn)*np.exp(thetas_t + ef) + pn*noise), axis=-1)[1])
-            v = np.exp(normalize(thetas_t + ef + np.log(pn*noise), axis=-1)[1])
-            m_theta = normalize(np.log(smoother(v[:, None])), axis=-1)[1]
-
-            pp1.set_ydata(np.exp(thetas_t)[0])
-            pl1.set_ydata(smoother(np.exp(thetas_t)[0][:, None]))
-            pp2.set_ydata(np.exp(thetas_t + ef)[0])
-            pl2.set_ydata(smoother(np.exp(thetas_t + ef)[0][:, None]))
-            pp3.set_ydata(v)
-            pl3.set_ydata(smoother(v[:, None]))
-            plt.draw()
-
-            # compute new weights
-            p_outcomes = np.exp(mo.predict(
-                thetas_t, outcomes[:, None], samps_t, f_smooth))
-            p_response = (p_outcomes[:, response_t]*(1-p_ignore_stimulus) + 
-                          (1./n_responses)*(p_ignore_stimulus))
-            weights_t = normalize(np.log(p_response) + weights_t)[1]
-            
-            # compute number of effective particles
-            neff = 1. / np.sum(np.exp(weights_t)**2)
-            if neff < neffthresh:
-                # sample new particles
-                tidx = weightedSample(
-                    np.exp(weights_t), n_part, rso=rso)
-
-                # update
-                thetas[idx, :, t+1] = m_theta[tidx]
-                weights[idx, :, t+1] = np.log(
-                    np.ones(n_part, dtype='f8') / n_part)
-            else:
-                thetas[idx, :, t+1] = m_theta
-                weights[idx, :, t+1] = weights_t
-
-        else:
-            thetas[idx, :, t+1] = thetas_t
-            weights[idx, :, t+1] = weights_t
-
-# <codecell>
-
+print thetas.shape
+print weights.shape
 
