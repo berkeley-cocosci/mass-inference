@@ -1,0 +1,111 @@
+<!-- based on https://github.com/longouyang/even-odd -->
+
+<html>
+
+  <head>
+    <title>Experiment on intuitive pysics</title>
+    <script src="resources/js/jquery.min.js"></script>
+    <script src="resources/js/mmturkey.js"></script>
+    <script src="resources/js/underscore-min.js"></script>
+    <script src="resources/js/swfobject.js"></script>
+    <link rel="stylesheet" href="resources/css/style.css" />
+  </head>
+
+  <body>
+
+    <div class="slide" id="introduction">
+
+      <div class="indicator-outer">
+        <div class="indicator" style="width: 10px"></div>
+      </div>
+
+      <img src="resources/images/UCSeal122x122.gif" alt="University of California, Berkeley">
+      <img src="resources/images/Bayes-500h.jpg" height="122" alt="Computational Cognitive Science Group">
+      <p id='logo-text'>UC Berkeley Computational Cognitive Science
+      Group</p>
+
+      <p class="block-text">You will be shown several different short
+      movies and and asked to answer a question for each of them. Each
+      video will only be shown once, so it is important to pay close
+      attention.</p>
+
+      <p class="block-text">Some of the questions don't have a "right"
+      answer -- just do your best.</p>
+
+      <p class="block-text">Other questions do have a correct answer,
+      and you must answer these correctly to be approved.</p>
+
+      <button type="button" onclick="$('#introduction').hide(); this.blur(); return showInstructions();">Start</button>
+
+      <!-- <p class="block-text" id="legal">COUHES statement</p> -->
+
+    </div>
+
+    <div class="slide" id="instructions">
+
+      <div class="indicator-outer">
+	<div style="width: 30px" class="indicator"></div>
+      </div>
+
+      <p class="block-text">
+	In this experiment, you will be making judgments about towers
+	of "stable" and "unstable" building blocks. Stable towers,
+	like the following, stay standing:
+	
+	<div id="stable-example"></div>
+      </p>
+
+      <p class="block-text">
+	And unstable towers fall down:
+
+	<div id="unstable-example"></div>
+      </p>
+
+      <button type="button" onclick="$('#instructions').hide(); this.blur(); return experiment.start();">Start</button>
+
+    </div>
+
+    <div class="slide" id="normal_trial">
+
+      <div class="indicator-outer">
+        <div id="indicator-stage" style="width: 60px" class="indicator"></div>
+      </div>
+
+      <p class="block-text">
+	<div id="instructions1">When you are ready, click the 'Play
+	  Video' button. You may only watch the video once.</div>
+	<div id="instructions2">Now, based on the video, please answer
+	  the following question:</div>
+      </p>
+
+      <div id="play-button">
+	<button type="button" onclick="experiment.play()">Play Video</button>
+      </div>
+
+      <div id="video-container">
+	<div id="player"></div>
+      </div>
+  
+      <p class="block-text">
+	<div id="question">
+	  Did the tower fall down? 
+	  <input type="radio" value="yes" name="response" id="response_yes" onclick="$('#next-button').show();">Yes</input>
+	  <input type="radio" value="no" name="response" id="response_no" onclick="$('#next-button').show();">No</input>
+	</div>
+      
+	<div id="next-button">
+          <button type="button" onclick="this.blur(); return experiment.submitAndNext()">Next page</button>
+	</div>
+      </p>
+      
+    </div>
+
+    <div class="slide" id="finished">
+      You're finished - thanks for participating! Submitting to
+      Mechanical Turk...
+    </div>
+
+    <script src="resources/js/experiment.js"></script>
+
+  </body>
+</html>
