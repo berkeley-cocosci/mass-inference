@@ -67,7 +67,9 @@ var experiment = {
     },
 
     initialize : function(msg) {
-	experiment.numTrials = msg;
+	var info = $.parseJSON(msg);
+	experiment.numTrials = info.numTrials;
+	experiment.pid = info.pid;
 	get('instructions', showInstructions);
     },
 
@@ -78,7 +80,11 @@ var experiment = {
 	    return experiment.end();
 	}
 
-	post('stimulus', { index: experiment.index }, experiment.show);
+	var data = {
+	    index : experiment.index,
+	    pid : experiment.pid
+	};
+	post('stimulus', data, experiment.show);
     },
 
     show: function(msg) {
@@ -101,6 +107,7 @@ var experiment = {
 	} else {
 	    var time = new Date().getTime() - experiment.start;
 	    var data = {
+		pid : experiment.pid,
 		trial : experiment.index,
 		stimulus : experiment.curVideo,
 		time : time / 1000,

@@ -23,18 +23,22 @@ cgitb.enable(display=0, logdir="cgitb", format='plain')
 trials = [0, 1]
 stims = ["stim_1.swf", "stim_2.swf"]
 fields = ["trial", "stimulus", "response", "time"]
-turkid = "XYZ"
+pformat = "%03d"
 
 #################
 
-def write_data(data):
-    datafile = "data/%s.csv" % turkid
+def create_datafile(pid):
+    datafile = "data/%s.csv" % (pformat % pid)
+    logging.info("Creating data file: '%s'" % datafile)
+    with open(datafile, "w") as fh:
+        fh.write(",".join(fields) + "\n")
+
+def write_data(pid, data):
+    datafile = "data/%s.csv" % (pformat % pid)
 
     # write csv headers to the file if they don't exist
     if not os.path.exists(datafile):
-        logging.info("Creating data file: '%s'" % datafile)
-        with open(datafile, "w") as fh:
-            fh.write(",".join(fields) + "\n")
+        raise IOError("datafile does not exist: %s" % datafile)
 
     # write data to the file
     vals = ",".join([str(data[f]) for f in fields]) + "\n"
@@ -44,12 +48,13 @@ def write_data(data):
 
 #################
 
-def error(form=None):
+def error(msg):
     # log the error
-    logging.error("Invalid request")
+    logging.error("Invalid request: %s" % msg)
 
     # respond
     print http.status(400, "Bad Request")
+    print msg
 
 def send_page(page):
     # read the html file
@@ -65,12 +70,30 @@ def send_page(page):
     print html
 
 def initialize(form):
+    # get list of all ids
+    ids = [
+        int(os.path.splitext(x)[0]) 
+        for x in os.listdir("data") 
+        if x.endswith(".csv")
+        ]
+    # set participant id (pid)
+    pid = 1 if len(ids) == 0 else max(ids) + 1
+    # create new data file
+    create_datafile(pid)
+
+    # initialization data we'll be sending
+    init = {
+        'numTrials': len(trials),
+        'pid': pformat % pid
+        }
+    json_init = json.dumps(init)
+        
     # log information about what we're sending
-    logging.info("Sending number of trials: %d" % len(trials))
+    logging.info("Sending init data: %s" % json_init)
 
     # respond
     print http.content_type("application/json")
-    print json.dumps(len(trials))
+    print json.dumps(json_init)
 
 def getStimulus(form):
     # get the index from the form
@@ -80,8 +103,7 @@ def getStimulus(form):
     try:
         index = int(sindex)
     except:
-        logging.error("Bad index: %s" % sindex)
-        return error()
+        return error("Bad index: %s" % sindex)
 
     # look up the stimulus
     stim = stims[trials[index]]
@@ -91,15 +113,21 @@ def getStimulus(form):
     print http.content_type("application/json")
     print json.dumps(stim)
     
-def submit(form): 
-    # try to extract all the relevant information that was submitted
+def submit(form):
     try:
+        # get the participant's id
+        pid = int(form.getvalue("pid"))
+    except:
+        return error("Could not get pid")
+
+    try:         
+        # try to extract all the relevant information
         data = dict((k, form.getvalue(k)) for k in fields)
     except:
-        return error()
+        return error("Could not get all field values")
 
     # write the data to file
-    write_data(data)
+    write_data(pid, data)
 
     # respond
     print http.status(200, "OK")
