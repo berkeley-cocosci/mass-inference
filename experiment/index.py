@@ -5,6 +5,8 @@ import cgitb
 import json
 import logging
 import http_responses as http
+import os
+from os import environ
 
 # configure logging
 logging.basicConfig(
@@ -18,20 +20,19 @@ cgitb.enable()
     
 #################
 
-def index(form):
-    """Respond with the physics-experiment.html main page"""
+def send_page(page):
 
-    page = "physics-experiment.html"
-    with open(page, "r") as fh:
+    with open(os.path.join("stages", page), "r") as fh:
         html = fh.read()
-
-    logging.info("Sending index page '%s'" % page)
+    logging.info("Sending page '%s'" % page)
     logging.debug(html)
-    
+
     print http.content_type("text/html")
     print html
 
-def start(form):
+#################
+    
+def initialize(form):
     """Shuffle the stimuli and send the list to the client"""
 
     stims = ["stim_1.swf", "stim_2.swf"]
@@ -54,19 +55,37 @@ def submit(form):
 # get the request
 form = cgi.FieldStorage()
 logging.info("Got request: " + str(form))
+for key in sorted(environ.keys()):
+    logging.info("%s %s" % (key, environ[key]))
 
-# parse the action, defaulting to the index
-action = form.getvalue('f', 'index')
-logging.info("Requested action is '" + action + "'")
+# parse the page, defaulting to the index
+if environ['REQUEST_METHOD'] == 'GET':
+    page = form.getvalue('page', 'index')
+    logging.info("Requested page is '" + page + "'")
 
-if action == "index":
-    index(form)
-elif action == "start":
-    start(form)
-elif action == "submit":
-    submit(form)
+    if page == "index":
+        send_page("experiment.html")
+    elif page == "instructions":
+        send_page("instructions.html")
+    elif page == "trial":
+        send_page("normal-trial.html")
+    elif page == "finished":
+        send_page("finished.html")
+
+# parse the action
+elif environ['REQUEST_METHOD'] == 'POST':
+    action = form.getvalue('a', None)
+    logging.info("Requested action is '" + action + "'")
+
+    if action == "initialize":
+        initialize(form)
+    elif action == "submit":
+        submit(form)
+    else:
+        logging.error("Invalid action: " + action)
+        print http.status(400, "Bad Request")
 
 else:
-    logging.error("Invalid action: " + action)
+    logging.error("Invalid request")
     print http.status(400, "Bad Request")
 
