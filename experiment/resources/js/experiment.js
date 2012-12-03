@@ -114,7 +114,6 @@ var experiment = {
 	});
 	request.done(function (msg) {
 	    experiment.videoOrder = msg;
-	    alert(experiment.videoOrder);
 	    experiment.next();
 	});
 	request.fail(function (msg) {
