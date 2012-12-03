@@ -16,76 +16,127 @@ logging.basicConfig(
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # enable debugging
-cgitb.enable()
+cgitb.enable(display=0, logdir="cgitb", format='plain')
     
 #################
 
-def send_page(page):
+trials = [0, 1]
+stims = ["stim_1.swf", "stim_2.swf"]
+fields = ["trial", "stimulus", "response", "time"]
+turkid = "XYZ"
 
+#################
+
+def write_data(data):
+    datafile = "data/%s.csv" % turkid
+
+    # write csv headers to the file if they don't exist
+    if not os.path.exists(datafile):
+        logging.info("Creating data file: '%s'" % datafile)
+        with open(datafile, "w") as fh:
+            fh.write(",".join(fields) + "\n")
+
+    # write data to the file
+    vals = ",".join([str(data[f]) for f in fields]) + "\n"
+    logging.info("Writing data to file '%s': %s" % (datafile, vals))
+    with open(datafile, "a") as fh:
+        fh.write(vals)
+
+#################
+
+def error(form=None):
+    # log the error
+    logging.error("Invalid request")
+
+    # respond
+    print http.status(400, "Bad Request")
+
+def send_page(page):
+    # read the html file
     with open(os.path.join("stages", page), "r") as fh:
         html = fh.read()
+
+    # log information
     logging.info("Sending page '%s'" % page)
     logging.debug(html)
 
+    # respond
     print http.content_type("text/html")
     print html
 
-#################
-    
 def initialize(form):
-    """Shuffle the stimuli and send the list to the client"""
+    # log information about what we're sending
+    logging.info("Sending number of trials: %d" % len(trials))
 
-    stims = ["stim_1.swf", "stim_2.swf"]
-    json_stims = json.dumps(stims)
-    
-    logging.info("Sending stimuli list: %s" % stims)
-    logging.debug(json_stims)
-
+    # respond
     print http.content_type("application/json")
-    print json_stims
+    print json.dumps(len(trials))
+
+def getStimulus(form):
+    # get the index from the form
+    sindex = form.getvalue('index', 'undefined')
+
+    # try to convert it into an integer
+    try:
+        index = int(sindex)
+    except:
+        logging.error("Bad index: %s" % sindex)
+        return error()
+
+    # look up the stimulus
+    stim = stims[trials[index]]
+    logging.info("Sending stimulus name: %s" % stims)
+
+    # respond
+    print http.content_type("application/json")
+    print json.dumps(stim)
     
 def submit(form): 
-    """Parse the client participant data and save it, then generate a
-    Turk id and send it back"""
-    
+    # try to extract all the relevant information that was submitted
+    try:
+        data = dict((k, form.getvalue(k)) for k in fields)
+    except:
+        return error()
+
+    # write the data to file
+    write_data(data)
+
+    # respond
     print http.status(200, "OK")
 
 #################
+
+pages = {
+    "index": "experiment.html",
+    "instructions": "instructions.html",
+    "trial": "normal-trial.html",
+    "finished": "finished.html",
+    }
+
+actions = {
+    "initialize": initialize,
+    "stimulus": getStimulus,
+    "submit": submit,
+    }
 
 # get the request
 form = cgi.FieldStorage()
 logging.info("Got request: " + str(form))
 for key in sorted(environ.keys()):
-    logging.info("%s %s" % (key, environ[key]))
-
+    logging.debug("%s %s" % (key, environ[key]))
+    
 # parse the page, defaulting to the index
 if environ['REQUEST_METHOD'] == 'GET':
     page = form.getvalue('page', 'index')
     logging.info("Requested page is '" + page + "'")
-
-    if page == "index":
-        send_page("experiment.html")
-    elif page == "instructions":
-        send_page("instructions.html")
-    elif page == "trial":
-        send_page("normal-trial.html")
-    elif page == "finished":
-        send_page("finished.html")
+    send_page(pages[page])
 
 # parse the action
 elif environ['REQUEST_METHOD'] == 'POST':
     action = form.getvalue('a', None)
     logging.info("Requested action is '" + action + "'")
-
-    if action == "initialize":
-        initialize(form)
-    elif action == "submit":
-        submit(form)
-    else:
-        logging.error("Invalid action: " + action)
-        print http.status(400, "Bad Request")
+    handler = actions.get(action, error)
+    handler(form)
 
 else:
-    logging.error("Invalid request")
-    print http.status(400, "Bad Request")
-
+    error(form)
