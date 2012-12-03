@@ -132,7 +132,7 @@ function showInstructions(msg) {
 		   loop: "true" };
 
     var width = 360 / (experiment.numTrials + 1);
-    $("#indicator-stage").width("30px");
+    $("#indicator-stage").width(width + "px");
     $("#content").replaceWith(msg);
 
     embedVideo(stableVideo, "stable-example", {}, params, {}, undefined);
@@ -141,7 +141,7 @@ function showInstructions(msg) {
 
 function showTrial(msg) {
     // Update the progress bar
-    var width = (experiment.index + 1) * (360 / (experiment.numTrials + 1));
+    var width = (experiment.index + 2) * (360 / (experiment.numTrials + 1));
     $("#indicator-stage").width(120 + width + "px");
 
     // Replace content

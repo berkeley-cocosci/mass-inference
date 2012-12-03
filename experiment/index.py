@@ -27,6 +27,20 @@ pformat = "%03d"
 
 #################
 
+def get_pid(form):
+    # try to get the participant's id
+    try:
+        pid = int(form.getvalue("pid"))
+    except:
+        return None
+
+    # check that the data file exists
+    datafile = "data/%s.csv" % (pformat % pid)
+    if not os.path.exists(datafile):
+        return None
+    
+    return pid
+
 def create_datafile(pid):
     datafile = "data/%s.csv" % (pformat % pid)
     logging.info("Creating data file: '%s'" % datafile)
@@ -96,6 +110,12 @@ def initialize(form):
     print json.dumps(json_init)
 
 def getStimulus(form):
+    
+    # make sure the pid is valid
+    pid = get_pid(form)
+    if pid is None:
+        return error("Bad pid")
+    
     # get the index from the form
     sindex = form.getvalue('index', 'undefined')
 
@@ -114,11 +134,11 @@ def getStimulus(form):
     print json.dumps(stim)
     
 def submit(form):
-    try:
-        # get the participant's id
-        pid = int(form.getvalue("pid"))
-    except:
-        return error("Could not get pid")
+
+    # make sure the pid is valid
+    pid = get_pid(form)
+    if pid is None:
+        return error("Bad pid")
 
     try:         
         # try to extract all the relevant information
