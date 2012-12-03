@@ -35,7 +35,7 @@
       <p class="block-text">Other questions do have a correct answer,
       and you must answer these correctly to be approved.</p>
 
-      <button type="button" onclick="$('#introduction').hide(); this.blur(); return showInstructions();">Start</button>
+      <button type="button" onclick="return showInstructions();">Start</button>
 
       <!-- <p class="block-text" id="legal">COUHES statement</p> -->
 
@@ -61,7 +61,7 @@
 	<div id="unstable-example"></div>
       </p>
 
-      <button type="button" onclick="$('#instructions').hide(); this.blur(); return experiment.start();">Start</button>
+      <button type="button" onclick="return startExperiment();">Start</button>
 
     </div>
 
@@ -94,15 +94,18 @@
 	</div>
       
 	<div id="next-button">
-          <button type="button" onclick="this.blur(); return experiment.submitAndNext()">Next page</button>
+          <button type="button" onclick="return nextTrial()">Next page</button>
 	</div>
       </p>
       
     </div>
 
     <div class="slide" id="finished">
-      You're finished - thanks for participating! Submitting to
-      Mechanical Turk...
+      You're finished - thanks for participating!
+    </div>
+
+    <div class="slide" id="error">
+      Error!
     </div>
 
     <script src="resources/js/experiment.js"></script>

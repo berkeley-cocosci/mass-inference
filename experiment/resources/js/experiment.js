@@ -1,23 +1,23 @@
 // Adjust this:
 
-var videos = [1,2,3,4,5,6];
+var videos = [1];
 
 // --------------------------------------------------------------------
 
-if (!String.prototype.supplant) {
-    String.prototype.supplant = function (o) {
-        return this.replace(
-		/{([^{}]*)}/g,
-	    function (a, b) {
-		var r = o[b];
-		return typeof r === 'string' || typeof r === 'number' ? r : a;
-	    }
-	);
-    };
-}
+// if (!String.prototype.supplant) {
+//     String.prototype.supplant = function (o) {
+//         return this.replace(
+// 		/{([^{}]*)}/g,
+// 	    function (a, b) {
+// 		var r = o[b];
+// 		return typeof r === 'string' || typeof r === 'number' ? r : a;
+// 	    }
+// 	);
+//     };
+// }
 
-var videoFolder = "file:///Users/jhamrick/project/physics-experiment/www/resources/video/";
-var videoTemplate = "stim_{id}.swf";
+var videoFolder = "resources/video/";
+// var videoTemplate = "stim_{id}.swf";
 var videoWidth = "320";
 var videoHeight = "240";
 var flashVersion = "9.0.0";
@@ -45,7 +45,7 @@ function setTimer(e) {
 }
 
 function showVideo(curVideo) {
-    var video = videoFolder + videoTemplate.supplant({id: curVideo});
+    var video = videoFolder + curVideo; //videoTemplate.supplant({id: curVideo});
     var flashvars = {};
     var params = { wmode: "direct",
 		   play: "true",
@@ -96,7 +96,7 @@ var experiment = {
 
     globalComprehension : "",
     index : 0,
-    videoOrder : myVideoOrder,
+    videoOrder : undefined,
     curVideo : "",
     timer : undefined,
 
@@ -108,13 +108,33 @@ var experiment = {
     },
 
     start: function() {
-	//experiment.globalComprehension = $("#comprehension_1").val();
-	return experiment.next();
+	var request = $.ajax({
+	    type: "GET",
+	    url: "../../index.py?f=start",
+	});
+	request.done(function (msg) {
+	    experiment.videoOrder = msg;
+	    alert(experiment.videoOrder);
+	    experiment.next();
+	});
+	request.fail(function (msg) {
+	    showSlide("error");
+	});
     },
 
     end: function() {
-	showSlide("finished");
-	setTimeout(function() { turk.submit(experiment) }, 1500);
+	var request = $.ajax({
+	    type: "POST",
+	    url: "../../index.py?f=submit", 
+	    data: experiment.data[0],
+	});
+	request.done(function (msg) { 
+	    showSlide("finished");
+	});
+	request.fail(function (msg) {
+	    showSlide("error");	    
+	});
+	//setTimeout(function() { turk.submit(experiment) }, 1500);
     },
 
     submitAndNext : function() {
@@ -134,7 +154,6 @@ var experiment = {
     },
 
     next: function() {
-
 	experiment.index = experiment.index + 1;
 	experiment.curVideo = experiment.videoOrder.shift();
 
@@ -163,7 +182,6 @@ var experiment = {
 };
 
 function showInstructions() {
-
     var stableVideo = videoFolder + "stable.swf";
     var unstableVideo = videoFolder + "unstable.swf";
     var flashvars = {};
@@ -171,6 +189,9 @@ function showInstructions() {
 		   play: "true",
 		   loop: "true" };
     var attributes = {};
+
+    $("#introduction").hide();
+    this.blur();
     
     $("#instructions").show();
     swfobject.embedSWF(
@@ -183,3 +204,13 @@ function showInstructions() {
 	flashvars, params, attributes);
 }
 
+function startExperiment() {
+    $("#instructions").hide();
+    this.blur();
+    return experiment.start();
+}
+
+function nextTrial() {
+    this.blur();
+    return experiment.submitAndNext();
+}
