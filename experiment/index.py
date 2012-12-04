@@ -55,6 +55,14 @@ def get_pid(form):
     
     return pid
 
+def get_trial(pid):
+    datafile = "data/%s.csv" % (pformat % pid)
+    with open(datafile, "r") as fh:
+        data = fh.read()
+    trial = data.strip().split("\n")[-1].split(",")[0]
+    trial = -1 if trial == "trial" else int(trial)
+    return trial
+    
 def create_datafile(pid):
     datafile = "data/%s.csv" % (pformat % pid)
     logging.info("Creating data file: '%s'" % datafile)
@@ -130,15 +138,10 @@ def getTrialInfo(form):
     if pid is None:
         return error("Bad pid")
     
-    # get the index from the form
-    sindex = form.getvalue('index', 'undefined')
-
-    # try to convert it into an integer
-    try:
-        index = int(sindex)
-    except:
-        return error("Bad index: %s" % sindex)
-
+    # get the index
+    index = get_trial(pid) + 1
+    logging.info("Trial %d" % index)
+    
     # look up the trial information
     stim = stims[trials[index]]
     ttype = trial_types[index]
@@ -146,6 +149,7 @@ def getTrialInfo(form):
     response = responses[ttype]
 
     info = {
+        'index': index,
         'stimulus': stim,
         'question': question,
         'responses': response
@@ -171,12 +175,13 @@ def submit(form):
     except:
         return error("Could not get all field values")
 
-    if data['question'] == questions['normal']:
-        data['question'] = 'normal'
-    elif data['question'] == questions['catch']:
-        data['question'] = 'catch'
-    else:
-        return error("Unexpected question: %s" % data['question'])
+    # get the trial number
+    index = get_trial(pid) + 1
+
+    # populate some more data
+    data['question'] = trial_types[index]
+    data['trial'] = index
+    data['stimulus'] = stims[trials[index]]
 
     # write the data to file
     write_data(pid, data)

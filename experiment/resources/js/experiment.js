@@ -84,13 +84,13 @@ var experiment = {
 	}
 
 	var data = {
-	    index : experiment.index,
 	    pid : experiment.pid
 	};
 	post('trialinfo', data, experiment.show);
     },
 
     show: function(info) {
+	experiment.index = info.index,
 	experiment.curVideo = info.stimulus;
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
@@ -113,11 +113,8 @@ var experiment = {
 	    var time = new Date().getTime() - experiment.start;
 	    var data = {
 		pid : experiment.pid,
-		trial : experiment.index,
-		stimulus : experiment.curVideo,
 		time : time / 1000,
 		response : $("input[name=response]:checked").val(),
-		question : experiment.curQuestion,
 	    };
 	    post("submit", data, experiment.next);
 	}
