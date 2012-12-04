@@ -15,16 +15,15 @@
     <div id="player"></div>
   </div>
   
-  <p class="block-text">
-    <div id="question">
-      Did the tower fall down?
-      <input type="radio" value="yes" name="response" id="response_yes" onclick="$('#next-button').show();">Yes</input>
-      <input type="radio" value="no" name="response" id="response_no" onclick="$('#next-button').show();">No</input>
-    </div>
-    
-    <div id="next-button">
-      <button type="button" onclick="return experiment.submit();">Next page</button>
-    </div>
-  </p>
-  
+  <div id="question-container">
+    <p class="block-text">
+      <div id="question"></div>
+      <div id="responses"></div>
+    </p>
+  </div>
+
+  <div id="next-button">
+    <button type="button" onclick="return experiment.submit();">Next page</button>
+  </div>
+
 </div>

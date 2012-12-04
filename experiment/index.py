@@ -21,9 +21,23 @@ cgitb.enable(display=0, logdir="cgitb", format='plain')
 #################
 
 trials = [0, 1]
+trial_types = ["catch", "normal"]
+
 stims = ["stim_1.swf", "stim_2.swf"]
-fields = ["trial", "stimulus", "response", "time"]
+fields = ["trial", "stimulus", "question", "response", "time"]
 pformat = "%03d"
+
+questions = {
+    "normal": "Will the tower fall down?",
+    "catch": "Did the tower fall down?"
+    }
+
+responses = {
+    "normal": [("Yes, it <b>will fall</b> down", "yes"),
+               ("No, it <b>will not fall</b> down", "no")],
+    "catch":  [("Yes, it <b>did fall</b>", "yes"),
+               ("No, it <b>did not fall</b>", "no")]
+    }
 
 #################
 
@@ -109,7 +123,7 @@ def initialize(form):
     print http.content_type("application/json")
     print json.dumps(json_init)
 
-def getStimulus(form):
+def getTrialInfo(form):
     
     # make sure the pid is valid
     pid = get_pid(form)
@@ -125,13 +139,24 @@ def getStimulus(form):
     except:
         return error("Bad index: %s" % sindex)
 
-    # look up the stimulus
+    # look up the trial information
     stim = stims[trials[index]]
-    logging.info("Sending stimulus name: %s" % stims)
+    ttype = trial_types[index]
+    question = questions[ttype]
+    response = responses[ttype]
+
+    info = {
+        'stimulus': stim,
+        'question': question,
+        'responses': response
+        }
+    json_info = json.dumps(info)
+
+    logging.info("Sending trial info: %s" % json_info)
 
     # respond
     print http.content_type("application/json")
-    print json.dumps(stim)
+    print json_info
     
 def submit(form):
 
@@ -146,6 +171,13 @@ def submit(form):
     except:
         return error("Could not get all field values")
 
+    if data['question'] == questions['normal']:
+        data['question'] = 'normal'
+    elif data['question'] == questions['catch']:
+        data['question'] = 'catch'
+    else:
+        return error("Unexpected question: %s" % data['question'])
+
     # write the data to file
     write_data(pid, data)
 
@@ -157,13 +189,13 @@ def submit(form):
 pages = {
     "index": "experiment.html",
     "instructions": "instructions.html",
-    "trial": "normal-trial.html",
+    "trial": "trial.html",
     "finished": "finished.html",
     }
 
 actions = {
     "initialize": initialize,
-    "stimulus": getStimulus,
+    "trialinfo": getTrialInfo,
     "submit": submit,
     }
 

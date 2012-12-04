@@ -59,9 +59,12 @@ var experiment = {
 
     index : -1,
     numTrials : 0,
-    curVideo : "",
     start : undefined,
-    
+
+    curVideo : "",
+    curQuestion : "",
+    curResponses : [],
+
     start : function() {
 	post('initialize', {}, experiment.initialize);
     },
@@ -84,11 +87,13 @@ var experiment = {
 	    index : experiment.index,
 	    pid : experiment.pid
 	};
-	post('stimulus', data, experiment.show);
+	post('trialinfo', data, experiment.show);
     },
 
-    show: function(msg) {
-	experiment.curVideo = msg;
+    show: function(info) {
+	experiment.curVideo = info.stimulus;
+	experiment.curQuestion = info.question;
+	experiment.curResponses = info.responses;
 	get('trial', showTrial);	
     },
 
@@ -112,6 +117,7 @@ var experiment = {
 		stimulus : experiment.curVideo,
 		time : time / 1000,
 		response : $("input[name=response]:checked").val(),
+		question : experiment.curQuestion,
 	    };
 	    post("submit", data, experiment.next);
 	}
@@ -147,10 +153,23 @@ function showTrial(msg) {
     // Replace content
     $("#content").replaceWith(msg);
 
+    // Set question and responses
+    $("#question").html(experiment.curQuestion);
+    var r = experiment.curResponses;
+    for (var i=0; i<r.length; i++) {
+	$("#responses").append(
+	    "<input type='radio' " +
+		"value='" + r[i][1] + "' " + 
+		"name='response' " +
+		"onclick='$(\"#next-button\").show();'>" + 
+		r[i][0] + 
+		"</input><br />");
+    }		
+
     // Display the video stimulus.
     $("#video-container").hide();
     $("#instructions2").hide();
-    $("#question").hide();
+    $("#question-container").hide();
     $("#next-button").hide();
 
     // Scroll up to the top
@@ -161,7 +180,7 @@ function showQuestion() {
     $("#instructions1").hide();
     $("#video-container").hide();
     $("#instructions2").show();
-    $("#question").show();
+    $("#question-container").show();
 }
 
 function playStimulus() {
