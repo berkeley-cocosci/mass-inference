@@ -4,21 +4,27 @@ import cgi
 import cgitb
 import json
 import logging
-import http_responses as http
 import os
+import httplib
+
 from os import environ
 
 # configure logging
 logging.basicConfig(
-    filename="experiment.log", 
+    filename="../experiment.log", 
     level=logging.INFO,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # enable debugging
-cgitb.enable(display=0, logdir="cgitb", format='plain')
-    
+cgitb.enable(display=0, logdir="../cgitb", format='plain')
+
+
 #################
+# Configuration
+
+html_dir = "../html"
+data_dir = "../data"
 
 trials = [0, 1]
 trial_types = ["catch", "normal"]
@@ -39,7 +45,9 @@ responses = {
                ("No, it <b>did not fall</b>", "no")]
     }
 
+
 #################
+# Experiment functions
 
 def get_pid(form):
     # try to get the participant's id
@@ -49,14 +57,14 @@ def get_pid(form):
         return None
 
     # check that the data file exists
-    datafile = "data/%s.csv" % (pformat % pid)
+    datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
     if not os.path.exists(datafile):
         return None
     
     return pid
 
 def get_trial(pid):
-    datafile = "data/%s.csv" % (pformat % pid)
+    datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
     with open(datafile, "r") as fh:
         data = fh.read()
     trial = data.strip().split("\n")[-1].split(",")[0]
@@ -64,13 +72,13 @@ def get_trial(pid):
     return trial
     
 def create_datafile(pid):
-    datafile = "data/%s.csv" % (pformat % pid)
-    logging.info("Creating data file: '%s'" % datafile)
+    datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
+    logging.info("(%s) Creating data file: '%s'" % ((pformat % pid), datafile))
     with open(datafile, "w") as fh:
         fh.write(",".join(fields) + "\n")
 
 def write_data(pid, data):
-    datafile = "data/%s.csv" % (pformat % pid)
+    datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
 
     # write csv headers to the file if they don't exist
     if not os.path.exists(datafile):
@@ -78,23 +86,41 @@ def write_data(pid, data):
 
     # write data to the file
     vals = ",".join([str(data[f]) for f in fields]) + "\n"
-    logging.info("Writing data to file '%s': %s" % (datafile, vals))
+    logging.info("(%s) Writing data to file '%s': %s" % (
+        (pformat % pid), datafile, vals))
     with open(datafile, "a") as fh:
         fh.write(vals)
 
+        
 #################
+# Http functions
 
+def http_status(code, name):
+    msg = httplib.responses[code]
+    if msg != name:
+        raise ValueError("invalid code and/or name: %d %s" % (code, name))
+    response = "Status: %d %s\n\n" % (code, name)
+    return response
+
+def http_content_type(mime):
+    response = "Content-Type: %s\n\n" % mime
+    return response
+
+    
+#################
+# Server functions
+    
 def error(msg):
     # log the error
     logging.error("Invalid request: %s" % msg)
 
     # respond
-    print http.status(400, "Bad Request")
+    print http_status(400, "Bad Request")
     print msg
 
 def send_page(page):
     # read the html file
-    with open(os.path.join("stages", page), "r") as fh:
+    with open(os.path.join(html_dir, page), "r") as fh:
         html = fh.read()
 
     # log information
@@ -102,14 +128,14 @@ def send_page(page):
     logging.debug(html)
 
     # respond
-    print http.content_type("text/html")
+    print http_content_type("text/html")
     print html
 
 def initialize(form):
     # get list of all ids
     ids = [
         int(os.path.splitext(x)[0]) 
-        for x in os.listdir("data") 
+        for x in os.listdir(data_dir) 
         if x.endswith(".csv")
         ]
     # set participant id (pid)
@@ -125,10 +151,11 @@ def initialize(form):
     json_init = json.dumps(init)
         
     # log information about what we're sending
-    logging.info("Sending init data: %s" % json_init)
+    logging.info("(%s) Sending init data: %s" % 
+                 ((pformat % pid), json_init))
 
     # respond
-    print http.content_type("application/json")
+    print http_content_type("application/json")
     print json.dumps(json_init)
 
 def getTrialInfo(form):
@@ -140,7 +167,7 @@ def getTrialInfo(form):
     
     # get the index
     index = get_trial(pid) + 1
-    logging.info("Trial %d" % index)
+    logging.info("(%s) Trial %d" % ((pformat % pid), index))
     
     # look up the trial information
     stim = stims[trials[index]]
@@ -156,10 +183,11 @@ def getTrialInfo(form):
         }
     json_info = json.dumps(info)
 
-    logging.info("Sending trial info: %s" % json_info)
+    logging.info("(%s) Sending trial info: %s" % (
+        (pformat % pid), json_info))
 
     # respond
-    print http.content_type("application/json")
+    print http_content_type("application/json")
     print json_info
     
 def submit(form):
@@ -187,9 +215,11 @@ def submit(form):
     write_data(pid, data)
 
     # respond
-    print http.status(200, "OK")
+    print http_status(200, "OK")
 
+    
 #################
+# Request handling
 
 pages = {
     "index": "experiment.html",
@@ -206,20 +236,20 @@ actions = {
 
 # get the request
 form = cgi.FieldStorage()
-logging.info("Got request: " + str(form))
+logging.debug("Got request: " + str(form))
 for key in sorted(environ.keys()):
     logging.debug("%s %s" % (key, environ[key]))
     
 # parse the page, defaulting to the index
 if environ['REQUEST_METHOD'] == 'GET':
     page = form.getvalue('page', 'index')
-    logging.info("Requested page is '" + page + "'")
+    logging.info("Requested page: " + page)
     send_page(pages[page])
 
 # parse the action
 elif environ['REQUEST_METHOD'] == 'POST':
     action = form.getvalue('a', None)
-    logging.info("Requested action is '" + action + "'")
+    logging.info("Requested action: " + action)
     handler = actions.get(action, error)
     handler(form)
 
