@@ -154,10 +154,15 @@ lat.plot_theta(
 
 # <codecell>
 
-N = 30
+N = 20
+C = 6
 yes = np.nonzero(fb[order] == 0)[0]
 no = np.nonzero(fb[order] == 1)[0]
-eqorder = order[np.sort(np.hstack([yes[:N/2], no[:N/2]]))]
+eqorder = order[np.sort(np.hstack([
+    yes[:N/2], 
+    no[:N/2],
+    yes[-C/2:],
+    no[-C/2:]]))]
 print eqorder[:N]
 print stimuli[0, eqorder[:N]]
 print fb[eqorder[:N]]
