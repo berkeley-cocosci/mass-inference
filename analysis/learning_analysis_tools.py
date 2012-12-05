@@ -9,11 +9,11 @@ import scipy.stats
 import os
 import time
 
-import cogphysics
-import cogphysics.lib.circ as circ
-import cogphysics.lib.nplib as npl
-import cogphysics.lib.rvs as rvs
-import cogphysics.lib.stats as stats
+#import cogphysics
+#import cogphysics.lib.circ as circ
+#import cogphysics.lib.nplib as npl
+#import cogphysics.lib.rvs as rvs
+#import cogphysics.lib.stats as stats
 import cogphysics.tower.analysis_tools as tat
 
 from joblib import Memory
@@ -162,13 +162,17 @@ def load(predicate):
     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
 
 @memory.cache
-def make_observer_data(nthresh0, nthresh, nsamps):
+def make_observer_data(nthresh0, nthresh, nsamps, order=True):
     out = load('stability')
     rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
-    human, stimuli, sort, truth, ipe = order_by_trial(
-        rawhuman, rawhstim, raworder, rawtruth, rawipe)
-    truth = truth[0]
-    ipe = ipe[0]
+    if order:
+        human, stimuli, sort, truth, ipe = order_by_trial(
+            rawhuman, rawhstim, raworder, rawtruth, rawipe)
+        truth = truth[0]
+        ipe = ipe[0]
+    else:
+        truth = rawtruth.copy()
+        ipe = rawipe.copy()
 
     ipe_samps = np.concatenate([
         ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype(
