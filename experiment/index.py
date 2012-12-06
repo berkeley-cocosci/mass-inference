@@ -26,10 +26,12 @@ cgitb.enable(display=0, logdir="../cgitb", format='plain')
 html_dir = "../html"
 data_dir = "../data"
 
-trials = [0, 1]
-trial_types = ["catch", "normal"]
+n = 2
+stims = ["stim_%d" % i for i in xrange(1, n+1)]
 
-stims = ["stim_1.swf", "stim_2.swf"]
+trials = range(n)
+trial_types = ["normal"]*n#["catch", "normal"]
+
 fields = ["trial", "stimulus", "question", "response", "time"]
 pformat = "%03d"
 
@@ -39,10 +41,14 @@ questions = {
     }
 
 responses = {
-    "normal": [("Yes, it <b>will fall</b> down", "yes"),
-               ("No, it <b>will not fall</b> down", "no")],
-    "catch":  [("Yes, it <b>did fall</b>", "yes"),
-               ("No, it <b>did not fall</b>", "no")]
+    # "normal": [("Yes, it <b>will fall</b> down", "yes"),
+    #            ("No, it <b>will not fall</b> down", "no")],
+    # "catch":  [("Yes, it <b>did fall</b>", "yes"),
+    #            ("No, it <b>did not fall</b>", "no")]
+    "normal": [("Yes", "yes"),
+               ("No", "no")],
+    "catch": [("Yes", "yes"),
+              ("No", "no")]
     }
 
 

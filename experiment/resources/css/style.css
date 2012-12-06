@@ -1,85 +1,168 @@
 body {
-	padding: 0;
-	margin: 0;
-	font-family: Palatino Linotype, Bookman Antiqua, Palatino, serif;
-	font-size: 16px;
-	line-height: 20px;
+    padding: 0;
+    margin: 0;
+    font-family: Palatino Linotype, Bookman Antiqua, Palatino, serif;
+    font-size: 16px;
+    line-height: 20px;
+}
+
+p {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .slide {
-	width: 95%;
-	height: 95%;
-	display: none;
-	position: absolute;
-	margin: 0;
-	margin-left: 0.5%;
-	padding: 1% 2% 1% 2%;
+    width: 95%;
+    height: 95%;
+    display: none;
+    position: absolute;
+    /* margin: 0; */
+    margin-left: 0.5%;
+    padding: 1% 2% 1% 2%;
 }
 
 input, select, button {font-family: Georgia, serif; font-size: 14px;}
 
 button {
-	background: url(../images/button-gradient.png);
-	border: 1px solid #999;
-	border-top: 1px solid #e0e0e0;
-	border-left: 1px solid #e0e0e0;
-	margin: 10px;
-	padding-left: 5px;
-	padding-right: 5px;
-	height: 29px;
-	min-width: 70px;
+    background: url(../images/button-gradient.png);
+    border: 1px solid #999;
+    border-top: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    margin: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
+    height: 29px;
+    min-width: 70px;
 }
 button:active {
-	border-left: 1px solid #c9c9c9;
-	border-top: 1px solid #c9c9c9;
-	background: none;
-	background-color: #c9c9c9;
+    border-left: 1px solid #c9c9c9;
+    border-top: 1px solid #c9c9c9;
+    background: none;
+    background-color: #c9c9c9;
 }
 
 button[disabled] {
-	background: url(zen-button.png);
-	border: 1px solid #999;
-	border-top: 1px solid #e0e0e0;
-	border-left: 1px solid #e0e0e0;
-	cursor: not-allowed;
+    /* background: url(zen-button.png); */
+    border: 1px solid #999;
+    border-top: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    cursor: not-allowed;
 }
-
 
 #logo-text {
-  font-weight: bold;
+    font-weight: bold;
 }
 
-/* #instructions { */
-/*   text-align: center; */
-/* } */
-
-.block-text {
-  width: 500px;
-  text-align: justify;
-  /* margin: 0 auto; */
-  margin-bottom: 1em;
+img.logo {
+    height: 100px;
 }
 
-#legal {
-  /* margin: 0 auto; */
-  margin-top: 1.5em;
-  font-size: 0.8em;
+div.spacer {
+    clear: both;
 }
 
-div.indicator {
+div.blue {
+    background-color: #CEECF5;
+    width: 620px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+div.example {
+    width: 320px;
+    height: 240px;
+    float: left;
+    text-align: center;
+    margin-top: 16px;
+    /* margin-right: 16px; */
+}
+
+div.continue {
+    text-align: center;
+    width: 660px;
+}
+
+#examples {
+    width: 660px;
+    height: 276px;
+    margin-bottom: 16px;
+}
+
+#stable-example {
+    margin-right: 16px;
+}
+
+#progress {
+    height: 12px;
+    margin-bottom: 32px;
+    width: 660px;
+}
+
+#indicator-stage {
     height: 6px;
     background-color: navy;
+    float: left;
 }
-div.indicator-outer {
+
+#indicator-outer {
     padding: 0;
-    margin-bottom: 2em;
     height: 6px;
     background-color: white;
-    width: 480px;
+    width: 570px;
+    border: 1px solid black;
+    float: left;
+}
+
+#progress-text {
+    margin-right: 8px;
+    line-height: 6px;
+    font-size: small;
+    float: left;
+    width: 80px;
+    text-align: left;
+}
+
+#question-container {
+    margin-left: 16px;
+    padding: 5px;
+    width: 310px;
+    height: 230px;
+    /* border: 1px solid black; */
+    float: left;
+    text-align: center;
+    background-color: #CEECF5;
+}
+
+#video-container {
+    width: 320px;
+    height: 240px;
+    float: left;
     border: 1px solid black;
 }
 
-li.question select {
-    display: block;
-    margin-bottom: .8em;
+#instructions {
+    position: absolute;
+    z-index: 100;
+    width: 310px;
+    height: 230px;
+    text-align: center;
+    /* margin: 1em; */
+    background-color: white;
+    padding: 5px;
+}
+
+#player {
+    position: absolute;
+    z-index: -100;
+    width: 320px;
+    height: 240px;
+}
+
+#player-img {
+    position: absolute;
+    z-index: -90;
+    width: 320px;
+    height: 240px;
 }

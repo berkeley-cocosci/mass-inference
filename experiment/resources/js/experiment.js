@@ -1,12 +1,16 @@
 
 // global variables
 var videoFolder = "resources/video/";
+var imageFolder = "resources/images/";
 var videoWidth = "320";
 var videoHeight = "240";
 var flashVersion = "9.0.0";
 var expressInstallSwfurl = false;
 var pageURL = "../../index.py?page=";
 var actionURL = "../../index.py?a=";
+
+var fade = 200;
+var indicatorWidth = 570;
 
 // --------------------------------------------------------------------
 
@@ -17,8 +21,8 @@ function embedVideo(url, div, flashvars, params, attributes, callback) {
 }
 
 function showSlide(id) {
-    $(".slide").hide();
-    $("#"+id).show();
+    $(".slide").fadeOut(fade);
+    $("#"+id).fadeIn(fade);
 }
 
 function get(page, handler) {
@@ -40,20 +44,16 @@ function post(action, data, handler) {
     request.fail(error);
 }
 
-function checkAnswered(name) {
-    var foo = $("input[name=" + name + "]");
-    var f = function (s) { return $(s).attr("checked") };
-    return _.any($("input[name=" + name + "]"), f);
-}
-
 function error(msg) {
     showSlide("error");
     $("#error-message").html(msg)
 }
 
+
 // --------------------------------------------------------------------
 
 showSlide("main");
+$("#progress").hide();
 
 var experiment = {
 
@@ -77,8 +77,7 @@ var experiment = {
     },
 
     next: function() {
-	experiment.index = experiment.index + 1;
-
+	experiment.index = experiment.index + 1; 
 	if (experiment.index >= experiment.numTrials) {
 	    return experiment.end();
 	}
@@ -90,8 +89,9 @@ var experiment = {
     },
 
     show: function(info) {
-	experiment.index = info.index,
-	experiment.curVideo = info.stimulus;
+	experiment.index = info.index;
+	experiment.curVideo = info.stimulus + ".swf";
+	experiment.curImg = info.stimulus + ".png";
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
 	get('trial', showTrial);	
@@ -102,30 +102,37 @@ var experiment = {
     },
 
     query : function () {
+	var img = imageFolder + experiment.curImg;
+	$("#player-img").html(
+	    "<img src='" + img + "' " +
+		"width='" + videoWidth + "' " +
+		"height='" + videoHeight + "'></img>");
+	$("#player-img").fadeIn(fade, function () {
+	    $("player").remove();
+	});
 	showQuestion();
 	experiment.start = new Date().getTime();
     },
 
-    submit : function() {
-	if (!checkAnswered("response")) {
-	    alert("Please fill out all form fields.");
-	} else {
-	    var time = new Date().getTime() - experiment.start;
-	    var data = {
-		pid : experiment.pid,
-		time : time / 1000,
-		response : $("input[name=response]:checked").val(),
-	    };
-	    post("submit", data, experiment.next);
-	}
+    submit : function(val) {
+	var time = new Date().getTime() - experiment.start;
+	var data = {
+	    pid : experiment.pid,
+	    time : time / 1000,
+	    response : val,
+	};
+	post("submit", data, experiment.next);
     },
 
     end: function() {
 	//setTimeout(function() { turk.submit(experiment) }, 1500);
-	get('finished', function (msg) { $("#content").replaceWith(msg) });
+	get('finished', function (msg) { 
+	    $("#content").replaceWith(msg) 
+	});
+	$("#indicator-stage").animate(
+	    {"width": indicatorWidth + "px"}, fade);
     },
 };
-
 
 function showInstructions(msg) {
     var stableVideo = videoFolder + "stable.swf";
@@ -134,50 +141,55 @@ function showInstructions(msg) {
 		   play: "true",
 		   loop: "true" };
 
-    var width = 360 / (experiment.numTrials + 1);
-    $("#indicator-stage").width(width + "px");
-    $("#content").replaceWith(msg);
-
-    embedVideo(stableVideo, "stable-example", {}, params, {}, undefined);
-    embedVideo(unstableVideo, "unstable-example", {}, params, {}, undefined);
+    // var width = 360 / (experiment.numTrials + 2);
+    // var step = indicatorWidth / (experiment.numTrials + 2);
+    // $("#indicator-stage").animate({"width": "+=10px"}, fade);
+    $("#content").fadeOut(fade, function () {
+	$("#content").replaceWith(msg);
+	embedVideo(stableVideo, "stable-example-video", 
+		   {}, params, {}, undefined);
+	embedVideo(unstableVideo, "unstable-example-video", 
+		   {}, params, {}, undefined);
+    });
 }
 
 function showTrial(msg) {
-    // Update the progress bar
-    var width = (experiment.index + 2) * (360 / (experiment.numTrials + 1));
-    $("#indicator-stage").width(120 + width + "px");
-
     // Replace content
-    $("#content").replaceWith(msg);
+    $("#content").fadeOut(fade, function() {
+	$("#content").replaceWith(msg);
 
-    // Set question and responses
-    $("#question").html(experiment.curQuestion);
-    var r = experiment.curResponses;
-    for (var i=0; i<r.length; i++) {
-	$("#responses").append(
-	    "<input type='radio' " +
-		"value='" + r[i][1] + "' " + 
-		"name='response' " +
-		"onclick='$(\"#next-button\").show();'>" + 
-		r[i][0] + 
-		"</input><br />");
-    }		
+	// Set question and responses
+	$("#question").html("<b>Question:</b> " + experiment.curQuestion);
+	var r = experiment.curResponses;
+	for (var i=0; i<r.length; i++) {
+	    $("#responses").append(
+		"<button type='button' " +
+		    "name='response-button' " +
+		    "onclick='experiment.submit(\"" + r[i][1] + "\");'>" +
+		    r[i][0] +
+		    "</button>");
+	}		
+	
+	// Hide elements we're not ready for yet
+	$("#player").hide();
+	$("#player-img").hide();
+	$("button[name=response-button]").attr("disabled", true);
+	
+	// Show instructions and focus the play button
+	$("#content").fadeIn(fade);
+	$("#play-button").focus();
 
-    // Display the video stimulus.
-    $("#video-container").hide();
-    $("#instructions2").hide();
-    $("#question-container").hide();
-    $("#next-button").hide();
-
-    // Scroll up to the top
-    $('html, body').animate({ scrollTop: 0 }, 0);
+	// Update the progress bar
+	var width = experiment.index * indicatorWidth / experiment.numTrials;
+	$("#progress").show();
+	$("#indicator-stage").animate({"width": width + "px"}, fade);
+	$("#progress-text").html(
+	    "Progress " + (experiment.index+1) + "/" + experiment.numTrials);
+    });
 }
 
 function showQuestion() {
-    $("#instructions1").hide();
-    $("#video-container").hide();
-    $("#instructions2").show();
-    $("#question-container").show();
+    $("button[name=response-button]").attr("disabled", false);
 }
 
 function playStimulus() {
@@ -188,13 +200,14 @@ function playStimulus() {
 		   loop: "false" };
     var attributes = { id: "player" };
     
-    $("#play-button").hide();
-    $("#video-container").show();
-    $("#player").show();
     embedVideo(video, "player", {}, params, attributes, 
-	      function (e) {
-		  if (e.success) {
-		      setTimeout(experiment.query, 5000);
-		  }});
+	       function (e) {
+		   if (e.success) {
+		       setTimeout(experiment.query, 5000);
+		   }});
+    $("#instructions").fadeOut(fade, function () {
+	$("#instructions").remove()
+    });
+
 }
 
