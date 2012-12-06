@@ -26,25 +26,24 @@ cgitb.enable(display=0, logdir="../cgitb", format='plain')
 html_dir = "../html"
 data_dir = "../data"
 
-n = 2
-stims = ["stim_%d" % i for i in xrange(1, n+1)]
+n = 3
+stims = [""] + ["stim_%d" % i for i in xrange(1, n+1)]
 
-trials = range(n)
-trial_types = ["normal"]*n#["catch", "normal"]
+trials = [1,1,0] + range(1, n+1) + [0]
+trial_types = ["training"]*3 + ["normal"]*(n-1) + ["catch"] + ["normal"]
 
 fields = ["trial", "stimulus", "question", "response", "time"]
 pformat = "%03d"
 
 questions = {
+    "training": "Will the tower fall down?",
     "normal": "Will the tower fall down?",
     "catch": "Did the tower fall down?"
     }
 
 responses = {
-    # "normal": [("Yes, it <b>will fall</b> down", "yes"),
-    #            ("No, it <b>will not fall</b> down", "no")],
-    # "catch":  [("Yes, it <b>did fall</b>", "yes"),
-    #            ("No, it <b>did not fall</b>", "no")]
+    "training": [("Yes", "yes"),
+                 ("No", "no")],
     "normal": [("Yes", "yes"),
                ("No", "no")],
     "catch": [("Yes", "yes"),
@@ -185,7 +184,8 @@ def getTrialInfo(form):
         'index': index,
         'stimulus': stim,
         'question': question,
-        'responses': response
+        'responses': response,
+        'training': ttype=='training',
         }
     json_info = json.dumps(info)
 

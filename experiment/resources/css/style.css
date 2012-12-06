@@ -11,12 +11,16 @@ p {
     margin-bottom: 10px;
 }
 
+h1 {
+    font-weight: bold;
+    font-size: 16px;
+}
+
 .slide {
-    width: 95%;
-    height: 95%;
+    /* width: 95%; */
+    /* height: 95%; */
     display: none;
     position: absolute;
-    /* margin: 0; */
     margin-left: 0.5%;
     padding: 1% 2% 1% 2%;
 }
@@ -34,6 +38,7 @@ button {
     height: 29px;
     min-width: 70px;
 }
+
 button:active {
     border-left: 1px solid #c9c9c9;
     border-top: 1px solid #c9c9c9;
@@ -42,15 +47,10 @@ button:active {
 }
 
 button[disabled] {
-    /* background: url(zen-button.png); */
     border: 1px solid #999;
     border-top: 1px solid #e0e0e0;
     border-left: 1px solid #e0e0e0;
     cursor: not-allowed;
-}
-
-#logo-text {
-    font-weight: bold;
 }
 
 img.logo {
@@ -63,7 +63,7 @@ div.spacer {
 
 div.blue {
     background-color: #CEECF5;
-    width: 620px;
+    width: 600px;
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left: 20px;
@@ -71,33 +71,25 @@ div.blue {
 }
 
 div.example {
-    width: 320px;
-    height: 240px;
-    float: left;
+    width: 640px;
+    height: 480px;
     text-align: center;
     margin-top: 16px;
-    /* margin-right: 16px; */
 }
 
 div.continue {
     text-align: center;
-    width: 660px;
+    width: 640px;
 }
 
-#examples {
-    width: 660px;
-    height: 276px;
-    margin-bottom: 16px;
-}
-
-#stable-example {
-    margin-right: 16px;
+#content {
+    width: 640px;
 }
 
 #progress {
     height: 12px;
     margin-bottom: 32px;
-    width: 660px;
+    width: 640px;
 }
 
 #indicator-stage {
@@ -110,7 +102,7 @@ div.continue {
     padding: 0;
     height: 6px;
     background-color: white;
-    width: 570px;
+    width: 550px;
     border: 1px solid black;
     float: left;
 }
@@ -124,31 +116,19 @@ div.continue {
     text-align: left;
 }
 
-#question-container {
-    margin-left: 16px;
-    padding: 5px;
-    width: 310px;
-    height: 230px;
-    /* border: 1px solid black; */
-    float: left;
-    text-align: center;
-    background-color: #CEECF5;
-}
-
 #video-container {
-    width: 320px;
-    height: 240px;
-    float: left;
+    width: 640px;
+    height: 480px;
     border: 1px solid black;
+    margin-top: 16px;
 }
 
-#instructions {
+#video-instructions {
     position: absolute;
     z-index: 100;
-    width: 310px;
-    height: 230px;
+    width: 630px;
+    height: 470px;
     text-align: center;
-    /* margin: 1em; */
     background-color: white;
     padding: 5px;
 }
@@ -156,13 +136,32 @@ div.continue {
 #player {
     position: absolute;
     z-index: -100;
-    width: 320px;
-    height: 240px;
+    width: 640px;
+    height: 480px;
 }
 
 #player-img {
     position: absolute;
     z-index: -90;
-    width: 320px;
-    height: 240px;
+    width: 640px;
+    height: 480px;
 }
+
+.stone {
+    background-color: gray;
+    color: white;
+    font-weight: bold;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid black;
+}
+
+.plastic {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid black;
+}
+
