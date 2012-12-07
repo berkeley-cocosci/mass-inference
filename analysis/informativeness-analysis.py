@@ -156,17 +156,19 @@ lat.plot_theta(
 
 N = 20
 C = 6
-yes = np.nonzero(fb[order] == 0)[0]
-no = np.nonzero(fb[order] == 1)[0]
-eqorder = order[np.sort(np.hstack([
+yes = np.nonzero(feedback[:, idx, 0][order] == 0)[0]
+no = np.nonzero(feedback[:, idx, 0][order] == 1)[0]
+exp = order[np.sort(np.hstack([
     yes[:N/2], 
-    no[:N/2],
+    no[:N/2]]))]
+catch = order[np.sort(np.hstack([  
     yes[-C/2:],
     no[-C/2:]]))]
-print eqorder[:N]
-print stimuli[0, eqorder[:N]]
-print fb[eqorder[:N]]
-print np.sum(fb[eqorder[:N]])
+eqorder = np.hstack([exp, catch])
+print eqorder
+print stimuli[0, eqorder]
+print fb[eqorder]
+print np.sum(fb[eqorder])
 
 # <codecell>
 
@@ -192,11 +194,36 @@ lat.plot_theta(
 
 # <codecell>
 
-exp_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, eqorder])]
+exp_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, exp])]
+catch_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, catch])]
 listpath = cppath(CPOBJ_LIST_PATH, 'local')
 l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[idx])
 with open(l, "w") as fh:
     lines = "\n".join(exp_stims)
     fh.write(lines)
+l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[idx])
+with open(l, "w") as fh:
+    lines = "\n".join(catch_stims)
+    fh.write(lines)
     
+
+# <codecell>
+
+import yaml
+fh = open("../../turk-experiment/stimuli/stimuli-info.csv", "w")
+fh.write("stimulus,stable,catch\n")
+for i in exp:
+    fh.write(",".join(
+	["%s~kappa-%s" % (stimuli[0,i], kappas[idx]),
+	 str(not(bool(feedback[i,idx,0]))),
+	 str(False)]
+	 ) + "\n")
+for i in catch:
+    fh.write(",".join(
+	["%s~kappa-%s" % (stimuli[0,i], kappas[idx]),
+	 str(not(bool(feedback[i,idx,0]))),
+	 str(True)]
+	 ) + "\n")
+
+fh.close()
 
