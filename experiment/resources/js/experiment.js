@@ -21,15 +21,24 @@ var massVideo = videoFolder + "mass.swf";
 // --------------------------------------------------------------------
 
 function embedVideo(url, div, flashvars, params, attributes, callback) {
+    $(".cover").show();
     swfobject.embedSWF(
 	url, div, videoWidth, videoHeight, flashVersion, 
 	expressInstallSwfurl, flashvars, params, attributes, callback);
 }
 
 function showSlide(id) {
-    $(".slide").fadeOut(fade);
+    $(".slide").hide();
     $('html, body').animate({ scrollTop: 0 }, 0);
-    $("#"+id).fadeIn(fade);
+    $(".cover").show();
+    $("#"+id).show();
+}
+
+function showInstructions(id) {
+    showSlide(id);
+    setTimeout(function () {
+	$(".cover").fadeOut(fade);
+    }, 300);
 }
 
 function post(action, data, handler) {
@@ -80,7 +89,6 @@ var experiment = {
     index : 0,
     numTrials : 0,
     starttime : undefined,
-    training : true,
 
     curVideo : "",
     curQuestion : "",
@@ -97,21 +105,32 @@ var experiment = {
 	    experiment.numTrials = info.numTrials;
 	    experiment.pid = info.pid;
 
-	    embedVideo(stableVideo, "stable-example", 
-		       {}, params, {}, undefined);
-	    embedVideo(unstableVideo, "unstable-example", 
-		       {}, params, {}, undefined);
-	    embedVideo(massVideo, "mass-example", 
-		       {}, params, {}, undefined);
-	    showSlide("instructions");
+	    embedVideo(
+		stableVideo, "stable-example", 
+		{}, params, {}, 
+		function () {
+		    embedVideo(
+			unstableVideo, "unstable-example", 
+			{}, params, {}, 
+			function () {
+			    embedVideo(
+				massVideo, "mass-example", 
+				{}, params, {}, 
+				function () {
+				    showInstructions("instructions");
+				});
+			});
+		});
 
 	});
     },
 
     start : function () {
 	post('trialinfo', {pid: experiment.pid}, function (info) {
-	    experiment.show(info);
-	    showSlide("trial");
+	    if (experiment.show(info)) {
+		showSlide("trial");
+		$("#play-button").focus();
+	    }
 	});
     },
 
@@ -123,28 +142,23 @@ var experiment = {
     },
 
     show: function(info) {
-	if (info.stimulus == "") {
-	    if (info.training == true) {
-		var data = {
-		    pid : experiment.pid,
-		    time : 0,
-		    response : "",
-		};
-		post("submit", data, function () {
-		    showSlide("instructions2");
-		});
-	    } else {
-		showSlide("finished");
-	    }
-	    return;
+	if (info == 'finished training') {
+	    showInstructions("instructions2");
+	    return false;
+	} else if (info == 'finished experiment') {
+	    showSlide("finished");
+	    return false;
 	}
 
 	experiment.index = info.index;
 	experiment.curVideo = info.stimulus + ".swf";
-	experiment.curImg = info.stimulus + ".png";
+	experiment.curImgA = info.stimulus + "A.png";
+	experiment.curImgB = info.stimulus + "B.png";
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
-	experiment.training = info.training;
+
+	// Update progress bar
+	updateProgress(experiment.index, experiment.numTrials);
 
 	// Set question and responses
 	setQuestion(experiment.curQuestion, experiment.curResponses);
@@ -157,32 +171,32 @@ var experiment = {
 
 	// Show instructions and focus the play button
 	$("#play-button").attr("disabled", false);
+	$("#video-instructions").show();
 	$("#play-button").focus();
-	$("#video-instructions").fadeIn();
 
-	// Update progress bar
-	updateProgress(experiment.index, experiment.numTrials);
+	return true;
     },
 
     play : function () {
+	var img = imageFolder + experiment.curImgA;
 	var video = videoFolder + experiment.curVideo;
 	var params = { wmode: "direct",
 		       play: "true",
 		       loop: "false" };
 	var attributes = { id: "player" };
 	
+	$("#play-button").attr("disabled", true);
 	embedVideo(video, "player", {}, params, attributes, 
 		   function (e) {
 		       if (e.success) {
+			   $("#player-img").hide();
+			   $("#video-instructions").fadeOut(fade)
 			   setTimeout(experiment.query, 5000);
 		       }});
-	$("#video-instructions").fadeOut(fade, function () {
-	    $("#play-button").attr("disabled", true);
-	});
     },
 
     query : function () {
-	var img = imageFolder + experiment.curImg;
+	var img = imageFolder + experiment.curImgB;
 
 	// set the end image (last frame of the video)
 	$("#player-img").html(
@@ -209,7 +223,9 @@ var experiment = {
 	    time : time / 1000,
 	    response : val,
 	};
-	post("submit", data, experiment.next);
+	$("#responses").slideUp(fade, function () {
+	    post("submit", data, experiment.next);
+	});
     },
 
     end: function() {

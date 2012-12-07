@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import httplib
+import random
 
 from os import environ
 
@@ -25,14 +26,10 @@ cgitb.enable(display=0, logdir="../cgitb", format='plain')
 
 html_dir = "../html"
 data_dir = "../data"
+conf_dir = "../config"
 
-n = 3
-stims = [""] + ["stim_%d" % i for i in xrange(1, n+1)]
-
-trials = [1,1,0] + range(1, n+1) + [0]
-trial_types = ["training"]*3 + ["normal"]*(n-1) + ["catch"] + ["normal"]
-
-fields = ["trial", "stimulus", "question", "response", "time"]
+keywords = ["finished training", "finished experiment"]
+fields = ["trial", "stimulus", "question", "response", "time", "angle", "catch", "training"]
 pformat = "%03d"
 
 questions = {
@@ -54,6 +51,12 @@ responses = {
 #################
 # Experiment functions
 
+def get_all_stiminfo():
+    filename = os.path.join(conf_dir, "stimuli-converted.json")
+    with open(filename, "r") as fh:
+        stiminfo = json.load(fh)
+    return stiminfo
+
 def get_pid(form):
     # try to get the participant's id
     try:
@@ -68,12 +71,23 @@ def get_pid(form):
     
     return pid
 
-def get_trial(pid):
+def parse_trialnum(t):
+    if t == "trial":
+        trialnum = -1
+    elif t in keywords:
+        trialnum = None
+    else:
+        trialnum = int(t)
+    return trialnum
+    
+def get_trialnum(pid):
     datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
     with open(datafile, "r") as fh:
         data = fh.read()
-    trial = data.strip().split("\n")[-1].split(",")[0]
-    trial = -1 if trial == "trial" else int(trial)
+    lines = data.strip().split("\n")
+    trial = parse_trialnum(lines[-1].split(",")[0])
+    if trial is None:
+        trial = parse_trialnum(lines[-2].split(",")[0]) + 1
     return trial
     
 def create_datafile(pid):
@@ -81,7 +95,7 @@ def create_datafile(pid):
     logging.info("(%s) Creating data file: '%s'" % ((pformat % pid), datafile))
     with open(datafile, "w") as fh:
         fh.write(",".join(fields) + "\n")
-
+        
 def write_data(pid, data):
     datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
 
@@ -96,7 +110,31 @@ def write_data(pid, data):
     with open(datafile, "a") as fh:
         fh.write(vals)
 
+def create_triallist(pid):
+    triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
+    logging.info("(%s) Creating trial list: '%s'" % ((pformat % pid), triallist))
+    stiminfo = get_all_stiminfo()
+    stims = stiminfo.keys()
+    random.shuffle(stims)
+    todump = ["finished training"]
+    for i, stim in enumerate(stims):
+        info = stiminfo[stim].copy()
+        info.update(stimulus=stim, index=i)
+        todump.append(info)
+    todump.append("finished experiment")
+    with open(triallist, "w") as fh:
+        json.dump(todump, fh)
+    return len(stims)
+
+def get_trialinfo(pid, index):
+    triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
+    with open(triallist, "r") as fh:
+        trialinfo = json.load(fh)
+    if index >= len(trialinfo):
+        return None
+    return trialinfo[index]
         
+
 #################
 # Http functions
 
@@ -145,12 +183,13 @@ def initialize(form):
         ]
     # set participant id (pid)
     pid = 1 if len(ids) == 0 else max(ids) + 1
-    # create new data file
+    # create new data file and trial list
     create_datafile(pid)
+    numtrials = create_triallist(pid)
 
     # initialization data we'll be sending
     init = {
-        'numTrials': len(trials),
+        'numTrials': numtrials,
         'pid': pformat % pid
         }
     json_init = json.dumps(init)
@@ -171,24 +210,31 @@ def getTrialInfo(form):
         return error("Bad pid")
     
     # get the index
-    index = get_trial(pid) + 1
-    logging.info("(%s) Trial %d" % ((pformat % pid), index))
+    index = get_trialnum(pid) + 1
     
     # look up the trial information
-    stim = stims[trials[index]]
-    ttype = trial_types[index]
-    question = questions[ttype]
-    response = responses[ttype]
+    trialinfo = get_trialinfo(pid, index)
 
-    info = {
-        'index': index,
-        'stimulus': stim,
-        'question': question,
-        'responses': response,
-        'training': ttype=='training',
-        }
+    if trialinfo in keywords:
+        data = dict([(k, "") for k in fields])
+        data['trial'] = trialinfo
+        write_data(pid, data)
+        info = trialinfo
+
+    else:
+        ttype = 'catch' if trialinfo['catch'] else 'normal'
+        question = questions[ttype]
+        response = responses[ttype]
+        
+        info = {
+            'index': trialinfo['index'],
+            'stimulus': trialinfo['stimulus'],
+            'question': question,
+            'responses': response,
+            'training': trialinfo['training'],
+            }
+
     json_info = json.dumps(info)
-
     logging.info("(%s) Sending trial info: %s" % (
         (pformat % pid), json_info))
 
@@ -210,12 +256,15 @@ def submit(form):
         return error("Could not get all field values")
 
     # get the trial number
-    index = get_trial(pid) + 1
+    index = get_trialnum(pid) + 1
 
     # populate some more data
-    data['question'] = trial_types[index]
+    trialinfo = get_trialinfo(pid, index)
+    ttype = 'catch' if trialinfo['catch'] else 'normal'
+    question = questions[ttype]
+    data['question'] = question
     data['trial'] = index
-    data['stimulus'] = stims[trials[index]]
+    data.update(trialinfo)
 
     # write the data to file
     write_data(pid, data)

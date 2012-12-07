@@ -16,9 +16,16 @@ h1 {
     font-size: 16px;
 }
 
+object {
+    position: absolute;
+    z-index: -100;
+    width: 640px;
+    height: 480px;
+    float: left;
+    visibility: hidden;
+}
+
 .slide {
-    /* width: 95%; */
-    /* height: 95%; */
     display: none;
     position: absolute;
     margin-left: 0.5%;
@@ -73,13 +80,26 @@ div.blue {
 div.example {
     width: 640px;
     height: 480px;
-    text-align: center;
     margin-top: 16px;
+    border: 1px solid black;
 }
 
 div.continue {
     text-align: center;
     width: 640px;
+}
+
+div.cover {
+    position: absolute;
+    z-index: 0;
+    width: 640px;
+    height: 60px;
+    float: left;
+    background-color: white;
+    font-size: 20pt;
+    text-align: center;
+    padding-top: 210px;
+    padding-bottom: 210px;
 }
 
 #content {
@@ -133,18 +153,12 @@ div.continue {
     padding: 5px;
 }
 
-#player {
-    position: absolute;
-    z-index: -100;
-    width: 640px;
-    height: 480px;
-}
-
 #player-img {
     position: absolute;
-    z-index: -90;
+    z-index: 0;
     width: 640px;
-    height: 480px;
+    height: 60px;
+    float: left;
 }
 
 .stone {
