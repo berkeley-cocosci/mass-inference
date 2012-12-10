@@ -35,6 +35,8 @@ weightedSample = rvs.util.weightedSample
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 
+listpath = cppath(CPOBJ_LIST_PATH, 'local')
+
 # <codecell>
 
 ######################################################################
@@ -158,11 +160,13 @@ N = 20
 C = 6
 yes = np.nonzero(feedback[:, idx, 0][order] == 0)[0]
 no = np.nonzero(feedback[:, idx, 0][order] == 1)[0]
+
+mass_example = stimuli[0, order[yes[-1]]]
 exp = order[np.sort(np.hstack([
     yes[:N/2], 
     no[:N/2]]))]
 catch = order[np.sort(np.hstack([  
-    yes[-C/2:],
+    yes[-(C/2)-1:-1],
     no[-C/2:]]))]
 eqorder = np.hstack([exp, catch])
 print eqorder
@@ -196,7 +200,6 @@ lat.plot_theta(
 
 exp_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, exp])]
 catch_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, catch])]
-listpath = cppath(CPOBJ_LIST_PATH, 'local')
 l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[idx])
 with open(l, "w") as fh:
     lines = "\n".join(exp_stims)
@@ -206,6 +209,81 @@ with open(l, "w") as fh:
     lines = "\n".join(catch_stims)
     fh.write(lines)
     
+
+# <codecell>
+
+uidx = np.hstack([exp, catch])
+used = stimuli[0, uidx]
+used_nums = [x.split("_")[1] for x in used]
+
+# <codecell>
+
+# want to pick training towers that are half and half, and are really
+# obvious to people (based on previous experiment results)
+
+rawhuman, hstimuli, hmeta = tat.load_human(0)
+rawmodel, sstimuli, smeta = tat.load_model(0)
+
+human, human_nonmean = tat.process_human_stability(rawhuman, zscore=False)
+pfell, nfell, fell_persample = tat.process_model_stability(
+    rawmodel, mthresh=0.095, zscore=False)
+
+# <codecell>
+
+from cogphysics import RESOURCE_PATH
+pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
+with open(pth, "r") as fh:
+    conv = pickle.load(fh)
+hstims = hmeta['dimvals']['stimulus']
+original = np.array([conv[x] for x in hstims])
+original_nums = [x[len('stability'):] for x in original]
+
+# <codecell>
+
+original_nums
+ok = np.array([x not in used_nums for x in original_nums])
+
+# <codecell>
+
+# 1 if stable, 0 if unstable
+ofb = (fell_persample[0,0,0,:,0] > 0)
+tstable = ~(fell_persample[0,0,0,:,0] > 0) & ok
+tunstable = (fell_persample[0,0,0,:,0] > 0) & ok
+hstable = 1 - human.copy()
+
+# <codecell>
+
+hsort = np.argsort(hstable)
+unstable = hsort[np.nonzero(tunstable[hsort])[0]]
+stable = hsort[np.nonzero(tstable[hsort])[0]][::-1]
+
+stable_example = original[stable[0]]
+unstable_example = original[unstable[0]]
+
+ntrain = 6
+train = np.hstack([
+    unstable[1:(ntrain/2)+1],
+    stable[1:(ntrain/2)+1]])
+train_stims = np.sort(original[train])
+ntrain_catch = 2
+train_catch = np.hstack([
+    unstable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1],
+    stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
+train_catch_stims = np.sort(original[train_catch])
+
+print train_stims
+print train_catch_stims
+
+# <codecell>
+
+l = os.path.join(listpath, "mass-towers-stability-learning-training")
+with open(l, "w") as fh:
+    lines = "\n".join(train_stims)
+    fh.write(lines)
+l = os.path.join(listpath, "mass-towers-stability-learning-training-catch")
+with open(l, "w") as fh:
+    lines = "\n".join(train_catch_stims)
+    fh.write(lines)
 
 # <codecell>
 
@@ -224,6 +302,27 @@ for i in catch:
 	 str(not(bool(feedback[i,idx,0]))),
 	 str(True)]
 	 ) + "\n")
+for i in train:
+    fh.write(",".join(
+	[original[i],
+	 str(not(bool(ofb[i]))),
+	 str(False)]
+	 ) + "\n")
+for i in train_catch:
+    fh.write(",".join(
+	[original[i],
+	 str(not(bool(ofb[i]))),
+	 str(True)]
+	 ) + "\n")
 
 fh.close()
+
+# <codecell>
+
+print "mass:", mass_example
+print "stable:", stable_example
+print "unstable:", unstable_example
+
+# <codecell>
+
 
