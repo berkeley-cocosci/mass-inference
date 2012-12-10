@@ -12,7 +12,7 @@ var pageURL = "../../index.py?page=";
 var actionURL = "../../index.py?a=";
 
 var fade = 200;
-var indicatorWidth = 550;
+var indicatorWidth = 545;
 
 var stableVideo = videoFolder + "stable.swf";
 var unstableVideo = videoFolder + "unstable.swf";
@@ -59,16 +59,18 @@ function error(msg) {
 function setQuestion(question, responses) {
     // Set question and responses
     $("#question").html("<b>Question:</b> " + question);
-    $("#responses").empty();
+    var resp = $("#responses");
+    resp.empty();
     for (var i=0; i<responses.length; i++) {
-	$("#responses").append(
-	    "<button type='button' " +
+	resp.append(
+	    "<div class='response'><button type='button' " +
 		"name='response-button' " +
 		"onclick='experiment.submit(\"" + 
 		responses[i][1] + "\");'>" +
 		responses[i][0] +
-		"</button>");
+		"</button></div>");
     }
+    resp.append("<div class='spacer'></div>");
 }
 
 function updateProgress (index, numTrials) {
@@ -107,25 +109,19 @@ var experiment = {
 
 	    embedVideo(
 		stableVideo, "stable-example", 
-		{}, params, {}, 
-		function () {
-		    embedVideo(
-			unstableVideo, "unstable-example", 
-			{}, params, {}, 
-			function () {
-			    embedVideo(
-				massVideo, "mass-example", 
-				{}, params, {}, 
-				function () {
-				    showInstructions("instructions");
-				});
-			});
-		});
+		{}, params, {}, undefined); 
+	    embedVideo(
+		unstableVideo, "unstable-example", 
+		{}, params, {}, undefined);
+	    embedVideo(
+		massVideo, "mass-example", 
+		{}, params, {}, undefined);
 
+	    showInstructions("instructions");
 	});
     },
 
-    start : function () {
+    start: function () {
 	post('trialinfo', {pid: experiment.pid}, function (info) {
 	    if (experiment.show(info)) {
 		showSlide("trial");
@@ -168,6 +164,7 @@ var experiment = {
 	$("#player-img").hide();
 	$("button[name=response-button]").attr("disabled", true);
 	$("#responses").hide();
+	$("#feedback").hide();
 
 	// Show instructions and focus the play button
 	$("#play-button").attr("disabled", false);
@@ -206,11 +203,11 @@ var experiment = {
 	// fade in the image and then remove the video when it's done
 	$("#player-img").fadeIn(fade, function () {
 	    $("player").replaceWith("<div id='player'></div>");
+	    $("#responses").slideDown(fade, function () {
+		// enable the response buttons
+		$("button[name=response-button]").attr("disabled", false);
+	    });
 	});
-
-	// enable the response buttons
-	$("button[name=response-button]").attr("disabled", false);
-	$("#responses").slideDown();
 
 	// record the time so we know how long they take to answer
 	experiment.starttime = new Date().getTime();
@@ -223,10 +220,42 @@ var experiment = {
 	    time : time / 1000,
 	    response : val,
 	};
-	$("#responses").slideUp(fade, function () {
-	    post("submit", data, experiment.next);
-	});
+	
+	post("submit", data, experiment.feedback);
     },
+
+    feedback : function(msg) {
+	var go = function () {
+	    $("#stable-feedback").html("");
+	    $("#unstable-feedback").html("");
+	    experiment.next();
+	};
+
+	// if the feedback is undefined, then don't display anything
+	if (msg == "undefined") {
+	    $("#responses").slideUp(fade, go);
+
+	// otherwise give feedback, then submit and go to the next
+	// trial
+	} else {
+	
+	    if (msg) {
+		$("#stable-feedback").html("Tower is stable!");
+		$("#unstable-feedback").html("&nbsp;");
+	    } else {
+		$("#stable-feedback").html("&nbsp;");
+		$("#unstable-feedback").html("Tower is falling...");
+	    }
+
+	    $("#responses").hide();
+	    $("#feedback").show();
+
+	    setTimeout(function () {
+		$("#feedback").slideUp(fade, go);
+	    }, 2000);
+	}
+    },
+
 
     end: function() {
 	showSlide("finished");

@@ -1,0 +1,23 @@
+/********************************************************************/
+/* Instructions slide components                                    */
+/********************************************************************/
+
+div.example {
+    width: 640px;
+    height: 480px;
+    margin-top: 16px;
+    border: 1px solid black;
+}
+
+div.cover {
+    position: absolute;
+    z-index: 0;
+    width: 640px;
+    height: 60px;
+    float: left;
+    background-color: white;
+    font-size: 20pt;
+    text-align: center;
+    padding-top: 210px;
+    padding-bottom: 210px;
+}

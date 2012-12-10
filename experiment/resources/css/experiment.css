@@ -1,3 +1,7 @@
+/********************************************************************/
+/* Generic element styles                                           */
+/********************************************************************/
+
 body {
     padding: 0;
     margin: 0;
@@ -25,14 +29,10 @@ object {
     visibility: hidden;
 }
 
-.slide {
-    display: none;
-    position: absolute;
-    margin-left: 0.5%;
-    padding: 1% 2% 1% 2%;
-}
 
-input, select, button {font-family: Georgia, serif; font-size: 14px;}
+/********************************************************************/
+/* Buttons                                                          */
+/********************************************************************/
 
 button {
     background: url(../images/button-gradient.png);
@@ -44,6 +44,8 @@ button {
     padding-right: 5px;
     height: 29px;
     min-width: 70px;
+    font-family: Georgia, serif; 
+    font-size: 14px;
 }
 
 button:active {
@@ -60,8 +62,16 @@ button[disabled] {
     cursor: not-allowed;
 }
 
-img.logo {
-    height: 100px;
+
+/********************************************************************/
+/* Slide components                                                 */
+/********************************************************************/
+
+div.slide {
+    display: none;
+    position: absolute;
+    margin-left: 0.5%;
+    padding: 1% 2% 1% 2%;
 }
 
 div.spacer {
@@ -70,96 +80,23 @@ div.spacer {
 
 div.blue {
     background-color: #CEECF5;
-    width: 600px;
+    width: 602px;
     padding-top: 10px;
     padding-bottom: 10px;
     padding-left: 20px;
     padding-right: 20px;
 }
 
-div.example {
-    width: 640px;
-    height: 480px;
-    margin-top: 16px;
-    border: 1px solid black;
-}
 
 div.continue {
     text-align: center;
     width: 640px;
 }
 
-div.cover {
-    position: absolute;
-    z-index: 0;
-    width: 640px;
-    height: 60px;
-    float: left;
-    background-color: white;
-    font-size: 20pt;
-    text-align: center;
-    padding-top: 210px;
-    padding-bottom: 210px;
-}
 
-#content {
-    width: 640px;
-}
-
-#progress {
-    height: 12px;
-    margin-bottom: 32px;
-    width: 640px;
-}
-
-#indicator-stage {
-    height: 6px;
-    background-color: navy;
-    float: left;
-}
-
-#indicator-outer {
-    padding: 0;
-    height: 6px;
-    background-color: white;
-    width: 550px;
-    border: 1px solid black;
-    float: left;
-}
-
-#progress-text {
-    margin-right: 8px;
-    line-height: 6px;
-    font-size: small;
-    float: left;
-    width: 80px;
-    text-align: left;
-}
-
-#video-container {
-    width: 640px;
-    height: 480px;
-    border: 1px solid black;
-    margin-top: 16px;
-}
-
-#video-instructions {
-    position: absolute;
-    z-index: 100;
-    width: 630px;
-    height: 470px;
-    text-align: center;
-    background-color: white;
-    padding: 5px;
-}
-
-#player-img {
-    position: absolute;
-    z-index: 0;
-    width: 640px;
-    height: 60px;
-    float: left;
-}
+/********************************************************************/
+/* Misc                                                             */
+/********************************************************************/
 
 .stone {
     background-color: gray;

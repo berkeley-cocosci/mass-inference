@@ -232,6 +232,7 @@ def getTrialInfo(form):
             'question': question,
             'responses': response,
             'training': trialinfo['training'],
+            # 'stable': stable,
             }
 
     json_info = json.dumps(info)
@@ -269,8 +270,15 @@ def submit(form):
     # write the data to file
     write_data(pid, data)
 
-    # respond
-    print http_status(200, "OK")
+    # now get the feedback
+    stable = 'undefined' if trialinfo['catch'] else trialinfo['stable']
+
+    # response
+    print http_content_type("application/json")
+    print json.dumps(stable)
+    
+    # # respond
+    # print http_status(200, "OK")
 
     
 #################
