@@ -175,7 +175,6 @@ var experiment = {
     },
 
     play : function () {
-	var img = imageFolder + experiment.curImgA;
 	var video = videoFolder + experiment.curVideo;
 	var params = { wmode: "direct",
 		       play: "true",
@@ -225,6 +224,8 @@ var experiment = {
     },
 
     feedback : function(msg) {
+	var stable = msg[0];
+	var vfb = msg[1];
 	var go = function () {
 	    $("#stable-feedback").html("");
 	    $("#unstable-feedback").html("");
@@ -232,27 +233,49 @@ var experiment = {
 	};
 
 	// if the feedback is undefined, then don't display anything
-	if (msg == "undefined") {
+	if (stable == "undefined") {
 	    $("#responses").slideUp(fade, go);
 
 	// otherwise give feedback, then submit and go to the next
 	// trial
 	} else {
 	
-	    if (msg) {
-		$("#stable-feedback").html("Tower is stable!");
-		$("#unstable-feedback").html("&nbsp;");
+	    var txtfb = function () {
+		if (stable) {
+		    $("#stable-feedback").html("Tower is stable!");
+		    $("#unstable-feedback").html("&nbsp;");
+		} else {
+		    $("#stable-feedback").html("&nbsp;");
+		    $("#unstable-feedback").html("Tower is falling...");
+		}
+		$("#responses").hide();
+		$("#feedback").show();
+	    };
+	    
+	    if (vfb != 'undefined') {
+		var video = videoFolder + vfb + ".swf";
+		var params = { wmode: "direct",
+			       play: "true",
+			       loop: "false" };
+		var attributes = { id: "player" };
+		embedVideo(
+		    video, "player", {}, params, attributes, 
+		    function (e) {
+			if (e.success) {
+			    setTimeout(function () {
+				$("#player-img").fadeOut(fade);
+			    }, 300);
+			    txtfb();
+			    setTimeout(function () {
+				$("#feedback").slideUp(fade, go);
+			    }, 3000);
+			}});
 	    } else {
-		$("#stable-feedback").html("&nbsp;");
-		$("#unstable-feedback").html("Tower is falling...");
+		txtfb();
+		setTimeout(function () {
+		    $("#feedback").slideUp(fade, go);
+		}, 2000);
 	    }
-
-	    $("#responses").hide();
-	    $("#feedback").show();
-
-	    setTimeout(function () {
-		$("#feedback").slideUp(fade, go);
-	    }, 2000);
 	}
     },
 

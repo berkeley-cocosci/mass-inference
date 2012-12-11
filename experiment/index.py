@@ -114,17 +114,27 @@ def create_triallist(pid):
     triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
     logging.info("(%s) Creating trial list: '%s'" % ((pformat % pid), triallist))
     stiminfo = get_all_stiminfo()
-    stims = stiminfo.keys()
+    train = [stim for stim in stiminfo.keys() if stiminfo[stim]['training']]
+    stims = [stim for stim in stiminfo.keys() if not stiminfo[stim]['training']]
+    random.shuffle(train)
     random.shuffle(stims)
-    todump = ["finished training"]
-    for i, stim in enumerate(stims):
+    todump = []
+    i = 0
+    for stim in train:
         info = stiminfo[stim].copy()
         info.update(stimulus=stim, index=i)
         todump.append(info)
+        i += 1
+    todump.append("finished training")
+    for stim in stims:
+        info = stiminfo[stim].copy()
+        info.update(stimulus=stim, index=i)
+        todump.append(info)
+        i += 1
     todump.append("finished experiment")
     with open(triallist, "w") as fh:
         json.dump(todump, fh)
-    return len(stims)
+    return len(todump) - 2
 
 def get_trialinfo(pid, index):
     triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
@@ -272,10 +282,12 @@ def submit(form):
 
     # now get the feedback
     stable = 'undefined' if trialinfo['catch'] else trialinfo['stable']
+    vfb = ('undefined' if (trialinfo['catch'] or not trialinfo['training'])
+           else "%s-fb" % trialinfo['stimulus'])
 
     # response
     print http_content_type("application/json")
-    print json.dumps(stable)
+    print json.dumps([stable, vfb])
     
     # # respond
     # print http_status(200, "OK")
