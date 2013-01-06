@@ -157,7 +157,7 @@ lat.plot_theta(
 # <codecell>
 
 N = 20
-C = 6
+C = 0
 yes = np.nonzero(feedback[:, idx, 0][order] == 0)[0]
 no = np.nonzero(feedback[:, idx, 0][order] == 1)[0]
 
@@ -165,9 +165,12 @@ mass_example = stimuli[0, order[yes[-1]]]
 exp = order[np.sort(np.hstack([
     yes[:N/2], 
     no[:N/2]]))]
-catch = order[np.sort(np.hstack([  
-    yes[-(C/2)-1:-1],
-    no[-C/2:]]))]
+if C > 0:
+    catch = order[np.sort(np.hstack([  
+        yes[-(C/2)-1:-1],
+	no[-C/2:]]))]
+else:
+    catch = np.array([], dtype='i8')
 eqorder = np.hstack([exp, catch])
 print eqorder
 print stimuli[0, eqorder]
@@ -221,8 +224,8 @@ used_nums = [x.split("_")[1] for x in used]
 # want to pick training towers that are half and half, and are really
 # obvious to people (based on previous experiment results)
 
-rawhuman, hstimuli, hmeta = tat.load_human(0)
-rawmodel, sstimuli, smeta = tat.load_model(0)
+rawhuman, hstimuli, hmeta = tat.load_human(2)#0)
+rawmodel, sstimuli, smeta = tat.load_model(1)#0)
 
 human, human_nonmean = tat.process_human_stability(rawhuman, zscore=False)
 pfell, nfell, fell_persample = tat.process_model_stability(
@@ -231,8 +234,8 @@ pfell, nfell, fell_persample = tat.process_model_stability(
 # <codecell>
 
 from cogphysics import RESOURCE_PATH
-#pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
-pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_sameheight.pkl')
+pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
+#pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_sameheight.pkl')
 with open(pth, "r") as fh:
     conv = pickle.load(fh)
 hstims = hmeta['dimvals']['stimulus']
@@ -262,15 +265,19 @@ stable_example = original[stable[0]]
 unstable_example = original[unstable[0]]
 
 ntrain = 6
+ntrain_catch = 0
+
 train = np.hstack([
     unstable[1:(ntrain/2)+1],
     stable[1:(ntrain/2)+1]])
 train_stims = np.sort(original[train])
-ntrain_catch = 2
-train_catch = np.hstack([
-    unstable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1],
-    stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
-train_catch_stims = np.sort(original[train_catch])
+if ntrain_catch > 0:
+    train_catch = np.hstack([
+        unstable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1],
+	stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
+    train_catch_stims = np.sort(original[train_catch])
+else:
+    train_catch_stims = np.array([], dtype='S')
 
 print train_stims
 print train_catch_stims
