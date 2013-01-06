@@ -231,7 +231,8 @@ pfell, nfell, fell_persample = tat.process_model_stability(
 # <codecell>
 
 from cogphysics import RESOURCE_PATH
-pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
+#pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
+pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_sameheight.pkl')
 with open(pth, "r") as fh:
     conv = pickle.load(fh)
 hstims = hmeta['dimvals']['stimulus']
