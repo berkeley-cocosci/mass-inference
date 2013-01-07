@@ -343,6 +343,6 @@ with open(l, "w") as fh:
     fh.write(lines)
 l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[idx])
 with open(l, "w") as fh:
-    lines = "\n".join([mass_example])
+    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[idx])])
     fh.write(lines)
 
