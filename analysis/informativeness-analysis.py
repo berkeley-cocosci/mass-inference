@@ -295,6 +295,27 @@ with open(l, "w") as fh:
 
 # <codecell>
 
+print "mass:", mass_example
+print "stable:", stable_example
+print "unstable:", unstable_example
+
+# <codecell>
+
+l = os.path.join(listpath, "stable-example")
+with open(l, "w") as fh:
+    lines = "\n".join([stable_example])
+    fh.write(lines)
+l = os.path.join(listpath, "unstable-example")
+with open(l, "w") as fh:
+    lines = "\n".join([unstable_example])
+    fh.write(lines)
+l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[idx])
+with open(l, "w") as fh:
+    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[idx])])
+    fh.write(lines)
+
+# <codecell>
+
 import yaml
 fh = open("../../turk-experiment/stimuli/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
@@ -324,25 +345,4 @@ for i in train_catch:
 	 ) + "\n")
 
 fh.close()
-
-# <codecell>
-
-print "mass:", mass_example
-print "stable:", stable_example
-print "unstable:", unstable_example
-
-# <codecell>
-
-l = os.path.join(listpath, "stable-example")
-with open(l, "w") as fh:
-    lines = "\n".join([stable_example])
-    fh.write(lines)
-l = os.path.join(listpath, "unstable-example")
-with open(l, "w") as fh:
-    lines = "\n".join([unstable_example])
-    fh.write(lines)
-l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[idx])
-with open(l, "w") as fh:
-    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[idx])])
-    fh.write(lines)
 
