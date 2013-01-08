@@ -21,7 +21,7 @@ var massVideo = videoFolder + "mass.swf";
 // --------------------------------------------------------------------
 
 function embedVideo(url, div, flashvars, params, attributes, callback) {
-    $(".cover").show();
+    $(".example-cover").show();
     swfobject.embedSWF(
 	url, div, videoWidth, videoHeight, flashVersion, 
 	expressInstallSwfurl, flashvars, params, attributes, callback);
@@ -30,14 +30,14 @@ function embedVideo(url, div, flashvars, params, attributes, callback) {
 function showSlide(id) {
     $(".slide").hide();
     $('html, body').animate({ scrollTop: 0 }, 0);
-    $(".cover").show();
+    $(".example-cover").show();
     $("#"+id).show();
 }
 
 function showInstructions(id) {
     showSlide(id);
     setTimeout(function () {
-	$(".cover").fadeOut(fade);
+	$(".example-cover").fadeOut(fade);
     }, 300);
 }
 
@@ -62,13 +62,17 @@ function setQuestion(question, responses) {
     var resp = $("#responses");
     resp.empty();
     for (var i=0; i<responses.length; i++) {
+	var text = responses[i][0];
+	var color = responses[i][1];
+	var val = responses[i][2];
 	resp.append(
 	    "<div class='response'><button type='button' " +
 		"name='response-button' " +
-		"class='response-option' " +
+		"class='big-option' " +
+		"style='background-color: " + color + "' " +
 		"onclick='experiment.submit(\"" + 
-		responses[i][1] + "\");'>" +
-		responses[i][0] +
+		val + "\");'>" +
+		text +
 		"</button></div>");
     }
     resp.append("<div class='spacer'></div>");
@@ -124,11 +128,18 @@ var experiment = {
 	});
     },
 
+    // checkComprehension : function (block) {
+    // 	var data = { pid : experiment.pid,
+    // 		     time : 0;
+    // 		     response : block };
+    // 	post('submit', data, experiment.start);
+    // },
+
     start: function () {
 	post('trialinfo', {pid: experiment.pid}, function (info) {
 	    if (experiment.show(info)) {
 		showSlide("trial");
-		$("#play-button").focus();
+		// $("#play-button").focus();
 	    }
 	});
     },
@@ -145,6 +156,9 @@ var experiment = {
 	    experiment.numTrials = experiment.numExperiment;
 	    showInstructions("instructions2");
 	    return false;
+	// } else if (info == 'show comprehension') {
+	//     showSlide("comprehension");
+	//     return false;
 	} else if (info == 'finished experiment') {
 	    showSlide("finished");
 	    return false;
@@ -154,8 +168,14 @@ var experiment = {
 	experiment.curVideo = info.stimulus + ".swf";
 	experiment.curImgA = info.stimulus + "A.png";
 	experiment.curImgB = info.stimulus + "B.png";
+	experiment.curImgFloor = info.stimulus + "-floor.png";
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
+
+	// Hide elements we're not ready for yet
+	$("button[name=response-button]").attr("disabled", true);
+	$("#responses").hide();
+	$("#feedback").hide();
 
 	// Update progress bar
 	updateProgress(experiment.index, experiment.numTrials);
@@ -163,17 +183,20 @@ var experiment = {
 	// Set question and responses
 	setQuestion(experiment.curQuestion, experiment.curResponses);
 
-	// Hide elements we're not ready for yet
-	$("#player").hide();
-	$("#player-img").hide();
-	$("button[name=response-button]").attr("disabled", true);
-	$("#responses").hide();
-	$("#feedback").hide();
-
-	// Show instructions and focus the play button
-	$("#play-button").attr("disabled", false);
-	$("#video-instructions").show();
-	$("#play-button").focus();
+	// Set background image
+	var img = imageFolder + experiment.curImgFloor;
+	$("#cover1").html(
+	    "<img src='" + img + "' " +
+		"width='" + videoWidth + "' " +
+		"height='" + videoHeight + "'></img>");
+	$("#cover1").fadeIn(fade, function () {
+	    $("#player").hide();
+	    $("#cover2").hide();
+	    // Show instructions and focus the play button
+	    $("#play-button").attr("disabled", false);
+	    $("#video-instructions").show();
+	    // $("#play-button").focus();
+	});
 
 	return true;
     },
@@ -186,11 +209,11 @@ var experiment = {
 	var attributes = { id: "player" };
 	
 	$("#play-button").attr("disabled", true);
+	$("#video-instructions").hide();//fadeOut(fade)
 	embedVideo(video, "player", {}, params, attributes, 
 		   function (e) {
 		       if (e.success) {
-			   $("#player-img").hide();
-			   $("#video-instructions").fadeOut(fade)
+			   $("#cover1").fadeOut(fade);
 			   setTimeout(experiment.query, 5000);
 		       }});
     },
@@ -199,13 +222,14 @@ var experiment = {
 	var img = imageFolder + experiment.curImgB;
 
 	// set the end image (last frame of the video)
-	$("#player-img").html(
+	$("#cover2").html(
 	    "<img src='" + img + "' " +
 		"width='" + videoWidth + "' " +
 		"height='" + videoHeight + "'></img>");
 	// fade in the image and then remove the video when it's done
-	$("#player-img").fadeIn(fade, function () {
-	    $("player").replaceWith("<div id='player'></div>");
+	$("#cover2").fadeIn(fade, function () {
+	    $("#player").replaceWith("<div id='player'></div>");
+	    $("#player").hide();
 	    $("#responses").fadeIn(fade, function () {
 		// enable the response buttons
 		$("button[name=response-button]").attr("disabled", false);
@@ -267,7 +291,7 @@ var experiment = {
 		    function (e) {
 			if (e.success) {
 			    setTimeout(function () {
-				$("#player-img").fadeOut(fade);
+				$("#cover2").fadeOut(fade);
 			    }, 300);
 			    txtfb();
 			    setTimeout(function () {

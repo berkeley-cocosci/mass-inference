@@ -6,7 +6,7 @@
 
 #progress {
     height: 12px;
-    margin-bottom: 32px;
+    margin-bottom: 12px;
     width: 642px;
 }
 
@@ -35,6 +35,11 @@
     float: left;
 }
 
+/* Question */
+
+#question {
+    font-size: 20px;
+}
 
 /* Video player */
 
@@ -52,16 +57,41 @@
     width: 630px;
     height: 470px;
     text-align: center;
-    background-color: white;
+    /* background-color: white; */
     padding: 5px;
+    color: white;
+    font-weight: normal;
+    font-size: 20px;
 }
 
-#player-img {
+#buffer1 {
+    height: 220px;
+}
+
+#buffer2 {
+    height: 100px;
+}
+
+#player-float {
+    position: absolute;
+    z-index: -100;
+    width: 640px;
+    height: 480px;
+}
+
+div.cover {
     position: absolute;
     z-index: 0;
     width: 640px;
-    height: 60px;
-    float: left;
+    height: 480px;
+}
+
+#cover1 {
+    z-index: 10;
+}
+
+#cover2 {
+    z-index: 0;
 }
 
 /* Responses */
@@ -75,7 +105,6 @@
     text-align: center;
 }
 
-
 .response {
     width: 300px;
     height: 40px;
@@ -83,32 +112,22 @@
     float: left;
 }
 
-button.response-option {
-    height: 40px;
-    font-size: 20px;
-    background: #ffffff;
-    margin: 0px;
-    margin-top: 1px;
-    border: 1px solid #000000;
-    padding-left: 10px;
-    padding-right: 10px;
-}
-
-
 /* Feedback */
 
 #feedback {
-    margin-top: 15px;
-    margin-bottom: 14px;
+    /* margin-top: 15px; */
+    /* margin-bottom: 14px; */
     width: 600px;
+    font-size: 20px;
     font-weight: bold;
 }
 
 .feedback {
     width: 300px;
-    /* height: 49px; */
+    height: 49px;
     text-align: center;
     float: left;
+    padding-top: 12px;
 }
 
 #stable-feedback {

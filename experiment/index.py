@@ -33,18 +33,15 @@ fields = ["trial", "stimulus", "question", "response", "time", "angle", "catch",
 pformat = "%03d"
 
 questions = {
-    "training": "Will the tower fall down?",
     "normal": "Will the tower fall down?",
     "catch": "Did the tower fall down?"
     }
 
 responses = {
-    "training": [("Yes, it will fall", "yes"),
-                 ("No, it will NOT fall", "no")],
-    "normal": [("Yes, it will fall", "yes"),
-               ("No, it will NOT fall", "no")],
-    "catch": [("Yes, it did fall", "yes"),
-              ("No, it did NOT fall", "no")]
+    "normal": [("Yes, it will fall", "#FF6666", "yes"),
+               ("No, it will NOT fall", "#6666FF", "no")],
+    "catch": [("Yes, it did fall", "#AA0000", "yes"),
+              ("No, it did NOT fall", "#0000AA", "no")]
     }
 
 

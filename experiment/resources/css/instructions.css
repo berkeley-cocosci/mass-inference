@@ -9,7 +9,7 @@ div.example {
     border: 1px solid black;
 }
 
-div.cover {
+div.example-cover {
     position: absolute;
     z-index: 0;
     width: 640px;

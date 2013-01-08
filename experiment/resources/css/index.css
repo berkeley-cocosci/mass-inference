@@ -5,3 +5,12 @@
 img.logo {
     height: 100px;
 }
+
+#consent {
+    font-size: 14px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 15px;
+    text-align: justify;
+}
+
