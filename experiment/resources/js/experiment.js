@@ -12,7 +12,7 @@ var pageURL = "../../index.py?page=";
 var actionURL = "../../index.py?a=";
 
 var fade = 200;
-var indicatorWidth = 545;
+var indicatorWidth = 540;
 
 var stableVideo = videoFolder + "stable.swf";
 var unstableVideo = videoFolder + "unstable.swf";
@@ -65,6 +65,7 @@ function setQuestion(question, responses) {
 	resp.append(
 	    "<div class='response'><button type='button' " +
 		"name='response-button' " +
+		"class='response-option' " +
 		"onclick='experiment.submit(\"" + 
 		responses[i][1] + "\");'>" +
 		responses[i][0] +
@@ -104,7 +105,9 @@ var experiment = {
 		play: "true",
 		loop: "true" };
 
-	    experiment.numTrials = info.numTrials;
+	    experiment.numTraining = info.numTraining;
+	    experiment.numExperiment = info.numExperiment;
+	    experiment.numTrials = experiment.numTraining;
 	    experiment.pid = info.pid;
 
 	    embedVideo(
@@ -139,6 +142,7 @@ var experiment = {
 
     show: function(info) {
 	if (info == 'finished training') {
+	    experiment.numTrials = experiment.numExperiment;
 	    showInstructions("instructions2");
 	    return false;
 	} else if (info == 'finished experiment') {
@@ -202,7 +206,7 @@ var experiment = {
 	// fade in the image and then remove the video when it's done
 	$("#player-img").fadeIn(fade, function () {
 	    $("player").replaceWith("<div id='player'></div>");
-	    $("#responses").slideDown(fade, function () {
+	    $("#responses").fadeIn(fade, function () {
 		// enable the response buttons
 		$("button[name=response-button]").attr("disabled", false);
 	    });
@@ -234,7 +238,7 @@ var experiment = {
 
 	// if the feedback is undefined, then don't display anything
 	if (stable == "undefined") {
-	    $("#responses").slideUp(fade, go);
+	    $("#responses").fadeOut(fade, go);
 
 	// otherwise give feedback, then submit and go to the next
 	// trial
@@ -242,7 +246,7 @@ var experiment = {
 	
 	    var txtfb = function () {
 		if (stable) {
-		    $("#stable-feedback").html("Tower is stable!");
+		    $("#stable-feedback").html("Tower does not fall!");
 		    $("#unstable-feedback").html("&nbsp;");
 		} else {
 		    $("#stable-feedback").html("&nbsp;");
@@ -267,13 +271,13 @@ var experiment = {
 			    }, 300);
 			    txtfb();
 			    setTimeout(function () {
-				$("#feedback").slideUp(fade, go);
+				$("#feedback").fadeOut(fade, go);
 			    }, 3000);
 			}});
 	    } else {
 		txtfb();
 		setTimeout(function () {
-		    $("#feedback").slideUp(fade, go);
+		    $("#feedback").fadeOut(fade, go);
 		}, 2000);
 	    }
 	}

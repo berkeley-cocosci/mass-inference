@@ -39,12 +39,12 @@ questions = {
     }
 
 responses = {
-    "training": [("Yes", "yes"),
-                 ("No", "no")],
-    "normal": [("Yes", "yes"),
-               ("No", "no")],
-    "catch": [("Yes", "yes"),
-              ("No", "no")]
+    "training": [("Yes, it will fall", "yes"),
+                 ("No, it will NOT fall", "no")],
+    "normal": [("Yes, it will fall", "yes"),
+               ("No, it will NOT fall", "no")],
+    "catch": [("Yes, it did fall", "yes"),
+              ("No, it did NOT fall", "no")]
     }
 
 
@@ -126,6 +126,7 @@ def create_triallist(pid):
         todump.append(info)
         i += 1
     todump.append("finished training")
+    i = 0
     for stim in stims:
         info = stiminfo[stim].copy()
         info.update(stimulus=stim, index=i)
@@ -134,7 +135,7 @@ def create_triallist(pid):
     todump.append("finished experiment")
     with open(triallist, "w") as fh:
         json.dump(todump, fh)
-    return len(todump) - 2
+    return len(train), len(stims)
 
 def get_trialinfo(pid, index):
     triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
@@ -195,11 +196,12 @@ def initialize(form):
     pid = 1 if len(ids) == 0 else max(ids) + 1
     # create new data file and trial list
     create_datafile(pid)
-    numtrials = create_triallist(pid)
+    numtrain, numexp = create_triallist(pid)
 
     # initialization data we'll be sending
     init = {
-        'numTrials': numtrials,
+        'numTraining': numtrain,
+        'numExperiment': numexp,
         'pid': pformat % pid
         }
     json_init = json.dumps(init)
