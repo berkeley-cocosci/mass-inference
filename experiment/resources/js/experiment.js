@@ -35,7 +35,7 @@ function onVideoLoaded(obj, callback) {
 	setTimeout(
 	    function () {
 		onVideoLoaded(obj, callback);
-	    }, 10);
+	    }, 1);
     } else {
 	callback();
     }
@@ -48,7 +48,7 @@ function onVideoFinished(obj, callback) {
 	setTimeout(
 	    function () {
 		onVideoFinished(obj, callback);
-	    }, 10);
+	    }, 1);
     }
 }
 
@@ -213,6 +213,10 @@ var experiment = {
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
 
+	// Load the images and cache them
+	$("#screenshot1-img").attr("src", imageFolder + experiment.curImgFloor);
+	$("#screenshot2-img").attr("src", imageFolder + experiment.curImgB);
+
 	// Hide elements we're not ready for yet
 	$("button[name=response-button]").attr("disabled", true);
 	$("#responses").hide();
@@ -225,8 +229,6 @@ var experiment = {
 	setQuestion(experiment.curQuestion, experiment.curResponses);
 
 	// Set background image
-	var img = imageFolder + experiment.curImgFloor;
-	$("#screenshot1-img").attr("src", img);
 	$("#screenshot1").fadeIn(fade, function () {
 	    $("#player").hide();
 	    $("#screenshot2").hide();
@@ -264,10 +266,6 @@ var experiment = {
     },
 
     query : function () {
-	var img = imageFolder + experiment.curImgB;
-
-	// set the end image (last frame of the video)
-	$("#screenshot2-img").attr("src", img);
 	// fade in the image and then remove the video when it's done
 	$("#screenshot2").fadeIn(fade, function () {
 	    $("#player").replaceWith("<div id='player'></div>");
