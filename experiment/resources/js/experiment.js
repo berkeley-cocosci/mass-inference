@@ -11,8 +11,7 @@ var expressInstallSwfurl = false;
 var pageURL = "../../index.py?page=";
 var actionURL = "../../index.py?a=";
 
-var fade = 200;
-var indicatorWidth = 540;
+var fade = 100;
 
 var stableVideo = videoFolder + "stable.swf";
 var unstableVideo = videoFolder + "unstable.swf";
@@ -200,16 +199,24 @@ var experiment = {
 
     show: function(info) {
 	if (info.index == 'finished training') {
-	    showInstructions("instructions2");
 	    experiment.numTrials = experiment.numExperiment;
-	    $("#indicator-stage").attr("width", "2%");
 	    $("#question-image").attr("src", imageFolder + "scales.png");
+	    $("#indicator-stage").animate({"width": "0%"}, 0);
+	    $("#feedback").hide();
+	    $("#screenshot1").hide();
+	    $("#screenshot2").hide();
+	    $("#player").hide();
+	    showInstructions("instructions2");
 	    return false;
 	} else if (info.index == "finished experiment") {
-	    showInstructions("instructions3");
 	    experiment.numTrials = experiment.numTraining;
-	    $("#indicator-stage").attr("width", "2%");
 	    $("#question-image").attr("src", "");
+	    $("#indicator-stage").animate({"width": "0%"}, 0);
+	    $("#feedback").hide();
+	    $("#screenshot1").hide();
+	    $("#screenshot2").hide();
+	    $("#player").hide();
+	    showInstructions("instructions3");
 	    return false;
 	} else if (info.index == 'finished posttest') {
 	    experiment.validationCode = info.code;
@@ -229,6 +236,8 @@ var experiment = {
 	$("button[name=response-button]").attr("disabled", true);
 	$("#responses").hide();
 	$("#feedback").hide();
+	$("#video-button").hide();
+	$("#video-instructions").hide();
 
 	// Update progress bar
 	updateProgress(experiment.index, experiment.numTrials);
