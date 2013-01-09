@@ -3,21 +3,19 @@
 /********************************************************************/
 
 div.example {
-    width: 640px;
-    height: 480px;
-    margin-top: 16px;
+    margin-top: 1em;
+    margin-bottom: 1em;
     border: 1px solid black;
+    position: relative;
+    overflow: hidden;
+    line-height: 480px; /* should be the height of the video */
 }
 
-div.example-cover {
+div.cover {
     position: absolute;
     z-index: 0;
-    width: 640px;
-    height: 60px;
-    float: left;
+    width: 100%;
     background-color: white;
-    font-size: 20pt;
+    font-size: 1.5em;
     text-align: center;
-    padding-top: 210px;
-    padding-bottom: 210px;
 }

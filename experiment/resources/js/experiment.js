@@ -20,26 +20,73 @@ var massVideo = videoFolder + "mass.swf";
 
 // --------------------------------------------------------------------
 
+function videoIsLoaded(obj) {
+    var percent = $("#" + obj)[0].PercentLoaded();
+    return (percent == 100);
+}
+
+function videoIsPlaying(obj) {
+    var playing = $("#" + obj)[0].IsPlaying();
+    return playing;
+}    
+
+function onVideoLoaded(obj, callback) {
+    if (!videoIsLoaded(obj)) {
+	setTimeout(
+	    function () {
+		onVideoLoaded(obj, callback);
+	    }, 10);
+    } else {
+	callback();
+    }
+}
+
+function onVideoFinished(obj, callback) {
+    if (videoIsLoaded(obj) && !videoIsPlaying(obj)) {
+	callback();
+    } else {
+	setTimeout(
+	    function () {
+		onVideoFinished(obj, callback);
+	    }, 10);
+    }
+}
+
 function embedVideo(url, div, flashvars, params, attributes, callback) {
-    $(".example-cover").show();
     swfobject.embedSWF(
 	url, div, videoWidth, videoHeight, flashVersion, 
-	expressInstallSwfurl, flashvars, params, attributes, callback);
+	expressInstallSwfurl, flashvars, params, attributes,
+	callback);
 }
+
+// --------------------------------------------------------------------
 
 function showSlide(id) {
     $(".slide").hide();
     $('html, body').animate({ scrollTop: 0 }, 0);
-    $(".example-cover").show();
     $("#"+id).show();
 }
 
 function showInstructions(id) {
-    showSlide(id);
-    setTimeout(function () {
-	$(".example-cover").fadeOut(fade);
-    }, 300);
+    var cover = $("#" + id).find(".cover");
+    if (cover.length != 0) {
+	var player = $($("#" + id).find(".example").children()[1]).attr("id");
+	cover.show();
+	showSlide(id);
+	onVideoLoaded(
+	    player,
+	    function () {
+		cover.fadeOut(fade);
+	    }); 
+    } else {
+	showSlide(id);
+    }
 }
+
+function preloadImage(url) {
+    var img = $("<img />").attr("src", url);
+    return img;
+}    
 
 function post(action, data, handler) {
     var request = $.ajax({
@@ -58,7 +105,7 @@ function error(msg) {
 
 function setQuestion(question, responses) {
     // Set question and responses
-    $("#question").html("<b>Question:</b> " + question);
+    $("#question").html("<p><b>Question:</b> " + question + "</p>");
     var resp = $("#responses");
     resp.empty();
     for (var i=0; i<responses.length; i++) {
@@ -80,16 +127,14 @@ function setQuestion(question, responses) {
 
 function updateProgress (index, numTrials) {
     // Update the progress bar
-    var width = index * indicatorWidth / numTrials;
+    var width = 2 + 98*(index / (numTrials-1.0));
     $("#progress").show();
-    $("#indicator-stage").animate({"width": width + "px"}, fade);
+    $("#indicator-stage").animate({"width": width + "%"}, fade);
     $("#progress-text").html(
 	"Progress " + (index+1) + "/" + numTrials);
 }
 
 // --------------------------------------------------------------------
-
-showSlide("index");
 
 var experiment = {
 
@@ -105,9 +150,10 @@ var experiment = {
 	post('initialize', {}, function (msg) {
 	    var info = $.parseJSON(msg);
 	    var params = { 
-		wmode: "direct",
+		wmode: "opaque",
 		play: "true",
-		loop: "true" };
+		loop: "true",
+	        bgcolor: "#FFFFFF"};
 
 	    experiment.numTraining = info.numTraining;
 	    experiment.numExperiment = info.numExperiment;
@@ -116,7 +162,7 @@ var experiment = {
 
 	    embedVideo(
 		stableVideo, "stable-example", 
-		{}, params, {}, undefined); 
+		{}, params, {}, undefined);
 	    embedVideo(
 		unstableVideo, "unstable-example", 
 		{}, params, {}, undefined);
@@ -128,18 +174,10 @@ var experiment = {
 	});
     },
 
-    // checkComprehension : function (block) {
-    // 	var data = { pid : experiment.pid,
-    // 		     time : 0;
-    // 		     response : block };
-    // 	post('submit', data, experiment.start);
-    // },
-
     start: function () {
 	post('trialinfo', {pid: experiment.pid}, function (info) {
 	    if (experiment.show(info)) {
 		showSlide("trial");
-		// $("#play-button").focus();
 	    }
 	});
     },
@@ -154,11 +192,9 @@ var experiment = {
     show: function(info) {
 	if (info == 'finished training') {
 	    experiment.numTrials = experiment.numExperiment;
+	    $("#indicator-stage").attr("width", "2%");
 	    showInstructions("instructions2");
 	    return false;
-	// } else if (info == 'show comprehension') {
-	//     showSlide("comprehension");
-	//     return false;
 	} else if (info == 'finished experiment') {
 	    showSlide("finished");
 	    return false;
@@ -185,17 +221,13 @@ var experiment = {
 
 	// Set background image
 	var img = imageFolder + experiment.curImgFloor;
-	$("#cover1").html(
-	    "<img src='" + img + "' " +
-		"width='" + videoWidth + "' " +
-		"height='" + videoHeight + "'></img>");
-	$("#cover1").fadeIn(fade, function () {
+	$("#screenshot1-img").attr("src", img);
+	$("#screenshot1").fadeIn(fade, function () {
 	    $("#player").hide();
-	    $("#cover2").hide();
-	    // Show instructions and focus the play button
+	    $("#screenshot2").hide();
 	    $("#play-button").attr("disabled", false);
 	    $("#video-instructions").show();
-	    // $("#play-button").focus();
+	    $("#video-button").show();
 	});
 
 	return true;
@@ -203,31 +235,36 @@ var experiment = {
 
     play : function () {
 	var video = videoFolder + experiment.curVideo;
-	var params = { wmode: "direct",
+	var params = { wmode: "opaque",
 		       play: "true",
-		       loop: "false" };
+		       loop: "false",
+		       bgcolor: "#FFFFFF" };
 	var attributes = { id: "player" };
 	
 	$("#play-button").attr("disabled", true);
-	$("#video-instructions").hide();//fadeOut(fade)
-	embedVideo(video, "player", {}, params, attributes, 
-		   function (e) {
-		       if (e.success) {
-			   $("#cover1").fadeOut(fade);
-			   setTimeout(experiment.query, 5000);
-		       }});
+	$("#video-instructions").hide();
+	$("#video-button").hide();
+	embedVideo(
+	    video, "player", {}, params, attributes, 
+	    function (e) {
+		if (e.success) {
+		    onVideoLoaded(
+			"player",
+			function () {
+			    $("#screenshot1").fadeOut(fade);
+			    onVideoFinished(
+				"player", experiment.query);
+			});
+		}});
     },
 
     query : function () {
 	var img = imageFolder + experiment.curImgB;
 
 	// set the end image (last frame of the video)
-	$("#cover2").html(
-	    "<img src='" + img + "' " +
-		"width='" + videoWidth + "' " +
-		"height='" + videoHeight + "'></img>");
+	$("#screenshot2-img").attr("src", img);
 	// fade in the image and then remove the video when it's done
-	$("#cover2").fadeIn(fade, function () {
+	$("#screenshot2").fadeIn(fade, function () {
 	    $("#player").replaceWith("<div id='player'></div>");
 	    $("#player").hide();
 	    $("#responses").fadeIn(fade, function () {
@@ -254,54 +291,59 @@ var experiment = {
     feedback : function(msg) {
 	var stable = msg[0];
 	var vfb = msg[1];
-	var go = function () {
-	    $("#stable-feedback").html("");
-	    $("#unstable-feedback").html("");
-	    experiment.next();
-	};
 
 	// if the feedback is undefined, then don't display anything
 	if (stable == "undefined") {
-	    $("#responses").fadeOut(fade, go);
+	    $("#responses").fadeOut(fade, experiment.next);
 
-	// otherwise give feedback, then submit and go to the next
-	// trial
+	// otherwise do give feedback
 	} else {
 	
 	    var txtfb = function () {
 		if (stable) {
-		    $("#stable-feedback").html("Tower does not fall!");
-		    $("#unstable-feedback").html("&nbsp;");
+		    $("#feedback").html("Tower does not fall!");
+		    $("#feedback").attr("class", "stable-feedback");
 		} else {
-		    $("#stable-feedback").html("&nbsp;");
-		    $("#unstable-feedback").html("Tower is falling...");
+		    $("#feedback").html("Tower is falling...");
+		    $("#feedback").attr("class", "unstable-feedback");
 		}
 		$("#responses").hide();
-		$("#feedback").show();
+		$("#feedback").fadeIn(fade);
 	    };
 	    
+	    // if vfb (video feedback) is not undefined, then show a
+	    // video and text
 	    if (vfb != 'undefined') {
 		var video = videoFolder + vfb + ".swf";
-		var params = { wmode: "direct",
+		var params = { wmode: "opaque",
 			       play: "true",
-			       loop: "false" };
+			       loop: "false",
+			       bgcolor: "#FFFFFF" };
 		var attributes = { id: "player" };
+
+		// callback to execute once the video has been loaded
+		var onload = function () {
+		    $("#screenshot2").fadeOut(fade);
+		    txtfb();
+		    onVideoFinished(
+			"player", 
+			function () {
+			    $("#feedback").fadeOut(fade, experiment.next);
+			});
+		};
+
 		embedVideo(
 		    video, "player", {}, params, attributes, 
 		    function (e) {
 			if (e.success) {
-			    setTimeout(function () {
-				$("#cover2").fadeOut(fade);
-			    }, 300);
-			    txtfb();
-			    setTimeout(function () {
-				$("#feedback").fadeOut(fade, go);
-			    }, 3000);
+			    onVideoLoaded("player", onload);
 			}});
+	
+            // otherwise just show text
 	    } else {
 		txtfb();
 		setTimeout(function () {
-		    $("#feedback").fadeOut(fade, go);
+		    $("#feedback").fadeOut(fade, experiment.next);
 		}, 2000);
 	    }
 	}
@@ -310,8 +352,10 @@ var experiment = {
 
     end: function() {
 	showSlide("finished");
-	$("#indicator-stage").animate(
-	    {"width": indicatorWidth + "px"}, fade);
+	// $("#indicator-stage").animate(
+	//     {"width": indicatorWidth + "px"}, fade);
     },
 };
+
+showSlide("index");
 

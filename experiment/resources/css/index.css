@@ -3,14 +3,14 @@
 /********************************************************************/
 
 img.logo {
-    height: 100px;
+    height: 6.25em;
 }
 
 #consent {
-    font-size: 14px;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-bottom: 15px;
+    font-size: .9em;
+    padding-left: 4%;
+    padding-right: 4%;
+    padding-bottom: 1em;
     text-align: justify;
 }
 
