@@ -105,7 +105,7 @@ function error(msg) {
 
 function setQuestion(question, responses) {
     // Set question and responses
-    $("#question").html("<p><b>Question:</b> " + question + "</p>");
+    $("#question").html("<b>Question:</b> " + question);
     var resp = $("#responses");
     resp.empty();
     for (var i=0; i<responses.length; i++) {
@@ -191,9 +191,10 @@ var experiment = {
 
     show: function(info) {
 	if (info == 'finished training') {
+	    showInstructions("instructions2");
 	    experiment.numTrials = experiment.numExperiment;
 	    $("#indicator-stage").attr("width", "2%");
-	    showInstructions("instructions2");
+	    $("#question-image").attr("src", imageFolder + "scales.png");
 	    return false;
 	} else if (info == 'finished experiment') {
 	    showSlide("finished");
@@ -358,4 +359,6 @@ var experiment = {
 };
 
 showSlide("index");
+//showSlide("instructions2");
+
 

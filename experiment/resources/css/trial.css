@@ -17,7 +17,7 @@
 #indicator-container {
     position: relative;
     float: right;
-    width: 84%;
+    width: 82%;
     margin-bottom: .2em;
 }
 
@@ -34,8 +34,25 @@
 
 /* Question */
 
+#question-container{
+    position: relative;
+    padding-top: .625em;
+    padding-bottom: .625em;
+    line-height: 3em;
+}
+
 #question {
+    position: absolute;
     font-size: 1.25em;
+}
+
+#question-image-container {
+    position: relative;
+    float: right;
+}
+
+#question-image {
+    height: 3em;
 }
 
 /* Video player */
@@ -115,6 +132,7 @@
     border: 1px solid white;
     padding-top: .5em;
     padding-bottom: .5em;
+    z-index: 100;
 }
 
 .stable-feedback {

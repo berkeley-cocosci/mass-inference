@@ -112,6 +112,7 @@ def create_triallist(pid):
     logging.info("(%s) Creating trial list: '%s'" % ((pformat % pid), triallist))
     stiminfo = get_all_stiminfo()
     train = [stim for stim in stiminfo.keys() if stiminfo[stim]['training']]
+    # train = []
     stims = [stim for stim in stiminfo.keys() if not stiminfo[stim]['training']]
     random.shuffle(train)
     random.shuffle(stims)
