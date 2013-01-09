@@ -9,11 +9,12 @@ import httplib
 import random
 
 from os import environ
+from hashlib import sha1
 
 # configure logging
 logging.basicConfig(
     filename="../experiment.log", 
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -27,6 +28,7 @@ cgitb.enable(display=0, logdir="../cgitb", format='plain')
 F_TRAINING = True
 F_EXPERIMENT = True
 F_POSTTEST = True
+F_CHECK_IP = False
 
 html_dir = "../html"
 data_dir = "../data"
@@ -168,8 +170,35 @@ def get_trialinfo(pid, index):
     if index >= len(trialinfo):
         return None
     return trialinfo[index]
-        
 
+def record_ip():
+    ip = cgi.escape(environ["REMOTE_ADDR"])
+    filename = os.path.join(data_dir, "ip_addresses.txt")
+    with open(filename, "a") as fh:
+        fh.write("%s\n" % ip)
+    logging.info("Wrote '%s' to list of IP addresses" % ip)
+
+def check_ip_exists():
+    ip = cgi.escape(environ["REMOTE_ADDR"])
+    filename = os.path.join(data_dir, "ip_addresses.txt")
+    if os.path.exists(filename):
+        with open(filename, "r") as fh:
+            ips = [x for x in fh.read().strip().split("\n") if x != ""]
+        exists = ip in ips
+    else:
+        exists = False
+    return exists   
+    
+def gen_validation_code(pid):
+    datafile = os.path.join(data_dir, "%s.csv" % (pformat % pid))
+    with open(datafile, "r") as fh:
+        data = fh.read()
+    code = sha1(data).hexdigest()
+    filename = os.path.join(data_dir, "%s_code.txt" % (pformat % pid))
+    with open(filename, "w") as fh:
+        fh.write(code)
+    return code
+    
 #################
 # Http functions
 
@@ -210,6 +239,16 @@ def send_page(page):
     print html
 
 def initialize(form):
+    if F_CHECK_IP:
+        # check to make sure the ip address doesn't exist
+        if check_ip_exists():
+            error("Sorry, your IP address has already been "
+                  "used in this experiment.")
+            return
+
+        # record the ip address
+        record_ip()
+
     # get list of all ids
     ids = [
         int(os.path.splitext(x)[0]) 
@@ -229,7 +268,7 @@ def initialize(form):
         'pid': pformat % pid
         }
     json_init = json.dumps(init)
-        
+    
     # log information about what we're sending
     logging.info("(%s) Sending init data: %s" % 
                  ((pformat % pid), json_init))
@@ -255,7 +294,11 @@ def getTrialInfo(form):
         data = dict([(k, "") for k in fields])
         data['trial'] = trialinfo
         write_data(pid, data)
-        info = trialinfo
+        info = { 'index': trialinfo }
+        
+        if trialinfo == "finished posttest":
+            code = gen_validation_code(pid)
+            info['code'] = code
 
     else:
         ttype = 'catch' if trialinfo['catch'] else 'normal'
@@ -337,13 +380,13 @@ for key in sorted(environ.keys()):
     logging.debug("%s %s" % (key, environ[key]))
     
 # parse the page, defaulting to the index
-if environ['REQUEST_METHOD'] == 'GET':
+if cgi.escape(environ['REQUEST_METHOD']) == 'GET':
     page = form.getvalue('page', 'index')
     logging.info("Requested page: " + page)
     send_page(pages[page])
 
 # parse the action
-elif environ['REQUEST_METHOD'] == 'POST':
+elif cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     action = form.getvalue('a', None)
     logging.info("Requested action: " + action)
     handler = actions.get(action, error)

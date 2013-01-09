@@ -83,10 +83,10 @@ function showInstructions(id) {
     }
 }
 
-function preloadImage(url) {
-    var img = $("<img />").attr("src", url);
-    return img;
-}    
+function error(msg) {
+    showSlide("error");
+    $("#error-message").html("<p>" + msg.responseText + "</p>");
+}
 
 function post(action, data, handler) {
     var request = $.ajax({
@@ -96,11 +96,6 @@ function post(action, data, handler) {
     });
     request.done(handler);
     request.fail(error);
-}
-
-function error(msg) {
-    showSlide("error");
-    $("#error-message").html(msg)
 }
 
 function setQuestion(question, responses) {
@@ -146,6 +141,8 @@ var experiment = {
     curQuestion : "",
     curResponses : [],
 
+    validationCode : "",
+
     initialize : function() {
 	post('initialize', {}, function (msg) {
 	    var info = $.parseJSON(msg);
@@ -190,20 +187,21 @@ var experiment = {
     },
 
     show: function(info) {
-	if (info == 'finished training') {
+	if (info.index == 'finished training') {
 	    showInstructions("instructions2");
 	    experiment.numTrials = experiment.numExperiment;
 	    $("#indicator-stage").attr("width", "2%");
 	    $("#question-image").attr("src", imageFolder + "scales.png");
 	    return false;
-	} else if (info == "finished experiment") {
+	} else if (info.index == "finished experiment") {
 	    showInstructions("instructions3");
 	    experiment.numTrials = experiment.numTraining;
 	    $("#indicator-stage").attr("width", "2%");
 	    $("#question-image").attr("src", "");
 	    return false;
-	} else if (info == 'finished posttest') {
-	    showSlide("finished");
+	} else if (info.index == 'finished posttest') {
+	    experiment.validationCode = info.code;
+	    experiment.end();
 	    return false;
 	}
 
@@ -359,6 +357,7 @@ var experiment = {
 
     end: function() {
 	showSlide("finished");
+	$("#code").html(experiment.validationCode);
     },
 };
 
