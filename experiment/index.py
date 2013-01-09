@@ -14,7 +14,7 @@ from hashlib import sha1
 # configure logging
 logging.basicConfig(
     filename="../experiment.log", 
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
