@@ -59,6 +59,16 @@ function embedVideo(url, div, flashvars, params, attributes, callback) {
 	callback);
 }
 
+function preloadImages(arrayOfImages, callback) {
+    var numToLoad = arrayOfImages.length;
+    $(arrayOfImages).each(function () {
+	$("<img />").load(function () {
+	    numToLoad--;
+	    if (numToLoad == 0 && callback) { callback(); }
+	}).attr("src", imageFolder + this);
+    });
+}
+
 // --------------------------------------------------------------------
 
 function showSlide(id) {
@@ -167,6 +177,7 @@ var experiment = {
 		massVideo, "mass-example", 
 		{}, params, {}, undefined);
 
+	    preloadImages(["scales.png"], undefined);
 	    showInstructions("instructions");
 	});
     },
@@ -185,6 +196,7 @@ var experiment = {
 	};
 	post('trialinfo', data, experiment.show);
     },
+	
 
     show: function(info) {
 	if (info.index == 'finished training') {
@@ -213,10 +225,6 @@ var experiment = {
 	experiment.curQuestion = info.question;
 	experiment.curResponses = info.responses;
 
-	// Load the images and cache them
-	$("#screenshot1-img").attr("src", imageFolder + experiment.curImgFloor);
-	$("#screenshot2-img").attr("src", imageFolder + experiment.curImgB);
-
 	// Hide elements we're not ready for yet
 	$("button[name=response-button]").attr("disabled", true);
 	$("#responses").hide();
@@ -228,14 +236,25 @@ var experiment = {
 	// Set question and responses
 	setQuestion(experiment.curQuestion, experiment.curResponses);
 
-	// Set background image
-	$("#screenshot1").fadeIn(fade, function () {
-	    $("#player").hide();
-	    $("#screenshot2").hide();
-	    $("#play-button").attr("disabled", false);
-	    $("#video-instructions").show();
-	    $("#video-button").show();
-	});
+	// Load the images and cache them
+	preloadImages(
+	    [experiment.curImgFloor, experiment.curImgB],
+	    function () {
+		$("#screenshot1-img").attr(
+		    "src", imageFolder + experiment.curImgFloor);
+		$("#screenshot2-img").attr(
+		    "src", imageFolder + experiment.curImgB);
+
+
+		// Set background image
+		$("#screenshot1").fadeIn(fade, function () {
+		    $("#player").hide();
+		    $("#screenshot2").hide();
+		    $("#play-button").attr("disabled", false);
+		    $("#video-instructions").show();
+		    $("#video-button").show();
+		});
+	    });
 
 	return true;
     },
@@ -359,7 +378,8 @@ var experiment = {
     },
 };
 
-showSlide("index");
-
-
+preloadImages(["UCSeal122x122.gif", "Bayes-500h.jpg"],
+	      function () {
+		  showSlide("index");
+	      });
 
