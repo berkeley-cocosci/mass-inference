@@ -24,11 +24,15 @@ cgitb.enable(display=0, logdir="../cgitb", format='plain')
 #################
 # Configuration
 
+F_TRAINING = True
+F_EXPERIMENT = True
+F_POSTTEST = True
+
 html_dir = "../html"
 data_dir = "../data"
 conf_dir = "../config"
 
-keywords = ["finished training", "finished experiment"]
+keywords = ["finished training", "finished experiment", "finished posttest"]
 fields = ["trial", "stimulus", "question", "response", "time", "angle", "catch", "training"]
 pformat = "%03d"
 
@@ -82,9 +86,15 @@ def get_trialnum(pid):
     with open(datafile, "r") as fh:
         data = fh.read()
     lines = data.strip().split("\n")
-    trial = parse_trialnum(lines[-1].split(",")[0])
-    if trial is None:
-        trial = parse_trialnum(lines[-2].split(",")[0]) + 1
+    i = 0
+    while True:
+        trial = parse_trialnum(lines[-(i+1)].split(",")[0])
+        if trial is not None:
+            trial += i
+            break
+        i += 1
+    # if trial is None:
+    #     trial = parse_trialnum(lines[-2].split(",")[0]) + 1
     return trial
     
 def create_datafile(pid):
@@ -112,25 +122,41 @@ def create_triallist(pid):
     logging.info("(%s) Creating trial list: '%s'" % ((pformat % pid), triallist))
     stiminfo = get_all_stiminfo()
     train = [stim for stim in stiminfo.keys() if stiminfo[stim]['training']]
-    # train = []
     stims = [stim for stim in stiminfo.keys() if not stiminfo[stim]['training']]
     random.shuffle(train)
     random.shuffle(stims)
     todump = []
-    i = 0
-    for stim in train:
-        info = stiminfo[stim].copy()
-        info.update(stimulus=stim, index=i)
-        todump.append(info)
-        i += 1
+
+    # training
+    if F_TRAINING:
+        i = 0
+        for stim in train:
+            info = stiminfo[stim].copy()
+            info.update(stimulus=stim, index=i)
+            todump.append(info)
+            i += 1
     todump.append("finished training")
-    i = 0
-    for stim in stims:
-        info = stiminfo[stim].copy()
-        info.update(stimulus=stim, index=i)
-        todump.append(info)
-        i += 1
+
+    # experiment
+    if F_EXPERIMENT:
+        i = 0
+        for stim in stims:
+            info = stiminfo[stim].copy()
+            info.update(stimulus=stim, index=i)
+            todump.append(info)
+            i += 1
     todump.append("finished experiment")
+
+    # posttest
+    if F_POSTTEST:
+        i = 0
+        for stim in train:
+            info = stiminfo[stim].copy()
+            info.update(stimulus=stim, index=i, posttest=True)
+            todump.append(info)
+            i += 1
+    todump.append("finished posttest")
+
     with open(triallist, "w") as fh:
         json.dump(todump, fh)
     return len(train), len(stims)
@@ -242,7 +268,6 @@ def getTrialInfo(form):
             'question': question,
             'responses': response,
             'training': trialinfo['training'],
-            # 'stable': stable,
             }
 
     json_info = json.dumps(info)
@@ -282,15 +307,14 @@ def submit(form):
 
     # now get the feedback
     stable = 'undefined' if trialinfo['catch'] else trialinfo['stable']
-    vfb = ('undefined' if (trialinfo['catch'] or not trialinfo['training'])
-           else "%s-fb" % trialinfo['stimulus'])
+    vfb = ('undefined' if (trialinfo['catch'] or 
+                           not trialinfo['training'] or
+                           trialinfo.get('posttest', False))
+            else "%s-fb" % trialinfo['stimulus'])
 
     # response
     print http_content_type("application/json")
     print json.dumps([stable, vfb])
-    
-    # # respond
-    # print http_status(200, "OK")
 
     
 #################
@@ -298,9 +322,6 @@ def submit(form):
 
 pages = {
     "index": "experiment.html",
-    "instructions": "instructions.html",
-    "trial": "trial.html",
-    "finished": "finished.html",
     }
 
 actions = {

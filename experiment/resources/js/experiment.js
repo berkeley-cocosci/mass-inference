@@ -196,7 +196,13 @@ var experiment = {
 	    $("#indicator-stage").attr("width", "2%");
 	    $("#question-image").attr("src", imageFolder + "scales.png");
 	    return false;
-	} else if (info == 'finished experiment') {
+	} else if (info == "finished experiment") {
+	    showInstructions("instructions3");
+	    experiment.numTrials = experiment.numTraining;
+	    $("#indicator-stage").attr("width", "2%");
+	    $("#question-image").attr("src", "");
+	    return false;
+	} else if (info == 'finished posttest') {
 	    showSlide("finished");
 	    return false;
 	}
@@ -353,12 +359,10 @@ var experiment = {
 
     end: function() {
 	showSlide("finished");
-	// $("#indicator-stage").animate(
-	//     {"width": indicatorWidth + "px"}, fade);
     },
 };
 
 showSlide("index");
-//showSlide("instructions2");
+
 
 
