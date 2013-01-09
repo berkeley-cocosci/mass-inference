@@ -277,6 +277,7 @@ if ntrain_catch > 0:
 	stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
     train_catch_stims = np.sort(original[train_catch])
 else:
+    train_catch = np.array([], dtype='S')
     train_catch_stims = np.array([], dtype='S')
 
 print train_stims
@@ -317,7 +318,7 @@ with open(l, "w") as fh:
 # <codecell>
 
 import yaml
-fh = open("../../turk-experiment/stimuli/stimuli-info.csv", "w")
+fh = open("../../turk-experiment/config/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
     fh.write(",".join(
@@ -345,4 +346,7 @@ for i in train_catch:
 	 ) + "\n")
 
 fh.close()
+
+# <codecell>
+
 
