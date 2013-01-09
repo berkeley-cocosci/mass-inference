@@ -1,0 +1,18 @@
+/********************************************************************/
+/* Finished slide components                                        */
+/********************************************************************/
+
+#code-container {
+    margin-top: .625em;
+    margin-bottom: .625em;
+}
+
+#code {
+    background-color: #FEA;
+    text-align: center;
+    width: 55%;
+    padding: .5em;
+    border: 1px solid black;
+    margin: 0px auto;
+}
+
