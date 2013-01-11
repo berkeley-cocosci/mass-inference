@@ -5,18 +5,19 @@ var imageFolder = "resources/images/";
 
 var videoWidth = "640";
 var videoHeight = "480";
-var flashVersion = "9.0.0";
-//var expressInstallSwfurl = false;
-var expressInstallSwfurl = "http://get.adobe.com/flashplayer/"
+// var flashVersion = "9.0.0";
+// //var expressInstallSwfurl = false;
+// var expressInstallSwfurl = "http://get.adobe.com/flashplayer/"
+var videoExt = "mp4";
 
-var pageURL = "../../index.py?page=";
-var actionURL = "../../index.py?a=";
+var pageURL = "index.py?page=";
+var actionURL = "index.py?a=";
 
 var fade = 200;
 
-var stableVideo = videoFolder + "stable.swf";
-var unstableVideo = videoFolder + "unstable.swf";
-var massVideo = videoFolder + "mass.swf";
+var stableVideo = "stable." + videoExt;
+var unstableVideo = "unstable." + videoExt;
+var massVideo = "mass." + videoExt;
 
 var DEBUG = true;
 
@@ -28,84 +29,149 @@ function debug(msg) {
 
 // --------------------------------------------------------------------
 
-function videoIsLoaded(obj) {
-    var elem = $("#" + obj);
-    var percent;
+// function videoIsLoaded(obj) {
+//     var elem = $("#" + obj);
+//     var percent;
 
-    try {
-	percent = elem[0].PercentLoaded();
-    } catch (exception) {
-	debug("ERROR: " + exception);
-	return false;
-    }
-    return (percent == 100);
+//     try {
+// 	percent = elem[0].PercentLoaded();
+//     } catch (exception) {
+// 	debug("ERROR: " + exception);
+// 	return false;
+//     }
+//     return (percent == 100);
+// }
+
+function videoIsLoaded(obj) {
+    var percent = jwplayer(obj).getBuffer();
+    return percent == 100;
 }
+
+// function videoIsPlaying(obj) {
+//     var playing = $("#" + obj)[0].IsPlaying();
+//     return playing;
+// }    
 
 function videoIsPlaying(obj) {
-    var playing = $("#" + obj)[0].IsPlaying();
+    var playing = jwplayer(obj).getState() == "PLAYING";
     return playing;
-}    
+}
+
+// function onVideoLoaded(obj, callback) {
+//     if (!videoIsLoaded(obj)) {
+// 	setTimeout(
+// 	    function () {
+// 		onVideoLoaded(obj, callback);
+// 	    }, 10);
+//     } else {
+// 	debug("video '" + obj + "' is loaded");
+// 	callback();
+//     }
+// }
 
 function onVideoLoaded(obj, callback) {
-    if (!videoIsLoaded(obj)) {
-	setTimeout(
-	    function () {
-		onVideoLoaded(obj, callback);
-	    }, 10);
-    } else {
-	debug("video '" + obj + "' is loaded");
-	callback();
-    }
-}
-
-function onVideoFinished(obj, callback) {
-    if (videoIsLoaded(obj) && !videoIsPlaying(obj)) {
-	debug("video '" + obj + "' is finished");
-	callback();
-    } else {
-	setTimeout(
-	    function () {
-		onVideoFinished(obj, callback);
-	    }, 10);
-    }
-}
-
-function embedVideo(url, div, flashvars, params, attributes, callback) {
-    debug("embedding '" + url + "'");
-    swfobject.embedSWF(
-	url, div, videoWidth, videoHeight, flashVersion, 
-	expressInstallSwfurl, flashvars, params, attributes,
-	function (e) {
-	    if (e.success) {
-		debug("success embedding '" + url + "'");
+    jwplayer(obj).onBufferChange(
+	function (event) {
+	    if (event.buffer == 100) {
+		debug("video '" + obj + "' finished loading");
 		callback();
-	    } else {
-		throw e;
 	    }
 	});
 }
 
-function embedAndLoadVideo(url, div, flashvars, params, attributes, callback) {
+// function onVideoFinished(obj, callback) {
+//     if (videoIsLoaded(obj) && !videoIsPlaying(obj)) {
+// 	debug("video '" + obj + "' is finished");
+// 	callback();
+//     } else {
+// 	setTimeout(
+// 	    function () {
+// 		onVideoFinished(obj, callback);
+// 	    }, 10);
+//     }
+// }
+
+function onVideoFinished(obj, callback) {
+    jwplayer(obj).onIdle(
+	function (event) {
+	    if (event.oldstate == "PLAYING") {
+		debug("video '" + obj + "' finished playing");
+		callback();
+	    }
+	});
+}
+
+// function embedVideo(url, div, flashvars, params, attributes, callback) {
+//     debug("embedding '" + url + "'");
+//     swfobject.embedSWF(
+// 	url, div, videoWidth, videoHeight, flashVersion, 
+// 	expressInstallSwfurl, flashvars, params, attributes,
+// 	function (e) {
+// 	    if (e.success) {
+// 		debug("success embedding '" + url + "'");
+// 		callback();
+// 	    } else {
+// 		throw e;
+// 	    }
+// 	});
+// }
+
+function embedVideo(video, image, div, callback) {
+    debug("embedding '" + video + "'");
+    jwplayer(div).setup({
+	file: videoFolder + video,
+	//image: imageFolder + image,
+	//width: videoWidth,
+	//height: videoHeight,
+    });
+    jwplayer(div).onReady(callback);
+}
+
+// function embedAndLoadVideo(url, div, flashvars, params, attributes, callback) {
+//     embedVideo(
+// 	url, div, flashvars, params, attributes,
+// 	function () {
+// 	    onVideoLoaded(div, callback);
+// 	});
+// }
+
+function embedAndLoadVideo(video, image, div, callback) {
     embedVideo(
-	url, div, flashvars, params, attributes,
-	function () {
+	video, image, div,
+	function (event) {
 	    onVideoLoaded(div, callback);
 	});
 }
 
-function embedVideos(urls, divs, flashvars, params, attributes, callback) {
+// function embedVideos(urls, divs, flashvars, params, attributes, callback) {
+//     var func = function () {
+// 	if (urls.length == 1) {
+// 	    callback();
+// 	} else {
+// 	    embedVideos(urls.slice(1, urls.length), 
+// 			divs.slice(1, divs.length), 
+// 			flashvars, params, 
+// 			attributes, callback);
+// 	}		
+//     };
+
+//     embedVideo(urls[0], divs[0], flashvars, params, attributes, func);
+// }
+
+function embedVideos(videos, images, divs, callback) {
     var func = function () {
-	if (urls.length == 1) {
+	if (videos.length == 1) {
 	    callback();
 	} else {
-	    embedVideos(urls.slice(1, urls.length), 
-			divs.slice(1, divs.length), 
-			flashvars, params, 
-			attributes, callback);
+	    embedVideos(
+		videos.slice(1, videos.length), 
+		images.slice(1, images.length),
+		divs.slice(1, divs.length), 
+		callback);
 	}		
     };
 
-    embedVideo(urls[0], divs[0], flashvars, params, attributes, func);
+    embedVideo(videos[0], images[0], divs[0], func);
 }
 
 function preloadImages(arrayOfImages, callback) {
@@ -220,16 +286,18 @@ var experiment = {
 	    experiment.pid = info.pid;
 
 	    embedVideos(
-		[unstableVideo, stableVideo, massVideo],
-		["unstable-example", "stable-example", "mass-example"],
-		{}, params, {}, 
-		function () {
-		    preloadImages(
-			["scales.png"], 
-			function () {
-			    showInstructions("instructions");
-			});
-		});
+	    	[unstableVideo, stableVideo, massVideo],
+	    	[undefined, undefined, undefined],
+	    	["unstable-example", "stable-example", "mass-example"],
+	    	// {}, params, {}, 
+	    	function () {
+	    	    preloadImages(
+	    		["scales.png"], 
+	    		function () {
+	    		    showInstructions("instructions");
+	    		});
+	    	});
+//	    showInstructions("instructions");
 	});
     },
 
@@ -279,7 +347,7 @@ var experiment = {
 	}
 
 	experiment.index = info.index;
-	experiment.curVideo = info.stimulus + ".swf";
+	experiment.curVideo = info.stimulus + "." + videoExt;
 	experiment.curImgA = info.stimulus + "A.png";
 	experiment.curImgB = info.stimulus + "B.png";
 	experiment.curImgFloor = info.stimulus + "-floor.png";
@@ -324,18 +392,19 @@ var experiment = {
     },
 
     play : function () {
-	var video = videoFolder + experiment.curVideo;
-	var params = { wmode: "opaque",
-		       play: "true",
-		       loop: "false",
-		       bgcolor: "#FFFFFF" };
-	var attributes = { id: "player" };
+	// var video = videoFolder + experiment.curVideo;
+	// var params = { wmode: "opaque",
+	// 	       play: "true",
+	// 	       loop: "false",
+	// 	       bgcolor: "#FFFFFF" };
+	// var attributes = { id: "player" };
 	
 	$("#play-button").attr("disabled", true);
 	$("#video-instructions").hide();
 	$("#video-button").hide();
 	embedAndLoadVideo(
-	    video, "player", {}, params, attributes, 
+	    experiment.curVideo, experiment.curImgFloor, "player", 
+	    //{}, params, attributes, 
 	    function () {
 		$("#screenshot1").fadeOut(fade);
 		onVideoFinished(
@@ -395,7 +464,7 @@ var experiment = {
 	    // if vfb (video feedback) is not undefined, then show a
 	    // video and text
 	    if (vfb != 'undefined') {
-		var video = videoFolder + vfb + ".swf";
+		var video = vfb + "." + videoExt;
 		var params = { wmode: "opaque",
 			       play: "true",
 			       loop: "false",
@@ -414,7 +483,8 @@ var experiment = {
 		};
 
 		embedAndLoadVideo(
-		    video, "player", {}, params, attributes, onload);
+		    video, undefined, "player", //{}, params, attributes, 
+		    onload);
 	
             // otherwise just show text
 	    } else {
