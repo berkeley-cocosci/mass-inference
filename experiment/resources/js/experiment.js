@@ -6,21 +6,38 @@ var imageFolder = "resources/images/";
 var videoWidth = "640";
 var videoHeight = "480";
 var flashVersion = "9.0.0";
-var expressInstallSwfurl = false;
+//var expressInstallSwfurl = false;
+var expressInstallSwfurl = "http://get.adobe.com/flashplayer/"
 
 var pageURL = "../../index.py?page=";
 var actionURL = "../../index.py?a=";
 
-var fade = 100;
+var fade = 200;
 
 var stableVideo = videoFolder + "stable.swf";
 var unstableVideo = videoFolder + "unstable.swf";
 var massVideo = videoFolder + "mass.swf";
 
+var DEBUG = true;
+
+function debug(msg) {
+    if (DEBUG) {
+	console.log(msg);
+    }
+}
+
 // --------------------------------------------------------------------
 
 function videoIsLoaded(obj) {
-    var percent = $("#" + obj)[0].PercentLoaded();
+    var elem = $("#" + obj);
+    var percent;
+
+    try {
+	percent = elem[0].PercentLoaded();
+    } catch (exception) {
+	debug("ERROR: " + exception);
+	return false;
+    }
     return (percent == 100);
 }
 
@@ -34,33 +51,67 @@ function onVideoLoaded(obj, callback) {
 	setTimeout(
 	    function () {
 		onVideoLoaded(obj, callback);
-	    }, 1);
+	    }, 10);
     } else {
+	debug("video '" + obj + "' is loaded");
 	callback();
     }
 }
 
 function onVideoFinished(obj, callback) {
     if (videoIsLoaded(obj) && !videoIsPlaying(obj)) {
+	debug("video '" + obj + "' is finished");
 	callback();
     } else {
 	setTimeout(
 	    function () {
 		onVideoFinished(obj, callback);
-	    }, 1);
+	    }, 10);
     }
 }
 
 function embedVideo(url, div, flashvars, params, attributes, callback) {
+    debug("embedding '" + url + "'");
     swfobject.embedSWF(
 	url, div, videoWidth, videoHeight, flashVersion, 
 	expressInstallSwfurl, flashvars, params, attributes,
-	callback);
+	function (e) {
+	    if (e.success) {
+		debug("success embedding '" + url + "'");
+		callback();
+	    } else {
+		throw e;
+	    }
+	});
+}
+
+function embedAndLoadVideo(url, div, flashvars, params, attributes, callback) {
+    embedVideo(
+	url, div, flashvars, params, attributes,
+	function () {
+	    onVideoLoaded(div, callback);
+	});
+}
+
+function embedVideos(urls, divs, flashvars, params, attributes, callback) {
+    var func = function () {
+	if (urls.length == 1) {
+	    callback();
+	} else {
+	    embedVideos(urls.slice(1, urls.length), 
+			divs.slice(1, divs.length), 
+			flashvars, params, 
+			attributes, callback);
+	}		
+    };
+
+    embedVideo(urls[0], divs[0], flashvars, params, attributes, func);
 }
 
 function preloadImages(arrayOfImages, callback) {
     var numToLoad = arrayOfImages.length;
     $(arrayOfImages).each(function () {
+	debug("preloading image '" + this + "'");
 	$("<img />").load(function () {
 	    numToLoad--;
 	    if (numToLoad == 0 && callback) { callback(); }
@@ -71,6 +122,7 @@ function preloadImages(arrayOfImages, callback) {
 // --------------------------------------------------------------------
 
 function showSlide(id) {
+    debug("show slide '" + id + "'");
     $(".slide").hide();
     $('html, body').animate({ scrollTop: 0 }, 0);
     $("#"+id).show();
@@ -85,6 +137,7 @@ function showInstructions(id) {
 	onVideoLoaded(
 	    player,
 	    function () {
+		debug("fading out cover");
 		cover.fadeOut(fade);
 	    }); 
     } else {
@@ -166,18 +219,17 @@ var experiment = {
 	    experiment.numTrials = experiment.numTraining;
 	    experiment.pid = info.pid;
 
-	    embedVideo(
-		stableVideo, "stable-example", 
-		{}, params, {}, undefined);
-	    embedVideo(
-		unstableVideo, "unstable-example", 
-		{}, params, {}, undefined);
-	    embedVideo(
-		massVideo, "mass-example", 
-		{}, params, {}, undefined);
-
-	    preloadImages(["scales.png"], undefined);
-	    showInstructions("instructions");
+	    embedVideos(
+		[unstableVideo, stableVideo, massVideo],
+		["unstable-example", "stable-example", "mass-example"],
+		{}, params, {}, 
+		function () {
+		    preloadImages(
+			["scales.png"], 
+			function () {
+			    showInstructions("instructions");
+			});
+		});
 	});
     },
 
@@ -200,6 +252,7 @@ var experiment = {
     show: function(info) {
 	if (info.index == 'finished training') {
 	    experiment.numTrials = experiment.numExperiment;
+	    $("#question-image-container").show();
 	    $("#question-image").attr("src", imageFolder + "scales.png");
 	    $("#indicator-stage").animate({"width": "0%"}, 0);
 	    $("#feedback").hide();
@@ -210,6 +263,7 @@ var experiment = {
 	    return false;
 	} else if (info.index == "finished experiment") {
 	    experiment.numTrials = experiment.numTraining;
+	    $("#question-image-container").hide();
 	    $("#question-image").attr("src", "");
 	    $("#indicator-stage").animate({"width": "0%"}, 0);
 	    $("#feedback").hide();
@@ -251,17 +305,18 @@ var experiment = {
 	    function () {
 		$("#screenshot1-img").attr(
 		    "src", imageFolder + experiment.curImgFloor);
-		$("#screenshot2-img").attr(
-		    "src", imageFolder + experiment.curImgB);
-
 
 		// Set background image
 		$("#screenshot1").fadeIn(fade, function () {
 		    $("#player").hide();
-		    $("#screenshot2").hide();
 		    $("#play-button").attr("disabled", false);
 		    $("#video-instructions").show();
 		    $("#video-button").show();
+
+		    $("#screenshot2").hide();
+		    $("#screenshot2-img").attr(
+			"src", imageFolder + experiment.curImgB);
+
 		});
 	    });
 
@@ -279,25 +334,20 @@ var experiment = {
 	$("#play-button").attr("disabled", true);
 	$("#video-instructions").hide();
 	$("#video-button").hide();
-	embedVideo(
+	embedAndLoadVideo(
 	    video, "player", {}, params, attributes, 
-	    function (e) {
-		if (e.success) {
-		    onVideoLoaded(
-			"player",
-			function () {
-			    $("#screenshot1").fadeOut(fade);
-			    onVideoFinished(
-				"player", experiment.query);
-			});
-		}});
+	    function () {
+		$("#screenshot1").fadeOut(fade);
+		onVideoFinished(
+		    "player", experiment.query);
+	    });
     },
 
     query : function () {
 	// fade in the image and then remove the video when it's done
 	$("#screenshot2").fadeIn(fade, function () {
-	    $("#player").replaceWith("<div id='player'></div>");
 	    $("#player").hide();
+	    $("#player").replaceWith("<div id='player'></div>");
 	    $("#responses").fadeIn(fade, function () {
 		// enable the response buttons
 		$("button[name=response-button]").attr("disabled", false);
@@ -332,10 +382,10 @@ var experiment = {
 	
 	    var txtfb = function () {
 		if (stable) {
-		    $("#feedback").html("Tower does not fall!");
+		    $("#feedback").html("Tower will not fall!");
 		    $("#feedback").attr("class", "stable-feedback");
 		} else {
-		    $("#feedback").html("Tower is falling...");
+		    $("#feedback").html("Tower will fall...");
 		    $("#feedback").attr("class", "unstable-feedback");
 		}
 		$("#responses").hide();
@@ -363,12 +413,8 @@ var experiment = {
 			});
 		};
 
-		embedVideo(
-		    video, "player", {}, params, attributes, 
-		    function (e) {
-			if (e.success) {
-			    onVideoLoaded("player", onload);
-			}});
+		embedAndLoadVideo(
+		    video, "player", {}, params, attributes, onload);
 	
             // otherwise just show text
 	    } else {

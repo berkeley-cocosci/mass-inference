@@ -49,6 +49,7 @@
 #question-image-container {
     position: relative;
     float: right;
+    visibility: hidden;
 }
 
 #question-image {
