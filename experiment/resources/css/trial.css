@@ -122,6 +122,14 @@
     float: left;
 }
 
+#response-yes {
+    background-color: #FF6666;
+}
+
+#response-no {
+    background-color: #6666FF;
+}
+
 /* Feedback */
 
 #feedback {

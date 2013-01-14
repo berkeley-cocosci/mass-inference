@@ -35,21 +35,8 @@ data_dir = "../data"
 conf_dir = "../config"
 
 keywords = ["finished training", "finished experiment", "finished posttest"]
-fields = ["trial", "stimulus", "question", "response", "time", "angle", "catch", "training"]
+fields = ["trial", "stimulus", "question", "response", "time", "angle", "type"]
 pformat = "%03d"
-
-questions = {
-    "normal": "Will the tower fall down?",
-    "catch": "Did the tower fall down?"
-    }
-
-responses = {
-    "normal": [("Yes, it will fall", "#FF6666", "yes"),
-               ("No, it will NOT fall", "#6666FF", "no")],
-    "catch": [("Yes, it did fall", "#AA0000", "yes"),
-              ("No, it did NOT fall", "#0000AA", "no")]
-    }
-
 
 #################
 # Experiment functions
@@ -134,7 +121,9 @@ def create_triallist(pid):
         i = 0
         for stim in train:
             info = stiminfo[stim].copy()
-            info.update(stimulus=stim, index=i)
+            info.update(stimulus=stim, index=i, ttype='training')
+            del info['training']
+            del info['catch']
             todump.append(info)
             i += 1
     todump.append("finished training")
@@ -144,7 +133,9 @@ def create_triallist(pid):
         i = 0
         for stim in stims:
             info = stiminfo[stim].copy()
-            info.update(stimulus=stim, index=i)
+            info.update(stimulus=stim, index=i, ttype='experiment')
+            del info['training']
+            del info['catch']
             todump.append(info)
             i += 1
     todump.append("finished experiment")
@@ -154,23 +145,55 @@ def create_triallist(pid):
         i = 0
         for stim in train:
             info = stiminfo[stim].copy()
-            info.update(stimulus=stim, index=i, posttest=True)
+            info.update(stimulus=stim, index=i, ttype='posttest')
+            del info['training']
+            del info['catch']
             todump.append(info)
             i += 1
     todump.append("finished posttest")
 
     with open(triallist, "w") as fh:
         json.dump(todump, fh)
-    return len(train), len(stims)
 
-def get_trialinfo(pid, index):
+def get_all_trialinfo(pid):
     triallist = os.path.join(data_dir, "%s_trials.json" % (pformat % pid))
     with open(triallist, "r") as fh:
         trialinfo = json.load(fh)
+    return trialinfo
+    
+def get_trialinfo(pid, index):
+    trialinfo = get_all_trialinfo(pid)
     if index >= len(trialinfo):
         return None
     return trialinfo[index]
 
+def get_training_playlist(pid):
+    trialinfo = get_all_trialinfo(pid)
+    playlist = []
+    for trial in trialinfo:
+        if trial == "finished training":
+            break
+        playlist.append(trial['stimulus'])
+    return playlist
+
+def get_experiment_playlist(pid):
+    trialinfo = get_all_trialinfo(pid)
+    playlist = []
+    for trial in trialinfo[trialinfo.index("finished training")+1:]:
+        if trial == "finished experiment":
+            break
+        playlist.append(trial['stimulus'])
+    return playlist
+
+def get_posttest_playlist(pid):
+    trialinfo = get_all_trialinfo(pid)
+    playlist = []
+    for trial in trialinfo[trialinfo.index("finished experiment")+1:]:
+        if trial == "finished posttest":
+            break
+        playlist.append(trial['stimulus'])
+    return playlist    
+    
 def record_ip():
     ip = cgi.escape(environ["REMOTE_ADDR"])
     filename = os.path.join(data_dir, "ip_addresses.txt")
@@ -259,12 +282,13 @@ def initialize(form):
     pid = 1 if len(ids) == 0 else max(ids) + 1
     # create new data file and trial list
     create_datafile(pid)
-    numtrain, numexp = create_triallist(pid)
+    create_triallist(pid)
+    playlist = get_training_playlist(pid)
 
     # initialization data we'll be sending
     init = {
-        'numTraining': numtrain,
-        'numExperiment': numexp,
+        'playlist': playlist,
+        'numTrials': len(playlist),
         'pid': pformat % pid
         }
     json_init = json.dumps(init)
@@ -295,22 +319,23 @@ def getTrialInfo(form):
         data['trial'] = trialinfo
         write_data(pid, data)
         info = { 'index': trialinfo }
-        
-        if trialinfo == "finished posttest":
+
+        if trialinfo == "finished training":
+            playlist = get_experiment_playlist(pid)
+            info['playlist'] = playlist
+            info['numTrials'] = len(playlist)
+        elif trialinfo == "finished experiment":
+            playlist = get_posttest_playlist(pid)
+            info['playlist'] = playlist
+            info['numTrials'] = len(playlist)
+        elif trialinfo == "finished posttest":
             code = gen_validation_code(pid)
             info['code'] = code
 
     else:
-        ttype = 'catch' if trialinfo['catch'] else 'normal'
-        question = questions[ttype]
-        response = responses[ttype]
-        
         info = {
             'index': trialinfo['index'],
             'stimulus': trialinfo['stimulus'],
-            'question': question,
-            'responses': response,
-            'training': trialinfo['training'],
             }
 
     json_info = json.dumps(info)
@@ -339,9 +364,6 @@ def submit(form):
 
     # populate some more data
     trialinfo = get_trialinfo(pid, index)
-    ttype = 'catch' if trialinfo['catch'] else 'normal'
-    question = questions[ttype]
-    data['question'] = question
     data['trial'] = index
     data.update(trialinfo)
 
@@ -349,15 +371,14 @@ def submit(form):
     write_data(pid, data)
 
     # now get the feedback
-    stable = 'undefined' if trialinfo['catch'] else trialinfo['stable']
-    vfb = ('undefined' if (trialinfo['catch'] or 
-                           not trialinfo['training'] or
-                           trialinfo.get('posttest', False))
-            else "%s-fb" % trialinfo['stimulus'])
+    response = {
+        'feedback' : 'stable' if trialinfo['stable'] else 'unstable',
+        'visual' : trialinfo['ttype'] == "training"
+        }
 
     # response
     print http_content_type("application/json")
-    print json.dumps([stable, vfb])
+    print json.dumps(response)
 
     
 #################
