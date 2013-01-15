@@ -2,9 +2,7 @@
 /* Index slide components                                           */
 /********************************************************************/
 
-img.logo {
-    height: 6.25em;
-}
+img.logo { height: 6.25em; }
 
 #consent {
     font-size: .9em;

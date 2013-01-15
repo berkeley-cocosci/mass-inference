@@ -34,19 +34,22 @@ var experiment = {
     pid : undefined,
     validationCode : undefined,
 
-    playlist : undefined,
+    // playlist : undefined,
     numTrials : undefined,
 
     stimulus : undefined,
     index : undefined,
     starttime : undefined,
     
+    showQuestionImage : false,
+    textFeedback : undefined,
+    showVideoFeedback : undefined,
+    
     initialize : function() {
 	post('initialize', {}, function (msg) {
 	    var info = $.parseJSON(msg);
 
 	    experiment.pid = info.pid;
-	    experiment.playlist = info.playlist;
 	    experiment.numTrials = info.numTrials;
 
 	    slides.show("instructions1a");
@@ -60,14 +63,14 @@ var experiment = {
 		// Finished the training block
 		if (info.index == 'finished training') {
 		    experiment.numTrials = info.numTrials;
-		    experiment.playlist = info.playlist;
+		    experiment.showQuestionImage = true;
 		    slides.show("instructions2");
 		}
 		
 		// Finished the experiment block
 		else if (info.index == "finished experiment") {
 		    experiment.numTrials = info.numTrials;
-		    experiment.playlist = info.playlist;
+		    experiment.showQuestionImage = false;
 		    slides.show("instructions3");
 		}
 

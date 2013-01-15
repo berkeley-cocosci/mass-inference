@@ -113,8 +113,6 @@ var slides = {
 	    $("#" + next).fadeIn(fade);
 	}
 
-	// scroll back up to the top of the page
-	$('html, body').animate({ scrollTop: 0 }, 0);
 	$("#" + next).focus();
 	slides.current = next;
     },
@@ -193,6 +191,13 @@ var slides = {
 	setup : function () {
 	    // Update progress bar
 	    slides.trial.updateProgress();
+
+	    // Possibly show image
+	    if (experiment.showQuestionImage) {
+		$("#question-image").find("img").show();
+	    } else {
+		$("#question-image").find("img").hide();
+	    }
 	    
 	    debug("showing trial");
 	    setBgImage("prestim", experiment.stimulus + "-floor");
@@ -236,9 +241,7 @@ var slides = {
 	showQuery : function () {
 	    debug("showing responses");
 	    setBgImage("responses", experiment.stimulus + "B");
-	    $("#responses").fadeIn(fade, function () {
-		// $f($("#player")).unload();
-	    });
+	    $("#responses").fadeIn(fade);
 	},
 
 	showFeedback : function () {
@@ -275,7 +278,6 @@ var slides = {
 	    else {
 		showTextFeedback();
 		setTimeout(function () {
-		    // $f($("#player")).unload();
 		    experiment.nextTrial();
 		}, 2000);
 	    }
@@ -314,7 +316,7 @@ $(document).ready(function () {
     $(players).each(
 	function () {
 	    $("#" + this).flowplayer({
-		// debug: true,
+		debug: DEBUG,
 		fullscreen: false,
 		keyboard: false,
 		muted: true,

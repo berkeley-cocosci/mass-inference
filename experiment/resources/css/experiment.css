@@ -53,9 +53,7 @@ div.slide {
     padding: 1% 2% 1% 2%;
 }
 
-div.spacer {
-    clear: both;
-}
+div.spacer { clear: both; }
 
 div.blue {
     background-color: #CEECF5;
@@ -74,24 +72,12 @@ div.continue {
 /* Flow player                                                      */
 /********************************************************************/
 
-.fp-controls {
-    display: none;
-}
-.fp-embed {
-    display: none;
-}
-.fp-time {
-    display: none;
-}
-.fp-help {
-    display: none;
-}
+.fp-controls { display: none; }
+.fp-embed { display: none; }
+.fp-time { display: none; }
+.fp-help { display: none; }
 
 /* don't show the player ui when the player is ready */
-.is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui {
-    display: none;
-}
-#player.is-finished .fp-ui,#player.is-finished .fp-engine {
-    display: none;
-}
+.is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui { display: none; }
+#player.is-finished .fp-ui,#player.is-finished .fp-engine { display: none; }
 

@@ -10,9 +10,7 @@
     position: relative;
 }
 
-#progress-text {
-    position: absolute;
-}
+#progress-text { position: absolute; }
 
 #indicator-container {
     position: relative;
@@ -46,14 +44,17 @@
     font-size: 1.25em;
 }
 
-#question-image-container {
+#question-image {
     position: relative;
     float: right;
-    visibility: hidden;
+    height: 3em;
 }
 
-#question-image {
-    height: 3em;
+#question-image img { 
+    height: 100%;
+    border-bottom: 2px solid black;
+    padding: 0 35px;
+    display: none;
 }
 
 /* Video player */
@@ -91,7 +92,7 @@
     position: absolute;
     width: 100%;
     text-align: center;
-    top: 70%;
+    top: 72%;
 }
 
 #play-button button {
@@ -103,7 +104,7 @@
     -webkit-border-radius: 4em;
 
     margin: 1%;
-    padding: 2% 4% 2% 4%;
+    padding: 4% 8% 4% 8%;
 
     font-family: Georgia, serif; 
     font-size: 1.25em;
@@ -133,8 +134,8 @@
 }
 
 .response {
-    position: relative;
-    height: 10%;
+    position: absolute;
+    height: 15%;
     width: 100%;
     font-size: 1.25em;
 }
@@ -147,29 +148,15 @@
     text-align: right;
 }
 
-.response button:active {
-    box-shadow: 0px 0px 3px;
-}
+.response button:active { box-shadow: 0px 0px 3px; }
 
-#response-yes {
-    bottom: -75%;
-}
-#response-yes button {
-    background-color: #FF6666;
-}
-#response-yes button:active {
-    background-color: #FFCCCC;
-}
+#response-yes { bottom: 5%; }
+#response-yes button { background-color: #6666FF; }
+#response-yes button:active { background-color: #CCCCFF; }
 
-#response-no {
-    top: 5%;
-}
-#response-no button {
-    background-color: #FFFF66;
-}
-#response-no button:active {
-    background-color: #FFFFCC;
-}
+#response-no { top: 5%; }
+#response-no button { background-color: #FFFF66; }
+#response-no button:active { background-color: #FFFFCC; }
 
 /* Feedback */
 
@@ -189,15 +176,14 @@
     display: none;
 }
 
-.feedback p {
-    margin-top: 2%;
-}
+.feedback p { margin-top: 2%; }
 
 #stable-feedback {
     background-color: #FFFF66;
+    top: 0%;
 }
 
 #unstable-feedback {
-    background-color: #FF6666;
+    background-color: #6666FF;
     bottom: 0%;
 }
