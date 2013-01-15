@@ -49,7 +49,8 @@ var experiment = {
 	    experiment.playlist = info.playlist;
 	    experiment.numTrials = info.numTrials;
 
-	    slides.show("instructions1a");
+	    // slides.show("instructions1a");
+	    experiment.nextTrial();
 	});
     },
 

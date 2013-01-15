@@ -64,11 +64,22 @@
     border: 1px solid black;
     position: relative;
     overflow: hidden;
+    width: 640px;
+    height: 480px;
+}
+
+#prestim {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    position: absolute;
+    z-index: 100;
+    background-size: 100%;
 }
 
 #video-instructions {
     position: absolute;
-    z-index: 100;
     width: 100%;
     font-size: 1.25em;
     text-align: center;
@@ -76,80 +87,120 @@
     top: 44%;
 }
 
-#video-button {
+#play-button {
     position: absolute;
-    z-index: 100;
     width: 100%;
     text-align: center;
     top: 70%;
 }
 
-#player-float {
-    position: relative;
-    float: left;
-    z-index: -100;
-    width: 640px;
-    height: 480px;
+#play-button button {
+    background-color: white;
+    box-shadow: 1px 1px 3px;
+    border: 1px solid black;
+    border-radius: 4em;
+    -moz-border-radius: 4em;
+    -webkit-border-radius: 4em;
+
+    margin: 1%;
+    padding: 2% 4% 2% 4%;
+
+    font-family: Georgia, serif; 
+    font-size: 1.25em;
 }
 
-.screenshot {
-    width: 640px;
-    height: 480px;
+#play-button button:active {
+    background-color: #c9c9c9;
+    box-shadow: 0px 0px 3px;
 }
 
-#screenshot1 {
-    position: absolute;
-    z-index: 10;
-}
-
-#screenshot2 {
-    position: absolute;
-    z-index: 0;
+#player {
+   display: inline-block;
+   position: relative;
+   width: 100%;
 }
 
 /* Responses */
 
 #responses {
-    padding: 0 1em 0 1em;
-    position: relative;
-    text-align: center;
-    margin-top: .625em;
-    margin-bottom: .625em;
+    position: absolute;
+    z-index: 75;
+    text-align: right;
+    height: 100%;
+    width: 100%;
+    display: none;
+    background-size: 100%;
 }
 
 .response {
-    width: 50%;
-    float: left;
+    position: relative;
+    height: 10%;
+    width: 100%;
+    font-size: 1.25em;
+}
+
+.response button {
+    width: 32%;
+    height: 100%;
+    border-radius: 4em 0 0 4em;
+    padding-right: 1%;
+    text-align: right;
+}
+
+.response button:active {
+    box-shadow: 0px 0px 3px;
 }
 
 #response-yes {
+    bottom: -75%;
+}
+#response-yes button {
     background-color: #FF6666;
+}
+#response-yes button:active {
+    background-color: #FFCCCC;
 }
 
 #response-no {
-    background-color: #6666FF;
+    top: 5%;
+}
+#response-no button {
+    background-color: #FFFF66;
+}
+#response-no button:active {
+    background-color: #FFFFCC;
 }
 
 /* Feedback */
 
 #feedback {
+    position: absolute;
+    z-index: 50;
+    width: 100%;
+    height: 100%;
+}
+
+.feedback {
     width: 30%;
+    height: 10%;
     text-align: center;
     margin-left: 35%;
     font-size: 1.25em;
     position: absolute;
     border: 1px solid white;
-    padding-top: .5em;
-    padding-bottom: .5em;
-    z-index: 100;
+    display: none;
 }
 
-.stable-feedback {
-    background-color: #6666FF;
-    top: 2%;
+.feedback p {
+    margin-top: 6.66%;
 }
 
-.unstable-feedback {
+#stable-feedback {
+    background-color: #FFFF66;
+    top: 5%;
+}
+
+#unstable-feedback {
     background-color: #FF6666;
-    bottom: 2%;
+    bottom: 5%;
 }

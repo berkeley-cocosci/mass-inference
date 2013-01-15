@@ -22,16 +22,6 @@ h1 {
     margin-bottom: .625em;
 }
 
-#player {
-    position: relative;
-    z-index: -100;
-    width: 640px;
-    height: 480px;
-    float: left;
-    visibility: hidden;
-}
-
-
 /********************************************************************/
 /* buttons                                                          */
 /********************************************************************/
@@ -48,28 +38,8 @@ button {
 
 button:active {
     background-color: #c9c9c9;
-    box-shadow: 0em 0em .3em;
+    box-shadow: 0px 0px 3px;
 }
-
-button[disabled] {
-    border: 1px solid #999;
-    cursor: not-allowed;
-}
-
- 
-button.big-option {
-    /* height: 40px; */
-    font-size: 1.25em;
-    /* background: none; */
-    /* background-color: white; */
-}
-
-/* button.big-option:active { */
-/*     background-color: white; */
-/*     box-shadow: 0px 0px 3px; */
-/* } */
-
-
 
 /********************************************************************/
 /* Slide components                                                 */
@@ -100,31 +70,28 @@ div.continue {
     margin-top: 1%;
 }
 
-
 /********************************************************************/
-/* Misc                                                             */
+/* Flow player                                                      */
 /********************************************************************/
 
-.blocktype {
-    color: white;
-    font-weight: bold;
-    font-size: 1.25em;
-    margin: 1%;
-    padding: 1% 2% 1% 2%;
-    border: 1px solid black;
-    float: left;
+.fp-controls {
+    display: none;
+}
+.fp-embed {
+    display: none;
+}
+.fp-time {
+    display: none;
+}
+.fp-help {
+    display: none;
 }
 
-button.blocktype {
-    color: black;
-    float: none;
+/* don't show the player ui when the player is ready */
+.is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui {
+    display: none;
 }
-
-#block1 {
-    background-color: gray;
-}
-
-#block2 {
-    background-color: #22dd88;
+#player.is-finished .fp-ui,#player.is-finished .fp-engine {
+    display: none;
 }
 

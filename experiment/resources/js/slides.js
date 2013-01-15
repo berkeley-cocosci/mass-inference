@@ -20,21 +20,6 @@ var imageExt = "png";
 var fade = 200;
 
 var DEBUG = true;
-var PLAYERSETUP = false;
-
-var VIDEO = {
-    onComplete: function (event) {},
-    onPlaylistItem : function (event) {},
-    onPause : function (event) {
-	if (jwplayer().getPosition() == jwplayer().getDuration()) {
-	    VIDEO.onComplete();
-	}
-	else if (event.oldstate == "PLAYING") {
-	    debug("not allowed to pause");
-	    jwplayer().play();
-	}
-    },
-};
 
 // --------------------------------------------------------------------
 // Generic helper functions
@@ -46,10 +31,39 @@ function debug(msg) {
 }
 
 // --------------------------------------------------------------------
-// Image functions
+// Configure flowplayer
+
+var $f = flowplayer;
+$f.conf.embed = false;
+
+$f(function(api, root) {
+    // when a new video is about to be loaded
+    api.bind("load", function() {
+	debug("flowplayer '" + this.id + "' loaded");
+	api.conf.loop = false;
+	api.conf.embed = false;
+	
+    // when a video is loaded and ready to play
+    }).bind("ready", function() {
+	debug("flowplayer '" + this.id + "' ready");
+    });
+});
+
+// --------------------------------------------------------------------
+// Media
+
+function formatVideo(video) {
+    return videoUrl + video + "." + videoExt;
+}
 
 function formatImage(image) {
     return imageUrl + image + "." + imageExt;
+}
+
+function setBgImage(elem, image) {
+    $("#" + elem).css(
+	"background-image",
+	"url(../../" + formatImage(image) + ")");
 }
 
 function preloadImages(arrayOfImages, callback) {
@@ -62,53 +76,6 @@ function preloadImages(arrayOfImages, callback) {
 	    if (numToLoad == 0 && callback) { callback(); }
 	}).attr("src", img);
     });
-}
-
-// --------------------------------------------------------------------
-// Video functions
-
-function formatVideo(video) {
-    return videoUrl + video + "." + videoExt;
-}
-
-function embedVideo(div, video, image) {
-    var setup = { file: formatVideo(video) };
-    if (image)
-	setup.image = formatImage(image);
-
-    if (!PLAYERSETUP) {
-
-	// default configuration
-	setup.width = videoWidth;
-	setup.height = videoHeight;
-	setup.controls = false;
-	setup.fallback = false;
-	setup.bufferlength = 5;
-	setup.autostart = false;
-	setup.repeat = "none";
-
-	debug("creating video player");
-	jwplayer("player").setup(setup);
-
-	jwplayer().onPause(function (event) {
-	    VIDEO.onPause(event);
-	});
-	jwplayer().onPlaylistItem(function (event) {
-	    VIDEO.onPlaylistItem(event);
-	});
-	jwplayer().onComplete(function (event) {
-	    VIDEO.onComplete(event);
-	});
-
-	PLAYERSETUP = true;
-    }
-
-    else {
-	debug("embedding '" + setup.file + "'");
-	jwplayer().load(setup);
-    }
-	
-    $("#" + div).append($("#player"));
 }
 
 // --------------------------------------------------------------------
@@ -132,17 +99,18 @@ var slides = {
 	    }
 	}
 
-	// scroll back up to the top of the page
-	$('html, body').animate({ scrollTop: 0 }, 0);
-
 	// set up and show new slide
-	if (slides.current != next) {
-	    debug("show slide '" + next + "'");
-	    $("#" + next).show();
-	}
-
 	debug("setup slide '" + next + "'");
 	slides[next].setup();
+
+	if (slides.current != next) {
+	    debug("show slide '" + next + "'");
+	    $("#" + next).fadeIn(fade);
+	}
+
+	// scroll back up to the top of the page
+	$('html, body').animate({ scrollTop: 0 }, 0);
+	$("#" + next).focus();
 	slides.current = next;
     },
 
@@ -155,50 +123,38 @@ var slides = {
     // ----------------------------------------------------------------
     instructions1a : {
 	setup : function () {
-	    // automatically play
-	    VIDEO.onPlaylistItem = function (event) {
-		debug("playing unstable example");
-		$("#unstable-example").show();
-		jwplayer().play();
-	    };
-
-	    // repeat the video
-	    VIDEO.onComplete = function (event) {
-	    	debug("looping");
-	    	jwplayer().play();
-	    };
-
-	    $("#unstable-example").hide();
-	    embedVideo(
-		"unstable-example",
-		"unstable",
-		"unstableA");
+	    $f($("#unstable-example")).bind(
+		"finish", function (e, api) {
+		    if (!api.playing) {
+			debug("looping");
+			api.play();
+		    }
+		}).load([
+	    	    { mp4: formatVideo("unstable") }
+		]);
 	},
 
 	teardown : function () {
-	    jwplayer().stop();
+	    $f($("#unstable-example")).unload();
 	}
     },
 
     // ----------------------------------------------------------------
     instructions1b : {
 	setup : function () {
-	    // automatically play
-	    VIDEO.onPlaylistItem = function (event) {
-		debug("playing stable example");
-		$("#stable-example").show();
-		jwplayer().play();
-	    };
-
-	    $("#stable-example").hide();
-	    embedVideo(
-		"stable-example",
-		"stable",
-		"stableA");
+	    $f($("#stable-example")).bind(
+		"finish", function (e, api) {
+		    if (!api.playing) {
+			debug("looping");
+			api.play();
+		    }
+		}).load([
+	    	    { mp4: formatVideo("stable") }
+		]);
 	},
 
 	teardown : function () {
-	    jwplayer().stop();
+	    $f($("#stable-example")).unload();
 	}
     },
     
@@ -211,22 +167,19 @@ var slides = {
     // ----------------------------------------------------------------
     instructions2 : {
 	setup : function () {
-	    // automatically play
-	    VIDEO.onPlaylistItem = function (event) {
-		debug("playing mass example");
-		$("#mass-example").show();
-		jwplayer().play();
-	    };
-
-	    $("#mass-example").hide();
-	    embedVideo(
-		"mass-example",
-		"mass",
-		"massA");
+	    $f($("#mass-example")).bind(
+		"finish", function (e, api) {
+		    if (!api.playing) {
+			debug("looping");
+			api.play();
+		    }
+		}).load([
+	    	    { mp4: formatVideo("mass") }
+		]);
 	},
 
 	teardown : function () {
-	    jwplayer().stop();
+	    $f($("#mass-example")).unload();
 	}
     },
 
@@ -239,34 +192,13 @@ var slides = {
     // ----------------------------------------------------------------
     trial : {
 	setup : function () {
-	    // Hide elements we're not ready for yet
-	    $("#responses").hide();
-	    $("#feedback").hide();
-	    $("#video-button").hide();
-	    $("#video-instructions").hide();
-	    
 	    // Update progress bar
 	    slides.trial.updateProgress();
-
-	    // show instructions on load
-	    VIDEO.onPlaylistItem = function (event) {
-		debug("showing trial");
-		$("#player-float").show();
-	    	$("#video-instructions").show();
-	    	$("#video-button").show();
-	    };
 	    
-	    // show response buttons on complete
-	    VIDEO.onComplete = function (event) {
-		debug("done showing trial");
-		experiment.queryResponse();
-	    };
-
-	    $("#player-float").hide();
-	    embedVideo(
-	    	"player-float",
-	    	experiment.stimulus, 
-	    	experiment.stimulus + "-floor");
+	    debug("showing trial");
+	    setBgImage("prestim", experiment.stimulus + "-floor");
+	    $("#prestim").fadeIn(fade);
+	    $(".feedback").hide();
 	},
 
 	teardown : function () {},
@@ -284,16 +216,30 @@ var slides = {
 
 	// User hits the 'play' button
 	play : function () {
-	    $("#video-instructions").hide();
-	    $("#video-button").hide();
-	    jwplayer().play();
+	    if ($f($("#player")).disabled)
+		$f($("#player")).disable()
+	    $f($("#player")).unbind("finish").bind(
+		"finish", function (e, api) {
+		    if (!api.disabled) {
+			debug("done showing trial");
+			api.disable();
+			experiment.queryResponse();
+		    }
+		}).load([
+		    { mp4: formatVideo(experiment.stimulus) },
+		], function (e, api) {
+		    setBgImage("player", experiment.stimulus + "B");
+		    $("#prestim").hide();
+		});
 	},
 
 	// Show the responses to the user
 	showQuery : function () {
 	    debug("showing responses");
-	    $("#player-float").hide();
-	    $("#responses").fadeIn(fade);
+	    setBgImage("responses", experiment.stimulus + "B");
+	    $("#responses").fadeIn(fade, function () {
+		// $f($("#player")).unload();
+	    });
 	},
 
 	showFeedback : function () {
@@ -301,46 +247,39 @@ var slides = {
 	    var stable = experiment.textFeedback == "stable";
 	    var videofb = experiment.showVideoFeedback;
 	    var showTextFeedback = function () {
-		if (stable) {
-		    $("#feedback").html("Tower will not fall!");
-		    $("#feedback").attr("class", "stable-feedback");
-		} else {
-		    $("#feedback").html("Tower will fall...");
-		    $("#feedback").attr("class", "unstable-feedback");
-		}
 		$("#responses").hide();
-		$("#feedback").fadeIn(fade);
+		if (stable) {
+		    $("#stable-feedback").fadeIn(fade);
+		} else {
+		    $("#unstable-feedback").fadeIn(fade);
+		}
 	    };
-	    
-	    // if videofb (video feedback) is not undefined, then show a
-	    // video and text
-	    if (videofb != 'undefined') {
 
-		// automaticaly start playing
-		VIDEO.onPlaylistItem = function (event) {
-		    debug("showing feedback");
-		    $("#player-float").show();
-		    jwplayer().play();
-		    showTextFeedback();
-		};
-
-		// go to the next trial after it plays
-		VIDEO.onComplete = function (event) {
-		    debug("done showing feedback");
-		    $("#feedback").fadeOut(fade, experiment.nextTrial);
-		};
-
-		embedVideo(
-		    "player-float", 
-		    experiment.stimulus + "-fb", 
-		    experiment.stimulus + "-fbA");
+	    // if videofb (video feedback) is true, then show a video
+	    // and text
+	    if (videofb) {
+		showTextFeedback();
+		// re-enable player
+		if ($f($("#player")).disabled)
+		    $f($("#player")).disable()
+		$f($("#player")).unbind("finish").bind(
+		    "finish", function (e, api) {
+			if (!api.disabled) {
+			    debug("done showing feedback");
+			    api.disable();
+			    experiment.nextTrial();
+			}
+		    }).load([
+			{ mp4: formatVideo(experiment.stimulus + "-fb") }
+		    ]);
 	    }
             
 	    // otherwise just show text
 	    else {
 		showTextFeedback();
 		setTimeout(function () {
-		    $("#feedback").fadeOut(fade, experiment.nextTrial);
+		    // $f($("#player")).unload();
+		    experiment.nextTrial();
 		}, 2000);
 	    }
 	}
@@ -369,9 +308,27 @@ var slides = {
 // --------------------------------------------------------------------
 // --------------------------------------------------------------------
 
-preloadImages(
-    ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
-    function () {
-	slides.show("index");
-    });
+$(document).ready(function () {
+    var players = [
+	"unstable-example", 
+	"stable-example", 
+	"mass-example", 
+	"player"];
+    $(players).each(
+	function () {
+	    $("#" + this).flowplayer({
+		debug: true,
+		fullscreen: false,
+		keyboard: false,
+		muted: true,
+		ratio: 0.75,
+		splash: true,
+		tooltip: false });
+	});
+    preloadImages(
+	["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
+	function () {
+	    slides.show("index");
+	});
+});
 
