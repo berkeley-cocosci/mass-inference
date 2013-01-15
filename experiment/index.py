@@ -143,6 +143,7 @@ def create_triallist(pid):
     # posttest
     if F_POSTTEST:
         i = 0
+        random.shuffle(stims)
         for stim in train:
             info = stiminfo[stim].copy()
             info.update(stimulus=stim, index=i, ttype='posttest')
@@ -373,7 +374,7 @@ def submit(form):
     # now get the feedback
     response = {
         'feedback' : 'stable' if trialinfo['stable'] else 'unstable',
-        'visual' : trialinfo['ttype'] == "training"
+        'visual' : trialinfo['ttype'] in ("training", "posttest")
         }
 
     # response

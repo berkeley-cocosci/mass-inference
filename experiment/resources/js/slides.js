@@ -52,12 +52,17 @@ $f(function(api, root) {
 // --------------------------------------------------------------------
 // Media
 
-function formatVideo(video) {
-    return videoUrl + video + "." + videoExt;
-}
-
 function formatImage(image) {
     return imageUrl + image + "." + imageExt;
+}
+
+function getVideoFormats(video) {
+    var prefix = videoUrl + video + ".";
+    var formats = [
+	{ mp4: prefix + "mp4" },
+	{ ogg: prefix + "ogg" },
+	{ flv: prefix + "flv" }];
+    return formats;
 }
 
 function setBgImage(elem, image) {
@@ -129,9 +134,7 @@ var slides = {
 			debug("looping");
 			api.play();
 		    }
-		}).load([
-	    	    { mp4: formatVideo("unstable") }
-		]);
+		}).load(getVideoFormats("unstable"));
 	},
 
 	teardown : function () {
@@ -148,9 +151,7 @@ var slides = {
 			debug("looping");
 			api.play();
 		    }
-		}).load([
-	    	    { mp4: formatVideo("stable") }
-		]);
+		}).load(getVideoFormats("stable"));
 	},
 
 	teardown : function () {
@@ -173,9 +174,7 @@ var slides = {
 			debug("looping");
 			api.play();
 		    }
-		}).load([
-	    	    { mp4: formatVideo("mass") }
-		]);
+		}).load(getVideoFormats("mass"));
 	},
 
 	teardown : function () {
@@ -225,12 +224,12 @@ var slides = {
 			api.disable();
 			experiment.queryResponse();
 		    }
-		}).load([
-		    { mp4: formatVideo(experiment.stimulus) },
-		], function (e, api) {
-		    setBgImage("player", experiment.stimulus + "B");
-		    $("#prestim").hide();
-		});
+		}).load(
+		    getVideoFormats(experiment.stimulus),
+		    function (e, api) {
+			setBgImage("player", experiment.stimulus + "B");
+			$("#prestim").hide();
+		    });
 	},
 
 	// Show the responses to the user
@@ -269,9 +268,7 @@ var slides = {
 			    api.disable();
 			    experiment.nextTrial();
 			}
-		    }).load([
-			{ mp4: formatVideo(experiment.stimulus + "-fb") }
-		    ]);
+		    }).load(getVideoFormats(experiment.stimulus + "-fb"));
 	    }
             
 	    // otherwise just show text
@@ -317,7 +314,7 @@ $(document).ready(function () {
     $(players).each(
 	function () {
 	    $("#" + this).flowplayer({
-		debug: true,
+		// debug: true,
 		fullscreen: false,
 		keyboard: false,
 		muted: true,
