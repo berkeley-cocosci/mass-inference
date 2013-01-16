@@ -16,14 +16,14 @@ import db_tools as dbt
 
 # configure logging
 logging.basicConfig(
-    filename="../experiment.log", 
+    filename="logs/experiment.log", 
     # level=logging.WARNING,
     level=logging.DEBUG,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # enable debugging
-cgitb.enable(display=0, logdir="../cgitb", format='plain')
+cgitb.enable(display=0, logdir="logs/", format='plain')
 
 
 #################
@@ -34,9 +34,8 @@ F_EXPERIMENT = True
 F_POSTTEST = True
 F_CHECK_IP = dbt.F_CHECK_IP
 
-HTML_DIR = "../html"
-DATA_DIR = "../data"
-CONF_DIR = "../config"
+DATA_DIR = "data"
+CONF_DIR = "config"
 
 KEYWORDS = ("finished training", "finished experiment", "finished posttest")
 FIELDS = ("trial", "stimulus", "response", "time", "angle", "ttype")
@@ -208,19 +207,6 @@ def error(msg):
     print http_status(400, "Bad Request")
     print msg
 
-def send_page(page):
-    # read the html file
-    with open(os.path.join(HTML_DIR, page), "r") as fh:
-        html = fh.read()
-
-    # log information
-    logging.info("Sending page '%s'" % page)
-    logging.debug(html)
-
-    # respond
-    print http_content_type("text/html")
-    print html
-
 def initialize(form):
     # get ip address
     ip_address = cgi.escape(environ["REMOTE_ADDR"])
@@ -333,10 +319,6 @@ def submit(form):
 #################
 # Request handling
 
-pages = {
-    "index": "experiment.html",
-    }
-
 actions = {
     "initialize": initialize,
     "trialinfo": getTrialInfo,
@@ -349,14 +331,8 @@ logging.debug("Got request: " + str(form))
 for key in sorted(environ.keys()):
     logging.debug("%s %s" % (key, environ[key]))
     
-# parse the page, defaulting to the index
-if cgi.escape(environ['REQUEST_METHOD']) == 'GET':
-    page = form.getvalue('page', 'index')
-    logging.info("Requested page: " + page)
-    send_page(pages[page])
-
 # parse the action
-elif cgi.escape(environ['REQUEST_METHOD']) == 'POST':
+if cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     action = form.getvalue('a', None)
     logging.info("Requested action: " + action)
     handler = actions.get(action, error)

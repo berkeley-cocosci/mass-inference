@@ -3,9 +3,9 @@ import numpy as np
 import sqlite3 as sql
 from hashlib import sha1
 
-DATA_DB = "../data/data.db"
-BACKUP_DB = "../data/data.db.bak"
-CONF_DIR = "../config"
+DATA_DB = "data/data.db"
+BACKUP_DB = "data/data.db.bak"
+CONF_DIR = "config"
 F_CHECK_IP = False
     
 def create():
