@@ -139,7 +139,7 @@ def list_participants():
         print colstr
         print "-" * len(colstr)
         for row in rows:
-            print "%3s  %40s  %-9s  %-15s  %40s" % row
+            print "%3s  %40s  %-9s  %-15s  %-40s" % row
 
 # # some testing code
 # create()
