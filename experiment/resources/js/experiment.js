@@ -9,9 +9,7 @@
 // --------------------------------------------------------------------
 // Configuration
 
-var pageUrl = "index.py?page=";
-var actionUrl = "index.py?a=";
-
+var actionUrl = "experiment.py?a=";
 var experiment_DEBUG = true;
 
 // --------------------------------------------------------------------

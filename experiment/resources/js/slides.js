@@ -68,7 +68,7 @@ function getVideoFormats(video) {
 function setBgImage(elem, image) {
     $("#" + elem).css(
 	"background-image",
-	"url(../../" + formatImage(image) + ")");
+	"url(" + formatImage(image) + ")");
 }
 
 function preloadImages(arrayOfImages, callback) {

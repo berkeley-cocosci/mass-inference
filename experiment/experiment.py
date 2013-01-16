@@ -1,4 +1,4 @@
-#!/usr/local/bin/python
+#!/usr/bin/python
 
 import cgi
 import cgitb
@@ -339,4 +339,4 @@ if cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     handler(form)
 
 else:
-    error(form)
+    error("Invalid action")
