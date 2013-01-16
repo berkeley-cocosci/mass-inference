@@ -19,7 +19,7 @@ var imageExt = "png";
 
 var fade = 200;
 
-var DEBUG = true;
+var DEBUG = false;
 
 // --------------------------------------------------------------------
 // Generic helper functions
