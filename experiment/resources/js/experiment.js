@@ -24,7 +24,8 @@ function post(action, data, handler) {
 	data: data,
     });
     request.done(handler);
-    request.fail(experiment.error);}
+    request.fail(experiment.error);
+}
 
 // --------------------------------------------------------------------
 // Experiment
@@ -33,8 +34,8 @@ var experiment = {
 
     pid : undefined,
     validationCode : undefined,
+    completionCode : undefined,
 
-    // playlist : undefined,
     numTrials : undefined,
 
     stimulus : undefined,
@@ -50,6 +51,7 @@ var experiment = {
 	    var info = $.parseJSON(msg);
 
 	    experiment.pid = info.pid;
+	    experiment.validationCode = info.validationCode;
 	    experiment.numTrials = info.numTrials;
 
 	    slides.show("instructions1a");
@@ -57,7 +59,9 @@ var experiment = {
     },
 
     nextTrial : function() {
-	post('trialinfo', {pid : experiment.pid}, 
+	post('trialinfo', 
+	     { pid : experiment.pid,
+	       validationCode : experiment.validationCode }, 
 	    function (info) {
 
 		// Finished the training block
@@ -76,7 +80,7 @@ var experiment = {
 
 		// Finished the post test
 		else if (info.index == 'finished posttest') {
-		    experiment.validationCode = info.code;
+		    experiment.completionCode = info.code;
 		    slides.show("finished");
 		}
 
@@ -107,6 +111,7 @@ var experiment = {
 	var time = new Date().getTime() - experiment.starttime;
 	var data = {
 	    pid : experiment.pid,
+	    validationCode : experiment.validationCode,
 	    time : time / 1000,
 	    response : val,
 	    index : experiment.index,
@@ -128,5 +133,10 @@ var experiment = {
     decline : function(msg) {
 	slides.show("declined");
     },
+
+    error : function(msg) {	
+	experiment.error = msg.responseText;
+	slides.show("error");
+    }
 };
 
