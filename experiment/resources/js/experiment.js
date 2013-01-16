@@ -123,6 +123,10 @@ var experiment = {
 	experiment.textFeedback = msg.feedback;
 	experiment.showVideoFeedback = msg.visual;
 	slides.trial.showFeedback();
-    }
+    },
+
+    decline : function(msg) {
+	slides.show("declined");
+    },
 };
 
