@@ -18,8 +18,8 @@ import db_tools as dbt
 # configure logging
 logging.basicConfig(
     filename="logs/experiment.log", 
-    # level=logging.WARNING,
-    level=logging.DEBUG,
+    level=logging.WARNING,
+    # level=logging.DEBUG,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
