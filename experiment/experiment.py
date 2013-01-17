@@ -8,6 +8,7 @@ import os
 import httplib
 import random
 import shutil
+import sys
 
 from os import environ
 from hashlib import sha1
@@ -17,8 +18,8 @@ import db_tools as dbt
 # configure logging
 logging.basicConfig(
     filename="logs/experiment.log", 
-    level=logging.WARNING,
-    # level=logging.DEBUG,
+    # level=logging.WARNING,
+    level=logging.DEBUG,
     format='%(levelname)s %(asctime)s -- %(message)s', 
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -38,7 +39,7 @@ DATA_DIR = "data"
 CONF_DIR = "config"
 
 KEYWORDS = ("finished training", "finished experiment", "finished posttest")
-FIELDS = ("trial", "stimulus", "response", "time", "angle", "ttype")
+FIELDS = ("index", "trial", "stimulus", "response", "time", "angle", "ttype")
 PFORMAT = "%03d"
 
 
@@ -76,29 +77,21 @@ def validate(form):
     
     return pid, validation_code
 
-def parse_trialnum(t):
-    if t == "trial":
-        trialnum = -1
-    elif t in KEYWORDS:
-        trialnum = None
+def parse_trialindex(t):
+    if t == "index":
+        trialindex = 0
     else:
-        trialnum = int(t)
-    return trialnum
+        trialindex = int(t) + 1
+    return trialindex
     
-def get_trialnum(pid):
+def get_trialindex(pid):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
     with open(datafile, "r") as fh:
         data = fh.read()
     lines = data.strip().split("\n")
-    i = 0
-    while True:
-        trial = parse_trialnum(lines[-(i+1)].split(",")[0])
-        if trial is not None:
-            trial += i
-            break
-        i += 1
-    return trial
-    
+    index = parse_trialindex(lines[-1].split(",")[0])
+    return index
+
 def create_datafile(ip_address):
     p = dbt.add_participant(ip_address)
     if p is None:
@@ -141,8 +134,6 @@ def get_all_trialinfo(pid):
     
 def get_trialinfo(pid, index):
     trialinfo = get_all_trialinfo(pid)
-    if index >= len(trialinfo):
-        return None
     return trialinfo[index]
 
 def get_training_playlist(pid):
@@ -184,11 +175,9 @@ def gen_completion_code(pid):
 #################
 # Http functions
 
-def http_status(code, name):
+def http_status(code):
     msg = httplib.responses[code]
-    if msg != name:
-        raise ValueError("invalid code and/or name: %d %s" % (code, name))
-    response = "Status: %d %s\n\n" % (code, name)
+    response = "Status: %d %s\n\n" % (code, msg)
     return response
 
 def http_content_type(mime):
@@ -199,12 +188,13 @@ def http_content_type(mime):
 #################
 # Server functions
     
-def error(msg):
+def error(msg, code=400):
     # log the error
-    logging.error("Invalid request: %s" % msg)
+    response = http_status(code)
+    logging.error("%s: %s" % (response, msg))
 
     # respond
-    print http_status(400, "Bad Request")
+    print response
     print msg
 
 def initialize(form):
@@ -215,16 +205,18 @@ def initialize(form):
     info = create_datafile(ip_address)
     if info is None:
         return error("Sorry, your IP address has already been "
-                     "used in this experiment.")
+                     "used in this experiment.", 403)
     else:
         pid, validation_code = info
         
     # initialization data we'll be sending
+    index = get_trialindex(pid)
     playlist = get_training_playlist(pid)
     init = {
         'numTrials': len(playlist),
         'pid': PFORMAT % pid,
         'validationCode': validation_code,
+        'index': index - 1,
         }
     json_init = json.dumps(init)
     
@@ -245,16 +237,24 @@ def getTrialInfo(form):
     pid, validation_code = info
     
     # get the index
-    index = get_trialnum(pid) + 1
+    r_index = int(form.getvalue("index"))
+    index = get_trialindex(pid)
+    if r_index != index:
+        return error("Requested index is %s but "
+                     "actual index is %s" % (r_index, index), 405)
     
     # look up the trial information
     trialinfo = get_trialinfo(pid, index)
-
     if trialinfo in KEYWORDS:
         data = dict([(k, "") for k in FIELDS])
+        data['index'] = index
         data['trial'] = trialinfo
         write_data(pid, data)
-        info = { 'index': trialinfo }
+
+        info = { 
+            'index': index,
+            'trial': trialinfo,
+            }
 
         if trialinfo == "finished training":
             playlist = get_experiment_playlist(pid)
@@ -269,6 +269,7 @@ def getTrialInfo(form):
     else:
         info = {
             'index': trialinfo['index'],
+            'trial': trialinfo['trial'],
             'stimulus': trialinfo['stimulus'],
             }
 
@@ -288,18 +289,21 @@ def submit(form):
         return error("Bad pid and/or validation code")
     pid, validation_code = info
 
-    # try:
-    # try to extract all the relevant information
+    # extract all the relevant information
     data = dict((k, form.getvalue(k)) for k in FIELDS)
-    # except:
-    #     return error("Could not get all field values")
 
     # get the trial number
-    index = get_trialnum(pid) + 1
+    r_index = int(form.getvalue("index"))
+    index = get_trialindex(pid)
+    if r_index != index:
+        return error("Requested index is %s but "
+                     "actual index is %s" % (r_index, index), 405)
 
     # populate some more data
     trialinfo = get_trialinfo(pid, index)
-    data['trial'] = index
+    if trialinfo in KEYWORDS:
+        return error("Invalid trial", 405)
+
     data.update(trialinfo)
 
     # write the data to file
@@ -308,7 +312,9 @@ def submit(form):
     # now get the feedback
     response = {
         'feedback' : 'stable' if trialinfo['stable'] else 'unstable',
-        'visual' : trialinfo['ttype'] in ("training", "posttest")
+        'visual' : trialinfo['ttype'] in ("training", "posttest"),
+        'index' : index,
+        'trial' : trialinfo['trial'],
         }
 
     # response
@@ -339,4 +345,4 @@ if cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     handler(form)
 
 else:
-    error("Invalid action")
+    error("Invalid action", 501)

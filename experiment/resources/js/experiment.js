@@ -37,6 +37,7 @@ var experiment = {
     numTrials : undefined,
 
     stimulus : undefined,
+    trial : undefined,
     index : undefined,
     starttime : undefined,
     
@@ -51,6 +52,7 @@ var experiment = {
 	    experiment.pid = info.pid;
 	    experiment.validationCode = info.validationCode;
 	    experiment.numTrials = info.numTrials;
+	    experiment.index = info.index;
 
 	    slides.show("instructions1a");
 	});
@@ -59,32 +61,36 @@ var experiment = {
     nextTrial : function() {
 	post('trialinfo', 
 	     { pid : experiment.pid,
-	       validationCode : experiment.validationCode }, 
+	       validationCode : experiment.validationCode,
+	       index : experiment.index + 1,
+	     }, 
 	    function (info) {
 
+		experiment.index = info.index;
+
 		// Finished the training block
-		if (info.index == 'finished training') {
+		if (info.trial == 'finished training') {
 		    experiment.numTrials = info.numTrials;
 		    experiment.showQuestionImage = true;
 		    slides.show("instructions2");
 		}
 		
 		// Finished the experiment block
-		else if (info.index == "finished experiment") {
+		else if (info.trial == "finished experiment") {
 		    experiment.numTrials = info.numTrials;
 		    experiment.showQuestionImage = false;
 		    slides.show("instructions3");
 		}
 
 		// Finished the post test
-		else if (info.index == 'finished posttest') {
+		else if (info.trial == 'finished posttest') {
 		    experiment.completionCode = info.code;
 		    slides.show("finished");
 		}
 
 		// Normal trial
 		else {
-		    experiment.index = info.index;
+		    experiment.trial = info.trial;
 		    experiment.stimulus = info.stimulus;
 		    slides.show("trial");
 		}
@@ -115,26 +121,30 @@ var experiment = {
 	    index : experiment.index,
 	};
 
-	// XXX: need to submit index and handle it because it's
-	// possible to submit a response twice
-	
 	post("submit", data, experiment.getFeedback);
     },
 
     // Show feedback to the user after they respond
     getFeedback : function(msg) {
+	if (experiment.index != msg.index)
+	    return;
+
 	experiment.textFeedback = msg.feedback;
 	experiment.showVideoFeedback = msg.visual;
 	slides.trial.showFeedback();
     },
 
-    decline : function(msg) {
+    decline : function() {
 	slides.show("declined");
     },
 
     error : function(msg) {	
-	experiment.error = msg.responseText;
-	slides.show("error");
+	experiment.errorMessage = msg.responseText;
+	experiment.errorStatus = msg.statusText;
+	experiment.errorCode = msg.status;
+	if (experiment.errorCode != 405) {
+	    slides.show("error");
+	}
     }
 };
 

@@ -209,13 +209,13 @@ var slides = {
 
 	// Update the progress bar
 	updateProgress : function () {
-	    var index = experiment.index;
+	    var trial = experiment.trial;
 	    var numTrials = experiment.numTrials;
-	    var width = 2 + 98*(index / (numTrials-1.0));
+	    var width = 2 + 98*(trial / (numTrials-1.0));
 	    $("#indicator-stage").animate(
 		{"width": width + "%"}, fade);
 	    $("#progress-text").html(
-		"Progress " + (index+1) + "/" + numTrials);
+		"Progress " + (trial+1) + "/" + numTrials);
 	},
 
 	// User hits the 'play' button
@@ -297,7 +297,8 @@ var slides = {
     // ----------------------------------------------------------------
     error : {
 	setup : function () {
-	    $("#error-message").html("<p>" + experiment.error + "</p>");
+	    $("#error-title").html(experiment.errorStatus);
+	    $("#error-message").html("<p>" + experiment.errorMessage + "</p>");
 	},
 
 	teardown : function () {}
