@@ -6,7 +6,7 @@ from hashlib import sha1
 DATA_DB = "data/data.db"
 BACKUP_DB = "data/data.db.bak"
 CONF_DIR = "config"
-F_CHECK_IP = True
+F_CHECK_IP = False
     
 def create():
     # back up any existing database

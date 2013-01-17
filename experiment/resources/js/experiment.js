@@ -8,7 +8,7 @@
 // --------------------------------------------------------------------
 // Configuration
 
-"use strict";
+// "use strict";
 
 var DEBUG = false;
 
@@ -45,18 +45,18 @@ function post(action, data, handler) {
 var $f = flowplayer;
 $f.conf.embed = false;
 
-$f(function(api, root) {
-    // when a new video is about to be loaded
-    api.bind("load", function() {
-        debug("flowplayer '" + this.id + "' loaded");
-        api.conf.loop = false;
-        api.conf.embed = false;
+// $f(function(api, root) {
+//     // when a new video is about to be loaded
+//     api.bind("load", function() {
+//         debug("flowplayer '" + this.id + "' loaded");
+//         api.conf.loop = false;
+//         api.conf.embed = false;
         
-    // when a video is loaded and ready to play
-    }).bind("ready", function() {
-        debug("flowplayer '" + this.id + "' ready");
-    });
-});
+//     // when a video is loaded and ready to play
+//     }).bind("ready", function() {
+//         debug("flowplayer '" + this.id + "' ready");
+//     });
+// });
 
 // --------------------------------------------------------------------
 // Media
@@ -70,7 +70,8 @@ function getVideoFormats(video) {
     var formats = [
         { mp4: prefix + "mp4" },
         { ogg: prefix + "ogg" },
-        { flv: prefix + "flv" }];
+        { flv: prefix + "flv" },
+        { wmv: prefix + "wmv" }];
     return formats;
 }
 
@@ -450,6 +451,21 @@ var experiment = {
 // --------------------------------------------------------------------
 
 $(document).ready(function () {
+
+    // flowplayer load/ready handlers
+    $f(function(api, root) {
+	// when a new video is about to be loaded
+	api.bind("load", function() {
+            debug("flowplayer '" + this.id + "' loaded");
+            api.conf.loop = false;
+            api.conf.embed = false;
+        
+	// when a video is loaded and ready to play
+	}).bind("ready", function() {
+            debug("flowplayer '" + this.id + "' ready");
+	});
+    });
+
     var players = [
         "unstable-example", 
         "stable-example", 
@@ -459,6 +475,7 @@ $(document).ready(function () {
         function () {
             $("#" + this).flowplayer({
                 debug: DEBUG,
+		swf: 'resources/flowplayer/flowplayer.swf',
                 fullscreen: false,
                 keyboard: false,
                 muted: true,

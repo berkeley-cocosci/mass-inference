@@ -121,6 +121,7 @@ div.example-container {
     border-bottom: 2px solid black;
     padding: 0 50px;
     height: 10%
+    text-align: center;
 }
 
 /********************************************************************/
