@@ -139,7 +139,7 @@
       <div class="blue">
 	<p>Good! Now, blocks can be either <i>heavy</i>
 	  or <i>light</i>, depending on color:</p>
-	<p><img id="scales" src="resources/images/scales.png" alt="" /></p>
+	<div id="scales"><img src="resources/images/scales.png" alt="" /></div>
       </div>
       <div class="example-container">
 	<div id="mass-example" class="example is-splash">
@@ -151,10 +151,14 @@
 	  </video>
 	</div>
       </div>
-      <div class="blue">
+      <div id="feedback-info" class="blue">
 	<p>In the upcoming trials, we will no longer <i>show</i> you
 	  what happens when the tower is unfrozen, but we
-	  will <i>tell</i> you.</p>
+	  will <i>tell</i> you.
+	</p>
+	<p>In the upcoming trials, we will no longer show or tell you
+	  what happens when the tower is unfrozen.
+	</p>
       </div>
       <div class="continue">
 	<button type="button" onclick="experiment.nextTrial();">Start</button>

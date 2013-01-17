@@ -36,7 +36,7 @@ def create():
         lists = [x for x in os.listdir(CONF_DIR) if x.endswith("_trials.json")]
         conditions = sorted([x.split("_")[0] for x in lists])
         for condition in conditions:
-            cur.execute("INSERT INTO Conditions VALUES (?)", condition)
+            cur.execute("INSERT INTO Conditions VALUES (?)", (condition,))
             print "Inserted condition '%s'" % condition
 
             

@@ -259,19 +259,24 @@ var slides = {
 
             var stable = experiment.textFeedback === "stable";
             var videofb = experiment.showVideoFeedback;
-            var showTextFeedback = function () {
-                $("#responses").hide();
+	    var textfb = experiment.showTextFeedback;
+
+	    var time;
+            $("#responses").hide();
+	    if (textfb) {
+		time = 2000;
                 if (stable) {
-                    $("#stable-feedback").fadeIn(fade);
+		    $("#stable-feedback").fadeIn(fade);
                 } else {
-                    $("#unstable-feedback").fadeIn(fade);
+		    $("#unstable-feedback").fadeIn(fade);
                 }
-            };
+	    } else {
+		time = 200;
+	    }
 
             // if videofb (video feedback) is true, then show a video
             // and text
             if (videofb) {
-                showTextFeedback();
                 // re-enable player
                 if ($f($("#player")).disabled) {
                     $f($("#player")).disable();
@@ -288,10 +293,9 @@ var slides = {
             
             // otherwise just show text
             else {
-                showTextFeedback();
                 setTimeout(function () {
                     experiment.nextTrial();
-                }, 2000);
+                }, time);
             }
         }
 
@@ -351,6 +355,14 @@ var experiment = {
             experiment.validationCode = info.validationCode;
             experiment.numTrials = info.numTrials;
             experiment.index = info.index;
+	    experiment.condition = info.condition;
+
+	    // different instructions depending on feedback condition
+	    if (experiment.condition == "fb") {
+		$($("#feedback-info").find("p")[1]).hide();
+	    } else {
+		$($("#feedback-info").find("p")[0]).hide();
+	    }
 
             slides.show("instructions1a");
         });
@@ -430,6 +442,7 @@ var experiment = {
 
         experiment.textFeedback = msg.feedback;
         experiment.showVideoFeedback = msg.visual;
+	experiment.showTextFeedback = msg.text;
         slides.trial.showFeedback();
     },
 

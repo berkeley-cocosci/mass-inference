@@ -119,9 +119,14 @@ div.example-container {
 
 #scales {
     border-bottom: 2px solid black;
-    padding: 0 50px;
-    height: 10%
-    text-align: center;
+    margin: 0 20%;
+    height: 5em;
+}
+
+#scales img {
+    height: 100%;
+    margin: 0 auto;
+    display: block;
 }
 
 /********************************************************************/

@@ -30,9 +30,6 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_TRAINING = True
-F_EXPERIMENT = True
-F_POSTTEST = True
 F_CHECK_IP = dbt.F_CHECK_IP
 
 DATA_DIR = "data"
@@ -110,7 +107,7 @@ def create_datafile(ip_address):
     with open(datafile, "w") as fh:
         fh.write(",".join(FIELDS) + "\n")
 
-    return pid, validation_code
+    return pid, validation_code, condition
         
 def write_data(pid, data):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
@@ -207,7 +204,7 @@ def initialize(form):
         return error("Sorry, your IP address has already been "
                      "used in this experiment.", 403)
     else:
-        pid, validation_code = info
+        pid, validation_code, condition = info
         
     # initialization data we'll be sending
     index = get_trialindex(pid)
@@ -217,6 +214,7 @@ def initialize(form):
         'pid': PFORMAT % pid,
         'validationCode': validation_code,
         'index': index - 1,
+        'condition': condition.split("-")[1],
         }
     json_init = json.dumps(init)
     
@@ -309,10 +307,19 @@ def submit(form):
     # write the data to file
     write_data(pid, data)
 
+    visual_fb = trialinfo['visual_fb']
+    text_fb = trialinfo['text_fb']
+
+    if (not visual_fb) and (not text_fb):
+        feedback = None
+    else:
+        feedback = 'stable' if trialinfo['stable'] else 'unstable'
+
     # now get the feedback
     response = {
-        'feedback' : 'stable' if trialinfo['stable'] else 'unstable',
-        'visual' : trialinfo['ttype'] in ("training", "posttest"),
+        'feedback' : feedback,
+        'visual' : visual_fb,
+        'text' : text_fb,
         'index' : index,
         'trial' : trialinfo['trial'],
         }
