@@ -36,9 +36,22 @@ cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 # <codecell>
 
 ######################################################################
-## Load and process data
+## Load and process old stability data
 out = lat.load('stability')
-rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+rawhuman0, rawhstim0, raworder0, rawtruth0, rawipe0, kappas = out
+
+# <codecell>
+
+######################################################################
+## Load and process new data
+hdata = np.load("../../turk-experiment/data.npz")
+rawhuman = hdata['data']['response'][..., None]
+rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
+raworder = hdata['data']['trial'][..., None]
+
+idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
+rawtruth = rawtruth0[idx].copy()
+rawipe = rawipe0[idx].copy()
 
 # <codecell>
 
@@ -46,6 +59,9 @@ ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
+# XXX: when you get more data you need to change this to actually
+# order for each participant! currently it only orders by the first
+# one!
 human, stimuli, sort, truth, ipe = lat.order_by_trial(
     rawhuman, rawhstim, raworder, rawtruth, rawipe)
 truth = truth[0]
@@ -75,7 +91,8 @@ def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth):
         ipe_samps,
         feedback[:, None],
         outcomes=None,
-        loss=None,
+	respond=False,
+	p_ignore_stimulus=0.0,
         smooth=smooth)
     r, c = 3, 3
     n = r*c
@@ -161,8 +178,9 @@ def plot_baserates(fignum, nsamps, smooth):
                 ipe_samps,
                 feedback[:, None],
                 outcomes=None,
-                loss=None,
-                smooth=True)
+		respond=False,
+		p_ignore_stimulus=0.0,
+		smooth=smooth)
             plt.subplot(r, c, i+1)
             exp = np.exp(np.log(0.5) / np.log(1. / n_kappas))
             nth = normalize(th[:, -1].T, axis=0)[1]

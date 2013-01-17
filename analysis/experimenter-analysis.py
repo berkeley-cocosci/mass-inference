@@ -39,7 +39,22 @@ rso = np.random.RandomState(0)
 
 # load stability data
 out = lat.load('stability')
-rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+rawhuman0, rawhstim0, raworder0, rawtruth0, rawipe0, kappas = out
+
+# <codecell>
+
+######################################################################
+## Load and process new data
+hdata = np.load("../../turk-experiment/data.npz")
+rawhuman = hdata['data']['response'][..., None]
+rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
+raworder = hdata['data']['trial'][..., None]
+
+idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
+rawtruth = rawtruth0[idx].copy()
+rawipe = rawipe0[idx].copy()
+
+# <codecell>
 
 # order data by trial
 human, stimuli, sort, truth, ipe = lat.order_by_trial(
@@ -87,13 +102,14 @@ ikappa0      = np.nonzero(kappas==1.0)[0][0]     # index for the true mass ratio
 # Human responses #
 #-----------------#
 
-ifell = human > 3
-istable = human < 3
-ichance = human == 3
-h_responses = np.empty(human.shape)
-h_responses[ifell] = 1
-h_responses[istable] = 0
-h_responses[ichance] = rso.randint(0, 2, h_responses[ichance].shape)
+# ifell = human > 3
+# istable = human < 3
+# ichance = human == 3
+# h_responses = np.empty(human.shape)
+# h_responses[ifell] = 1
+# h_responses[istable] = 0
+# h_responses[ichance] = rso.randint(0, 2, h_responses[ichance].shape)
+h_responses = human.astype('i8')
 
 plt.figure()
 plt.bar(np.arange(h_responses.shape[0]),
@@ -110,10 +126,10 @@ plt.xlim(-1, 11)
 
 # model observer parameters
 nthresh0          = 1                            # feedback threshold for "fall"
-nthresh           = 1                            # ipe threshold for "fall"
+nthresh           = 4                            # ipe threshold for "fall"
 nsamps            = 300                          # number of ipe samples
 f_smooth          = True                         # smooth ipe likelihoods
-p_ignore_stimulus = 0.0                          # probability of ignoring stimulus
+p_ignore_stimulus = 0.1                          # probability of ignoring stimulus
 
 # <codecell>
 
@@ -168,7 +184,7 @@ kw           = 0.1                               # kernel width for smoothing
 pn           = 2.0                               # noise
 f_use_model  = True                              # if True, use responses from model observer,
                                                  # if False, use responses from human data
-f_plot_particle = False
+f_plot_particle = True
 
 # for smoothing likelihoods
 smoother = mo.make_kde_smoother(np.arange(0, n_kappas*0.1, 0.1), kw)
