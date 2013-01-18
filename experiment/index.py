@@ -30,7 +30,7 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = False
+F_CHECK_IP = True
 
 DATA_DIR = "data"
 CONF_DIR = "config"
@@ -108,7 +108,7 @@ def create_datafile(ip_address, condition):
     with open(datafile, "w") as fh:
         fh.write(",".join(FIELDS) + "\n")
 
-    return pid, validation_code, condition
+    return pid, validation_code
         
 def write_data(pid, data):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
@@ -216,7 +216,7 @@ def initialize(form):
         return error("Sorry, your IP address has already been "
                      "used in this experiment.", 403)
     else:
-        pid, validation_code, condition = info
+        pid, validation_code = info
         
     # initialization data we'll be sending
     index = get_trialindex(pid)

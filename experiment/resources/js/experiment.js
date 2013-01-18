@@ -357,7 +357,7 @@ var experiment = {
             experiment.index = info.index;
 
 	    // different instructions depending on feedback condition
-	    if (experiment.condition == "fb") {
+	    if (experiment.condition.split("-")[1] === "fb") {
 		$($("#feedback-info").find("p")[1]).hide();
 	    } else {
 		$($("#feedback-info").find("p")[0]).hide();
