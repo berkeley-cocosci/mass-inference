@@ -12,7 +12,7 @@
 
 var DEBUG = false;
 
-var actionUrl = "experiment.py?a=";
+var actionUrl = "index.py?a=";
 var videoUrl = "resources/video/";
 var imageUrl = "resources/images/";
 var imageExt = "png";
@@ -348,14 +348,13 @@ var experiment = {
     showVideoFeedback : undefined,
     
     initialize : function() {
-        post('initialize', {}, function (msg) {
+        post('initialize', { condition: experiment.condition }, function (msg) {
             var info = $.parseJSON(msg);
 
             experiment.pid = info.pid;
             experiment.validationCode = info.validationCode;
             experiment.numTrials = info.numTrials;
             experiment.index = info.index;
-	    experiment.condition = info.condition;
 
 	    // different instructions depending on feedback condition
 	    if (experiment.condition == "fb") {

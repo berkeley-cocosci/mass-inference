@@ -6,7 +6,6 @@ from hashlib import sha1
 DATA_DB = "data/data.db"
 BACKUP_DB = "data/data.db.bak"
 CONF_DIR = "config"
-F_CHECK_IP = True
     
 def create():
     # back up any existing database
@@ -28,16 +27,16 @@ def create():
         cur.execute("CREATE TABLE Participants(pid INTEGER PRIMARY KEY AUTOINCREMENT, validation_code TEXT, condition TEXT, ip_address TEXT, completion_code TEXT)")
         print "Created 'Participants' table"
 
-        # create and conditions table
-        cur.execute("CREATE TABLE Conditions(id TEXT)")
-        print "Created 'Conditions' table"
+        # # create and conditions table
+        # cur.execute("CREATE TABLE Conditions(id TEXT)")
+        # print "Created 'Conditions' table"
 
-        # populate conditions table
-        lists = [x for x in os.listdir(CONF_DIR) if x.endswith("_trials.json")]
-        conditions = sorted([x.split("_")[0] for x in lists])
-        for condition in conditions:
-            cur.execute("INSERT INTO Conditions VALUES (?)", (condition,))
-            print "Inserted condition '%s'" % condition
+        # # populate conditions table
+        # lists = [x for x in os.listdir(CONF_DIR) if x.endswith("_trials.json")]
+        # conditions = sorted([x.split("_")[0] for x in lists])
+        # for condition in conditions:
+        #     cur.execute("INSERT INTO Conditions VALUES (?)", (condition,))
+        #     print "Inserted condition '%s'" % condition
 
             
 def check_ip(cur, ip_address):
@@ -47,42 +46,42 @@ def check_ip(cur, ip_address):
     pids = cur.fetchall()
     return pids
 
-def choose_condition(cur):
-    # get available conditions
-    cur.execute("SELECT id FROM Conditions")
-    conditions = np.array(cur.fetchall())
+# def choose_condition(cur):
+#     # get available conditions
+#     cur.execute("SELECT id FROM Conditions")
+#     conditions = np.array(cur.fetchall())
 
-    # get conditions of participants that have finished
-    cur.execute("SELECT condition FROM Participants WHERE NOT completion_code=NULL")
-    vals = np.array(cur.fetchall())
+#     # get conditions of participants that have finished
+#     cur.execute("SELECT condition FROM Participants WHERE NOT completion_code=NULL")
+#     vals = np.array(cur.fetchall())
 
-    # count up the number of participants in each condition
-    if vals.size == 0:
-        counts = np.zeros(conditions.shape[0], dtype='i4')
-    else:
-        counts = np.sum(vals == conditions.T, axis=0)
+#     # count up the number of participants in each condition
+#     if vals.size == 0:
+#         counts = np.zeros(conditions.shape[0], dtype='i4')
+#     else:
+#         counts = np.sum(vals == conditions.T, axis=0)
 
-    # randomly choose the condition out of the conditions with the
-    # least number of completed participants
-    mins = np.nonzero(counts == np.min(counts))[0]
-    idx = random.choice(mins)
-    condition = conditions[idx].ravel()[0]
+#     # randomly choose the condition out of the conditions with the
+#     # least number of completed participants
+#     mins = np.nonzero(counts == np.min(counts))[0]
+#     idx = random.choice(mins)
+#     condition = conditions[idx].ravel()[0]
     
-    return condition
+#     return condition
 
-def add_participant(ip_address):
+def add_participant(ip_address, condition, f_check_ip):
     conn = sql.connect(DATA_DB)
     with conn:
         cur = conn.cursor()
         
         # make sure the IP address doesn't exist already
         pids = check_ip(cur, ip_address)
-        if F_CHECK_IP and len(pids) > 0:
+        if f_check_ip and len(pids) > 0:
             participant = None
 
         else:
-            # get the condition
-            condition = choose_condition(cur)
+            # # get the condition
+            # condition = choose_condition(cur)
     
             # generate a unique validation code
             validation_code = sha1(ip_address + str(time.time())).hexdigest()
@@ -101,8 +100,8 @@ def add_participant(ip_address):
             # double check that the validation code is unique...
             assert len(rows) == 1
             
-            # return the pid, validation code, and condition
-            participant = rows[0][:3]
+            # return the pid & validation code
+            participant = rows[0][:2]
             
     return participant
 

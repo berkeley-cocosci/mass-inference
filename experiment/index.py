@@ -30,10 +30,11 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = dbt.F_CHECK_IP
+F_CHECK_IP = False
 
 DATA_DIR = "data"
 CONF_DIR = "config"
+HTML_DIR = "html"
 
 KEYWORDS = ("finished training", "finished experiment", "finished posttest")
 FIELDS = ("index", "trial", "stimulus", "response", "time", "angle", "ttype")
@@ -89,12 +90,12 @@ def get_trialindex(pid):
     index = parse_trialindex(lines[-1].split(",")[0])
     return index
 
-def create_datafile(ip_address):
-    p = dbt.add_participant(ip_address)
+def create_datafile(ip_address, condition):
+    p = dbt.add_participant(ip_address, condition, F_CHECK_IP)
     if p is None:
         return p
 
-    pid, validation_code, condition = p
+    pid, validation_code = p
     logging.info("(%s) In condition %s" % ((PFORMAT % pid), condition))
 
     clist = os.path.join(CONF_DIR, "%s_trials.json" % condition)
@@ -194,12 +195,23 @@ def error(msg, code=400):
     print response
     print msg
 
+def send_html(html):
+
+    # log information
+    logging.info("Sending html")
+    logging.debug(html)
+
+    # respond
+    print http_content_type("text/html")
+    print html
+
 def initialize(form):
     # get ip address
     ip_address = cgi.escape(environ["REMOTE_ADDR"])
+    condition = str(form.getvalue("condition"))
 
     # get pid/validation code and create new data files
-    info = create_datafile(ip_address)
+    info = create_datafile(ip_address, condition)
     if info is None:
         return error("Sorry, your IP address has already been "
                      "used in this experiment.", 403)
@@ -214,7 +226,6 @@ def initialize(form):
         'pid': PFORMAT % pid,
         'validationCode': validation_code,
         'index': index - 1,
-        'condition': condition.split("-")[1],
         }
     json_init = json.dumps(init)
     
@@ -350,6 +361,17 @@ if cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     logging.info("Requested action: " + action)
     handler = actions.get(action, error)
     handler(form)
+
+elif cgi.escape(environ['REQUEST_METHOD']) == "GET":
+    condition = form.getvalue('cond', None)
+    if condition is None:
+        error("Invalid condition", 501)
+    logging.info("Condition: " + condition)
+
+    # read the html file
+    with open(os.path.join(HTML_DIR, "experiment.html"), "r") as fh:
+        html = fh.read()
+    send_html(html % {"condition": condition})
 
 else:
     error("Invalid action", 501)
