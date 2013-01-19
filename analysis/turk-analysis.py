@@ -8,6 +8,7 @@ import collections
 import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
 import numpy as np
+import pandas as pd
 import pdb
 import pickle
 import scipy.stats
@@ -23,7 +24,19 @@ import cogphysics.tower.analysis_tools as tat
 import cogphysics.tower.mass.model_observer as mo
 import cogphysics.tower.mass.learning_analysis_tools as lat
 
-from cogphysics.lib.corr import xcorr
+from cogphysics.lib.corr import xcorr, partialcorr
+
+pd.set_option('line_width', 195)
+LINE = "-"*195
+
+# <codecell>
+
+def print_data(name, data):
+    print name
+    print LINE
+    print data.to_string()
+    print
+	
 
 # <codecell>
 
@@ -33,151 +46,203 @@ weightedSample = rvs.util.weightedSample
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 
+nthresh0 = 1
+nthresh = 4
+
+# <codecell>
+
+def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
+    truth = (rawtruth['nfellA'] + rawtruth['nfellB']) > nthresh0
+    df = pd.DataFrame(truth[..., 0].T, index=kappas, columns=rawsstim)
+    return df
+
+def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
+    samps = (rawipe['nfellA'] + rawipe['nfellB']) > nthresh
+    alpha = np.sum(samps, axis=-1) + 0.5
+    beta = np.sum(1-samps, axis=-1) + 0.5
+    pfell_mean = alpha / (alpha + beta)
+    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+    pfell_std = np.sqrt(pfell_var)
+    pfell_meanstd = np.mean(pfell_std, axis=-1)
+    ipe = np.empty(pfell_mean.shape)
+    for idx in xrange(rawipe.shape[0]):
+        x = kappas
+        lam = pfell_meanstd[idx] * 10
+        kde_smoother = mo.make_kde_smoother(x, lam)
+        ipe[idx] = kde_smoother(pfell_mean[idx])
+    df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
+    return df
+		  
+
 # <codecell>
 
 ######################################################################
-## Load and process old stability data
-out = lat.load('stability')
-rawhuman0, rawhstim0, raworder0, rawtruth0, rawipe0, kappas = out
+## Load model data
+reload(lat)
+rawtruth0, rawipe0, rawsstim, kappas = lat.load_model("stability")
 
-# <codecell>
+truth0 = make_truth_df(rawtruth0, rawsstim, kappas, nthresh0)
+ipe0 = make_ipe_df(rawipe0, rawsstim, kappas, nthresh)
 
-######################################################################
-## Load and process new data
-hdata = np.load("../../turk-experiment/data.npz")
-rawhuman = hdata['data']['response'][..., None]
-rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
-raworder = hdata['data']['trial'][..., None]
-
-idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
-rawtruth = rawtruth0[idx].copy()
-rawipe = rawipe0[idx].copy()
-
-# <codecell>
-
+n_kappas = len(kappas)
 ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
-# XXX: when you get more data you need to change this to actually
-# order for each participant! currently it only orders by the first
-# one!
-human, stimuli, sort, truth, ipe = lat.order_by_trial(
-    rawhuman, rawhstim, raworder, rawtruth, rawipe)
-truth = truth[0]
-ipe = ipe[0]
- 
-# variables
-n_trial      = stimuli.shape[1]
-n_kappas     = len(kappas)
+# <codecell>
+
+######################################################################
+## Load human data
+reload(lat)
+
+A_fb_training = lat.load_turk_df("A-fb", "training")
+A_fb_posttest = lat.load_turk_df("A-fb", "posttest")
+A_fb = lat.load_turk_df("A-fb", "experiment")
+
+A_nfb_training = lat.load_turk_df("A-nfb", "training")
+A_nfb_posttest = lat.load_turk_df("A-nfb", "posttest")
+A_nfb = lat.load_turk_df("A-nfb", "experiment")
 
 # <codecell>
 
-def calc_baserates(nthresh0, nthresh, nsamps):
-    feedback, ipe_samps = lat.make_observer_data(
-        nthresh0, nthresh, nsamps)
-
-    fbbr = np.mean(np.swapaxes(feedback, 0, 1).reshape((-1, n_kappas)))
-    ipebr = np.mean(np.swapaxes(ipe_samps[..., 0], 0, 1).reshape((-1, n_kappas)))
-
-    return fbbr, ipebr
+print_data("A-fb TRAINING DATA", A_fb_training)
+print_data("A-nfb TRAINING DATA", A_nfb_training)
 
 # <codecell>
 
-def plot_belief(fignum, nthresh0, nthresh, nsamps, smooth):
-    feedback, ipe_samps = lat.make_observer_data(
-        nthresh0, nthresh, nsamps)
-    model_lh, model_joint, model_theta = mo.ModelObserver(
-        ipe_samps,
-        feedback[:, None],
-        outcomes=None,
-	respond=False,
-	p_ignore_stimulus=0.0,
-        smooth=smooth)
-    r, c = 3, 3
-    n = r*c
-    exp = np.exp(np.log(0.5) / np.log(1./27))    
-    fig = plt.figure(fignum)
-    plt.clf()
-    gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
-    plt.suptitle(
-        "Posterior belief about mass ratio over time\n"
-        "(%d samples, %s, model thresh=%d blocks, "
-        "fb thresh=%d blocks)" % (
-            nsamps, "smoothed" if smooth else "unsmoothed",
-            nthresh, nthresh0),
-        fontsize=16)
-    plt.subplots_adjust(
-        wspace=0.2,
-        hspace=0.3,
-        left=0.1,
-        right=0.93,
-        top=0.85,
-        bottom=0.1)
-    kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
-    for i, kidx in enumerate(kidxs):
-        irow, icol = np.unravel_index(i, (r, c))
-        ax = plt.subplot(gs[irow, icol])
-        kappa = kappas[kidx]
-        subjname = "True $\kappa=%s$" % float(ratios[kidx])
-        img = lat.plot_theta(
-            None, None, ax,
-            np.exp(model_theta[kidx]),
-            subjname,
-            exp=exp,
-            cmap=cmap,
-            fontsize=14)
-        yticks = np.round(
-            np.linspace(0, n_kappas-1, 5)).astype('i8')
-        if (i%c) == 0:
-            plt.yticks(yticks, ratios[yticks], fontsize=14)
-            plt.ylabel("Mass ratio ($\kappa$)", fontsize=14)
-        else:
-            plt.yticks(yticks, [])
-            plt.ylabel("")
-        xticks = np.linspace(0, n_trial, 4).astype('i8')
-        if (n-i) <= c:
-            plt.xticks(xticks, xticks, fontsize=14)
-            plt.xlabel("Trial number ($t$)", fontsize=14)
-        else:
-            plt.xticks(xticks, [])
-    logcticks = np.array([0, 0.001, 0.05, 0.25, 1])
-    cticks = np.exp(np.log(logcticks) * np.log(exp))
-    cax = plt.subplot(gs[:, -1])
-    cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
-    cb.set_ticklabels(logcticks)
-    cax.set_title("$P_t(\kappa)$", fontsize=14)
-    return model_lh, model_joint, model_theta
+print_data("A-fb POSTTEST DATA", A_fb_posttest)
+print_data("A-nfb POSTTEST DATA", A_nfb_posttest)
 
 # <codecell>
 
-nthresh0 = 1
-nthresh = 4
-nsamps = 300
-ext = ['png', 'pdf']
-f_save = True
-f_close = False
-
-fbbr, ipebr = calc_baserates(nthresh0, nthresh, nsamps=300)
+print_data("A-fb EXPERIMENT DATA", A_fb)
+print_data("A-nfb EXPERIMENT DATA", A_nfb)
 
 # <codecell>
 
-feedback, ipe_samps = lat.make_observer_data(
-    nthresh0, nthresh, nsamps)
-model_lh, model_joint, model_theta = mo.ModelObserver(
-    ipe_samps,
-    feedback[:, None],
-    outcomes=None,
-    respond=False,
-    p_ignore_stimulus=0.0,
-    smooth=True)
+# raw correlation between feedback and no feedback
+m1 = np.mean(np.asarray(A_fb), axis=0)
+m2 = np.mean(np.asarray(A_nfb), axis=0)
+corr = xcorr(m1, m2)
+print "(all) feedback v no-feedback: rho = %.4f" % corr
+
+# <codecell>
+
+# bootstrapped correlations
+reload(lat)
+
+nboot = 10000
+nsamp = 9
+with_replacement = False
+
+corrs = lat.bootcorr(
+    np.asarray(A_fb), np.asarray(A_nfb), 
+    nboot=nboot, 
+    nsamp=nsamp,
+    with_replacement=with_replacement)
+meancorr = np.median(corrs)
+semcorr = scipy.stats.sem(corrs)
+print "(bootstrap) feedback v no-feedback: rho = %.4f +/- %.4f" % (meancorr, semcorr)
+
+corrs = lat.bootcorr_wc(
+    np.asarray(A_fb), 
+    nboot=nboot, 
+    nsamp=nsamp,
+    with_replacement=with_replacement)
+meancorr = np.median(corrs)
+semcorr = scipy.stats.sem(corrs)
+print "(bootstrap) feedback v feedback: rho = %.4f +/- %.4f" % (meancorr, semcorr)
+
+corrs = lat.bootcorr_wc(
+    np.asarray(A_nfb), 
+    nboot=nboot,
+    nsamp=nsamp,
+    with_replacement=with_replacement)
+meancorr = np.median(corrs)
+semcorr = scipy.stats.sem(corrs)
+print "(bootstrap) no-feedback v no-feedback: rho = %.4f +/- %.4f" % (meancorr, semcorr)
+
+# <codecell>
+
+plt.close('all')
+
+hstim = np.array([x.split("~")[0] for x in zip(*A_fb.columns)[1]])
+sstim = np.array(ipe0.columns)
+
+idx = np.nonzero((sstim[:, None] == hstim[None, :]))[0]
+truth = truth0.T.ix[idx].T
+ipe = ipe0.T.ix[idx].T
+
+p_resp_fb = np.empty((A_fb.shape[0], n_kappas))
+p_resp_nfb = np.empty((A_nfb.shape[0], n_kappas))
+p_response_mean = np.empty((n_kappas, 2))
+p_response_sem = np.empty((n_kappas, 2))
+
+for kidx, kappa in enumerate(kappas):
+    resp_fb = ((A_fb * np.asarray(ipe.ix[kappa])) + 
+	       ((1-A_fb) * np.asarray(1-ipe.ix[kappa])))
+    resp_nfb = ((A_nfb * np.asarray(ipe.ix[kappa])) + 
+		((1-A_nfb) * np.asarray(1-ipe.ix[kappa])))
+
+    p_resp_fb[:, kidx] = np.log(resp_fb).sum(axis=1)
+    p_resp_nfb[:, kidx] = np.log(resp_nfb).sum(axis=1)
+
+# p_resp_fb = normalize(p_resp_fb, axis=1)[1]
+# p_resp_nfb = normalize(p_resp_nfb, axis=1)[1]
+	
+p_response_mean[:, 0] = np.exp(p_resp_fb).mean(axis=0)
+p_response_mean[:, 1] = np.exp(p_resp_nfb).mean(axis=0)
+p_response_sem[:, 0] = scipy.stats.sem(np.exp(p_resp_fb), axis=0)
+p_response_sem[:, 1] = scipy.stats.sem(np.exp(p_resp_nfb), axis=0)
+
+x = np.arange(n_kappas)
+upper = np.log(p_response_mean + p_response_sem).T
+lower = np.log(p_response_mean - p_response_sem).T
+mean = np.log(p_response_mean).T
+
+# for sidx in xrange(p_resp_fb.shape[0]):
+#     plt.plot(x, p_resp_fb[sidx], color='#FFCCCC')
+# for sidx in xrange(p_resp_nfb.shape[0]):
+#     plt.plot(x, p_resp_nfb[sidx], color='#CCCCFF')
+
+plt.fill_between(x, lower[0], upper[0], color='#FF0000', alpha=0.1)
+plt.fill_between(x, lower[1], upper[1], color='#0000FF', alpha=0.1)
+plt.plot(x, mean[0], label="feedback", color='#FF0000', linewidth=2)
+plt.plot(x, mean[1], label="no feedback", color='#0000FF', linewidth=2)
+plt.xticks(x, ratios, rotation=90)
+plt.xlabel("Mass ratio")
+plt.ylabel("Negative log likelihood")
+plt.legend(loc=4)
+plt.xlim(x[0], x[-1])
+#plt.ylim(-15, 0)
+plt.title("Likelihood of human responses under different models")
+
+# <codecell>
+
+model_same = np.array((mean[:, list(kappas).index(0.0)],
+		       lower[:, list(kappas).index(0.0)],
+		       upper[:, list(kappas).index(0.0)])).T
+model_true = np.array((mean[:, list(kappas).index(1.0)],
+		       lower[:, list(kappas).index(1.0)],
+		       upper[:, list(kappas).index(1.0)])).T
+model_opposite = np.array((mean[:, list(kappas).index(-1.0)],
+			   lower[:, list(kappas).index(-1.0)],
+			   upper[:, list(kappas).index(-1.0)])).T
+
+
+# <codecell>
+
+# random model
+model_random = np.array([[np.log(0.5)*A_fb.shape[1]]*3,
+			 [np.log(0.5)*A_nfb.shape[1]]*3])
+model_random
 
 # <codecell>
 
 # global parameters
 outcomes     = np.array([0, 1])                  # possible outcomes
 responses    = np.array([0, 1])                  # possible responses
-n_trial      = stimuli.shape[1]                  # number of trials
+n_trial      = hstim.size
 n_kappas     = len(kappas)                       # number of mass ratios to consider
 n_responses  = responses.size                    # number of possible responses
 n_outcomes   = outcomes.size                     # number of possible outcomes
@@ -189,29 +254,87 @@ p_ignore_stimulus = 0.0
 
 # <codecell>
 
-ll = np.zeros((n_kappas, n_trial))
+hstim = np.array([x.split("~")[0] for x in zip(*A_fb.columns)[1]])
+sstim = np.array(ipe0.columns)
+idx = np.nonzero((sstim[:, None] == hstim[None, :]))[0]
 
-for sidx in xrange(n_kappas):
-    
-    for t in xrange(0, n_trial):
-
-	thetas_t = model_theta[sidx, t][None]
-        samps_t = ipe_samps[t]
-	
-	# compute likelihood of outcomes
-	p_outcomes = np.exp(mo.predict(
-	    thetas_t, outcomes[:, None], samps_t, f_smooth))
-	
-	# observe response
-	response_t = int(human[0, t])
-	
-	# compute likelihood of response
-	p_response = (p_outcomes[:, response_t]*(1-p_ignore_stimulus) + 
-		      (1./n_responses)*(p_ignore_stimulus))
-
-	ll[sidx, t] = np.log(p_response)
+feedback = np.asarray(truth).T[..., None]
+ipe_samps = ((rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) > nthresh)[..., None]
 
 # <codecell>
 
-plt.plot(np.sum(ll, axis=1))
+order_fb = np.argsort(zip(*A_fb.columns)[0])
+order_nfb = np.argsort(zip(*A_nfb.columns)[0])
+
+# <codecell>
+
+model_lh, model_joint, model_theta = mo.ModelObserver(
+    ipe_samps,
+    feedback[:, None],
+    outcomes=None,
+    respond=False,
+    p_ignore_stimulus=p_ignore_stimulus,
+    smooth=f_smooth)
+
+# <codecell>
+
+def compute_ll(resp, order):
+    ll = np.empty(resp.shape)
+
+    for t in order:
+
+	thetas_t = model_theta[ikappa0, t][None]
+	samps_t = ipe_samps[t]
+	
+	# compute likelihood of outcomes
+	p_outcomes = np.exp(mo.predict(
+	    thetas_t, outcomes[:, None], samps_t, f_smooth)).ravel()
+	
+	# observe response
+	p_response = (resp[:, t]*p_outcomes[1]) + ((1-resp[:, t])*p_outcomes[0])
+
+	ll[:, t] = np.log(p_response)
+
+    return ll
+
+# <codecell>
+
+lfb = np.exp(np.sum(compute_ll(np.asarray(A_fb), order_fb), axis=1))
+lnfb = np.exp(np.sum(compute_ll(np.asarray(A_nfb), order_nfb), axis=1))
+
+mean_p = np.array([np.mean(lfb), np.mean(lnfb)])
+sem_p = np.array([scipy.stats.sem(lfb), scipy.stats.sem(lnfb)])
+
+mean = np.log(mean_p)
+lower = np.log(mean_p - sem_p)
+upper = np.log(mean_p + sem_p)
+
+model_learn = np.array([mean, lower, upper]).T
+
+# <codecell>
+
+models = np.array([model_random,
+		   model_opposite,
+		   model_same,
+		   model_true,
+		   model_learn]).T
+height = models[0]
+err = np.abs(height[None] - models[1:])
+
+x = np.arange(models.shape[2])
+xfb = x - 0.2
+xnfb = x + 0.2
+
+plt.close('all')
+plt.bar(xfb, height[0], yerr=err[:, 0], color='#FF0000', ecolor='k', align='center', width=0.4, label="feedback")
+plt.bar(xnfb, height[1], yerr=err[:, 1], color='#0000FF', ecolor='k', align='center', width=0.4, label="no feedback")
+plt.xticks(x, ["random", "r=0.1", "r=1.0", "r=10.0", "learn"])
+plt.ylim(-20, -12)
+plt.legend(loc=0)
+plt.xlabel("Model")
+plt.ylabel("Negative log likelihood of responses")
+plt.title("Model performance")
+
+# <codecell>
+
 

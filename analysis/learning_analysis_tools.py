@@ -3,6 +3,7 @@ import matplotlib.cm as cm
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
+import pandas as pd
 import pdb
 import pickle
 import scipy.stats
@@ -16,13 +17,62 @@ import time
 #import cogphysics.lib.stats as stats
 import cogphysics.tower.analysis_tools as tat
 
+from cogphysics.lib.corr import xcorr, partialcorr
+
 from joblib import Memory
 memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 
 ######################################################################
 # Data handling
 
-@memory.cache
+def load_turk_df(condition, mode="experiment", sort_trials=False):
+    path = "../../turk-experiment/turk_%s_data~%s.npz" % (mode, condition)
+    print "Loading '%s'" % path
+    datafile = np.load(path)
+    data = datafile['data']['response']
+    # stims = []
+    # for stim in datafile['stims']:
+    #     if stim.startswith("stability"):
+    #         stims.append("s" + stim[len("stability"):])
+    #     elif stim.startswith("mass-tower"):
+    #         stims.append("mt" + stim.split("_")[1])
+    #     else:
+    #         stims.append(stim)
+    stims = datafile['stims']
+    trial = datafile['data']['trial'][:, 0]
+    pids = datafile['pids']
+    datafile.close()
+    df = pd.DataFrame(data.T, columns=[trial, stims], index=pids)
+    df.columns.names = ["trial", "stimulus"]
+    df.index.names = ["pid"]
+    if sort_trials:
+        df.sort_index(axis=1, inplace=True)
+    return df
+
+# def load_turk(condition, mode="experiment"):
+#     path = "../../turk-experiment/turk_%s_data~%s.npz" % (mode, condition)
+#     print "Loading '%s'" % path
+#     hdata = np.load(path)
+#     rawhuman = hdata['data']['response'][..., None]
+#     rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
+#     raworder = hdata['data']['trial'][..., None]
+#     hdata.close()
+#     return rawhuman, rawhstim, raworder    
+
+def process_turk(human0, hstim0, truth0, ipe0, sstim0):
+    
+    idx = np.nonzero((sstim0[:, None] == hstim0[None, :]))[0]
+    truth = truth0[idx].copy()
+    ipe = ipe0[idx].copy()
+
+    # human, stimuli, sort, truth, ipe = order_by_trial(
+    #     rawhdata, rawhstim, raworder, rawtruth, rawipe)
+    # truth = truth[0]
+    # ipe = ipe[0]
+
+    return human, stimuli, sort, truth, ipe
+
+#@memory.cache
 def order_by_trial(human, stimuli, order, truth, ipe):
 
     n_subjs = human.shape[1]
@@ -89,14 +139,11 @@ def summarize(samps, mass, assigns, mthresh=0.095):
     return posdiff, comdiff, nfellA, nfellB
 
 @memory.cache
-def load(predicate):
-
+def load_human(predicate):
     if predicate == 'stability':
         exp_ver = 7
-        sim_ver = 14 #6
     elif predicate == 'direction':
         exp_ver = 8
-        sim_ver = 15 #7
     else:
         raise ValueError, predicate
 
@@ -106,63 +153,83 @@ def load(predicate):
     n_subjs, n_reps = rawhuman.shape[1:]
     hids = rawhmeta['dimvals']['id']
 
-    # Model
-    mname = "ipe_data.npz"
-    if not os.path.exists(mname):
-        rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)#-2)
-        sigmas = rawsmeta["sigmas"]
-        phis = rawsmeta["phis"]
-        kappas = rawsmeta["kappas"]
-
-        # Truth samples
-        sigma0 = list(sigmas).index(0.0)
-        phi0 = list(phis).index(0.0)
-        truth = rawmodel[sigma0, phi0][:, :, [0]]
-
-        # IPE samples
-        sigma1 = list(sigmas).index(0.05)#0.04)
-        ipe = rawmodel[sigma1, phi0]
-
-        # Summarize data
-        mass, cpoids, assigns, intassigns = tat.stimnames2mass(
-            rawsstim, kappas)
-        posdiff_true, comdiff_true, nfellA_true, nfellB_true = summarize(
-            truth, mass, assigns)
-        posdiff_ipe, comdiff_ipe, nfellA_ipe, nfellB_ipe = summarize(
-            ipe, mass, assigns)
-
-        # Save it
-        dtype = np.dtype([
-            ('nfellA', 'f8'),
-            ('nfellB', 'f8'),
-            ('comdiff', [('x', 'f8'), ('y', 'f8'), ('z', 'f8')])])
-
-        data_true = np.empty(nfellA_true.shape, dtype=dtype)
-        data_true['nfellA'] = nfellA_true
-        data_true['nfellB'] = nfellB_true
-        data_true['comdiff']['x'] = comdiff_true[..., 0]
-        data_true['comdiff']['y'] = comdiff_true[..., 1]
-        data_true['comdiff']['z'] = comdiff_true[..., 2]
-
-        data_ipe = np.empty(nfellA_ipe.shape, dtype=dtype)
-        data_ipe['nfellA'] = nfellA_ipe
-        data_ipe['nfellB'] = nfellB_ipe
-        data_ipe['comdiff']['x'] = comdiff_ipe[..., 0]
-        data_ipe['comdiff']['y'] = comdiff_ipe[..., 1]
-        data_ipe['comdiff']['z'] = comdiff_ipe[..., 2]
-
-        np.savez(mname, truth=data_true, ipe=data_ipe, kappas=kappas)
-
+    return rawhuman, rawhstim, raworder
+    
+@memory.cache
+def load_model(predicate):
+    
+    if predicate == 'stability':
+        sim_ver = 14 #6
+    elif predicate == 'direction':
+        sim_ver = 15 #7
     else:
-        data = np.load(mname)
-        data_true = data['truth']
-        data_ipe = data['ipe']
-        kappas = data['kappas']
+        raise ValueError, predicate
 
+    # Model
+    # mname = "ipe_data.npz"
+    # if not os.path.exists(mname):
+    rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)#-2)
+    sigmas = rawsmeta["sigmas"]
+    phis = rawsmeta["phis"]
+    kappas = rawsmeta["kappas"]
+
+    # Truth samples
+    sigma0 = list(sigmas).index(0.0)
+    phi0 = list(phis).index(0.0)
+    truth = rawmodel[sigma0, phi0][:, :, [0]]
+        
+    # IPE samples
+    sigma1 = list(sigmas).index(0.05)#0.04)
+    ipe = rawmodel[sigma1, phi0]
+
+    # Summarize data
+    mass, cpoids, assigns, intassigns = tat.stimnames2mass(
+        rawsstim, kappas)
+    posdiff_true, comdiff_true, nfellA_true, nfellB_true = summarize(
+        truth, mass, assigns)
+    posdiff_ipe, comdiff_ipe, nfellA_ipe, nfellB_ipe = summarize(
+        ipe, mass, assigns)
+    
+    # Save it
+    dtype = np.dtype([
+        ('nfellA', 'f8'),
+        ('nfellB', 'f8'),
+        ('comdiff', [('x', 'f8'), ('y', 'f8'), ('z', 'f8')])])
+    
+    data_true = np.empty(nfellA_true.shape, dtype=dtype)
+    data_true['nfellA'] = nfellA_true
+    data_true['nfellB'] = nfellB_true
+    data_true['comdiff']['x'] = comdiff_true[..., 0]
+    data_true['comdiff']['y'] = comdiff_true[..., 1]
+    data_true['comdiff']['z'] = comdiff_true[..., 2]
+    
+    data_ipe = np.empty(nfellA_ipe.shape, dtype=dtype)
+    data_ipe['nfellA'] = nfellA_ipe
+    data_ipe['nfellB'] = nfellB_ipe
+    data_ipe['comdiff']['x'] = comdiff_ipe[..., 0]
+    data_ipe['comdiff']['y'] = comdiff_ipe[..., 1]
+    data_ipe['comdiff']['z'] = comdiff_ipe[..., 2]
+
+    # np.savez(mname, truth=data_true, ipe=data_ipe, kappas=kappas, stims=rawsstim)
+
+    # else:
+    #     data = np.load(mname)
+    #     data_true = data['truth']
+    #     data_ipe = data['ipe']
+    #     rawsstim = data['stims']
+    #     kappas = data['kappas']
+
+    return data_true, data_ipe, rawsstim, kappas
+    
+def load(predicate):
+    rawhuman, rawhstim, raworder = load_human(predicate)
+    data_true, data_ipe, rawsstim, kappas = load_model(predicate)
     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
 
 @memory.cache
 def make_observer_data(nthresh0, nthresh, nsamps, order=True):
+    assert False
+    
     out = load('stability')
     rawhuman0, rawhstim0, raworder0, rawtruth0, rawipe0, kappas = out
 
@@ -297,3 +364,44 @@ def plot_polar():
         ax.set_rmin(r[0] - 1)
         pdb.set_trace()
 
+def bootcorr(arr1, arr2, nboot=1000, nsamp=None, with_replacement=True):
+    nsubj1, ntrial = arr1.shape
+    nsubj2, ntrial = arr2.shape
+    corrs = np.empty(nboot)
+
+    if nsamp is None:
+	nsamp = min(nsubj1, nsubj2) / 2
+
+    for i in xrange(corrs.size):
+	if with_replacement:
+	    idx1 = np.random.randint(0, nsubj1, nsamp)
+	    idx2 = np.random.randint(0, nsubj2, nsamp)
+	else:
+	    idx1 = np.random.permutation(nsubj1)[:nsamp]
+	    idx2 = np.random.permutation(nsubj2)[:nsamp]
+
+	group1 = arr1[idx1].mean(axis=0)
+	group2 = arr2[idx2].mean(axis=0)
+	corrs[i] = xcorr(group1, group2)
+
+    return corrs
+
+def bootcorr_wc(arr, nboot=1000, nsamp=None, with_replacement=False):
+    nsubj, ntrial = arr.shape
+    corrs = np.empty(nboot)
+
+    if nsamp is None:
+	nsamp = nsubj / 2
+
+    for i in xrange(corrs.size):
+	if with_replacement:
+	    idx1 = np.random.permutation(nsubj)[:nsamp]
+	    idx2 = np.random.permutation(nsubj)[:nsamp]
+	else:
+	    idx1, idx2 = np.array_split(np.random.permutation(nsubj)[:nsamp*2], 2)
+
+	group1 = arr[idx1].mean(axis=0)
+	group2 = arr[idx2].mean(axis=0)
+	corrs[i] = xcorr(group1, group2)
+
+    return corrs
