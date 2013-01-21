@@ -26,6 +26,9 @@ import cogphysics.tower.mass.learning_analysis_tools as lat
 
 from cogphysics.lib.corr import xcorr, partialcorr
 
+normalize = rvs.util.normalize
+weightedSample = rvs.util.weightedSample
+
 pd.set_option('line_width', 195)
 LINE = "-"*195
 
@@ -40,20 +43,14 @@ def print_data(name, data):
 
 # <codecell>
 
-# global variables
-normalize = rvs.util.normalize
-weightedSample = rvs.util.weightedSample
-
-cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
-
-# <codecell>
-
 def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
     nfell = (rawtruth['nfellA'] + rawtruth['nfellB']) / 10.0
     truth = nfell > nthresh0
     truth[np.isnan(nfell)] = 0.5
     df = pd.DataFrame(truth[..., 0].T, index=kappas, columns=rawsstim)
     return df
+
+# <codecell>
 
 def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
     nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
@@ -81,11 +78,8 @@ def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
 def plot_smoothing(rawipe, stims, nstim, nthresh):
     nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
     samps = (nfell > nthresh).astype('f8')
-    # samps = nfell.copy()
+
     samps[np.isnan(nfell)] = 0.5
-    # samps = np.concatenate([
-    #     ((rawipe['nfellA'] + rawipe['nfellB']) > nthresh).astype(
-    #         'int')[..., None]], axis=-1)[..., 0][..., :nsamps]
     alpha = np.sum(samps, axis=-1) + 0.5
     beta = np.sum(1-samps, axis=-1) + 0.5
     pfell_mean = alpha / (alpha + beta)
@@ -99,7 +93,6 @@ def plot_smoothing(rawipe, stims, nstim, nthresh):
     xticks10[xticks >= 0] = np.round(xticks10[xticks >= 0], decimals=1)
     yticks = np.linspace(0, 1, 3)
 
-    # plt.figure(fignum)
     plt.figure()
     plt.clf()
     plt.suptitle(
@@ -116,7 +109,6 @@ def plot_smoothing(rawipe, stims, nstim, nthresh):
     for idx in xrange(nstim):
         i = order[idx]
         x = kappas
-        #xn = np.linspace(-1.5, 1.5, 100)
         lam = pfell_meanstd[i] * 10
         kde_smoother = mo.make_kde_smoother(x, lam)
         y_mean = kde_smoother(pfell_mean[i])
@@ -133,11 +125,10 @@ def plot_smoothing(rawipe, stims, nstim, nthresh):
 
 # <codecell>
 
-def plot_belief(model_theta):
+def plot_belief(model_theta, cmap):
     r, c = 3, 3
     n = r*c
     exp = np.exp(np.log(0.5) / np.log(1./27))    
-    # fig = plt.figure(fignum)
     fig = plt.figure()
     plt.clf()
     gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
@@ -188,22 +179,17 @@ def plot_belief(model_theta):
 
 # <codecell>
 
-########################################################################
-def compute_ll(resp, theta, order):
+def compute_ll(resp, theta, order, f_smooth):
     ll = np.empty(resp.shape)
 
     for t in order:
-
 	thetas_t = theta[t][None]
 	samps_t = ipe_samps[t]
-	
 	# compute likelihood of outcomes
 	p_outcomes = np.exp(mo.predict(
 	    thetas_t, outcomes[:, None], samps_t, f_smooth)).ravel()
-	
 	# observe response
 	p_response = (resp[:, t]*p_outcomes[1]) + ((1-resp[:, t])*p_outcomes[0])
-
 	ll[:, t] = np.log(p_response)
 
     return ll
@@ -277,16 +263,13 @@ ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
 outcomes     = np.array([0, 1])                  # possible outcomes
-responses    = np.array([0, 1])                  # possible responses
 n_trial      = hstim.size
-n_kappas     = len(kappas)                       # number of mass ratios to consider
-n_responses  = responses.size                    # number of possible responses
 n_outcomes   = outcomes.size                     # number of possible outcomes
-kappa0       = 1.0                               # value of the true log mass ratio
-ikappa0      = np.nonzero(kappas==1.0)[0][0]     # index for the true mass ratio
 
-f_smooth = False
+f_smooth = True
 p_ignore_stimulus = 0.0
+
+cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 
 # <codecell>
 
@@ -294,11 +277,6 @@ p_ignore_stimulus = 0.0
 ## Generate fake human data
 ######################################################################
 nfake = 1000
-
-# for cidx, cond in enumerate(experiment.keys()):
-#     if cond.endswith("-mo"): continue
-#     if cond.endswith("-nfb"): continue
-
 cond = 'A-fb'
 
 # trial ordering
@@ -318,7 +296,7 @@ model_lh, model_joint, model_theta = mo.ModelObserver(
 # <codecell>
 
 plt.close('all')
-plot_belief(model_theta)
+plot_belief(model_theta, cmap)
 fig = plt.gcf()
 fig.set_figwidth(8)
 fig.set_figheight(6)
@@ -394,7 +372,6 @@ experiment[cond + "-fixed10-mo"] = pd.DataFrame(
 
 # <codecell>
 
-# conds = sorted(experiment.keys())
 conds = [
     'A-fb-fixed0.1-mo',
     'A-fb-ideal0.1-mo', 
@@ -506,7 +483,6 @@ plt.xlabel("Fixed model mass ratio")
 plt.ylabel("Log likelihood of responses")
 plt.legend(loc=4)
 plt.xlim(x[0], x[-1])
-#plt.ylim(-20, -12)
 plt.title("Likelihood of responses under fixed models")
 fig = plt.gcf()
 fig.set_figwidth(8)
@@ -561,7 +537,7 @@ def learning_model_lh(ikappa):
 	trial_ll = compute_ll(
 	    np.asarray(experiment[cond]), 
 	    model_theta[ikappa], 
-	    order)
+	    order, f_smooth)
 
 	# overall likelihood
 	lh = np.exp(np.sum(trial_ll, axis=1))
@@ -659,7 +635,6 @@ for i in xrange(model_thetas.shape[0]):
 
 
 p_responses = np.empty((3, n_kappas, nsamp, n_trial))
-
 theta_fixed = np.log(np.eye(n_kappas))
 
 theta_uniform = normalize(np.log(np.ones(n_kappas)))[1]
@@ -689,7 +664,7 @@ for i in xrange(nsamp):
 	p_responses[1, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
 
 	# fixed at uniform belief
-	p_outcomes1 = np.exp(mo.predict(
+	p_outcomes = np.exp(mo.predict(
 	    theta_uniform[None],
 	    outcomes[:, None], 
 	    ipe_samps[orders[i]][t],
@@ -731,6 +706,7 @@ plt.xlim(0, n_trial-1)
 plt.xlabel("Trial")
 plt.ylabel("Likelihood")
 plt.title("Likelihood of observer responses, averaged over trial orderings")
+plt.ylim(0.45, 0.6)
 
 lat.save("images/likelihoods_over_time.png", close=False)
 
