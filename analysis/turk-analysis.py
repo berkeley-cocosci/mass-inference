@@ -435,6 +435,7 @@ for idx1, m1 in enumerate(means):
 	c1 = conds[idx1]
 	c2 = conds[idx1+idx2+1]
 	print "(all) %-16s v %-16s : rho = % .4f" % (c1, c2, corr)
+	
 
 # <codecell>
 
@@ -631,4 +632,108 @@ fig.set_figwidth(8)
 fig.set_figheight(6)
 
 lat.save("images/model_performance.png", close=False)
+
+# <codecell>
+
+
+nsamp = 1000
+ikappa = list(kappas).index(1.0)
+orders = np.array([np.random.permutation(n_trial) for i in xrange(nsamp)])
+
+# <codecell>
+
+model_thetas = np.empty((nsamp, n_kappas, n_trial+1, n_kappas))
+for i in xrange(model_thetas.shape[0]):
+    if i%10 == 0:
+	print i
+    model_lh, model_joint, model_theta = mo.ModelObserver(
+	ipe_samps[orders[i]],
+	feedback[orders[i]][:, None],
+	outcomes=None,
+	respond=False,
+	p_ignore_stimulus=p_ignore_stimulus,
+	smooth=f_smooth)
+    model_thetas[i] = model_theta
+
+# <codecell>
+
+
+p_responses = np.empty((3, n_kappas, nsamp, n_trial))
+
+theta_fixed = np.log(np.eye(n_kappas))
+
+theta_uniform = normalize(np.log(np.ones(n_kappas)))[1]
+sdata = np.asarray(ipe)
+
+for i in xrange(nsamp):
+    if i%10 == 0:
+	print i
+    sd = sdata[ikappa, orders[i]]
+    for t in xrange(n_trial):
+	# learning
+	p_outcomes = np.exp(mo.predict(
+	    model_thetas[i, :, t],
+	    outcomes[:, None], 
+	    ipe_samps[orders[i]][t],
+	    f_smooth))[:, 1]
+	resp = np.random.rand() < p_outcomes
+	p_responses[0, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
+	# fixed at true ratio
+	p_outcomes = np.exp(mo.predict(
+	    theta_fixed,
+	    outcomes[:, None], 
+	    ipe_samps[orders[i]][t],
+	    f_smooth))[:, 1]
+	resp = np.random.rand() < p_outcomes
+	p_responses[1, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
+	# fixed at uniform belief
+	p_outcomes1 = np.exp(mo.predict(
+	    theta_uniform[None],
+	    outcomes[:, None], 
+	    ipe_samps[orders[i]][t],
+	    f_smooth))[:, 1]
+	resp = np.random.rand() < p_outcomes
+	p_responses[2, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
+
+# <codecell>
+
+p_response_mean = np.mean(p_responses, axis=2)
+p_response_sem = scipy.stats.sem(p_responses, axis=2)
+
+x = np.arange(n_trial)
+upper = p_response_mean + p_response_sem
+lower = p_response_mean - p_response_sem
+mean = p_response_mean
+
+plt.close('all')
+#clr = ['r', 'b']
+k = 0 
+def plot(i, j, label):
+    global k
+    plt.fill_between(x, lower[i, j], upper[i, j], color=colors[k], alpha=0.1)
+    plt.plot(mean[i, j], color=colors[k], label=label)
+    k += 1
+
+plot(0, list(kappas).index(-1.0), "learning, r=0.1")
+plot(1, list(kappas).index(-1.0), "fixed, r=0.1")
+plot(2, 0, "fixed, uniform")
+plot(0, list(kappas).index(1.0), "learning, r=10")
+plot(1, list(kappas).index(1.0), "fixed, r=10")
+	
+plt.legend(loc=0)
+fig = plt.gcf()
+fig.set_figwidth(8)
+fig.set_figheight(6)
+plt.xlim(0, n_trial-1)
+plt.xlabel("Trial")
+plt.ylabel("Likelihood")
+plt.title("Likelihood of observer responses, averaged over trial orderings")
+
+lat.save("images/likelihoods_over_time.png", close=False)
+
+# <codecell>
+
 
