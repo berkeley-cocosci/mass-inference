@@ -366,12 +366,14 @@ elif cgi.escape(environ['REQUEST_METHOD']) == "GET":
     condition = form.getvalue('cond', None)
     if condition is None:
         error("Invalid condition", 501)
-    logging.info("Condition: " + condition)
 
-    # read the html file
-    with open(os.path.join(HTML_DIR, "experiment.html"), "r") as fh:
-        html = fh.read()
-    send_html(html % {"condition": condition})
+    else:
+        logging.info("Condition: " + condition)
+
+        # read the html file
+        with open(os.path.join(HTML_DIR, "experiment.html"), "r") as fh:
+            html = fh.read()
+        send_html(html % {"condition": condition})
 
 else:
     error("Invalid action", 501)

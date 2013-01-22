@@ -176,13 +176,15 @@ var slides = {
     // ----------------------------------------------------------------
     instructions2 : {
         setup : function () {
+	    var parts = experiment.condition.split("-");
+	    var suffix = parts[2] + "-" + parts[3]
             $f($("#mass-example")).bind(
                 "finish", function (e, api) {
                     if (!api.playing) {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("mass"));
+                }).load(getVideoFormats("mass-" + suffix));
         },
 
         teardown : function () {
