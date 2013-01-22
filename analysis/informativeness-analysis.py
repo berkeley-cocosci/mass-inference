@@ -73,6 +73,7 @@ f_save = False
 f_close = False
 smooth = True
 idx = int(np.nonzero(ratios==10)[0][0])
+nidx = int(np.nonzero(ratios==0.1)[0][0])
 
 # <codecell>
 
@@ -215,6 +216,20 @@ with open(l, "w") as fh:
 
 # <codecell>
 
+exp_stims = ["%s~kappa-%s" % (x, kappas[nidx]) for x in np.sort(stimuli[0, exp])]
+catch_stims = ["%s~kappa-%s" % (x, kappas[nidx]) for x in np.sort(stimuli[0, catch])]
+l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[nidx])
+with open(l, "w") as fh:
+    lines = "\n".join(exp_stims)
+    fh.write(lines)
+l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[nidx])
+with open(l, "w") as fh:
+    lines = "\n".join(catch_stims)
+    fh.write(lines)
+    
+
+# <codecell>
+
 uidx = np.hstack([exp, catch])
 used = stimuli[0, uidx]
 used_nums = [x.split("_")[1] for x in used]
@@ -314,24 +329,58 @@ l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[idx])
 with open(l, "w") as fh:
     lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[idx])])
     fh.write(lines)
+l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
+with open(l, "w") as fh:
+    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
+    fh.write(lines)
 
 # <codecell>
 
 import yaml
-fh = open("../../turk-experiment/config/stimuli-info.csv", "w")
+fh = open("../../turk-experiment/www/config/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
     fh.write(",".join(
-	["%s~kappa-%s" % (stimuli[0,i], kappas[idx]),
+	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[idx]),
 	 str(not(bool(feedback[i,idx,0]))),
 	 str(False)]
 	 ) + "\n")
+    fh.write(",".join(
+    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[idx]),
+    	 str(not(bool(feedback[i,idx,0]))),
+    	 str(False)]
+    	 ) + "\n")
+    fh.write(",".join(
+	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
+	 str(not(bool(feedback[i,nidx,0]))),
+	 str(False)]
+	 ) + "\n")
+    fh.write(",".join(
+    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
+    	 str(not(bool(feedback[i,nidx,0]))),
+    	 str(False)]
+    	 ) + "\n")
 for i in catch:
     fh.write(",".join(
-	["%s~kappa-%s" % (stimuli[0,i], kappas[idx]),
+	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[idx]),
 	 str(not(bool(feedback[i,idx,0]))),
 	 str(True)]
 	 ) + "\n")
+    fh.write(",".join(
+    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[idx]),
+    	 str(not(bool(feedback[i,idx,0]))),
+    	 str(True)]
+    	 ) + "\n")
+    fh.write(",".join(
+	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
+	 str(not(bool(feedback[i,nidx,0]))),
+	 str(True)]
+	 ) + "\n")
+    fh.write(",".join(
+    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
+    	 str(not(bool(feedback[i,nidx,0]))),
+    	 str(True)]
+    	 ) + "\n")
 for i in train:
     fh.write(",".join(
 	[original[i],

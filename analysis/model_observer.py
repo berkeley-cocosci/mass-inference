@@ -109,8 +109,8 @@ def IPE(samps, smooth):
         # pfell = np.clip(gp(x)[0][:, None, None], 0, 1)
         # assert ((pfell >= 0) & (pfell <= 1)).all()
 
-        lam = pfell_meanstd * 10
-        # lam = 0.2
+        #lam = pfell_meanstd * 10
+        lam = 0.2
         kde_smoother = make_kde_smoother(x, lam)
         pfell = kde_smoother(pfell_mean)[:, None, None]
 

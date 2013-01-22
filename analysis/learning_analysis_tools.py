@@ -228,19 +228,18 @@ def load(predicate):
 
 @memory.cache
 def make_observer_data(nthresh0, nthresh, nsamps, order=True):
-    assert False
-    
-    out = load('stability')
-    rawhuman0, rawhstim0, raworder0, rawtruth0, rawipe0, kappas = out
 
-    # new data
-    hdata = np.load("../../turk-experiment/data.npz")
-    rawhuman = hdata['data']['response'][..., None]
-    rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
-    raworder = hdata['data']['trial'][..., None]
-    idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
-    rawtruth = rawtruth0[idx].copy()
-    rawipe = rawipe0[idx].copy()
+    out = load('stability')
+    rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+
+    # # new data
+    # hdata = np.load("../../turk-experiment/data.npz")
+    # rawhuman = hdata['data']['response'][..., None]
+    # rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
+    # raworder = hdata['data']['trial'][..., None]
+    # idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
+    # rawtruth = rawtruth0[idx].copy()
+    # rawipe = rawipe0[idx].copy()
     
     if order:
         human, stimuli, sort, truth, ipe = order_by_trial(
