@@ -26,7 +26,7 @@ memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 # Data handling
 
 def load_turk_df(condition, mode="experiment", sort_trials=False):
-    path = "../../turk-experiment/turk_%s_data~%s.npz" % (mode, condition)
+    path = "../../turk-experiment/data/consolidated_data/%s_data~%s.npz" % (mode, condition)
     print "Loading '%s'" % path
     datafile = np.load(path)
     data = datafile['data']['response']
