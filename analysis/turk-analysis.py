@@ -126,7 +126,7 @@ def plot_smoothing(rawipe, stims, nstim, nthresh):
 # <codecell>
 
 def plot_belief(model_theta, cmap):
-    r, c = 3, 3
+    r, c = 1, 3
     n = r*c
     exp = np.exp(np.log(0.5) / np.log(1./27))    
     fig = plt.figure()
@@ -140,9 +140,10 @@ def plot_belief(model_theta, cmap):
         hspace=0.3,
         left=0.1,
         right=0.93,
-        top=0.85,
+        top=0.8,
         bottom=0.1)
-    kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
+    #kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
+    kidxs = [3, 13, 23]
     for i, kidx in enumerate(kidxs):
         irow, icol = np.unravel_index(i, (r, c))
         ax = plt.subplot(gs[irow, icol])
@@ -299,7 +300,7 @@ plt.close('all')
 plot_belief(model_theta, cmap)
 fig = plt.gcf()
 fig.set_figwidth(8)
-fig.set_figheight(6)
+fig.set_figheight(2.5)
 
 lat.save("images/ideal_learning_observers.png", close=False)
 
