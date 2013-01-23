@@ -36,7 +36,7 @@ DATA_DIR = "data"
 CONF_DIR = "config"
 HTML_DIR = "html"
 
-KEYWORDS = ("finished training", "finished experiment", "finished posttest")
+KEYWORDS = ("finished training", "finished experiment", "finished posttest", "query ratio")
 FIELDS = ("index", "trial", "stimulus", "response", "time", "angle", "ttype")
 PFORMAT = "%03d"
 
@@ -149,6 +149,8 @@ def get_experiment_playlist(pid):
     for trial in trialinfo[trialinfo.index("finished training")+1:]:
         if trial == "finished experiment":
             break
+        if trial == "query ratio":
+            continue
         playlist.append(trial['stimulus'])
     return playlist
 
@@ -189,7 +191,7 @@ def http_content_type(mime):
 def error(msg, code=400):
     # log the error
     response = http_status(code)
-    logging.error("%s: %s" % (response, msg))
+    logging.error("%s: %s" % (response.strip(), msg))
 
     # respond
     print response
@@ -255,10 +257,11 @@ def getTrialInfo(form):
     # look up the trial information
     trialinfo = get_trialinfo(pid, index)
     if trialinfo in KEYWORDS:
-        data = dict([(k, "") for k in FIELDS])
-        data['index'] = index
-        data['trial'] = trialinfo
-        write_data(pid, data)
+        if trialinfo != "query ratio":
+            data = dict([(k, "") for k in FIELDS])
+            data['index'] = index
+            data['trial'] = trialinfo
+            write_data(pid, data)
 
         info = { 
             'index': index,
@@ -305,35 +308,50 @@ def submit(form):
     r_index = int(form.getvalue("index"))
     index = get_trialindex(pid)
     if r_index != index:
-        return error("Requested index is %s but "
+        return error("Submit: Requested index is %s but "
                      "actual index is %s" % (r_index, index), 405)
 
     # populate some more data
     trialinfo = get_trialinfo(pid, index)
-    if trialinfo in KEYWORDS:
+    if trialinfo in KEYWORDS and trialinfo != "query ratio":
         return error("Invalid trial", 405)
 
-    data.update(trialinfo)
+    if trialinfo == "query ratio":
+        # write the data to file
+        data['trial'] = "query ratio"
+        write_data(pid, data)
 
-    # write the data to file
-    write_data(pid, data)
+        # now get the feedback
+        response = {
+            'feedback' : None,
+            'visual' : None,
+            'text' : None,
+            'index' : index,
+            'trial' : trialinfo,
+            }
 
-    visual_fb = trialinfo['visual_fb']
-    text_fb = trialinfo['text_fb']
-
-    if (not visual_fb) and (not text_fb):
-        feedback = None
     else:
-        feedback = 'stable' if trialinfo['stable'] else 'unstable'
+        data.update(trialinfo)
+        # write the data to file
+        write_data(pid, data)
 
-    # now get the feedback
-    response = {
-        'feedback' : feedback,
-        'visual' : visual_fb,
-        'text' : text_fb,
-        'index' : index,
-        'trial' : trialinfo['trial'],
-        }
+
+        visual_fb = trialinfo['visual_fb']
+        text_fb = trialinfo['text_fb']
+
+        if (not visual_fb) and (not text_fb):
+            feedback = None
+        else:
+            feedback = 'stable' if trialinfo['stable'] else 'unstable'
+
+        # now get the feedback
+        response = {
+            'feedback' : feedback,
+            'visual' : visual_fb,
+            'text' : text_fb,
+            'index' : index,
+            'trial' : trialinfo['trial'],
+            }
 
     # response
     print http_content_type("application/json")
@@ -360,7 +378,7 @@ actions = {
     "initialize": initialize,
     "trialinfo": getTrialInfo,
     "submit": submit,
-    "submitRatio" : submitRatio,
+    # "submitRatio" : submitRatio,
     }
 
 # get the request

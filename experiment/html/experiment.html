@@ -143,7 +143,10 @@
       <div class="blue">
 	<p>Good! Now, blocks can be either <i>heavy</i>
 	  or <i>light</i>, depending on color. We won't tell you
-	  which is the heavier color -- just do your best.</p>
+	  which is the heavier color -- just try your best.</p>
+	<p class="fb">You should try to figure out for yourself which
+	color is heavier, and we will occasionally ask you what you
+	think.</p>
 	<div id="scales"><img src="resources/images/scales-ry.png" alt="" /></div>
       </div>
       <div class="example-container">
@@ -156,14 +159,12 @@
 	  </video>
 	</div>
       </div>
-      <div id="feedback-info" class="blue">
-	<p>In the upcoming trials, we will no longer <i>show</i> you
-	  what happens when the tower is unfrozen, but we
-	  will <i>tell</i> you.
-	</p>
-	<p>In the upcoming trials, we will no longer show or tell you
-	  what happens when the tower is unfrozen.
-	</p>
+      <div class="blue">
+	<p class="fb">In the upcoming trials, we will no
+	  longer <i>show</i> you what happens when the tower is
+	  unfrozen, but we will <i>tell</i> you.</p>
+	<p class="nfb">In the upcoming trials, we will no longer show
+	  or tell you what happens when the tower is unfrozen.</p>
       </div>
       <div class="continue">
 	<button type="button" onclick="experiment.nextTrial();">Start</button>
@@ -178,18 +179,6 @@
 	  question, and then just a few more trials like the ones you
 	  did at the beginning.</p>
 
-	<p><b>Which color do you think is heavier?</b></p>
-	<div id="weight-query">
-	  <div id="yellow-heavy">
-	    <img src="resources/images/scales-ry-yellow.png" />
-	    <button type="button" onclick="experiment.submitRatio('yellow');">Yellow</button>
-	  </div>
-	  <div id="red-heavy">
-	    <img src="resources/images/scales-ry-red.png" />
-	    <button type="button" onclick="experiment.submitRatio('red');">Red</button>
-	  </div>
-	  <div class="spacer"></div>
-	</div>
 	<!-- <p>We will not <i>show</i> you what happens when the tower is -->
 	<!--   unfrozen, but we will <i>tell</i> you.</p> -->
       </div>
@@ -248,6 +237,20 @@
 	    <div class="feedback" id="stable-feedback"><p>Tower does not fall</p></div>
 	    <div class="feedback" id="unstable-feedback"><p>Tower falls</p></div>
 	  </div>
+	</div>
+      </div>
+      <div id="query-ratio-container" class="blue">
+      	<p><b>Which color do you think is heavier?</b></p>
+	<div id="ratio-query">
+	  <div id="yellow-heavy">
+	    <img src="resources/images/scales-ry-yellow.png" />
+	    <button type="button" onclick="experiment.submitResponse('yellow');">Yellow</button>
+	  </div>
+	  <div id="red-heavy">
+	    <img src="resources/images/scales-ry-red.png" />
+	    <button type="button" onclick="experiment.submitResponse('red');">Red</button>
+	  </div>
+	  <div class="spacer"></div>
 	</div>
       </div>
     </div>

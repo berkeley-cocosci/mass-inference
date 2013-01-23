@@ -10,7 +10,7 @@
 
 // "use strict";
 
-var DEBUG = false;
+var DEBUG = true;
 
 var actionUrl = "index.py?a=";
 var videoUrl = "resources/video/";
@@ -360,9 +360,13 @@ var experiment = {
 
 	    // different instructions depending on feedback condition
 	    if (experiment.condition.split("-")[1] === "fb") {
-		$($("#feedback-info").find("p")[1]).hide();
+		// $($("#feedback-info").find("p")[1]).hide();
+		$(".fb").show();
+		$(".nfb").hide();
 	    } else {
-		$($("#feedback-info").find("p")[0]).hide();
+		// $($("#feedback-info").find("p")[0]).hide();
+		$(".fb").hide();
+		$(".nfb").show();
 	    }
 
             slides.show("instructions1a");
@@ -399,10 +403,21 @@ var experiment = {
                     slides.show("finished");
                 }
 
+		// Querying the ratio
+		else if (info.trial == 'query ratio') {
+		    $("#question-container").hide();
+		    $("#video-container").hide();
+		    $("#query-ratio-container").show();
+                    slides.show("trial");
+		}		    
+
                 // Normal trial
                 else {
                     experiment.trial = info.trial;
                     experiment.stimulus = info.stimulus;
+		    $("#question-container").show();
+		    $("#video-container").show();
+		    $("#query-ratio-container").hide();
                     slides.show("trial");
                 }
             });
@@ -440,6 +455,10 @@ var experiment = {
         if (experiment.index !== msg.index) {
             return;
 	}
+	if (msg.trial == "query ratio") {
+	    experiment.nextTrial();
+	    return;
+	}
 
         experiment.textFeedback = msg.feedback;
         experiment.showVideoFeedback = msg.visual;
@@ -447,16 +466,16 @@ var experiment = {
         slides.trial.showFeedback();
     },
 
-    // Get the ratio from the user and submit it to the server
-    submitRatio : function(color) {
-        var data = {
-            pid : experiment.pid,
-            validationCode : experiment.validationCode,
-            "color" : color,
-        };
+    // // Get the ratio from the user and submit it to the server
+    // submitRatio : function(color) {
+    //     var data = {
+    //         pid : experiment.pid,
+    //         validationCode : experiment.validationCode,
+    //         "color" : color,
+    //     };
 
-        post("submitRatio", data, experiment.nextTrial);
-    },
+    //     post("submitRatio", data, experiment.nextTrial);
+    // },
 
     decline : function() {
         slides.show("declined");

@@ -131,7 +131,9 @@ div.example-container {
     display: block;
 }
 
-#weight-query div {
+#query-ratio-container { display: none; }
+
+#ratio-query div {
     text-align: center;
     /* float: left; */
     /* position: relative; */
@@ -139,14 +141,14 @@ div.example-container {
     margin: .625em 0;
 }
 
-#weight-query img {
+#ratio-query img {
     width: 90%;
     display: block;
     margin: .625em auto;
     border-bottom: 2px solid black;
 }
 
-#weight-query button {
+#ratio-query button {
     width: 30%;
     padding: .5em 1em;
 }
