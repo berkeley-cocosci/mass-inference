@@ -30,7 +30,7 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = True
+F_CHECK_IP = False
 
 DATA_DIR = "data"
 CONF_DIR = "config"
@@ -165,7 +165,7 @@ def gen_completion_code(pid):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
     with open(datafile, "r") as fh:
         data = fh.read()
-    code = sha1(data).hexdigest()
+    code = sha1(str(pid) + data).hexdigest()
     dbt.set_completion_code(pid, code)
     return code
 
@@ -339,6 +339,19 @@ def submit(form):
     print http_content_type("application/json")
     print json.dumps(response)
 
+def submitRatio(form):
+    # make sure the pid is valid
+    info = validate(form)
+    if info is None:
+        return error("Bad pid and/or validation code")
+    pid, validation_code = info
+
+    # extract all the relevant information
+    heavy_color = form.getvalue("color")
+    dbt.set_heavy_color(pid, heavy_color)
+
+    print http_status(200)
+    print
     
 #################
 # Request handling
@@ -347,6 +360,7 @@ actions = {
     "initialize": initialize,
     "trialinfo": getTrialInfo,
     "submit": submit,
+    "submitRatio" : submitRatio,
     }
 
 # get the request

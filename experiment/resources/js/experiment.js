@@ -306,7 +306,7 @@ var slides = {
     // ----------------------------------------------------------------
     finished : {
         setup : function () {
-            $("#code").html(experiment.validationCode);
+            $("#code").html(experiment.completionCode);
         },
 
         teardown : function () {}
@@ -395,7 +395,7 @@ var experiment = {
 
                 // Finished the post test
                 else if (info.trial === 'finished posttest') {
-                    experiment.completionCode = info.code;
+                    experiment.completionCode = info.completionCode;
                     slides.show("finished");
                 }
 
@@ -445,6 +445,17 @@ var experiment = {
         experiment.showVideoFeedback = msg.visual;
 	experiment.showTextFeedback = msg.text;
         slides.trial.showFeedback();
+    },
+
+    // Get the ratio from the user and submit it to the server
+    submitRatio : function(color) {
+        var data = {
+            pid : experiment.pid,
+            validationCode : experiment.validationCode,
+            "color" : color,
+        };
+
+        post("submitRatio", data, experiment.nextTrial);
     },
 
     decline : function() {
@@ -501,6 +512,8 @@ $(document).ready(function () {
         ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
         function () {
             slides.show("index");
+	    // $(".slide").show();
+	    // $("#instructions3").show();
         });
 });
 

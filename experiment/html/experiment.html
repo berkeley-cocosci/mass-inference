@@ -142,8 +142,9 @@
       <h1>Instructions</h1>
       <div class="blue">
 	<p>Good! Now, blocks can be either <i>heavy</i>
-	  or <i>light</i>, depending on color:</p>
-	<div id="scales"><img src="resources/images/scales.png" alt="" /></div>
+	  or <i>light</i>, depending on color. However, you don't know
+	  which is the heavier color:</p>
+	<div id="scales"><img src="resources/images/scales-ry.png" alt="" /></div>
       </div>
       <div class="example-container">
 	<div id="mass-example" class="example is-splash">
@@ -173,14 +174,28 @@
     <div class="slide" id="instructions3">
       <h1>Instructions</h1>
       <div class="blue">
-	<p>Great, you're almost done! Now just a few more trials like
-	  the ones you did at the beginning.</p>
+	<p>Great, you're almost done! Please answer the following
+	  question, and then just a few more trials like the ones you
+	  did at the beginning.</p>
+
+	<p><b>Which color do you think is heavier?</b></p>
+	<div id="weight-query">
+	  <div id="yellow-heavy">
+	    <img src="resources/images/scales-ry-yellow.png" />
+	    <button type="button" onclick="experiment.submitRatio('yellow');">Yellow</button>
+	  </div>
+	  <div id="red-heavy">
+	    <img src="resources/images/scales-ry-red.png" />
+	    <button type="button" onclick="experiment.submitRatio('red');">Red</button>
+	  </div>
+	  <div class="spacer"></div>
+	</div>
 	<!-- <p>We will not <i>show</i> you what happens when the tower is -->
 	<!--   unfrozen, but we will <i>tell</i> you.</p> -->
       </div>
-      <div class="continue">
-	<button type="button" onclick="experiment.nextTrial();">Start</button>
-      </div>
+      <!-- <div class="continue"> -->
+      <!-- 	<button type="button" onclick="experiment.nextTrial();">Start</button> -->
+      <!-- </div> -->
     </div>
     
     <!-- Trial Slide -->
