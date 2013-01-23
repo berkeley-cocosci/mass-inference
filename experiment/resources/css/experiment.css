@@ -143,6 +143,7 @@ div.example-container {
     width: 90%;
     display: block;
     margin: .625em auto;
+    border-bottom: 2px solid black;
 }
 
 #weight-query button {
@@ -208,10 +209,11 @@ div.example-container {
 }
 
 #question-image img { 
-    height: 100%;
-    border-bottom: 2px solid black;
-    padding: 0 35px;
-    display: none;
+    height: 2em;
+    border-bottom: 1px solid black;
+    /* padding: 0 35px; */
+    /* display: none; */
+    margin: .5em auto;
 }
 
 /* Video player */
