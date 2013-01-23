@@ -416,6 +416,7 @@ var experiment = {
 		else if (info.trial == 'query ratio') {
 		    $("#question-container").hide();
 		    $("#video-container").hide();
+		    $("#reload-container").hide();
 		    $("#query-ratio-container").show();
                     slides.show("trial");
 		}		    
@@ -426,6 +427,7 @@ var experiment = {
                     experiment.stimulus = info.stimulus;
 		    $("#question-container").show();
 		    $("#video-container").show();
+		    $("#reload-container").show();
 		    $("#query-ratio-container").hide();
                     slides.show("trial");
                 }
