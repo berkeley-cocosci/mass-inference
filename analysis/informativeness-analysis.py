@@ -72,8 +72,9 @@ ext = ['png', 'pdf']
 f_save = False
 f_close = False
 smooth = True
-idx = int(np.nonzero(ratios==10)[0][0])
-nidx = int(np.nonzero(ratios==0.1)[0][0])
+idx0 = int(np.nonzero(ratios==10)[0][0])
+idx1 = int(np.nonzero(ratios==0.1)[0][0])
+idx = [idx0, idx1]
 
 # <codecell>
 
@@ -88,50 +89,50 @@ model_lh, model_joint, model_theta = mo.ModelObserver(
 
 # <codecell>
 
-def KL(qi, axis=-1):
+def KL(qi, idx):
     """Compute the KL divergence between qi and pi, where pi is a
-    multinomial centered around idx (defined above).
+    multinomial centered around idx.
 
     """
-    pi = np.zeros(ratios.shape) + (1./n_kappas)
-    pi[idx] += nsamps
+    pi = (np.eye(n_kappas) + (1./n_kappas))[idx][:, None]
+    for i, ix in enumerate(idx):
+	pi[i, :, ix] += nsamps
     pi /= nsamps + 1
-    kl = np.sum(np.log(pi / qi)*pi, axis=axis)
+    kl = np.sum(np.log(pi / qi)*pi, axis=-1)
     return kl
     
 
 # <codecell>
 
-plt.close('all')
 
 # figure out the starting stimulus (minimum entropy=most information)
 fb = feedback[:, idx, 0]
-lh = model_lh[idx, 1:].copy()
+lh = model_lh[idx][:, 1:].copy()
 p = normalize(lh, axis=-1)[1]
-H = KL(np.exp(p))
+H = KL(np.exp(p), idx)
 
-order = [np.argmin(H)]
+order = [np.argmin(np.sum(H**2, axis=0))]
 nums = [stimuli[0, order[0]].split("_")[1]]
     
-joint = lh[order[0]].copy()
+joint = lh[:, order[0]].copy()
 allJoint = [joint.copy()]
-allH = [H[order[0]]]
+allH = [H[:, order[0]]]
 
 T = 48
 for t in xrange(T-1):
     # calculate possible posterior values for each stimulus
-    p = normalize(joint[None, :] + lh, axis=-1)[1]
+    p = normalize(joint[:, None] + lh, axis=-1)[1]
     # compute entropies
-    H = KL(np.exp(p))
+    H = KL(np.exp(p), idx)
     # choose stimulus that would result in the lowest entropy, without
     # repeating stimuli
-    for s in np.argsort(H):
+    for s in np.argsort(np.sum(H**2, axis=0)):
 	num = stimuli[0, s].split("_")[1]
 	if (s not in order) and (num not in nums):
 	    order.append(s)
 	    nums.append(num)
-	    allH.append(H[s])
-	    joint += lh[order[-1]]
+	    allH.append(H[:, s])
+	    joint += lh[:, order[-1]]
 	    allJoint.append(joint.copy())
 	    break
 
@@ -140,27 +141,32 @@ nums = np.array(nums)
 allJoint = np.array(allJoint)
 allH = np.array(allH)    
 
-plt.figure()
-plt.clf()
-plt.suptitle(ratios[idx])
-plt.subplot(1, 2, 1)
-plt.plot(allH)
-plt.ylim(0, 3)
 
-lat.plot_theta(
-    1, 2, 2,
-    np.exp(normalize(allJoint, axis=-1)[1]),
-    "",
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
+# <codecell>
+
+plt.close('all')
+for i, ix in enumerate(idx):
+    plt.figure()
+    plt.clf()
+    plt.suptitle(ratios[ix])
+    plt.subplot(1, 2, 1)
+    plt.plot(allH[:, i])
+    plt.ylim(0, 3)
+
+    lat.plot_theta(
+	1, 2, 2,
+        np.exp(normalize(allJoint[:, i], axis=-1)[1]),
+	"",
+	exp=1.3,
+	cmap=cmap,
+	fontsize=14)
 
 # <codecell>
 
 N = 20
 C = 0
-yes = np.nonzero(feedback[:, idx, 0][order] == 0)[0]
-no = np.nonzero(feedback[:, idx, 0][order] == 1)[0]
+yes = np.nonzero(feedback[:, :, 0][:, idx[0]][order] == 0)[0]
+no = np.nonzero(feedback[:, :, 0][:, idx[0]][order] == 1)[0]
 
 mass_example = stimuli[0, order[yes[-1]]]
 exp = order[np.sort(np.hstack([
@@ -176,14 +182,14 @@ eqorder = np.hstack([exp, catch])
 print eqorder
 print stimuli[0, eqorder]
 print fb[eqorder]
-print np.sum(fb[eqorder])
+print np.sum(fb[eqorder], axis=0)
 
 # <codecell>
 
 np.random.shuffle(eqorder)
 print eqorder 
 exp_ipe_samps = ipe_samps[eqorder]
-exp_feedback = feedback[eqorder][:, [idx]]
+exp_feedback = feedback[eqorder][:, idx]
 
 exp_lh, exp_joint, exp_theta = mo.ModelObserver(
     exp_ipe_samps,
@@ -192,40 +198,39 @@ exp_lh, exp_joint, exp_theta = mo.ModelObserver(
     respond=False,
     smooth=smooth)
 
+close("all")
 lat.plot_theta(
-    1, 1, 1,
+    1, 2, 1,
     np.exp(exp_theta[0]),
     "",
     exp=1.3,
     cmap=cmap,
     fontsize=14)
+plt.title(ratios[idx[0]])
+lat.plot_theta(
+    1, 2, 2,
+    np.exp(exp_theta[1]),
+    "",
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+plt.title(ratios[idx[1]])
 
 # <codecell>
 
-exp_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, exp])]
-catch_stims = ["%s~kappa-%s" % (x, kappas[idx]) for x in np.sort(stimuli[0, catch])]
-l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[idx])
-with open(l, "w") as fh:
-    lines = "\n".join(exp_stims)
-    fh.write(lines)
-l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[idx])
-with open(l, "w") as fh:
-    lines = "\n".join(catch_stims)
-    fh.write(lines)
-    
-
-# <codecell>
-
-exp_stims = ["%s~kappa-%s" % (x, kappas[nidx]) for x in np.sort(stimuli[0, exp])]
-catch_stims = ["%s~kappa-%s" % (x, kappas[nidx]) for x in np.sort(stimuli[0, catch])]
-l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[nidx])
-with open(l, "w") as fh:
-    lines = "\n".join(exp_stims)
-    fh.write(lines)
-l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[nidx])
-with open(l, "w") as fh:
-    lines = "\n".join(catch_stims)
-    fh.write(lines)
+for i, ix in enumerate(idx):
+    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[0, exp])]
+    catch_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[0, catch])]
+    l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[ix])
+    print l
+    with open(l, "w") as fh:
+	lines = "\n".join(exp_stims)
+	fh.write(lines)
+    # l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[ix])
+    # print l
+    # with open(l, "w") as fh:
+    # 	lines = "\n".join(catch_stims)
+    # 	fh.write(lines)
     
 
 # <codecell>
@@ -301,13 +306,14 @@ print train_catch_stims
 # <codecell>
 
 l = os.path.join(listpath, "mass-towers-stability-learning-training")
+print l
 with open(l, "w") as fh:
     lines = "\n".join(train_stims)
     fh.write(lines)
-l = os.path.join(listpath, "mass-towers-stability-learning-training-catch")
-with open(l, "w") as fh:
-    lines = "\n".join(train_catch_stims)
-    fh.write(lines)
+# l = os.path.join(listpath, "mass-towers-stability-learning-training-catch")
+# with open(l, "w") as fh:
+#     lines = "\n".join(train_catch_stims)
+#     fh.write(lines)
 
 # <codecell>
 
@@ -318,21 +324,25 @@ print "unstable:", unstable_example
 # <codecell>
 
 l = os.path.join(listpath, "stable-example")
+print l
 with open(l, "w") as fh:
     lines = "\n".join([stable_example])
     fh.write(lines)
 l = os.path.join(listpath, "unstable-example")
+print l
 with open(l, "w") as fh:
     lines = "\n".join([unstable_example])
     fh.write(lines)
-l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[idx])
-with open(l, "w") as fh:
-    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[idx])])
-    fh.write(lines)
-l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
-with open(l, "w") as fh:
-    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
-    fh.write(lines)
+for i, ix in enumerate(idx):
+    l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[ix])
+    print l
+    with open(l, "w") as fh:
+	lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
+	fh.write(lines)
+# l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
+# with open(l, "w") as fh:
+#     lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
+#     fh.write(lines)
 
 # <codecell>
 
@@ -340,47 +350,51 @@ import yaml
 fh = open("../../turk-experiment/www/config/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
-    fh.write(",".join(
-	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[idx]),
-	 str(not(bool(feedback[i,idx,0]))),
-	 str(False)]
-	 ) + "\n")
-    fh.write(",".join(
-    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[idx]),
-    	 str(not(bool(feedback[i,idx,0]))),
-    	 str(False)]
-    	 ) + "\n")
-    fh.write(",".join(
-	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
-	 str(not(bool(feedback[i,nidx,0]))),
-	 str(False)]
-	 ) + "\n")
-    fh.write(",".join(
-    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
-    	 str(not(bool(feedback[i,nidx,0]))),
-    	 str(False)]
-    	 ) + "\n")
+    for ix in idx:
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[ix]),
+	     str(not(bool(feedback[i,ix,0]))),
+	     str(False)]
+	     ) + "\n")
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[ix]),
+	     str(not(bool(feedback[i,ix,0]))),
+	     str(False)]
+	     ) + "\n")
+    # fh.write(",".join(
+    # 	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
+    # 	 str(not(bool(feedback[i,nidx,0]))),
+    # 	 str(False)]
+    # 	 ) + "\n")
+    # fh.write(",".join(
+    # 	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
+    # 	 str(not(bool(feedback[i,nidx,0]))),
+    # 	 str(False)]
+    # 	 ) + "\n")
+
 for i in catch:
-    fh.write(",".join(
-	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[idx]),
-	 str(not(bool(feedback[i,idx,0]))),
-	 str(True)]
-	 ) + "\n")
-    fh.write(",".join(
-    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[idx]),
-    	 str(not(bool(feedback[i,idx,0]))),
-    	 str(True)]
-    	 ) + "\n")
-    fh.write(",".join(
-	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
-	 str(not(bool(feedback[i,nidx,0]))),
-	 str(True)]
-	 ) + "\n")
-    fh.write(",".join(
-    	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
-    	 str(not(bool(feedback[i,nidx,0]))),
-    	 str(True)]
-    	 ) + "\n")
+    for ix in idx:
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[ix]),
+	     str(not(bool(feedback[i,ix,0]))),
+	     str(True)]
+	     ) + "\n")
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[ix]),
+	     str(not(bool(feedback[i,ix,0]))),
+	     str(True)]
+	     ) + "\n")
+    # fh.write(",".join(
+    # 	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
+    # 	 str(not(bool(feedback[i,nidx,0]))),
+    # 	 str(True)]
+    # 	 ) + "\n")
+    # fh.write(",".join(
+    # 	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
+    # 	 str(not(bool(feedback[i,nidx,0]))),
+    # 	 str(True)]
+    # 	 ) + "\n")
+
 for i in train:
     fh.write(",".join(
 	[original[i],
