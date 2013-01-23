@@ -68,10 +68,10 @@ function formatImage(image) {
 function getVideoFormats(video) {
     var prefix = videoUrl + video + ".";
     var formats = [
-        { mp4: prefix + "mp4" },
-        { ogg: prefix + "ogg" },
         { flv: prefix + "flv" },
-        { wmv: prefix + "wmv" }];
+        { wmv: prefix + "wmv" },
+        { ogg: prefix + "ogg" },
+        { mp4: prefix + "mp4" }];
     return formats;
 }
 
@@ -200,7 +200,11 @@ var slides = {
 
     // ----------------------------------------------------------------
     trial : {
+	phase : undefined,
+
         setup : function () {
+	    slides.trial.phase = "setup";
+
             // Update progress bar
             slides.trial.updateProgress();
 
@@ -232,6 +236,7 @@ var slides = {
 
         // User hits the 'play' button
         play : function () {
+	    slides.trial.phase = "play";
             if ($f($("#player")).disabled) {
                 $f($("#player")).disable();
 	    }
@@ -252,12 +257,14 @@ var slides = {
 
         // Show the responses to the user
         showQuery : function () {
+	    slides.trial.phase = "showQuery";
             debug("showing responses");
             setBgImage("responses", experiment.stimulus + "B");
             $("#responses").fadeIn(fade);
         },
 
         showFeedback : function () {
+	    slides.trial.phase = "showFeedback";
 
             var stable = experiment.textFeedback === "stable";
             var videofb = experiment.showVideoFeedback;
@@ -285,17 +292,19 @@ var slides = {
 		}
                 $f($("#player")).unbind("finish").bind(
                     "finish", function (e, api) {
+			slides.trial.phase = undefined;
                         if (!api.disabled) {
-                            debug("done showing feedback");
                             api.disable();
-                            experiment.nextTrial();
                         }
+                        debug("done showing feedback");
+                        experiment.nextTrial();
                     }).load(getVideoFormats(experiment.stimulus + "-fb"));
             }
             
             // otherwise just show text
             else {
                 setTimeout(function () {
+		    slides.trial.phase = undefined;
                     experiment.nextTrial();
                 }, time);
             }
@@ -348,7 +357,7 @@ var experiment = {
     showQuestionImage : false,
     textFeedback : undefined,
     showVideoFeedback : undefined,
-    
+
     initialize : function() {
         post('initialize', { condition: experiment.condition }, function (msg) {
             var info = $.parseJSON(msg);
@@ -488,6 +497,13 @@ var experiment = {
         if (experiment.errorCode !== 405) {
             slides.show("error");
         }
+    },
+
+    reloadTrial : function () {
+	var phase = slides.trial.phase;
+	if (phase != undefined) {
+	    slides.trial[phase]();
+	}
     }
 };
 
