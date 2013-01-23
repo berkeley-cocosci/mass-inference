@@ -357,19 +357,19 @@ def submit(form):
     print http_content_type("application/json")
     print json.dumps(response)
 
-def submitRatio(form):
-    # make sure the pid is valid
-    info = validate(form)
-    if info is None:
-        return error("Bad pid and/or validation code")
-    pid, validation_code = info
+# def submitRatio(form):
+#     # make sure the pid is valid
+#     info = validate(form)
+#     if info is None:
+#         return error("Bad pid and/or validation code")
+#     pid, validation_code = info
 
-    # extract all the relevant information
-    heavy_color = form.getvalue("color")
-    dbt.set_heavy_color(pid, heavy_color)
+#     # extract all the relevant information
+#     heavy_color = form.getvalue("color")
+#     dbt.set_heavy_color(pid, heavy_color)
 
-    print http_status(200)
-    print
+#     print http_status(200)
+#     print
     
 #################
 # Request handling

@@ -24,7 +24,7 @@ def create():
         cur = conn.cursor()
         
         # create participants table
-        cur.execute("CREATE TABLE Participants(pid INTEGER PRIMARY KEY AUTOINCREMENT, validation_code TEXT, condition TEXT, ip_address TEXT, heavy_color TEXT, completion_code TEXT)")
+        cur.execute("CREATE TABLE Participants(pid INTEGER PRIMARY KEY AUTOINCREMENT, validation_code TEXT, condition TEXT, ip_address TEXT, completion_code TEXT)")
         print "Created 'Participants' table"
 
         # # create and conditions table
@@ -88,7 +88,7 @@ def add_participant(ip_address, condition, f_check_ip):
     
             # add a new row for this participant
             cur.execute(
-                "INSERT INTO Participants VALUES (NULL, ?, ?, ?, NULL, NULL)",
+                "INSERT INTO Participants VALUES (NULL, ?, ?, ?, NULL)",
                 (validation_code, condition, ip_address))
 
             # get the new participant's info
@@ -126,13 +126,13 @@ def set_completion_code(pid, completion_code):
             "UPDATE Participants SET completion_code=? WHERE pid=?",
             (completion_code, pid))
 
-def set_heavy_color(pid, heavy_color):
-    conn = sql.connect(DATA_DB)
-    with conn:
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE Participants SET heavy_color=? WHERE pid=?",
-            (heavy_color, pid))
+# def set_heavy_color(pid, heavy_color):
+#     conn = sql.connect(DATA_DB)
+#     with conn:
+#         cur = conn.cursor()
+#         cur.execute(
+#             "UPDATE Participants SET heavy_color=? WHERE pid=?",
+#             (heavy_color, pid))
 
 def list_participants():
     conn = sql.connect(DATA_DB)
@@ -142,11 +142,11 @@ def list_participants():
         cur.execute("SELECT * FROM Participants")
         col_names = [cn[0] for cn in cur.description]
         rows = cur.fetchall()
-        colstr = "%s  %-40s  %-15s  %-15s  %-11s  %-40s" % tuple(col_names)
+        colstr = "%s  %-40s  %-15s  %-15s  %-40s" % tuple(col_names)
         print colstr
         print "-" * len(colstr)
         for row in rows:
-            print "%3s  %40s  %-15s  %-15s  %-11s  %-40s" % row
+            print "%3s  %40s  %-15s  %-15s  %-40s" % row
 
 # # some testing code
 # create()

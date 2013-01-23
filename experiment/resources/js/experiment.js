@@ -10,7 +10,7 @@
 
 // "use strict";
 
-var DEBUG = true;
+var DEBUG = false;
 
 var actionUrl = "index.py?a=";
 var videoUrl = "resources/video/";
