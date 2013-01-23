@@ -198,25 +198,31 @@ def compute_ll(resp, theta, order, f_smooth):
 # <codecell>
 
 ######################################################################
+## Load stimuli
+######################################################################
+
+listpath = os.path.join(cogphysics.CPOBJ_LIST_PATH,
+			"mass-towers-stability-learning~kappa-1.0")
+with open(listpath, "r") as fh:
+    Stims = np.array([x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""])
+
+# <codecell>
+
+training = {}
+posttest = {}
+experiment = {}
+    
+
+# <codecell>
+
+######################################################################
 ## Load human data
 ######################################################################
 
-reload(lat)
-
-training = {
-    'A-fb': lat.load_turk_df("A-fb", "training"),
-    'A-nfb': lat.load_turk_df("A-nfb", "training")
-    }
-
-posttest = {
-    'A-fb': lat.load_turk_df("A-fb", "posttest"),
-    'A-nfb': lat.load_turk_df("A-nfb", "posttest")
-    }
-
-experiment = {
-    'A-fb': lat.load_turk_df("A-fb", "experiment"),
-    'A-nfb': lat.load_turk_df("A-nfb", "experiment")
-    }
+for cond in ['A-fb', 'A-nfb']:
+    training[cond] = lat.load_turk_df(cond, "training")
+    posttest[cond] = lat.load_turk_df(cond, "posttest")
+    experiment[cond] = lat.load_turk_df(cond, "experiment")
 
 # <codecell>
 
@@ -232,7 +238,8 @@ rawtruth0, rawipe0, rawsstim, kappas = lat.load_model("stability")
 truth0 = make_truth_df(rawtruth0, rawsstim, kappas, nthresh0)
 ipe0 = make_ipe_df(rawipe0, rawsstim, kappas, nthresh)
 
-hstim = np.array([x.split("~")[0] for x in zip(*experiment['A-fb'].columns)[1]])
+# hstim = np.array([x.split("~")[0] for x in zip(*experiment['A-fb'].columns)[1]])
+hstim = Stims.copy() 
 sstim = np.array(ipe0.columns)
 idx = np.nonzero((sstim[:, None] == hstim[None, :]))[0]
 
@@ -278,21 +285,53 @@ cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 ## Generate fake human data
 ######################################################################
 nfake = 1000
-cond = 'A-fb'
+for cond in ['B-nfb-0.1', 'B-fb-0.1', 'B-nfb-10', 'B-fb-10', 'B-nfb']:
 
-# trial ordering
-cols = experiment[cond].columns
-order = np.argsort(zip(*cols)[0])
-undo_order = np.argsort(order)
+    # trial ordering
+    if cond in experiment:
+	cols = experiment[cond].columns
+    else:
+	cols = zip(Stims, np.arange(n_kappas))
 
-# learning model beliefs
-model_lh, model_joint, model_theta = mo.ModelObserver(
-    ipe_samps[order],
-    feedback[order][:, None],
-    outcomes=None,
-    respond=False,
-    p_ignore_stimulus=p_ignore_stimulus,
-    smooth=f_smooth)
+    order = np.argsort(zip(*cols)[0])
+    undo_order = np.argsort(order)
+    
+    # learning model beliefs
+    model_lh, model_joint, model_theta = mo.ModelObserver(
+	ipe_samps[order],
+	feedback[order][:, None],
+	outcomes=None,
+	respond=False,
+	p_ignore_stimulus=p_ignore_stimulus,
+	smooth=f_smooth)
+    
+    p_outcomes = np.empty((n_trial,))
+    args = cond.split("-")
+    if len(args) > 2:
+	tidx = list(ratios).index(float(args[2]))
+    else:
+	tidx = None
+	
+    for t in xrange(n_trial):
+	if args[1] == "nfb":
+	    if tidx is None:
+		theta = normalize(np.log(np.ones(n_kappas)))[1]
+	    else:
+		theta = np.log(np.zeros(n_kappas))
+		theta[tidx] = 0
+		
+	elif args[1] == "fb":
+	    theta = model_theta[tidx, t]
+			
+	p_outcomes[t] = np.exp(mo.predict(
+		theta[None],
+		outcomes[:, None], 
+		ipe_samps[order][t],
+		f_smooth)).ravel()[1]
+	responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
+	experiment[cond + "-mo"] = pd.DataFrame(
+		responses[:, undo_order], 
+		columns=cols)
 
 # <codecell>
 
@@ -306,89 +345,21 @@ lat.save("images/ideal_learning_observers.png", close=False)
 
 # <codecell>
 
-# ideal observer model (k=0.1)
-tidx = list(kappas).index(-1.0)
-p_outcomes = np.empty((n_trial,))
-for t in xrange(n_trial):
-    p_outcomes[t] = np.exp(mo.predict(
-	model_theta[tidx, t][None],
-	outcomes[:, None], 
-	ipe_samps[order][t],
-	f_smooth)).ravel()[1]
-responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
-experiment[cond + "-ideal0.1-mo"] = pd.DataFrame(
-    responses[:, undo_order], 
-    columns=cols)
-
-# <codecell>
-
-# ideal observer model (k=10)
-p_outcomes = np.empty((n_trial,))
-for t in xrange(n_trial):
-    p_outcomes[t] = np.exp(mo.predict(
-	model_theta[list(kappas).index(1.0), t][None],
-	outcomes[:, None], 
-	ipe_samps[order][t],
-	f_smooth)).ravel()[1]
-responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
-experiment[cond + "-ideal10-mo"] = pd.DataFrame(
-    responses[:, undo_order], 
-    columns=cols)
-
-# <codecell>
-
-# fixed r=0.1 model
-p_outcomes = np.empty((n_trial,))
-for t in xrange(n_trial):
-    theta = np.log(np.zeros(n_kappas))
-    theta[list(kappas).index(-1.0)] = 0
-    theta = normalize(theta)[1]
-    p_outcomes[t] = np.exp(mo.predict(
-	theta[None],
-	outcomes[:, None], 
-	ipe_samps[order][t],
-	f_smooth)).ravel()[1]
-responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
-experiment[cond + "-fixed0.1-mo"] = pd.DataFrame(
-    responses[:, undo_order], 
-    columns=cols)
-
-# <codecell>
-
-# fixed r=10.0 model
-p_outcomes = np.empty((n_trial,))
-for t in xrange(n_trial):
-    theta = np.log(np.zeros(n_kappas))
-    theta[list(ratios).index(10.0)] = 0
-    theta = normalize(theta)[1]
-    p_outcomes[t] = np.exp(mo.predict(
-	theta[None],
-	outcomes[:, None], 
-	ipe_samps[order][t],
-	f_smooth)).ravel()[1]
-responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
-experiment[cond + "-fixed10-mo"] = pd.DataFrame(
-    responses[:, undo_order], 
-    columns=cols)
-
-# <codecell>
-
-conds = [
-    'A-fb-fixed0.1-mo',
-    'A-fb-ideal0.1-mo', 
-    'A-fb-fixed10-mo', 
-    'A-fb-ideal10-mo',
-    'A-nfb', 
-    'A-fb',
-    ]
 cond_labels = {
-    'A-nfb': 'No feedback',
-    'A-fb': 'Feedback',
-    'A-fb-ideal0.1-mo': 'Learning observer, r=0.1',
-    'A-fb-ideal10-mo': 'Learning observer, r=10',
-    'A-fb-fixed0.1-mo': 'Fixed Observer, r=0.1',
-    'A-fb-fixed10-mo': 'Fixed Observer, r=10'
+    # 'A-nfb': 'No feedback',
+    # 'A-fb': 'Feedback',
+    # 'A-fb-ideal0.1-mo': 'Learning observer, r=0.1',
+    # 'A-fb-ideal10-mo': 'Learning observer, r=10',
+    # 'A-fb-fixed0.1-mo': 'Fixed Observer, r=0.1',
+    # 'A-fb-fixed10-mo': 'Fixed Observer, r=10'
+    'B-nfb-mo': 'uniform fixed observer',
+    'B-nfb-0.1-mo': 'r=0.1 fixed observer',
+    'B-nfb-10-mo': 'r=10 fixed observer',
+    'B-fb-0.1-mo': 'r=0.1 learning observer',
+    'B-fb-10-mo': 'r=10 learning observer',
     }
+condsort = np.argsort(cond_labels.values())
+conds = list([str(x) for x in np.array(cond_labels.keys())[condsort]])
 n_cond = len(conds)
     
 
@@ -524,7 +495,10 @@ def learning_model_lh(ikappa):
     
     for cidx, cond in enumerate(conds):
 	# trial ordering
-	order = np.argsort(zip(*experiment[cond].columns)[0])
+	if cond in experiment:
+	    order = np.argsort(zip(*experiment[cond].columns)[0])
+	else:
+	    order = np.arange(n_kappas)
 	# learning model beliefs
 	model_lh, model_joint, model_theta = mo.ModelObserver(
 	    ipe_samps[order],
