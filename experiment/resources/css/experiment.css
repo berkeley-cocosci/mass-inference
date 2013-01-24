@@ -374,3 +374,10 @@ div.example-container {
     margin: 0px auto;
 }
 
+#error-message {
+    background-color: #FEA;
+    padding: 0 0.625em;
+    border: 1px solid black;
+    margin: 0.625em;
+}
+

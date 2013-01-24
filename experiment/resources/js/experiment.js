@@ -292,12 +292,12 @@ var slides = {
 		}
                 $f($("#player")).unbind("finish").bind(
                     "finish", function (e, api) {
-			slides.trial.phase = undefined;
                         if (!api.disabled) {
+			    slides.trial.phase = undefined;
                             api.disable();
+                            debug("done showing feedback");
+                            experiment.nextTrial();
                         }
-                        debug("done showing feedback");
-                        experiment.nextTrial();
                     }).load(getVideoFormats(experiment.stimulus + "-fb"));
             }
             
@@ -324,8 +324,8 @@ var slides = {
     // ----------------------------------------------------------------
     error : {
         setup : function () {
-            $("#error-title").html(experiment.errorStatus);
-            $("#error-message").html("<p>" + experiment.errorMessage + "</p>");
+            // $($("#error-message").find("p")[0]).html(experiment.errorStatus);
+            $($("#error-message").find("p")[0]).html("<p>" + experiment.errorMessage + "</p>");
         },
 
         teardown : function () {}
@@ -467,6 +467,7 @@ var experiment = {
             return;
 	}
 	if (msg.trial == "query ratio") {
+	    slides.trial.phase = undefined;
 	    experiment.nextTrial();
 	    return;
 	}
