@@ -427,22 +427,181 @@ print "(bootstrap) no-feedback v no-feedback: rho = %.4f +/- %.4f" % (meancorr, 
 
 # <codecell>
 
+def random_model_lh(t0=None, tn=None):
+    if t0 is None:
+	t0 = 0
+    if tn is None:
+	tn = n_trial
+	
+    lh =  np.log(0.5)*(tn-t0)
+    mean = np.array([lh]*n_cond)
+    lower = np.array([lh]*n_cond)
+    upper = np.array([lh]*n_cond)
+    out = np.array([mean, upper, lower]).T
 
-p_response_mean = np.empty((n_kappas, n_cond))
-p_response_sem = np.empty((n_kappas, n_cond))
+    return out
+	
 
-for cidx, cond in enumerate(conds):
-    hdata = np.asarray(experiment[cond])[:, None]
-    sdata = np.asarray(ipe)[None]
+# <codecell>
+
+def fixed_model_lh(thetas, t0=None, tn=None):
+    """
+    thetas should be (n_prior, n_trial+1, n_kappas)
+    """
     
-    resp = (hdata * sdata) + ((1-hdata) * (1-sdata))
-    p_response_mean[:, cidx] = np.mean(np.exp(np.log(resp).sum(axis=2)), axis=0)
-    p_response_sem[:, cidx] = scipy.stats.sem(np.exp(np.log(resp).sum(axis=2)), axis=0)
+    if t0 is None:
+	t0 = 0
+    if tn is None:
+	tn = n_trial
+	
+    lh_mean = np.empty((thetas.shape[0], n_cond))
+    lh_sem = np.empty((thetas.shape[0], n_cond))
+
+    for cidx, cond in enumerate(conds):
+	# trial ordering
+	if cond in experiment:
+	    order = np.argsort(zip(*experiment[cond].columns)[0])
+	else:
+	    order = np.arange(n_trial)
+	    
+	order = order[t0:tn]
+
+	# trial-by-trial likelihoods of judgments
+	resp = np.asarray(experiment[cond])
+	trial_ll = np.empty((resp.shape[0], tn-t0, thetas.shape[0]))
+	
+	for tidx, t in enumerate(order):
+	    thetas_t = thetas[:, t]
+	    samps_t = ipe_samps[t]
+	    resp_t = resp[:, t][:, None]
+	    
+	    # compute likelihood of outcomes
+	    p_outcomes = np.exp(mo.predict(
+		    thetas_t, outcomes[:, None], 
+		    samps_t, f_smooth))[:, 1]
+			
+	    # observe response
+	    ll = np.log((resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
+	    trial_ll[:, tidx] = ll
+
+	# overall likelihood
+	lh = np.exp(np.sum(trial_ll, axis=1))
+
+	# hdata = np.asarray(experiment[cond])[:, None]
+	# sdata = np.asarray(ipe)[ikappas][None]
+    
+	# lh = ((hdata * sdata) + ((1-hdata) * (1-sdata)))[:, :, t0:tn]
+	# lht = np.exp(np.log(lh).sum(axis=2))
+	lh_mean[:, cidx] = np.mean(lh, axis=0)
+	lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
+    
+    mean = np.log(lh_mean).T
+    upper = np.log(lh_mean + lh_sem).T
+    lower = np.log(lh_mean - lh_sem).T
+    out = np.array([mean, upper, lower]).T
+
+    return out
+    
+
+# <codecell>
+
+def learning_model_lh(ikappas, t0=None, tn=None):
+    if t0 is None:
+	t0 = 0
+    if tn is None:
+	tn = n_trial
+    
+    lh_mean = np.empty((len(ikappas), n_cond))
+    lh_sem = np.empty((len(ikappas), n_cond))
+
+    for cidx, cond in enumerate(conds):
+	# trial ordering
+	if cond in experiment:
+	    order = np.argsort(zip(*experiment[cond].columns)[0])
+	else:
+	    order = np.arange(n_trial)
+	    
+	order = order[t0:tn]
+
+	# learning model beliefs
+	model_lh, model_joint, model_theta = mo.ModelObserver(
+	    ipe_samps[order],
+	    feedback[order][:, None],
+	    outcomes=None,
+	    respond=False,
+	    p_ignore_stimulus=p_ignore_stimulus,
+	    smooth=f_smooth)
+
+	# trial-by-trial likelihoods of judgments
+	resp = np.asarray(experiment[cond])
+	theta = model_theta[ikappas]
+	trial_ll = np.empty((resp.shape[0], tn-t0, len(ikappas)))
+	
+	for tidx, t in enumerate(order):
+	    thetas_t = theta[:, t]
+	    samps_t = ipe_samps[t]
+	    resp_t = resp[:, t][:, None]
+	    
+	    # compute likelihood of outcomes
+	    p_outcomes = np.exp(mo.predict(
+		    thetas_t, outcomes[:, None], 
+		    samps_t, f_smooth))[:, 1]
+
+	    # observe response
+	    trial_ll[:, tidx] = np.log(
+		(resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
+
+	# overall likelihood
+	lh = np.exp(np.sum(trial_ll, axis=1))
+
+	# mean across participants
+	lh_mean[:, cidx] = np.mean(lh, axis=0)
+	lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
+
+    mean = np.log(lh_mean).T
+    lower = np.log(lh_mean - lh_sem).T
+    upper = np.log(lh_mean + lh_sem).T
+    out = np.array([mean, lower, upper]).T
+	
+    return out
+
+# <codecell>
+
+ir1 = list(kappas).index(0.0)
+ir10 = list(kappas).index(1.0)
+ir01 = list(kappas).index(-1.0)
+
+# random model
+model_random = np.array(random_model_lh())
+
+# fixed models
+thetas = np.zeros((3, n_trial+1, n_kappas))
+thetas[0, :, ir1] = 1
+thetas[1, :, ir10] = 1
+thetas[2, :, ir01] = 1
+model_same, model_true10, model_true01 = fixed_model_lh(np.log(thetas))
+
+# learning models
+model_learn01, model_learn10 = learning_model_lh([ir01, ir10])
+
+# <codecell>
+
+# all the models
+models = np.array([
+    model_random,
+    model_true01,
+    model_learn01,
+    # model_same,
+    model_true10,
+    model_learn10
+    ]).T
+
+# <codecell>
+
+theta = np.log(np.eye(n_kappas)[:, None] * np.ones((n_kappas, n_trial+1, n_kappas)))
+mean, upper, lower = fixed_model_lh(theta).T
 
 x = np.arange(n_kappas)
-upper = np.log(p_response_mean + p_response_sem).T
-lower = np.log(p_response_mean - p_response_sem).T
-mean = np.log(p_response_mean).T
 
 plt.close('all')
 colors = ['r', '#FF9966', '#AAAA00', 'g', 'c', 'b', '#9900FF', 'm']
@@ -464,96 +623,10 @@ lat.save("images/fixed_model_performance.png", close=False)
 
 # <codecell>
 
-# fixed models
-kidx = list(kappas).index(0.0)
-model_same = np.array((
-    mean[:, kidx],
-    np.abs(mean[:, kidx] - lower[:, kidx]),
-    np.abs(mean[:, kidx] - upper[:, kidx]))).T
-
-kidx = list(kappas).index(1.0)
-model_true10 = np.array((
-    mean[:, kidx],
-    np.abs(mean[:, kidx] - lower[:, kidx]),
-    np.abs(mean[:, kidx] - upper[:, kidx]))).T
-
-kidx = list(kappas).index(-1.0)
-model_true01 = np.array((
-    mean[:, kidx],
-    np.abs(mean[:, kidx] - lower[:, kidx]),
-    np.abs(mean[:, kidx] - upper[:, kidx]))).T
-
-# random model
-model_random = np.array([[np.log(0.5)*n_trial, 0, 0]]*n_cond)
-
-# <codecell>
-
-
-def learning_model_lh(ikappa):
-    lh_mean = np.empty(n_cond)
-    lh_sem = np.empty(n_cond)
-    
-    for cidx, cond in enumerate(conds):
-	# trial ordering
-	if cond in experiment:
-	    order = np.argsort(zip(*experiment[cond].columns)[0])
-	else:
-	    order = np.arange(n_kappas)
-	# learning model beliefs
-	model_lh, model_joint, model_theta = mo.ModelObserver(
-	    ipe_samps[order],
-	    feedback[order][:, None],
-	    outcomes=None,
-	    respond=False,
-	    p_ignore_stimulus=p_ignore_stimulus,
-	    smooth=f_smooth)
-
-	# trial-by-trial likelihoods of judgments
-	trial_ll = compute_ll(
-	    np.asarray(experiment[cond]), 
-	    model_theta[ikappa], 
-	    order, f_smooth)
-
-	# overall likelihood
-	lh = np.exp(np.sum(trial_ll, axis=1))
-
-	# mean across participants
-	lh_mean[cidx] = np.mean(lh)
-	lh_sem[cidx] = scipy.stats.sem(lh)
-
-    mean = np.log(lh_mean)
-    lower = np.log(lh_mean - lh_sem)
-    upper = np.log(lh_mean + lh_sem)
-
-    return mean, lower, upper
-
-# <codecell>
-
-# learning models
-mean, lower, upper = learning_model_lh(list(kappas).index(1.0))
-model_learn10 = np.array([mean, np.abs(mean-lower), np.abs(mean-upper)]).T
-
-mean, lower, upper = learning_model_lh(list(kappas).index(-1.0))
-model_learn01 = np.array([mean, np.abs(mean-lower), np.abs(mean-upper)]).T
-
-# <codecell>
-
-# all the models
-models = np.array([
-    model_random,
-    model_true01,
-    model_learn01,
-    # model_same,
-    model_true10,
-    model_learn10
-    ]).T
-
-# <codecell>
-
 # plot model performance
 x0 = np.arange(models.shape[2])
 height = models[0]
-err = models[1:]
+err = np.abs(models[[0]] - models[1:])
 width = 0.7 / n_cond
 
 plt.close('all')
@@ -586,67 +659,61 @@ lat.save("images/model_performance.png", close=False)
 
 # <codecell>
 
+thetas = normalize(np.log(np.ones((1, n_trial+1, n_kappas))), axis=2)[1]
+window = 8
+# lh = np.empty((n_trial-window, n_cond, 3))
+# x = np.arange(n_trial-window)
 
-nsamp = 1000
-ikappa = list(kappas).index(1.0)
-orders = np.array([np.random.permutation(n_trial) for i in xrange(nsamp)])
+# for t in xrange(n_trial-window):
+#     lh[t] = fixed_model_lh(thetas, t, t+window)[0]
 
-# <codecell>
+# plt.close('all')
+# for cidx, cond in enumerate(conds):
+#     plt.fill_between(x, lh[:, cidx, 1], lh[:, cidx, 2],
+# 		     color=colors[cidx], alpha=0.1)
+#     plt.plot(lh[:, cidx, 0], color=colors[cidx], label=cond_labels[cond])
 
-model_thetas = np.empty((nsamp, n_kappas, n_trial+1, n_kappas))
-for i in xrange(model_thetas.shape[0]):
-    if i%10 == 0:
-	print i
-    model_lh, model_joint, model_theta = mo.ModelObserver(
-	ipe_samps[orders[i]],
-	feedback[orders[i]][:, None],
-	outcomes=None,
-	respond=False,
-	p_ignore_stimulus=p_ignore_stimulus,
-	smooth=f_smooth)
-    model_thetas[i] = model_theta
+x0 = np.arange(models.shape[2])
+height = models[0]
+err = np.abs(models[[0]] - models[1:])
+width = 0.7 / n_cond
 
-# <codecell>
+plt.close('all')
+for cidx, cond in enumerate(conds):
+    x = x0 + width*(cidx-(n_cond/2.)) + (width/2.)
+    plt.bar(x, height[cidx], yerr=err[:, cidx], color=colors[cidx], 
+	    ecolor='k', align='center', width=width, label=cond_labels[cond])
 
+plt.xticks(x0, [
+    "Random", 
+    "Fixed\nr=0.1",
+    "Learning\nr=0.1",
+    # "Fixed\nr=1.0", 
+    "Fixed\nr=10.0", 
+    "Learning\nr=10.0"
+    ])
+#plt.ylim(int(np.min(height-err))-1, int(np.max(height))+1)
+plt.ylim(-25, -5)
+plt.xlim(x0.min()-0.5, x0.max()+0.5)
+plt.legend(loc=0)
+plt.xlabel("Model", fontsize=14)
+plt.ylabel("Log likelihood of responses, $\Pr(J|S,B)$", fontsize=14)
+plt.title("Likelihood of human and ideal observer judgments", fontsize=16)
 
-p_responses = np.empty((3, n_kappas, nsamp, n_trial))
-theta_fixed = np.log(np.eye(n_kappas))
-
-theta_uniform = normalize(np.log(np.ones(n_kappas)))[1]
-sdata = np.asarray(ipe)
-
-for i in xrange(nsamp):
-    if i%10 == 0:
-	print i
-    sd = sdata[ikappa, orders[i]]
-    for t in xrange(n_trial):
-	# learning
-	p_outcomes = np.exp(mo.predict(
-	    model_thetas[i, :, t],
-	    outcomes[:, None], 
-	    ipe_samps[orders[i]][t],
-	    f_smooth))[:, 1]
-	resp = np.random.rand() < p_outcomes
-	p_responses[0, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
-
-	# fixed at true ratio
-	p_outcomes = np.exp(mo.predict(
-	    theta_fixed,
-	    outcomes[:, None], 
-	    ipe_samps[orders[i]][t],
-	    f_smooth))[:, 1]
-	resp = np.random.rand() < p_outcomes
-	p_responses[1, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
-
-	# fixed at uniform belief
-	p_outcomes = np.exp(mo.predict(
-	    theta_uniform[None],
-	    outcomes[:, None], 
-	    ipe_samps[orders[i]][t],
-	    f_smooth))[:, 1]
-	resp = np.random.rand() < p_outcomes
-	p_responses[2, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
-
+fig = plt.gcf()
+fig.set_figwidth(8)
+fig.set_figheight(6)
+    
+	
+plt.legend(loc=0)
+fig = plt.gcf()
+fig.set_figwidth(8)
+fig.set_figheight(6)
+#plt.xlim(0, n_trial-1)
+plt.xlabel("Trial")
+plt.ylabel("Likelihood")
+plt.title("Likelihood of observer responses, averaged over trial orderings")
+#plt.ylim(0.45, 0.6)
 
 # <codecell>
 
@@ -684,6 +751,63 @@ plt.title("Likelihood of observer responses, averaged over trial orderings")
 plt.ylim(0.45, 0.6)
 
 lat.save("images/likelihoods_over_time.png", close=False)
+
+# <codecell>
+
+# model_thetas = np.empty((nsamp, n_kappas, n_trial+1, n_kappas))
+# for i in xrange(model_thetas.shape[0]):
+#     if i%10 == 0:
+# 	print i
+#     model_lh, model_joint, model_theta = mo.ModelObserver(
+# 	ipe_samps[orders[i]],
+# 	feedback[orders[i]][:, None],
+# 	outcomes=None,
+# 	respond=False,
+# 	p_ignore_stimulus=p_ignore_stimulus,
+# 	smooth=f_smooth)
+#     model_thetas[i] = model_theta
+
+# <codecell>
+
+
+# p_responses = np.empty((3, n_kappas, nsamp, n_trial))
+# theta_fixed = np.log(np.eye(n_kappas))
+
+# theta_uniform = normalize(np.log(np.ones(n_kappas)))[1]
+# sdata = np.asarray(ipe)
+
+# for i in xrange(nsamp):
+#     if i%10 == 0:
+# 	print i
+#     sd = sdata[ikappa, orders[i]]
+#     for t in xrange(n_trial):
+# 	# learning
+# 	p_outcomes = np.exp(mo.predict(
+# 	    model_thetas[i, :, t],
+# 	    outcomes[:, None], 
+# 	    ipe_samps[orders[i]][t],
+# 	    f_smooth))[:, 1]
+# 	resp = np.random.rand() < p_outcomes
+# 	p_responses[0, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
+# 	# fixed at true ratio
+# 	p_outcomes = np.exp(mo.predict(
+# 	    theta_fixed,
+# 	    outcomes[:, None], 
+# 	    ipe_samps[orders[i]][t],
+# 	    f_smooth))[:, 1]
+# 	resp = np.random.rand() < p_outcomes
+# 	p_responses[1, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
+# 	# fixed at uniform belief
+# 	p_outcomes = np.exp(mo.predict(
+# 	    theta_uniform[None],
+# 	    outcomes[:, None], 
+# 	    ipe_samps[orders[i]][t],
+# 	    f_smooth))[:, 1]
+# 	resp = np.random.rand() < p_outcomes
+# 	p_responses[2, :, i, t] = (resp * sd[t]) + ((1-resp) * (1-sd[t]))
+
 
 # <codecell>
 
