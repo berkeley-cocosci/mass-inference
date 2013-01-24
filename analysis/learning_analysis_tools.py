@@ -1,6 +1,7 @@
 import collections
 import matplotlib.cm as cm
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 import matplotlib
 import numpy as np
 import pandas as pd
@@ -16,6 +17,7 @@ import time
 #import cogphysics.lib.rvs as rvs
 #import cogphysics.lib.stats as stats
 import cogphysics.tower.analysis_tools as tat
+import model_observer as mo
 
 from cogphysics.lib.corr import xcorr, partialcorr
 
@@ -25,24 +27,33 @@ memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 ######################################################################
 # Data handling
 
-def load_turk_df(condition, mode="experiment", sort_trials=False):
-    path = "../../turk-experiment/data/consolidated_data/%s_data~%s.npz" % (mode, condition)
-    print "Loading '%s'" % path
-    datafile = np.load(path)
-    data = datafile['data']['response']
-    # stims = []
-    # for stim in datafile['stims']:
-    #     if stim.startswith("stability"):
-    #         stims.append("s" + stim[len("stability"):])
-    #     elif stim.startswith("mass-tower"):
-    #         stims.append("mt" + stim.split("_")[1])
-    #     else:
-    #         stims.append(stim)
-    stims = datafile['stims']
-    trial = datafile['data']['trial'][:, 0]
-    pids = datafile['pids']
-    datafile.close()
-    df = pd.DataFrame(data.T, columns=[trial, stims], index=pids)
+def load_turk_df(conditions, mode="experiment", sort_trials=False, exclude=None):
+    if not hasattr(conditions, "__iter__"):
+        conditions = [conditions]
+    if exclude is None:
+        exclude = []
+            
+    dfs = []
+    for condition in conditions:
+        path = "../../turk-experiment/data/consolidated_data/%s_data~%s.npz" % (mode, condition)
+        print "Loading '%s'" % path
+        datafile = np.load(path)
+        data = datafile['data']['response']
+        stims = []
+        for s in datafile['stims']:
+            if s.endswith("_cb-0") or s.endswith("_cb-1"):
+                stims.append(s[:len(s)-len("_cb-0")])
+            else:
+                stims.append(s)
+        trial = datafile['data']['trial'][:, 0]
+        pids = datafile['pids']
+        datafile.close()
+        mask = np.array([p not in exclude for p in pids])
+        pids = [x for x in pids if x not in exclude]
+        df = pd.DataFrame(data.T[mask], columns=[trial, stims], index=pids)
+        dfs.append(df)
+        
+    df = pd.concat(dfs)
     df.columns.names = ["trial", "stimulus"]
     df.index.names = ["pid"]
     if sort_trials:
@@ -404,3 +415,283 @@ def bootcorr_wc(arr, nboot=1000, nsamp=None, with_replacement=False):
 	corrs[i] = xcorr(group1, group2)
 
     return corrs
+
+def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
+    nfell = (rawtruth['nfellA'] + rawtruth['nfellB']) / 10.0
+    truth = nfell > nthresh0
+    truth[np.isnan(nfell)] = 0.5
+    df = pd.DataFrame(truth[..., 0].T, index=kappas, columns=rawsstim)
+    return df
+
+def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
+    nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
+    samps = (nfell > nthresh).astype('f8')
+    # samps = nfell.copy()
+    samps[np.isnan(nfell)] = 0.5
+    alpha = np.sum(samps, axis=-1) + 0.5
+    beta = np.sum(1-samps, axis=-1) + 0.5
+    pfell_mean = alpha / (alpha + beta)
+    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+    pfell_std = np.sqrt(pfell_var)
+    pfell_meanstd = np.mean(pfell_std, axis=-1)
+    ipe = np.empty(pfell_mean.shape)
+    for idx in xrange(rawipe.shape[0]):
+        x = kappas
+        lam = pfell_meanstd[idx] * 10
+        kde_smoother = mo.make_kde_smoother(x, lam)
+        ipe[idx] = kde_smoother(pfell_mean[idx])
+    df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
+    return df
+
+def plot_smoothing(rawipe, stims, nstim, nthresh, kappas):
+    nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
+    samps = (nfell > nthresh).astype('f8')
+
+    samps[np.isnan(nfell)] = 0.5
+    alpha = np.sum(samps, axis=-1) + 0.5
+    beta = np.sum(1-samps, axis=-1) + 0.5
+    pfell_mean = alpha / (alpha + beta)
+    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+    pfell_std = np.sqrt(pfell_var)
+    pfell_meanstd = np.mean(pfell_std, axis=-1)
+    colors = cm.hsv(np.round(np.linspace(0, 220, nstim)).astype('i8'))
+    xticks = np.linspace(-1.3, 1.3, 7)
+    xticks10 = 10 ** xticks
+    xticks10[xticks < 0] = np.round(xticks10[xticks < 0], decimals=2)
+    xticks10[xticks >= 0] = np.round(xticks10[xticks >= 0], decimals=1)
+    yticks = np.linspace(0, 1, 3)
+
+    plt.figure()
+    plt.clf()
+    plt.suptitle(
+        "Likelihood function for feedback given mass ratio\n"
+        "(%d IPE samples, threshold=%d%% blocks)" % (rawipe.shape[1], nthresh*100),
+        fontsize=16)
+    plt.ylim(0, 1)
+    plt.xticks(xticks, xticks10)
+    plt.xlabel("Mass ratio ($r$)", fontsize=14)
+    plt.yticks(yticks, yticks)
+    plt.ylabel("\Pr(fall|$r$, $S$)", fontsize=14)
+    plt.grid(True)
+    order = (range(0, stims.size, 2) + range(1, stims.size, 2))[:nstim]
+    for idx in xrange(nstim):
+        i = order[idx]
+        x = kappas
+        lam = pfell_meanstd[i] * 10
+        kde_smoother = mo.make_kde_smoother(x, lam)
+        y_mean = kde_smoother(pfell_mean[i])
+        plt.plot(x, y_mean,
+                 color=colors[idx],
+                 linewidth=3)        
+        plt.errorbar(x, pfell_mean[i], pfell_std[i], None,
+                     color=colors[idx], fmt='o',
+                     markeredgecolor=colors[idx],
+                     markersize=5,
+                     label=str(stims[i]).split("_")[1])
+    # plt.legend(loc=8, prop={'size':12}, numpoints=1,
+    #            scatterpoints=1, ncol=3, title="Stimuli")
+
+def plot_belief(model_theta, kappas, cmap):
+    ratios = np.round(10 ** kappas, decimals=1)
+    n_kappas = len(kappas)
+    n_trial = model_theta.shape[1] - 1
+    r, c = 1, 3
+    n = r*c
+    exp = np.exp(np.log(0.5) / np.log(1./27))    
+    fig = plt.figure()
+    plt.clf()
+    gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
+    plt.suptitle(
+        "Posterior belief about mass ratio over time",
+        fontsize=16)
+    plt.subplots_adjust(
+        wspace=0.2,
+        hspace=0.3,
+        left=0.1,
+        right=0.93,
+        top=0.8,
+        bottom=0.1)
+    #kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
+    kidxs = [3, 13, 23]
+    for i, kidx in enumerate(kidxs):
+        irow, icol = np.unravel_index(i, (r, c))
+        ax = plt.subplot(gs[irow, icol])
+        kappa = kappas[kidx]
+        subjname = "True $r=%s$" % float(ratios[kidx])
+        img = plot_theta(
+            None, None, ax,
+            np.exp(model_theta[kidx]),
+            subjname,
+            exp=exp,
+            cmap=cmap,
+            fontsize=14)
+        yticks = np.round(
+            np.linspace(0, n_kappas-1, 5)).astype('i8')
+        if (i%c) == 0:
+            plt.yticks(yticks, ratios[yticks], fontsize=14)
+            plt.ylabel("Mass ratio ($r$)", fontsize=14)
+        else:
+            plt.yticks(yticks, [])
+            plt.ylabel("")
+        xticks = np.linspace(0, n_trial, 4).astype('i8')
+        if (n-i) <= c:
+            plt.xticks(xticks, xticks, fontsize=14)
+            plt.xlabel("Trial number ($t$)", fontsize=14)
+        else:
+            plt.xticks(xticks, [])
+    logcticks = np.array([0, 0.001, 0.05, 0.25, 1])
+    cticks = np.exp(np.log(logcticks) * np.log(exp))
+    cax = plt.subplot(gs[:, -1])
+    cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
+    cb.set_ticklabels(logcticks)
+    cax.set_title("$\Pr(r|B_t)$", fontsize=14)
+
+def random_model_lh(conds, n_trial, t0=None, tn=None):
+    if t0 is None:
+        t0 = 0
+    if tn is None:
+        tn = n_trial
+
+    n_cond = len(conds)
+        
+    lh = {}
+    for cond in conds:
+        lh[cond] = np.exp(np.array([np.log(0.5)*(tn-t0)])[None])
+
+    # lh = np.array([np.log(0.5)*(tn-t0)])
+    # mean = np.array([lh]*n_cond)
+    # lower = np.array([lh]*n_cond)
+    # upper = np.array([lh]*n_cond)
+    # out = np.array([mean, upper, lower]).T
+
+    return lh
+
+def fixed_model_lh(conds, experiment, ipe_samps, thetas, t0=None, tn=None, f_smooth=True):
+    """
+    thetas should be (n_prior, n_trial+1, n_kappas)
+    """
+ 
+    n_cond = len(conds)
+    n_trial = ipe_samps.shape[0]
+    outcomes = np.array([[0], [1]])
+    
+    if t0 is None:
+        t0 = 0
+    if tn is None:
+        tn = n_trial
+	
+    # lh_mean = np.empty((thetas.shape[0], n_cond))
+    # lh_sem = np.empty((thetas.shape[0], n_cond))
+
+    lh = {}
+
+    for cidx, cond in enumerate(conds):
+        # trial ordering
+        if cond in experiment:
+            order = np.argsort(zip(*experiment[cond].columns)[0])
+        else:
+            order = np.arange(n_trial)
+	    
+        order = order[t0:tn]
+
+        # trial-by-trial likelihoods of judgments
+        resp = np.asarray(experiment[cond])
+        trial_ll = np.empty((resp.shape[0], tn-t0, thetas.shape[0]))
+	
+        for tidx, t in enumerate(order):
+            thetas_t = thetas[:, t]
+            samps_t = ipe_samps[t]
+            resp_t = resp[:, t][:, None]
+            
+            # compute likelihood of outcomes
+            p_outcomes = np.exp(mo.predict(
+                thetas_t, outcomes,
+                samps_t, f_smooth))[:, 1]
+			
+            # observe response
+            ll = np.log((resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
+            trial_ll[:, tidx] = ll
+
+        # overall likelihood
+        lh[cond] = np.exp(np.sum(trial_ll, axis=1))
+
+    return lh
+    
+	# lh_mean[:, cidx] = np.mean(lh, axis=0)
+	# lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
+    
+    # mean = np.log(lh_mean).T
+    # upper = np.log(lh_mean + lh_sem).T
+    # lower = np.log(lh_mean - lh_sem).T
+    # out = np.array([mean, upper, lower]).T
+
+    # return out
+
+def learning_model_lh(conds, experiment, ipe_samps, feedback, ikappas, t0=None, tn=None, f_smooth=True):
+    
+    n_cond = len(conds)
+    n_trial = ipe_samps.shape[0]
+    outcomes = np.array([[0], [1]])
+
+    if t0 is None:
+        t0 = 0
+    if tn is None:
+        tn = n_trial
+    
+    # lh_mean = np.empty((len(ikappas), n_cond))
+    # lh_sem = np.empty((len(ikappas), n_cond))
+    
+    lh = {}
+    
+    for cidx, cond in enumerate(conds):
+        # trial ordering
+        if cond in experiment:
+            order = np.argsort(zip(*experiment[cond].columns)[0])
+        else:
+            order = np.arange(n_trial)
+            
+        order = order[t0:tn]
+
+        # learning model beliefs
+        model_lh, model_joint, model_theta = mo.ModelObserver(
+            ipe_samps[order],
+            feedback[order][:, None],
+            outcomes=None,
+            respond=False,
+            p_ignore_stimulus=0,
+            smooth=f_smooth)
+
+        # trial-by-trial likelihoods of judgments
+        resp = np.asarray(experiment[cond])
+        theta = model_theta[ikappas]
+        trial_ll = np.empty((resp.shape[0], tn-t0, len(ikappas)))
+        
+        for tidx, t in enumerate(order):
+            thetas_t = theta[:, t]
+            samps_t = ipe_samps[t]
+            resp_t = resp[:, t][:, None]
+	    
+            # compute likelihood of outcomes
+            p_outcomes = np.exp(mo.predict(
+                thetas_t, outcomes, 
+                samps_t, f_smooth))[:, 1]
+
+            # observe response
+            trial_ll[:, tidx] = np.log(
+            (resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
+
+        # overall likelihood
+        lh[cond] = np.exp(np.sum(trial_ll, axis=1))
+
+	# mean across participants
+    return lh
+    
+	# lh_mean[:, cidx] = np.mean(lh, axis=0)
+	# lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
+
+    # mean = np.log(lh_mean).T
+    # lower = np.log(lh_mean - lh_sem).T
+    # upper = np.log(lh_mean + lh_sem).T
+    # out = np.array([mean, lower, upper]).T
+	
+    # return out
