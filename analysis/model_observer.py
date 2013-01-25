@@ -124,7 +124,7 @@ def IPE(samps, smooth):
         
     return f
 
-@memory.cache
+#@memory.cache
 def evaluateFeedback(feedback, samps, smooth):#, P_outcomes):
     """Evaluate the likelihood of the observed outcomes given the
     probability of each possible outcome.
@@ -149,10 +149,11 @@ def evaluateFeedback(feedback, samps, smooth):#, P_outcomes):
     P_outcomes = IPE(samps, smooth)
     pf = P_outcomes(feedback)
     lh = np.log(pf)
+    lh[np.isnan(lh)] = np.log(0.5)
     return lh
 
-@memory.cache
-def learningCurve(feedback, ipe_samps, smooth):
+#@memory.cache
+def learningCurve(feedback, ipe_samps, initial, smooth):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -192,7 +193,10 @@ def learningCurve(feedback, ipe_samps, smooth):
         # allocate arrays
         if lh is None:
             lh = np.empty(ef.shape[:-1] + (n_trial+1, n_kappas))
-            lh[..., 0, :] = np.log(1. / n_kappas)
+            if initial is None:
+                lh[..., 0, :] = np.log(1. / n_kappas)
+            else:
+                lh[..., 0, :] = initial.copy()
             joint = np.empty(lh.shape)
             joint[..., 0, :] = lh[..., 0, :].copy()
 
@@ -332,9 +336,9 @@ def responses(p_kappas, outcomes, ipe_samps, p_ignore_stimulus, smooth):
 
 ######################################################################
 
-@memory.cache
-def ModelObserver(ipe_samples, feedback, outcomes, respond=False, 
-                  p_ignore_stimulus=0.0, smooth=True):
+#@memory.cache
+def ModelObserver(ipe_samples, feedback, outcomes, initial=None, 
+                  respond=False, p_ignore_stimulus=0.0, smooth=True):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     feedback that they see, and the total number of possible outcomes.
@@ -366,7 +370,7 @@ def ModelObserver(ipe_samples, feedback, outcomes, respond=False,
 
     """
     n_kappas = ipe_samples.shape[1]
-    lh, joint, thetas = learningCurve(feedback, ipe_samples, smooth)
+    lh, joint, thetas = learningCurve(feedback, ipe_samples, initial, smooth)
     if respond:
         resp = responses(
             thetas, outcomes, ipe_samples, p_ignore_stimulus, smooth)

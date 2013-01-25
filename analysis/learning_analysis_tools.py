@@ -27,7 +27,97 @@ memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 ######################################################################
 # Data handling
 
-def load_turk_df(conditions, mode="experiment", sort_trials=False, exclude=None):
+def parse_condition(cond):
+    args = cond.split("-")
+    group = args[0]
+    fbtype = args[1]
+    ratio = float(args[2]) if len(args) > 2 else None
+    cb = args[3] if len(args) > 3 else None
+    return group, fbtype, ratio, cb
+
+def get_bad_pids(conds, thresh=1):
+
+    # load posttest data
+    dfs = []
+    for cond in conds:
+        l = load_turk_df(cond, "posttest")
+        dfs.append(l)
+    df = pd.concat(dfs)
+    hstim = zip(*df.columns)[1]
+
+    # load model cata
+    rawmodel, sstim, smeta = tat.load_model(1)#0)
+    pfell, nfell, fell_persample = tat.process_model_stability(
+        rawmodel, mthresh=0.095, zscore=False)
+    # convert model stim ids
+    from cogphysics import RESOURCE_PATH
+    pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
+    with open(pth, "r") as fh:
+        conv = pickle.load(fh)
+        sstim = np.array([conv[x] for x in sstim])
+    # get the correct stimuli indices
+    idx = np.nonzero(np.array(hstim)[:, None] == np.array(sstim)[None])[1]
+
+    # model stability 
+    ofb = (fell_persample[0,0,0,:,0] > 0)[idx]
+
+    wrong = (df != ofb).sum(axis=1)
+    bad = wrong > thresh
+    pids = sorted(list((bad).index[(bad).nonzero()]))
+
+    return pids
+
+def load_turk_static(thresh=1):
+    training = {}
+    posttest = {}
+    experiment = {}
+    queries = {}
+
+    suffix = ['-cb0', '-cb1']
+    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    allconds = [c+s for c in conds for s in suffix]
+    pids = get_bad_pids(allconds, thresh=thresh)
+
+    for cond in conds:
+        training[cond] = pd.concat([
+            load_turk_df(cond+s, "training", itrial=False, exclude=pids)
+            for s in suffix])
+        posttest[cond] = pd.concat([
+            load_turk_df(cond+s, "posttest", itrial=False, exclude=pids)
+            for s in suffix])
+        experiment[cond] = pd.concat([
+            load_turk_df(cond+s, "experiment", itrial=False, exclude=pids)
+            for s in suffix])
+        if cond.split("-")[1] != "nfb":
+            queries[cond] = pd.concat([
+                load_turk_df(cond+s, "queries", istim=False, exclude=pids)
+                for s in suffix])
+
+    return training, posttest, experiment, queries
+
+def load_turk_learning(thresh=1):
+    training = {}
+    posttest = {}
+    experiment = {}
+    queries = {}
+
+    suffix = ['-cb0', '-cb1']
+    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    allconds = [c+s for c in conds for s in suffix]
+
+    pids = get_bad_pids(allconds, thresh=thresh)
+    for cond in allconds:
+        training[cond] = load_turk_df(cond, "training", exclude=pids)
+        posttest[cond] = load_turk_df(cond, "posttest", exclude=pids)
+        experiment[cond] = load_turk_df(cond, "experiment", exclude=pids)
+        if cond.split("-")[1] != "nfb":
+            queries[cond] = load_turk_df(cond, "queries", exclude=pids)
+
+    return training, posttest, experiment, queries
+        
+def load_turk_df(conditions, mode="experiment", istim=True, itrial=True, exclude=None):
+    assert istim or itrial
+    
     if not hasattr(conditions, "__iter__"):
         conditions = [conditions]
     if exclude is None:
@@ -50,15 +140,39 @@ def load_turk_df(conditions, mode="experiment", sort_trials=False, exclude=None)
         datafile.close()
         mask = np.array([p not in exclude for p in pids])
         pids = [x for x in pids if x not in exclude]
-        df = pd.DataFrame(data.T[mask], columns=[trial, stims], index=pids)
+        columns = []
+        if itrial:
+            columns.append(trial)
+        if istim:
+            columns.append(stims)
+        df = pd.DataFrame(data.T[mask], columns=columns, index=pids)
         dfs.append(df)
         
     df = pd.concat(dfs)
-    df.columns.names = ["trial", "stimulus"]
+    colnames = []
+    if itrial:
+        colnames.append("trial")
+    if istim:
+        colnames.append("stimulus")
+    df.columns.names = colnames
     df.index.names = ["pid"]
-    if sort_trials:
-        df.sort_index(axis=1, inplace=True)
     return df
+
+def process_model_turk(hstim, nthresh0, nthresh):
+    rawtruth0, rawipe0, rawsstim, kappas = load_model("stability")
+
+    sstim = np.array(rawsstim)
+    idx = np.nonzero((sstim[:, None] == hstim[None, :]))[1]
+
+    nfell = (rawtruth0[idx]['nfellA'] + rawtruth0[idx]['nfellB']) / 10.0
+    feedback = nfell > nthresh0
+    feedback[np.isnan(feedback)] = 0.5
+
+    nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.0
+    ipe_samps = (nfell > nthresh)[..., None].astype('f8')
+    ipe_samps[np.isnan(nfell)] = 0.5
+
+    return rawipe0[idx], ipe_samps, rawtruth0[idx], feedback, kappas
 
 # def load_turk(condition, mode="experiment"):
 #     path = "../../turk-experiment/turk_%s_data~%s.npz" % (mode, condition)
@@ -380,19 +494,19 @@ def bootcorr(arr1, arr2, nboot=1000, nsamp=None, with_replacement=True):
     corrs = np.empty(nboot)
 
     if nsamp is None:
-	nsamp = min(nsubj1, nsubj2) / 2
+        nsamp = min(nsubj1, nsubj2) / 2
 
     for i in xrange(corrs.size):
-	if with_replacement:
-	    idx1 = np.random.randint(0, nsubj1, nsamp)
-	    idx2 = np.random.randint(0, nsubj2, nsamp)
-	else:
-	    idx1 = np.random.permutation(nsubj1)[:nsamp]
-	    idx2 = np.random.permutation(nsubj2)[:nsamp]
+        if with_replacement:
+            idx1 = np.random.randint(0, nsubj1, nsamp)
+            idx2 = np.random.randint(0, nsubj2, nsamp)
+        else:
+            idx1 = np.random.permutation(nsubj1)[:nsamp]
+            idx2 = np.random.permutation(nsubj2)[:nsamp]
 
-	group1 = arr1[idx1].mean(axis=0)
-	group2 = arr2[idx2].mean(axis=0)
-	corrs[i] = xcorr(group1, group2)
+        group1 = arr1[idx1].mean(axis=0)
+        group2 = arr2[idx2].mean(axis=0)
+        corrs[i] = xcorr(group1, group2)
 
     return corrs
 
@@ -401,18 +515,18 @@ def bootcorr_wc(arr, nboot=1000, nsamp=None, with_replacement=False):
     corrs = np.empty(nboot)
 
     if nsamp is None:
-	nsamp = nsubj / 2
+        nsamp = nsubj / 2
 
     for i in xrange(corrs.size):
-	if with_replacement:
-	    idx1 = np.random.permutation(nsubj)[:nsamp]
-	    idx2 = np.random.permutation(nsubj)[:nsamp]
-	else:
-	    idx1, idx2 = np.array_split(np.random.permutation(nsubj)[:nsamp*2], 2)
+        if with_replacement:
+            idx1 = np.random.permutation(nsubj)[:nsamp]
+            idx2 = np.random.permutation(nsubj)[:nsamp]
+        else:
+            idx1, idx2 = np.array_split(np.random.permutation(nsubj)[:nsamp*2], 2)
 
-	group1 = arr[idx1].mean(axis=0)
-	group2 = arr[idx2].mean(axis=0)
-	corrs[i] = xcorr(group1, group2)
+        group1 = arr[idx1].mean(axis=0)
+        group2 = arr[idx2].mean(axis=0)
+        corrs[i] = xcorr(group1, group2)
 
     return corrs
 
@@ -423,25 +537,25 @@ def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
     df = pd.DataFrame(truth[..., 0].T, index=kappas, columns=rawsstim)
     return df
 
-def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
-    nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
-    samps = (nfell > nthresh).astype('f8')
-    # samps = nfell.copy()
-    samps[np.isnan(nfell)] = 0.5
-    alpha = np.sum(samps, axis=-1) + 0.5
-    beta = np.sum(1-samps, axis=-1) + 0.5
-    pfell_mean = alpha / (alpha + beta)
-    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
-    pfell_std = np.sqrt(pfell_var)
-    pfell_meanstd = np.mean(pfell_std, axis=-1)
-    ipe = np.empty(pfell_mean.shape)
-    for idx in xrange(rawipe.shape[0]):
-        x = kappas
-        lam = pfell_meanstd[idx] * 10
-        kde_smoother = mo.make_kde_smoother(x, lam)
-        ipe[idx] = kde_smoother(pfell_mean[idx])
-    df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
-    return df
+# def make_ipe_df(rawipe, rawsstim, kappas, nthresh):
+#     nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
+#     samps = (nfell > nthresh).astype('f8')
+#     # samps = nfell.copy()
+#     samps[np.isnan(nfell)] = 0.5
+#     alpha = np.sum(samps, axis=-1) + 0.5
+#     beta = np.sum(1-samps, axis=-1) + 0.5
+#     pfell_mean = alpha / (alpha + beta)
+#     pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+#     pfell_std = np.sqrt(pfell_var)
+#     pfell_meanstd = np.mean(pfell_std, axis=-1)
+#     ipe = np.empty(pfell_mean.shape)
+#     for idx in xrange(rawipe.shape[0]):
+#         x = kappas
+#         lam = pfell_meanstd[idx] * 10
+#         kde_smoother = mo.make_kde_smoother(x, lam)
+#         ipe[idx] = kde_smoother(pfell_mean[idx])
+#     df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
+#     return df
 
 def plot_smoothing(rawipe, stims, nstim, nthresh, kappas):
     nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
@@ -461,8 +575,6 @@ def plot_smoothing(rawipe, stims, nstim, nthresh, kappas):
     xticks10[xticks >= 0] = np.round(xticks10[xticks >= 0], decimals=1)
     yticks = np.linspace(0, 1, 3)
 
-    plt.figure()
-    plt.clf()
     plt.suptitle(
         "Likelihood function for feedback given mass ratio\n"
         "(%d IPE samples, threshold=%d%% blocks)" % (rawipe.shape[1], nthresh*100),
@@ -498,8 +610,6 @@ def plot_belief(model_theta, kappas, cmap):
     r, c = 1, 3
     n = r*c
     exp = np.exp(np.log(0.5) / np.log(1./27))    
-    fig = plt.figure()
-    plt.clf()
     gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
     plt.suptitle(
         "Posterior belief about mass ratio over time",

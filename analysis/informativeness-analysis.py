@@ -14,7 +14,7 @@ import scipy.stats
 import os
 import time
 
-#import cogphysics
+import cogphysics
 #import cogphysics.lib.circ as circ
 #import cogphysics.lib.nplib as npl
 from cogphysics import path as cppath
@@ -198,9 +198,9 @@ exp_lh, exp_joint, exp_theta = mo.ModelObserver(
     respond=False,
     smooth=smooth)
 
-close("all")
+plt.figure(1)
 lat.plot_theta(
-    1, 2, 1,
+    1, 3, 1,
     np.exp(exp_theta[0]),
     "",
     exp=1.3,
@@ -208,13 +208,29 @@ lat.plot_theta(
     fontsize=14)
 plt.title(ratios[idx[0]])
 lat.plot_theta(
-    1, 2, 2,
+    1, 3, 3,
     np.exp(exp_theta[1]),
     "",
     exp=1.3,
     cmap=cmap,
     fontsize=14)
 plt.title(ratios[idx[1]])
+
+exp_feedback = feedback[eqorder][:, [list(kappas).index(0)]]
+exp_lh, exp_joint, exp_theta = mo.ModelObserver(
+    exp_ipe_samps,
+    exp_feedback[:, None],
+    outcomes=None,
+    respond=False,
+    smooth=smooth)
+lat.plot_theta(
+    1, 3, 2,
+    np.exp(exp_theta[0]),
+    "",
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+plt.title(ratios[list(kappas).index(0)])
 
 # <codecell>
 
