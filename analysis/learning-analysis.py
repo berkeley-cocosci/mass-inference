@@ -148,7 +148,7 @@ for cond in sorted(experiment.keys()):
 	    f_smooth))[:, 1]
 
     # sample responses
-    responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
+    responses = np.random.rand(nfake, n_trial) < p_outcomes
     experiment[newcond] = pd.DataFrame(
 	responses[:, undo_order], 
 	columns=cols)

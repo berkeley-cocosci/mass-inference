@@ -35,23 +35,43 @@ LINE = "-"*195
 # <codecell>
 
 ######################################################################
-## Load stimuli
-######################################################################
-
-listpath = os.path.join(cogphysics.CPOBJ_LIST_PATH,
-			"mass-towers-stability-learning~kappa-1.0")
-with open(listpath, "r") as fh:
-    Stims = np.array([x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""])
-
-# <codecell>
-
-######################################################################
 ## Load human data
 ######################################################################
 
 reload(lat)
 training, posttest, experiment, queries = lat.load_turk_static(thresh=1)
 conds = experiment.keys()
+
+# <codecell>
+
+######################################################################
+## Load stimuli
+######################################################################
+
+# listpath = os.path.join(cogphysics.CPOBJ_LIST_PATH,
+# 			"mass-towers-stability-learning~kappa-1.0")
+# with open(listpath, "r") as fh:
+#     Stims = np.array([x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""])
+
+Stims = np.array([x.split("~")[0] for x in experiment[experiment.keys()[0]].columns])
+
+# <codecell>
+
+######################################################################
+## Load old human data
+######################################################################
+
+out = lat.load_human('stability')
+rawoldhuman, rawoldhstim, rawoldorder = out
+idx = np.nonzero(Stims[None, :] == rawoldhstim[:, None])[0]
+oldhuman_all = pd.DataFrame(
+    (7-rawoldhuman.reshape((rawoldhuman.shape[0], -1)).T)/7.,
+    columns=rawoldhstim)
+oldhuman = pd.DataFrame(
+    (7-rawoldhuman[idx].reshape((idx.shape[0], -1)).T)/7.,
+    columns=Stims)
+experiment['old-fb-10'] = oldhuman
+experiment['old-all-10'] = oldhuman_all
 
 # <codecell>
 
@@ -65,11 +85,11 @@ nthresh0 = 0
 nthresh = 0.4
 rawipe, ipe_samps, rawtruth, feedback, kappas = lat.process_model_turk(
     Stims, nthresh0, nthresh)
-nofeedback = np.empty((feedback.shape[0], 1, 1))*np.nan
+nofeedback = np.empty((feedback.shape[1]))*np.nan
 
 fig = plt.figure(1)
 plt.clf()
-lat.plot_smoothing(rawipe, Stims, 6, nthresh, kappas)
+lat.plot_smoothing(ipe_samps, Stims, 6, nthresh, kappas)
 fig.set_figheight(6)
 fig.set_figwidth(8)
 
@@ -92,7 +112,7 @@ outcomes     = np.array([0, 1])                  # possible outcomes
 n_trial      = Stims.size
 n_outcomes   = outcomes.size                     # number of possible outcomes
 
-f_smooth = True
+f_smooth = False
 p_ignore_stimulus = 0.0
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
@@ -114,7 +134,7 @@ nfake = 1000
 for cond in sorted(experiment.keys()):
 
     group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if group == "MO":
+    if group in ("MO", "old"):
 	continue
 
     cols = experiment[cond].columns
@@ -129,39 +149,30 @@ for cond in sorted(experiment.keys()):
     else:
 	ridx = ratios.index(ratio)
 	
-    fb = nofeedback[order][:, None]
-    initial = np.zeros((n_kappas))
-    initial[ridx] = 1
-    initial = normalize(np.log(initial))[1]
+    fb = nofeedback[..., order]
+    prior = np.zeros((n_kappas))
+    prior[ridx] = 1
+    prior = normalize(np.log(prior))[1]
     
     # learning model beliefs
-    model_lh, model_joint, model_theta = mo.ModelObserver(
-	ipe_samps[order], fb,
-	outcomes=None,
-	respond=False,
-	initial=initial,
-	p_ignore_stimulus=p_ignore_stimulus,
-	smooth=f_smooth)
+    model_joint, model_theta = mo.ModelObserver(
+	fb, ipe_samps[order], kappas, prior=prior, smooth=f_smooth)
 
     # compute probability of falling
     p_outcomes = np.empty((n_trial,))
-    for t in xrange(n_trial):
-	newcond = "-".join(["MO"] + cond.split("-")[1:])
-	p_outcomes[t] = np.exp(mo.predict(
-	    model_theta[0, t][None],
-	    outcomes[:, None], 
-	    ipe_samps[order][t],
-	    f_smooth))[:, 1]
+    newcond = "-".join(["MO"] + cond.split("-")[1:])
+    p_outcomes = np.exp(mo.predict(
+	model_theta[:-1], ipe_samps[order], kappas, f_smooth))
 
     # sample responses
-    responses = np.random.rand(nfake)[:, None] < p_outcomes[None]		
+    responses = np.random.rand(nfake, n_trial) < p_outcomes
     experiment[newcond] = pd.DataFrame(
 	responses[:, undo_order], 
 	columns=cols)
 
     lat.plot_theta(
 	1, 3, cidx+1,
-	np.exp(model_theta[0]),
+	np.exp(model_theta),
 	cond,
 	exp=1.3,
 	cmap=cmap,
@@ -176,7 +187,8 @@ lat.save("images/ideal_observer_beliefs.png", close=False)
 reload(lat)
 
 nboot = 1000
-nsamp = 9
+nsamp_wc = 8
+nsamp = 15
 with_replacement = False
 
 for cidx1, cond1 in enumerate(conds):
@@ -184,14 +196,19 @@ for cidx1, cond1 in enumerate(conds):
     corrs = lat.bootcorr_wc(
 	np.asarray(arr1), 
 	nboot=nboot,
-	nsamp=nsamp,
+	nsamp=nsamp_wc,
 	with_replacement=with_replacement)
     meancorr = np.mean(corrs)
     semcorr = scipy.stats.sem(corrs)
     print "(bootstrap) %-15s v %-15s: rho = %.4f +/- %.4f" % (
 	cond1, cond1, meancorr, semcorr)
 
+    if cond1 == "old-all-10":
+	continue
+
     for cidx2, cond2 in enumerate(conds[cidx1+1:]):
+	if cond2 == "old-all-10":
+	    continue
 	arr2 = np.asarray(experiment[cond2])
 
 	corrs = lat.bootcorr(
@@ -208,22 +225,23 @@ for cidx1, cond1 in enumerate(conds):
 
 # <codecell>
 
-nfell = rawipe['nfellA'] + rawipe['nfellB']
+rawipe0 = lat.load_model("stability")[1]
+idx = np.nonzero(Stims[None, :] == rawoldhstim[:, None])[0]
+nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.
 
-zscore = scipy.stats.zscore
-#zscore = lambda a, axis, ddof: a
 nanmean = scipy.stats.nanmean
 nanstd = scipy.stats.nanstd
 
-suffix = "-fb-0.1"
+suffix = "-fb-10"
+ratio = 10
 
-hdata = zscore(np.asarray(experiment['B' + suffix]), axis=1, ddof=1)
+hdata = np.asarray(experiment['B' + suffix])
 hmean = nanmean(hdata, axis=0)
 hsem = nanstd(hdata, axis=0) / np.sqrt(hdata.shape[0])
 
-sdata = zscore(ipe_samps[:, ratios.index(0.1), :, 0].T, axis=1, ddof=1)
-#sdata = zscore(nfell[:, ratios.index(0.1)].T, axis=1, ddof=1)
-#sdata = zscore(np.asarray(experiment['MO' + suffix]), axis=1, ddof=1)
+#sdata = ipe_samps[:, ratios.index(ratio)].T
+#sdata = nfell[:, ratios.index(ratio)].T
+sdata = zscore(np.asarray(experiment['MO' + suffix]), axis=1, ddof=1)
 smean = nanmean(sdata, axis=0)
 ssem = nanstd(sdata, axis=0) / np.sqrt(sdata.shape[0])
 
@@ -246,6 +264,8 @@ plt.clf()
 
 for cond in conds:
     if cond.startswith("MO"):
+	continue
+    if cond.startswith("old"):
 	continue
     if cond.endswith("nfb-10"):
 	continue

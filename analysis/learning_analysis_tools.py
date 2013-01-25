@@ -126,7 +126,7 @@ def load_turk_df(conditions, mode="experiment", istim=True, itrial=True, exclude
     dfs = []
     for condition in conditions:
         path = "../../turk-experiment/data/consolidated_data/%s_data~%s.npz" % (mode, condition)
-        print "Loading '%s'" % path
+        # print "Loading '%s'" % path
         datafile = np.load(path)
         data = datafile['data']['response']
         stims = []
@@ -162,14 +162,15 @@ def process_model_turk(hstim, nthresh0, nthresh):
     rawtruth0, rawipe0, rawsstim, kappas = load_model("stability")
 
     sstim = np.array(rawsstim)
-    idx = np.nonzero((sstim[:, None] == hstim[None, :]))[1]
+    idx = np.nonzero((sstim[:, None] == hstim[None, :]))[0]
 
     nfell = (rawtruth0[idx]['nfellA'] + rawtruth0[idx]['nfellB']) / 10.0
-    feedback = nfell > nthresh0
+    feedback = (nfell > nthresh0)[:, :, 0].T
     feedback[np.isnan(feedback)] = 0.5
 
     nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.0
-    ipe_samps = (nfell > nthresh)[..., None].astype('f8')
+    #ipe_samps = nfell.copy()
+    ipe_samps = (nfell > nthresh).astype('f8')
     ipe_samps[np.isnan(nfell)] = 0.5
 
     return rawipe0[idx], ipe_samps, rawtruth0[idx], feedback, kappas
@@ -557,11 +558,10 @@ def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
 #     df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
 #     return df
 
-def plot_smoothing(rawipe, stims, nstim, nthresh, kappas):
-    nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
-    samps = (nfell > nthresh).astype('f8')
-
-    samps[np.isnan(nfell)] = 0.5
+def plot_smoothing(samps, stims, nstim, nthresh, kappas):
+    # nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
+    # samps = (nfell > nthresh).astype('f8')
+    # samps[np.isnan(nfell)] = 0.5
     alpha = np.sum(samps, axis=-1) + 0.5
     beta = np.sum(1-samps, axis=-1) + 0.5
     pfell_mean = alpha / (alpha + beta)
@@ -577,7 +577,7 @@ def plot_smoothing(rawipe, stims, nstim, nthresh, kappas):
 
     plt.suptitle(
         "Likelihood function for feedback given mass ratio\n"
-        "(%d IPE samples, threshold=%d%% blocks)" % (rawipe.shape[1], nthresh*100),
+        "(%d IPE samples, threshold=%d%% blocks)" % (samps.shape[-1], nthresh*100),
         fontsize=16)
     plt.ylim(0, 1)
     plt.xticks(xticks, xticks10)

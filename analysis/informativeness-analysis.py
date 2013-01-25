@@ -72,9 +72,11 @@ ext = ['png', 'pdf']
 f_save = False
 f_close = False
 smooth = True
-idx0 = int(np.nonzero(ratios==10)[0][0])
-idx1 = int(np.nonzero(ratios==0.1)[0][0])
-idx = [idx0, idx1]
+idx = [
+    int(np.nonzero(ratios==0.1)[0][0]),
+    int(np.nonzero(ratios==1)[0][0]),
+    int(np.nonzero(ratios==10)[0][0]),
+]
 
 # <codecell>
 
@@ -126,7 +128,7 @@ for t in xrange(T-1):
     H = KL(np.exp(p), idx)
     # choose stimulus that would result in the lowest entropy, without
     # repeating stimuli
-    for s in np.argsort(np.sum(H**2, axis=0)):
+    for s in np.argsort(np.prod(H, axis=0)):
 	num = stimuli[0, s].split("_")[1]
 	if (s not in order) and (num not in nums):
 	    order.append(s)
@@ -165,19 +167,34 @@ for i, ix in enumerate(idx):
 
 N = 20
 C = 0
-yes = np.nonzero(feedback[:, :, 0][:, idx[0]][order] == 0)[0]
-no = np.nonzero(feedback[:, :, 0][:, idx[0]][order] == 1)[0]
 
+exp = list(order.copy())
+fbexp = np.sum(fb[order], axis=0)
+newexp = exp[::-1]
+for i in xrange(len(newexp)):
+    if (fbexp==(N/2)).all():
+	break
+    if len(exp) == N:
+	break
+    if ((fbexp==((N/2)-2)) & fb[newexp[i]].astype('bool')).any():
+	continue
+    fbexp -= fb[newexp[i]]
+    exp.remove(newexp[i])
+
+yes = np.nonzero((fb[order] == 0).all(axis=1))[0]
+assert order[yes[-1]] not in exp
 mass_example = stimuli[0, order[yes[-1]]]
-exp = order[np.sort(np.hstack([
-    yes[:N/2], 
-    no[:N/2]]))]
-if C > 0:
-    catch = order[np.sort(np.hstack([  
-        yes[-(C/2)-1:-1],
-	no[-C/2:]]))]
-else:
-    catch = np.array([], dtype='i8')
+
+# exp = order[np.sort(np.hstack([
+#     yes[:N/2], 
+#     no[:N/2]]))]
+# if C > 0:
+#     catch = order[np.sort(np.hstack([  
+#         yes[-(C/2)-1:-1],
+# 	no[-C/2:]]))]
+# else:
+exp = np.array(exp)
+catch = np.array([], dtype='i8')
 eqorder = np.hstack([exp, catch])
 print eqorder
 print stimuli[0, eqorder]
@@ -199,38 +216,40 @@ exp_lh, exp_joint, exp_theta = mo.ModelObserver(
     smooth=smooth)
 
 plt.figure(1)
-lat.plot_theta(
-    1, 3, 1,
-    np.exp(exp_theta[0]),
-    "",
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
-plt.title(ratios[idx[0]])
-lat.plot_theta(
-    1, 3, 3,
-    np.exp(exp_theta[1]),
-    "",
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
-plt.title(ratios[idx[1]])
+plt.clf()
+for i in xrange(len(idx)):
+    lat.plot_theta(
+	1, len(idx), i+1,
+	np.exp(exp_theta[i]),
+	ratios[idx[i]],
+	exp=1.3,
+	cmap=cmap,
+	fontsize=14)
 
-exp_feedback = feedback[eqorder][:, [list(kappas).index(0)]]
-exp_lh, exp_joint, exp_theta = mo.ModelObserver(
-    exp_ipe_samps,
-    exp_feedback[:, None],
-    outcomes=None,
-    respond=False,
-    smooth=smooth)
-lat.plot_theta(
-    1, 3, 2,
-    np.exp(exp_theta[0]),
-    "",
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
-plt.title(ratios[list(kappas).index(0)])
+# lat.plot_theta(
+#     1, 3, 3,
+#     np.exp(exp_theta[1]),
+#     "",
+#     exp=1.3,
+#     cmap=cmap,
+#     fontsize=14)
+# plt.title(ratios[idx[1]])
+
+# exp_feedback = feedback[eqorder][:, [list(kappas).index(0)]]
+# exp_lh, exp_joint, exp_theta = mo.ModelObserver(
+#     exp_ipe_samps,
+#     exp_feedback[:, None],
+#     outcomes=None,
+#     respond=False,
+#     smooth=smooth)
+# lat.plot_theta(
+#     1, 3, 2,
+#     np.exp(exp_theta[0]),
+#     "",
+#     exp=1.3,
+#     cmap=cmap,
+#     fontsize=14)
+# plt.title(ratios[list(kappas).index(0)])
 
 # <codecell>
 
