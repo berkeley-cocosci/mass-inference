@@ -173,7 +173,9 @@ def process_model_turk(hstim, nthresh0, nthresh):
     ipe_samps = (nfell > nthresh).astype('f8')
     ipe_samps[np.isnan(nfell)] = 0.5
 
-    return rawipe0[idx], ipe_samps, rawtruth0[idx], feedback, kappas
+    return (rawipe0[idx], ipe_samps, 
+            rawtruth0[idx][:, :, 0].T, feedback, 
+            kappas)
 
 # def load_turk(condition, mode="experiment"):
 #     path = "../../turk-experiment/turk_%s_data~%s.npz" % (mode, condition)
@@ -676,132 +678,68 @@ def random_model_lh(conds, n_trial, t0=None, tn=None):
 
     return lh
 
-def fixed_model_lh(conds, experiment, ipe_samps, thetas, t0=None, tn=None, f_smooth=True):
-    """
-    thetas should be (n_prior, n_trial+1, n_kappas)
-    """
- 
-    n_cond = len(conds)
+def block_lh(responses, feedback, ipe_samps, prior, kappas,
+             t0=None, tn=None, f_smooth=True):
+
+    reload(mo)
     n_trial = ipe_samps.shape[0]
-    outcomes = np.array([[0], [1]])
     
     if t0 is None:
         t0 = 0
     if tn is None:
         tn = n_trial
 	
-    # lh_mean = np.empty((thetas.shape[0], n_cond))
-    # lh_sem = np.empty((thetas.shape[0], n_cond))
-
     lh = {}
 
-    for cidx, cond in enumerate(conds):
-        # trial ordering
-        if cond in experiment:
-            order = np.argsort(zip(*experiment[cond].columns)[0])
-        else:
-            order = np.arange(n_trial)
-	    
+    for cond in responses.keys():
+        order = np.argsort(zip(*responses[cond].columns)[0])
         order = order[t0:tn]
 
         # trial-by-trial likelihoods of judgments
-        resp = np.asarray(experiment[cond])
-        trial_ll = np.empty((resp.shape[0], tn-t0, thetas.shape[0]))
-	
-        for tidx, t in enumerate(order):
-            thetas_t = thetas[:, t]
-            samps_t = ipe_samps[t]
-            resp_t = resp[:, t][:, None]
-            
-            # compute likelihood of outcomes
-            p_outcomes = np.exp(mo.predict(
-                thetas_t, outcomes,
-                samps_t, f_smooth))[:, 1]
-			
-            # observe response
-            ll = np.log((resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
-            trial_ll[:, tidx] = ll
-
-        # overall likelihood
-        lh[cond] = np.exp(np.sum(trial_ll, axis=1))
+        resp = np.asarray(responses[cond])[..., t0:tn]
+        lh[cond] = np.exp(mo.EvaluateObserver(
+            resp, feedback[..., t0:tn], ipe_samps[order], 
+            kappas, prior=prior, smooth=f_smooth))
 
     return lh
-    
-	# lh_mean[:, cidx] = np.mean(lh, axis=0)
-	# lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
-    
-    # mean = np.log(lh_mean).T
-    # upper = np.log(lh_mean + lh_sem).T
-    # lower = np.log(lh_mean - lh_sem).T
-    # out = np.array([mean, upper, lower]).T
 
-    # return out
-
-def learning_model_lh(conds, experiment, ipe_samps, feedback, ikappas, t0=None, tn=None, f_smooth=True):
+# def learning_model_lh(conds, experiment, ipe_samps, feedback, ikappas, kappas, 
+#                       t0=None, tn=None, f_smooth=True):
     
-    n_cond = len(conds)
-    n_trial = ipe_samps.shape[0]
-    outcomes = np.array([[0], [1]])
+#     n_cond = len(conds)
+#     n_trial = ipe_samps.shape[0]
+#     outcomes = np.array([[0], [1]])
 
-    if t0 is None:
-        t0 = 0
-    if tn is None:
-        tn = n_trial
-    
-    # lh_mean = np.empty((len(ikappas), n_cond))
-    # lh_sem = np.empty((len(ikappas), n_cond))
-    
-    lh = {}
-    
-    for cidx, cond in enumerate(conds):
-        # trial ordering
-        if cond in experiment:
-            order = np.argsort(zip(*experiment[cond].columns)[0])
-        else:
-            order = np.arange(n_trial)
-            
-        order = order[t0:tn]
-
-        # learning model beliefs
-        model_lh, model_joint, model_theta = mo.ModelObserver(
-            ipe_samps[order],
-            feedback[order][:, None],
-            outcomes=None,
-            respond=False,
-            p_ignore_stimulus=0,
-            smooth=f_smooth)
-
-        # trial-by-trial likelihoods of judgments
-        resp = np.asarray(experiment[cond])
-        theta = model_theta[ikappas]
-        trial_ll = np.empty((resp.shape[0], tn-t0, len(ikappas)))
+#     if t0 is None:
+#         t0 = 0
+#     if tn is None:
+#         tn = n_trial
         
-        for tidx, t in enumerate(order):
-            thetas_t = theta[:, t]
-            samps_t = ipe_samps[t]
-            resp_t = resp[:, t][:, None]
-	    
-            # compute likelihood of outcomes
-            p_outcomes = np.exp(mo.predict(
-                thetas_t, outcomes, 
-                samps_t, f_smooth))[:, 1]
-
-            # observe response
-            trial_ll[:, tidx] = np.log(
-            (resp_t*p_outcomes) + ((1-resp_t)*(1-p_outcomes)))
-
-        # overall likelihood
-        lh[cond] = np.exp(np.sum(trial_ll, axis=1))
-
-	# mean across participants
-    return lh
+#     lh = {}
     
-	# lh_mean[:, cidx] = np.mean(lh, axis=0)
-	# lh_sem[:, cidx] = scipy.stats.sem(lh, axis=0)
+#     for cidx, cond in enumerate(conds):
+#         # trial ordering
+#         if cond in experiment:
+#             order = np.argsort(zip(*experiment[cond].columns)[0])
+#         else:
+#             order = np.arange(n_trial)
+            
+#         order = order[t0:tn]
 
-    # mean = np.log(lh_mean).T
-    # lower = np.log(lh_mean - lh_sem).T
-    # upper = np.log(lh_mean + lh_sem).T
-    # out = np.array([mean, lower, upper]).T
-	
-    # return out
+#         # learning model beliefs
+#         model_joint, model_theta = mo.ModelObserver(
+#             feedback[ikappas][:, order], ipe_samps[order], kappas, 
+#             prior=None, smooth=f_smooth)
+
+#         # trial-by-trial likelihoods of judgments
+#         resp = np.asarray(experiment[cond])[:, None]
+
+#         p_outcomes = np.exp(mo.predict(
+#             model_theta[:, :-1], ipe_samps[order], kappas, f_smooth))
+#         lh_judgment = np.log(
+#             (resp*p_outcomes) + ((1-resp)*(1-p_outcomes)))
+
+#         # overall likelihood
+#         lh[cond] = np.exp(np.sum(lh_judgment, axis=-1))
+
+#     return lh

@@ -112,7 +112,7 @@ outcomes     = np.array([0, 1])                  # possible outcomes
 n_trial      = Stims.size
 n_outcomes   = outcomes.size                     # number of possible outcomes
 
-f_smooth = False
+f_smooth = True
 p_ignore_stimulus = 0.0
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
@@ -159,7 +159,6 @@ for cond in sorted(experiment.keys()):
 	fb, ipe_samps[order], kappas, prior=prior, smooth=f_smooth)
 
     # compute probability of falling
-    p_outcomes = np.empty((n_trial,))
     newcond = "-".join(["MO"] + cond.split("-")[1:])
     p_outcomes = np.exp(mo.predict(
 	model_theta[:-1], ipe_samps[order], kappas, f_smooth))

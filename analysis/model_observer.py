@@ -44,6 +44,7 @@ def IPE(F, samps, kappas, smooth):
     """
 
     n_trial, n_kappas, n_samps = samps.shape
+    x = np.array(kappas)
     
     # shape is (n_trial, n_kappas)
     alpha = np.sum(samps, axis=-1) + 0.5
@@ -60,14 +61,14 @@ def IPE(F, samps, kappas, smooth):
 
     else:
         # using bernoulli fall/not fall plus kernel smoothing
-        lam = pfell_meanstd * 10
+        lam = (pfell_meanstd * 10)[:, None, None]
         # calculate distances
-        # shape is (n_kappas, n_kappas)
-        dists = np.abs(kappas[:, None] - kappas[None, :]) / lam
+        # shape is (n_trial, n_kappas, n_kappas)
+        dists = np.abs(x[:, None] - x[None, :]) / lam
         # calculate gaussian probability of distances
         pdist = np.exp(-0.5 * dists**2) / np.sqrt(2)
-        # shape is (n_kappas,)
-        sum_pdist = np.sum(pdist, axis=-1)[:, None]
+        # shape is (n_trial, n_kappas, 1)
+        sum_pdist = np.sum(pdist, axis=-1)
         # broadcasts to shape (n_trial, n_kappas, n_kappas), then sum
         # leads to shape of (n_trial, n_kappas)
         pfell = np.sum(pdist * pfell_mean[..., None], axis=-1) / sum_pdist
@@ -157,9 +158,28 @@ def ModelObserver(feedback, ipe_samps, kappas, prior=None, smooth=True):
     seq = np.empty(lh.shape[:-2] + (n_trial+1, n_kappas))
     seq[..., 0, :] = prior
     seq[..., 1:, :] = lh
-    # cumulative sum over this sequence to get the joint
+    # cumulative sum over this sequence to get the joint P(F, k | S)
     joint = np.cumsum(seq, axis=-2)
-    # normalize for the posterior
-    posterior = normalize(joint, axis=-1)[1]
+    # normalize to get the posterior P(F | S) and marginal P(k | F, S)
+    marginal, posterior = normalize(joint, axis=-1)
 
-    return joint, posterior
+    return joint, marginal, posterior
+
+def EvaluateObserver(responses, feedback, ipe_samps, kappas, prior=None, smooth=True):
+    joint, marginal, posterior = ModelObserver(
+        feedback, ipe_samps, kappas, prior=prior, smooth=smooth)
+
+    n_trial, n_kappas, n_samps = ipe_samps.shape
+    lh = np.log(IPE(np.ones(n_trial), ipe_samps, kappas, smooth))
+    lh[np.isnan(lh)] = np.log(0.5)
+
+    p_response = np.exp(normalize(posterior[..., :-1, :] + lh, axis=-1)[0])
+    
+    # marginal and responses should be in the shape (..., n_trial)
+    lh0 = responses[:, None] * p_response
+    lh1 = (1-responses)[:, None] * (1-p_response)
+    lh = lh0 + lh1
+    lh[np.isnan(lh)] = 0.5
+    assert (lh<=1).all()
+    llh = np.sum(np.log(lh), axis=-1)
+    return llh
