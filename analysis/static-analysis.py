@@ -231,10 +231,10 @@ nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.
 nanmean = scipy.stats.nanmean
 nanstd = scipy.stats.nanstd
 
-suffix = "-fb-10"
+suffix = "-vfb-10"
 ratio = 10
 
-hdata = np.asarray(experiment['B' + suffix])
+hdata = np.asarray(experiment['C' + suffix])
 hmean = nanmean(hdata, axis=0)
 hsem = nanstd(hdata, axis=0) / np.sqrt(hdata.shape[0])
 
@@ -282,13 +282,16 @@ for cond in conds:
 
     ratio = float(cond.split("-")[-1])
     arr = np.asarray(queries[cond]) == ratio
+    index = np.array(queries[cond].columns, dtype='i8')
+    idx = np.array(index)-6-np.arange(len(index))-1
+    print idx
     allarr.append(arr)
     allconds.append(cond)
     binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
     print np.round(binom, decimals=8)
     mean = np.mean(arr, axis=0)
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
-    plt.errorbar(np.arange(mean.shape[0]), mean, yerr=sem, 
+    plt.errorbar(idx, mean, yerr=sem, 
 		 label="r=%s (n=%d)"% (cond.split("-")[-1], arr.shape[0]))
 
 arr = np.concatenate(allarr, axis=0)
@@ -299,8 +302,8 @@ sem = scipy.stats.sem(arr, axis=0)
 plt.errorbar(np.arange(mean.shape[0]), mean, yerr=sem, 
 	     label="all (n=%d)"% (arr.shape[0]))
 
-plt.xlim(-.5, 3.5)
-plt.xticks([0, 1, 2, 3], [5, 10, 15, 20])
+plt.xlim(idx.min(), idx.max())
+plt.xticks(idx, idx)
 plt.xlabel("Trial")
 plt.ylabel("P(judge correct mass ratio)")
 plt.title("Explicit mass judgments")
@@ -314,9 +317,12 @@ lat.save("images/explicit_mass_judgments.png", close=False)
 arr = np.concatenate(allarr, axis=0)
 df = pd.DataFrame(
     np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
-    index=[5, 10, 15, 20], 
+    index=idx,
     columns=["incorrect", "correct"])
 print df
 
-scipy.stats.chi2_contingency(df)
+chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
+print (chi2, p)
+
+scipy.stats.chisquare(df)
 

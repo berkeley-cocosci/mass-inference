@@ -74,7 +74,8 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
     queries = {}
 
     suffix = ['-cb0', '-cb1']
-    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
     pids = get_bad_pids(allconds, thresh=thresh)
     print "Bad pids (%d): %s" % (len(pids), pids)
@@ -106,7 +107,8 @@ def load_turk_static(thresh=1):
     queries = {}
 
     suffix = ['-cb0', '-cb1']
-    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-nfb-10']
 
     for cond in conds:
         training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
@@ -166,6 +168,7 @@ def process_model_turk(hstim, nthresh0, nthresh):
 
     sstim = np.array(rawsstim)
     idx = np.nonzero((sstim[:, None] == hstim[None, :]))[0]
+    assert idx.size > 0
 
     nfell = (rawtruth0[idx]['nfellA'] + rawtruth0[idx]['nfellB']) / 10.0
     feedback = (nfell > nthresh0)[:, :, 0].T
