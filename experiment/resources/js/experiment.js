@@ -273,7 +273,11 @@ var slides = {
 	    var time;
             $("#responses").hide();
 	    if (textfb) {
-		time = 2000;
+		if (videofb && stable) {
+		    time = 3000;
+		} else {
+		    time = 2000;
+		}
                 if (stable) {
 		    $("#stable-feedback").fadeIn(fade);
                 } else {
@@ -285,7 +289,7 @@ var slides = {
 
             // if videofb (video feedback) is true, then show a video
             // and text
-            if (videofb) {
+            if (videofb && !stable) {
                 // re-enable player
                 if ($f($("#player")).disabled) {
                     $f($("#player")).disable();
