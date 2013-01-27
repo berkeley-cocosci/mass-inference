@@ -368,14 +368,19 @@ var experiment = {
             experiment.index = info.index;
 
 	    // different instructions depending on feedback condition
-	    if (experiment.condition.split("-")[1] === "fb") {
+	    var fbtype = experiment.condition.split("-")[1];
+	    if (fbtype == "fb") {
 		// $($("#feedback-info").find("p")[1]).hide();
 		$(".fb").show();
 		$(".nfb").hide();
-	    } else {
+	    } else if (fbtype == "nfb") {
 		// $($("#feedback-info").find("p")[0]).hide();
 		$(".fb").hide();
 		$(".nfb").show();
+	    } else if (fbtype == "vfb") {
+		$(".nfb").hide();
+		$(".fb").hide();
+		$(".vfb").show();
 	    }
 
             slides.show("instructions1a");
@@ -419,6 +424,7 @@ var experiment = {
 		    $("#reload-container").hide();
 		    $("#query-ratio-container").show();
                     slides.show("trial");
+		    experiment.starttime = new Date().getTime();
 		}		    
 
                 // Normal trial

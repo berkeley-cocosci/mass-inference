@@ -155,6 +155,10 @@ mass-tower_00392_0100110011~kappa--1.0_cb-0,False,False
 mass-tower_00392_0100110011~kappa--1.0_cb-1,False,False
 mass-tower_00392_0100110011~kappa-1.0_cb-0,False,False
 mass-tower_00392_0100110011~kappa-1.0_cb-1,False,False
+mass-tower_00263_0010100111~kappa--1.0_cb-0,True,False
+mass-tower_00263_0010100111~kappa--1.0_cb-1,True,False
+mass-tower_00263_0010100111~kappa-1.0_cb-0,True,False
+mass-tower_00263_0010100111~kappa-1.0_cb-1,True,False
 stability01654,False,False
 stability01967,False,False
 stability01491,False,False
