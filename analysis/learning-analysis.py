@@ -118,7 +118,7 @@ plt.suptitle("Ideal Observer Beliefs")
 cidx = 0
 
 reload(mo)
-#nfake = 2000
+nfake = 2000
 for cond in sorted(experiment.keys()):
 
     group, fbtype, ratio, cb = lat.parse_condition(cond)
@@ -130,18 +130,22 @@ for cond in sorted(experiment.keys()):
     cols = experiment[cond].columns
     order = np.argsort(zip(*cols)[0])
     undo_order = np.argsort(order)
-    nfake = experiment[cond].shape[0]
+    #nfake = experiment[cond].shape[0]
 
     # determine what feedback to give
     if fbtype == 'nfb':
 	fb = nofeedback[..., order]
+	prior = np.zeros((n_kappas,))
+	prior[kappas.index(0.0)] = 1
+	prior = normalize(np.log(prior))[1]
     else:
 	ridx = ratios.index(ratio)
 	fb = feedback[:, order][ridx]
+	prior = None
     
     # learning model beliefs
     model_joint, model_theta = mo.ModelObserver(
-	fb, ipe_samps[order], kappas, prior=None, smooth=f_smooth)
+	fb, ipe_samps[order], kappas, prior=prior, smooth=f_smooth)
 
     # compute probability of falling
     #newcond = "-".join(["MO"] + cond.split("-")[1:])
@@ -216,30 +220,6 @@ for cond in conds:
 
 # <codecell>
 
-def collapse(data, mean=False):
-    arrs = [[data[c] for c in data if c.startswith(nc+"-cb")] for nc in conds]
-    stacked = [np.concatenate(x, axis=0) for x in arrs if x != []]
-    # means = np.array([np.mean(x, axis=0).T for x in stacked])
-    # sems = np.array([scipy.stats.sem(x, axis=0).T for x in stacked])
-    # sems[np.isnan(sems)] = 0
-    # mean = np.log(means)
-    # lower = np.log(means - sems)
-    # upper = np.log(means + sems)
-    # out = np.array([mean, lower, upper]).T
-    if mean:
-	arr = np.array([np.mean(x, axis=0).T for x in stacked])
-    else:
-	arr = np.array([np.sum(x, axis=0).T for x in stacked])
-    out = np.array([np.log(arr)]).T
-    return out
-def samplesize(data):
-    arrs = [[data[c] for c in data if c.startswith(nc+"-cb")] for nc in conds]
-    size = np.array([np.concatenate(x, axis=0).shape[0] for x in arrs if x != []])
-    return size
-
-
-# <codecell>
-
 def CI(data):
     bmvs = scipy.stats.bayes_mvs
     stats = []
@@ -248,11 +228,17 @@ def CI(data):
 	assert len(shape) == 2
 	info = []
 	for i in xrange(shape[1]):
-	    if data[cond][:, i].shape == (1,):
-		mean = lower = upper = data[cond][:, i][0]
+	    shape = data[cond][:, i].shape
+	    if shape == (1,):
+		mean = lower = upper = np.log(data[cond][:, i][0])
 	    else:
-		mean, (lower, upper) = bmvs(data[cond][:, i])[0]
-		mean = lower = upper = np.sum(data[cond][:, i])
+		#mean, (lower, upper) = bmvs(data[cond][:, i])[0]
+		mean = np.mean(data[cond][:, i])
+		sem = scipy.stats.sem(data[cond][:, i])
+		lower = np.log(mean - sem)
+		upper = np.log(mean + sem)
+		mean = np.log(mean)
+		# mean = lower = upper = np.sum(data[cond][:, i])
 	    info.append([mean, lower, upper])
 	stats.append(info)
     stats = np.swapaxes(np.array(stats), 0, 1)
@@ -268,7 +254,7 @@ ir01 = list(kappas).index(-1.0)
 reload(lat)
 
 # random model
-model_random = CI(lat.random_model_lh(conds, n_trial))
+model_random, = CI(lat.random_model_lh(conds, n_trial))
 
 # <codecell>
 
@@ -297,14 +283,14 @@ model_learn01, model_learn10 = CI(lat.block_lh(
 # <codecell>
 
 # all the models
-models = np.array([
-    model_random,
-    model_true01,
-    model_learn01,
-    model_uniform,
-    model_true10,
-    model_learn10
-    ]).T
+models = np.concatenate([
+    model_random[None],
+    model_true01[None],
+    model_learn01[None],
+    model_uniform[None],
+    model_true10[None],
+    model_learn10[None]
+    ], axis=0).T
 
 # <codecell>
 
@@ -312,7 +298,7 @@ reload(lat)
 theta = np.log(np.eye(n_kappas))
 fb = np.empty((n_kappas, n_trial))*np.nan
 
-mean, upper, lower = CI(lat.block_lh(
+mean, lower, upper = CI(lat.block_lh(
     experiment, fb, ipe_samps, theta, kappas, f_smooth=f_smooth,
     f_average=False, f_round=False)).T
 # sums, = CI(lat.block_lh(
@@ -340,7 +326,7 @@ plt.xlabel("Fixed model mass ratio")
 plt.ylabel("Log likelihood of responses")
 plt.legend(loc=4, ncol=2, fontsize=12)
 plt.xlim(x[0], x[-1])
-#plt.ylim(-15, -6)
+plt.ylim(-34, -20)
 plt.title("Likelihood of responses under fixed models")
 fig.set_figwidth(8)
 fig.set_figheight(6)
@@ -352,7 +338,7 @@ lat.save("images/fixed_model_performance.png", close=False)
 # plot model performance
 x0 = np.arange(models.shape[2])
 height = models[0]
-#err = np.abs(models[[0]] - models[1:])
+err = np.abs(models[[0]] - models[1:])
 width = 0.7 / n_cond
 fig = plt.figure(4)
 plt.clf()
@@ -364,7 +350,7 @@ for cidx, cond in enumerate(conds):
     else:
 	alpha = 1.0
     x = x0 + width*(cidx-(n_cond/2.)) + (width/2.)
-    plt.bar(x, height[cidx], #yerr=err[:, cidx], 
+    plt.bar(x, height[cidx], yerr=err[:, cidx], 
 	    color=color,
 	    ecolor='k', align='center', width=width, 
 	    label=cond_labels[cond], alpha=alpha)
@@ -378,7 +364,7 @@ plt.xticks(x0, [
     "Learning\nr=10.0"
     ])
 #plt.ylim(int(np.min(height-err))-1, int(np.max(height))+1)
-plt.ylim(-16, -6)
+plt.ylim(-34, -20)
 plt.xlim(x0.min()-0.5, x0.max()+0.5)
 plt.legend(loc=0, ncol=2, fontsize=12)
 plt.xlabel("Model", fontsize=14)
@@ -405,11 +391,11 @@ lat.save("images/model_performance.png", close=False)
 # p_ratio = np.exp(collapse(p_ratio, mean=True)[:, :, 0])
 
 reload(lat)
-window = 5
+window = 8
 nsteps = n_trial / window
 
 x = np.linspace(window, n_trial, nsteps)
-lh = np.empty((nsteps, 2, len(conds)))
+lh = np.empty((nsteps, 2, len(conds), 3))
 for t in xrange(nsteps):
     thetas = np.zeros((2, n_kappas))
     # thetas[:, :kappas.index(0.0)] = p_ratio[t][:, None]
@@ -421,9 +407,9 @@ for t in xrange(nsteps):
     thetas[:, kappas.index(1.0)] = np.array([0, 1])
     thetas = normalize(np.log(thetas), axis=1)[1]
     fb = np.empty((2, n_trial)) * np.nan
-    lh[t] = collapse(lat.block_lh(
+    lh[t] = CI(lat.block_lh(
 	experiment, fb, ipe_samps, thetas, 
-	kappas, t*window, (t+1)*window, f_smooth))[..., 0]
+	kappas, t*window, (t+1)*window, f_smooth))
 
 # x = np.arange(10)
 # lh = np.empty((10, 2, len(conds), 3))
@@ -464,25 +450,25 @@ else:
 	    linestyle = '-'
 
 	plt.figure(fig1)
-	# plt.fill_between(x, lh[:, 0, cidx, 1], lh[:, 0, cidx, 2],
-	# 		 color=color, alpha=alpha)
-	# plt.plot(x, lh[:, 0, cidx, 0], color=color, label=cond_labels[cond],
-	# 	 linestyle=linestyle)
-	plt.plot(x, lh[:, 0, cidx], color=color, label=cond_labels[cond],
-		 linestyle=linestyle, linewidth=2)
+	plt.fill_between(x, lh[:, 0, cidx, 1], lh[:, 0, cidx, 2],
+			 color=color, alpha=alpha)
+	plt.plot(x, lh[:, 0, cidx, 0], color=color, label=cond_labels[cond],
+		 linestyle=linestyle)
+	# plt.plot(x, lh[:, 0, cidx], color=color, label=cond_labels[cond],
+	# 	 linestyle=linestyle, linewidth=2)
 
 	plt.figure(fig2)
-	# plt.fill_between(x, lh[:, 1, cidx, 1], lh[:, 1, cidx, 2],
-	# 		 color=color, alpha=alpha)
-	# plt.plot(x, lh[:, 1, cidx, 0], color=color, label=cond_labels[cond],
-	# 	 linestyle=linestyle)
-	plt.plot(x, lh[:, 1, cidx], color=color, label=cond_labels[cond],
-		 linestyle=linestyle, linewidth=2)
+	plt.fill_between(x, lh[:, 1, cidx, 1], lh[:, 1, cidx, 2],
+			 color=color, alpha=alpha)
+	plt.plot(x, lh[:, 1, cidx, 0], color=color, label=cond_labels[cond],
+		 linestyle=linestyle)
+	# plt.plot(x, lh[:, 1, cidx], color=color, label=cond_labels[cond],
+	# 	 linestyle=linestyle, linewidth=2)
 
 for i, fig in enumerate((fig1, fig2)):
     plt.figure(fig)
     plt.xlim(x.min(), x.max())
-    plt.ylim(-2, 2)
+    # plt.ylim(-2, 2)
     # plt.xticks(np.arange(0, nsteps), np.linspace(window, n_trial, nsteps))
     plt.xticks(x, x.astype('i8'))
     plt.xlabel("Trial")
@@ -504,6 +490,13 @@ for i, fig in enumerate((fig1, fig2)):
 # k : number of parameters
 # n : sample size
 
+def samplesize(data):
+    sizes = []
+    for cond in conds:
+	d = data[cond]
+	sizes.append(d.shape[0])
+    return np.array(sizes)
+
 mnames = np.array([
     "random", "fixed 0.1", "learning 0.1", 
     "fixed uniform", "fixed 10", "learning 10"])
@@ -520,41 +513,4 @@ zip(conds, mnames[best])
 
 # <codecell>
 
-# all the models
-models = np.array([
-    model_random,
-    model_true01,
-    model_learn01,
-    model_uniform,
-    model_true10,
-    model_learn10
-    ]).T
-
-# <codecell>
-
-
-kappa = -1
-cond = 'fb-0.1'
-
-idx1, stim1 = zip(*experiment['B-'+cond+'-cb0'].columns)
-idx2, stim2 = zip(*experiment['B-'+cond+'-cb1'].columns)
-
-fb1 = feedback[kappas.index(kappa), list(idx1)].astype('i8')
-fb2 = feedback[kappas.index(kappa), list(idx2)].astype('i8')
-
-h1 = np.mean(np.asarray(experiment['B-'+cond+'-cb0'])[:, idx1], axis=0)
-h2 = np.mean(np.asarray(experiment['B-'+cond+'-cb1'])[:, idx2], axis=0)
-
-m1 = np.mean(np.asarray(experiment['MO-'+cond+'-cb0'])[:, idx1], axis=0)
-m2 = np.mean(np.asarray(experiment['MO-'+cond+'-cb1'])[:, idx2], axis=0)
-
-plt.figure(20)
-plt.clf()
-plt.plot(h1, 'b-')
-plt.plot(h2, 'r-')
-plt.plot(m1, 'b--')
-plt.plot(m2, 'r--')
-plt.plot((fb1*.9)+.05, 'bo')
-plt.plot((fb2*.8)+.1, 'ro')
-plt.ylim(0, 1)
 

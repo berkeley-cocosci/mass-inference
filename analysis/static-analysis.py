@@ -130,7 +130,7 @@ plt.suptitle("Ideal Observer Beliefs")
 cidx = 0
 
 reload(mo)
-nfake = 1000
+nfake = 2000
 for cond in sorted(experiment.keys()):
 
     group, fbtype, ratio, cb = lat.parse_condition(cond)
@@ -250,19 +250,11 @@ plt.figure(3)
 plt.clf()
 plt.errorbar(hmean, smean, xerr=hsem, yerr=ssem, 
 	     linestyle='', marker='o')
-plt.xlabel("Human n=%d (no feedback)" % hdata.shape[0])
+plt.xlabel("Human n=%d (visual feedback)" % hdata.shape[0])
 plt.ylabel("Model n=%d (uniform prior, no learning)" % sdata.shape[0])
 plt.title("Human vs. model judgments")
 
 lat.save("images/human_v_model.png", close=False)
-
-# <codecell>
-
-emj = np.concatenate(allarr, axis=0)
-total = emj.shape[0]
-sum_emj = np.sum(emj, axis=0)
-
-scipy.stats.binom.sf(sum_emj[0], total, 0.5)
 
 # <codecell>
 
@@ -299,7 +291,7 @@ binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=
 print np.round(binom, decimals=8)
 mean = np.mean(arr, axis=0)
 sem = scipy.stats.sem(arr, axis=0)
-plt.errorbar(np.arange(mean.shape[0]), mean, yerr=sem, 
+plt.errorbar(idx, mean, yerr=sem, 
 	     label="all (n=%d)"% (arr.shape[0]))
 
 plt.xlim(idx.min(), idx.max())
@@ -324,5 +316,6 @@ print df
 chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
 print (chi2, p)
 
-scipy.stats.chisquare(df)
+# <codecell>
+
 
