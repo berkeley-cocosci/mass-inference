@@ -53,7 +53,7 @@ def IPE(F, samps, kappas, smooth):
     pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
     pfell_std = np.sqrt(pfell_var)
     # shape is (n_trial,)
-    pfell_meanstd = np.mean(pfell_std, axis=-1)
+    pfell_meanstd = np.mean(pfell_std, axis=-2)
 
     if not smooth:
         # using bernoulli fall/not fall
@@ -61,18 +61,17 @@ def IPE(F, samps, kappas, smooth):
 
     else:
         # using bernoulli fall/not fall plus kernel smoothing
-        lam = (pfell_meanstd * 10)[:, None, None]
+        lam = (pfell_meanstd * 10)
         # calculate distances
-        # shape is (n_trial, n_kappas, n_kappas)
+        # shape is (n_kappas, n_kappas)
         dists = np.abs(x[:, None] - x[None, :]) / lam
         # calculate gaussian probability of distances
         pdist = np.exp(-0.5 * dists**2) / np.sqrt(2)
-        # shape is (n_trial, n_kappas, 1)
+        # shape is (n_kappas,)
         sum_pdist = np.sum(pdist, axis=-1)
         # broadcasts to shape (n_trial, n_kappas, n_kappas), then sum
         # leads to shape of (n_trial, n_kappas)
-        pfell = np.sum(pdist * pfell_mean[..., None], axis=-1) / sum_pdist
-
+        pfell = np.sum(pdist * pfell_mean[..., None, :], axis=-1) / sum_pdist
 
     # Ok, so now we have pfell which is shape (n_trial, n_kappas) and
     # is the probability of the stimulus on trial N falling, given
@@ -160,13 +159,13 @@ def ModelObserver(feedback, ipe_samps, kappas, prior=None, smooth=True):
     seq[..., 1:, :] = lh
     # cumulative sum over this sequence to get the joint P(F, k | S)
     joint = np.cumsum(seq, axis=-2)
-    # normalize to get the posterior P(F | S) and marginal P(k | F, S)
-    marginal, posterior = normalize(joint, axis=-1)
+    # normalize to get the posterior P(k | F, S)
+    posterior = normalize(joint, axis=-1)[1]
 
-    return joint, marginal, posterior
+    return joint, posterior
 
 def EvaluateObserver(responses, feedback, ipe_samps, kappas, prior=None, smooth=True):
-    joint, marginal, posterior = ModelObserver(
+    joint, posterior = ModelObserver(
         feedback, ipe_samps, kappas, prior=prior, smooth=smooth)
 
     n_trial, n_kappas, n_samps = ipe_samps.shape

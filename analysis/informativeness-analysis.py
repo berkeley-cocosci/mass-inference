@@ -55,12 +55,12 @@ ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 # truth = truth[0]
 # ipe = ipe[0]
 
-stimuli = rawhstim[None, :].copy()
+stimuli = rawhstim.copy()
 truth = rawtruth.copy()
 ipe = rawipe.copy()
 
 # variables
-n_trial      = stimuli.shape[1]
+n_trial      = stimuli.shape[0]
 n_kappas     = len(kappas)
 
 # <codecell>
@@ -74,7 +74,6 @@ f_close = False
 smooth = True
 idx = [
     int(np.nonzero(ratios==0.1)[0][0]),
-    int(np.nonzero(ratios==1)[0][0]),
     int(np.nonzero(ratios==10)[0][0]),
 ]
 
@@ -82,12 +81,18 @@ idx = [
 
 feedback, ipe_samps = lat.make_observer_data(
     nthresh0, nthresh, nsamps, order=False)
-model_lh, model_joint, model_theta = mo.ModelObserver(
-    ipe_samps,
-    feedback[:, None],
-    outcomes=None,
-    respond=False,
-    smooth=smooth)
+feedback = feedback[..., 0].T
+ipe_samps = ipe_samps[..., 0]
+
+# <codecell>
+
+# model_joint, model_theta = mo.ModelObserver(
+#     feedback.T,
+#     ipe_samps[..., 0],
+#     kappas,
+#     prior=None,
+#     smooth=True)
+model_lh = np.log(mo.IPE(feedback, ipe_samps, kappas, True))
 
 # <codecell>
 
@@ -98,7 +103,7 @@ def KL(qi, idx):
     """
     pi = (np.eye(n_kappas) + (1./n_kappas))[idx][:, None]
     for i, ix in enumerate(idx):
-	pi[i, :, ix] += nsamps
+    pi[i, :, ix] += nsamps
     pi /= nsamps + 1
     kl = np.sum(np.log(pi / qi)*pi, axis=-1)
     return kl
@@ -108,13 +113,13 @@ def KL(qi, idx):
 
 
 # figure out the starting stimulus (minimum entropy=most information)
-fb = feedback[:, idx, 0]
-lh = model_lh[idx][:, 1:].copy()
+fb = feedback[idx]
+lh = model_lh[idx].copy()
 p = normalize(lh, axis=-1)[1]
 H = KL(np.exp(p), idx)
 
 order = [np.argmin(np.sum(H**2, axis=0))]
-nums = [stimuli[0, order[0]].split("_")[1]]
+nums = [stimuli[order[0]].split("_")[1]]
     
 joint = lh[:, order[0]].copy()
 allJoint = [joint.copy()]
@@ -129,14 +134,14 @@ for t in xrange(T-1):
     # choose stimulus that would result in the lowest entropy, without
     # repeating stimuli
     for s in np.argsort(np.prod(H, axis=0)):
-	num = stimuli[0, s].split("_")[1]
-	if (s not in order) and (num not in nums):
-	    order.append(s)
-	    nums.append(num)
-	    allH.append(H[:, s])
-	    joint += lh[:, order[-1]]
-	    allJoint.append(joint.copy())
-	    break
+        num = stimuli[s].split("_")[1]
+        if (s not in order) and (num not in nums):
+            order.append(s)
+            nums.append(num)
+            allH.append(H[:, s])
+            joint += lh[:, order[-1]]
+            allJoint.append(joint.copy())
+            break
 
 order = np.array(order)
 nums = np.array(nums)
@@ -156,34 +161,36 @@ for i, ix in enumerate(idx):
     plt.ylim(0, 3)
 
     lat.plot_theta(
-	1, 2, 2,
+    1, 2, 2,
         np.exp(normalize(allJoint[:, i], axis=-1)[1]),
-	"",
-	exp=1.3,
-	cmap=cmap,
-	fontsize=14)
+    "",
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
 
 # <codecell>
 
-N = 20
+N = 40
 C = 0
 
-exp = list(order.copy())
-fbexp = np.sum(fb[order], axis=0)
-newexp = exp[::-1]
+exp = list(order[np.nonzero(fb[0, order] != fb[1, order])[0]][:N])
+fbexp = np.sum(fb[:, exp], axis=1)
+newexp = order[np.nonzero(fb[0, order] == fb[1, order])[0]]
 for i in xrange(len(newexp)):
+    print fbexp
     if (fbexp==(N/2)).all():
-	break
+        break
     if len(exp) == N:
-	break
-    if ((fbexp==((N/2)-2)) & fb[newexp[i]].astype('bool')).any():
-	continue
-    fbexp -= fb[newexp[i]]
-    exp.remove(newexp[i])
+        break
+    print fb[:, newexp[i]]
+    if ((fbexp==((N/2))) & fb[:, newexp[i]].astype('bool')).any():
+        continue
+    fbexp += fb[:, newexp[i]]
+    exp.append(newexp[i])
 
-yes = np.nonzero((fb[order] == 0).all(axis=1))[0]
+yes = np.nonzero((fb[:, order] == 0).all(axis=0))[0]
 assert order[yes[-1]] not in exp
-mass_example = stimuli[0, order[yes[-1]]]
+mass_example = stimuli[order[yes[-1]]]
 
 # exp = order[np.sort(np.hstack([
 #     yes[:N/2], 
@@ -191,40 +198,40 @@ mass_example = stimuli[0, order[yes[-1]]]
 # if C > 0:
 #     catch = order[np.sort(np.hstack([  
 #         yes[-(C/2)-1:-1],
-# 	no[-C/2:]]))]
+#     no[-C/2:]]))]
 # else:
 exp = np.array(exp)
 catch = np.array([], dtype='i8')
 eqorder = np.hstack([exp, catch])
 print eqorder
-print stimuli[0, eqorder]
-print fb[eqorder]
-print np.sum(fb[eqorder], axis=0)
+print stimuli[eqorder]
+print fb[:, eqorder]
+print np.sum(fb[:, eqorder], axis=1)
 
 # <codecell>
 
 np.random.shuffle(eqorder)
 print eqorder 
 exp_ipe_samps = ipe_samps[eqorder]
-exp_feedback = feedback[eqorder][:, idx]
+exp_feedback = feedback[idx][:, eqorder]
 
-exp_lh, exp_joint, exp_theta = mo.ModelObserver(
+exp_joint, exp_theta = mo.ModelObserver(
+    exp_feedback,
     exp_ipe_samps,
-    exp_feedback[:, None],
-    outcomes=None,
-    respond=False,
-    smooth=smooth)
+    kappas,
+    prior=None,
+    smooth=True)
 
 plt.figure(1)
 plt.clf()
 for i in xrange(len(idx)):
     lat.plot_theta(
-	1, len(idx), i+1,
-	np.exp(exp_theta[i]),
-	ratios[idx[i]],
-	exp=1.3,
-	cmap=cmap,
-	fontsize=14)
+    1, len(idx), i+1,
+    np.exp(exp_theta[i]),
+    ratios[idx[i]],
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
 
 # lat.plot_theta(
 #     1, 3, 3,
@@ -254,24 +261,24 @@ for i in xrange(len(idx)):
 # <codecell>
 
 for i, ix in enumerate(idx):
-    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[0, exp])]
-    catch_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[0, catch])]
+    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
+    catch_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[catch])]
     l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[ix])
     print l
     with open(l, "w") as fh:
-	lines = "\n".join(exp_stims)
-	fh.write(lines)
+    lines = "\n".join(exp_stims)
+    fh.write(lines)
     # l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[ix])
     # print l
     # with open(l, "w") as fh:
-    # 	lines = "\n".join(catch_stims)
-    # 	fh.write(lines)
+    #     lines = "\n".join(catch_stims)
+    #     fh.write(lines)
     
 
 # <codecell>
 
 uidx = np.hstack([exp, catch])
-used = stimuli[0, uidx]
+used = stimuli[uidx]
 used_nums = [x.split("_")[1] for x in used]
 
 # <codecell>
@@ -329,7 +336,7 @@ train_stims = np.sort(original[train])
 if ntrain_catch > 0:
     train_catch = np.hstack([
         unstable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1],
-	stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
+    stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
     train_catch_stims = np.sort(original[train_catch])
 else:
     train_catch = np.array([], dtype='S')
@@ -372,8 +379,8 @@ for i, ix in enumerate(idx):
     l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[ix])
     print l
     with open(l, "w") as fh:
-	lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
-	fh.write(lines)
+    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
+    fh.write(lines)
 # l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
 # with open(l, "w") as fh:
 #     lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
@@ -386,62 +393,42 @@ fh = open("../../turk-experiment/www/config/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
     for ix in idx:
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[ix]),
-	     str(not(bool(feedback[i,ix,0]))),
-	     str(False)]
-	     ) + "\n")
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[ix]),
-	     str(not(bool(feedback[i,ix,0]))),
-	     str(False)]
-	     ) + "\n")
-    # fh.write(",".join(
-    # 	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
-    # 	 str(not(bool(feedback[i,nidx,0]))),
-    # 	 str(False)]
-    # 	 ) + "\n")
-    # fh.write(",".join(
-    # 	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
-    # 	 str(not(bool(feedback[i,nidx,0]))),
-    # 	 str(False)]
-    # 	 ) + "\n")
+    fh.write(",".join(
+        ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
+         str(not(bool(feedback[ix,i]))),
+         str(False)]
+         ) + "\n")
+    fh.write(",".join(
+        ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
+         str(not(bool(feedback[ix,i]))),
+         str(False)]
+         ) + "\n")
 
 for i in catch:
     for ix in idx:
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[ix]),
-	     str(not(bool(feedback[i,ix,0]))),
-	     str(True)]
-	     ) + "\n")
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[ix]),
-	     str(not(bool(feedback[i,ix,0]))),
-	     str(True)]
-	     ) + "\n")
-    # fh.write(",".join(
-    # 	["%s~kappa-%s_cb-0" % (stimuli[0,i], kappas[nidx]),
-    # 	 str(not(bool(feedback[i,nidx,0]))),
-    # 	 str(True)]
-    # 	 ) + "\n")
-    # fh.write(",".join(
-    # 	["%s~kappa-%s_cb-1" % (stimuli[0,i], kappas[nidx]),
-    # 	 str(not(bool(feedback[i,nidx,0]))),
-    # 	 str(True)]
-    # 	 ) + "\n")
+    fh.write(",".join(
+        ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
+         str(not(bool(feedback[ix,i]))),
+         str(True)]
+         ) + "\n")
+    fh.write(",".join(
+        ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
+         str(not(bool(feedback[ix,i]))),
+         str(True)]
+         ) + "\n")
 
 for i in train:
     fh.write(",".join(
-	[original[i],
-	 str(not(bool(ofb[i]))),
-	 str(False)]
-	 ) + "\n")
+    [original[i],
+     str(not(bool(ofb[i]))),
+     str(False)]
+     ) + "\n")
 for i in train_catch:
     fh.write(",".join(
-	[original[i],
-	 str(not(bool(ofb[i]))),
-	 str(True)]
-	 ) + "\n")
+    [original[i],
+     str(not(bool(ofb[i]))),
+     str(True)]
+     ) + "\n")
 
 fh.close()
 

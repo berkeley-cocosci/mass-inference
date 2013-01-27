@@ -89,7 +89,7 @@ nofeedback = np.empty((feedback.shape[1]))*np.nan
 
 fig = plt.figure(1)
 plt.clf()
-lat.plot_smoothing(ipe_samps, Stims, 6, nthresh, kappas)
+lat.plot_smoothing(ipe_samps, Stims, 6, kappas)
 fig.set_figheight(6)
 fig.set_figwidth(8)
 
@@ -138,7 +138,7 @@ for cond in sorted(experiment.keys()):
 	continue
 
     cols = experiment[cond].columns
-    order = np.argsort(zip(*cols)[0])
+    order = np.argsort(cols)
     undo_order = np.argsort(order)
 
     # determine what feedback to give
@@ -240,7 +240,7 @@ hsem = nanstd(hdata, axis=0) / np.sqrt(hdata.shape[0])
 
 #sdata = ipe_samps[:, ratios.index(ratio)].T
 #sdata = nfell[:, ratios.index(ratio)].T
-sdata = zscore(np.asarray(experiment['MO' + suffix]), axis=1, ddof=1)
+sdata = np.asarray(experiment['MO' + suffix])
 smean = nanmean(sdata, axis=0)
 ssem = nanstd(sdata, axis=0) / np.sqrt(sdata.shape[0])
 
@@ -258,8 +258,19 @@ lat.save("images/human_v_model.png", close=False)
 
 # <codecell>
 
+emj = np.concatenate(allarr, axis=0)
+total = emj.shape[0]
+sum_emj = np.sum(emj, axis=0)
+
+scipy.stats.binom.sf(sum_emj[0], total, 0.5)
+
+# <codecell>
+
 plt.figure(10)
 plt.clf()
+
+allarr = []
+allconds = []
 
 for cond in conds:
     if cond.startswith("MO"):
@@ -271,11 +282,22 @@ for cond in conds:
 
     ratio = float(cond.split("-")[-1])
     arr = np.asarray(queries[cond]) == ratio
+    allarr.append(arr)
+    allconds.append(cond)
+    binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
+    print np.round(binom, decimals=8)
     mean = np.mean(arr, axis=0)
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
-    print mean
     plt.errorbar(np.arange(mean.shape[0]), mean, yerr=sem, 
 		 label="r=%s (n=%d)"% (cond.split("-")[-1], arr.shape[0]))
+
+arr = np.concatenate(allarr, axis=0)
+binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
+print np.round(binom, decimals=8)
+mean = np.mean(arr, axis=0)
+sem = scipy.stats.sem(arr, axis=0)
+plt.errorbar(np.arange(mean.shape[0]), mean, yerr=sem, 
+	     label="all (n=%d)"% (arr.shape[0]))
 
 plt.xlim(-.5, 3.5)
 plt.xticks([0, 1, 2, 3], [5, 10, 15, 20])
@@ -289,4 +311,12 @@ lat.save("images/explicit_mass_judgments.png", close=False)
 
 # <codecell>
 
+arr = np.concatenate(allarr, axis=0)
+df = pd.DataFrame(
+    np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
+    index=[5, 10, 15, 20], 
+    columns=["incorrect", "correct"])
+print df
+
+scipy.stats.chi2_contingency(df)
 

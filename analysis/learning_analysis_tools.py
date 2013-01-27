@@ -45,7 +45,7 @@ def get_bad_pids(conds, thresh=1):
     df = pd.concat(dfs)
     hstim = zip(*df.columns)[1]
 
-    # load model cata
+    # load model data
     rawmodel, sstim, smeta = tat.load_model(1)#0)
     pfell, nfell, fell_persample = tat.process_model_stability(
         rawmodel, mthresh=0.095, zscore=False)
@@ -67,7 +67,7 @@ def get_bad_pids(conds, thresh=1):
 
     return pids
 
-def load_turk_static(thresh=1):
+def load_turk_learning(thresh=1, istim=True, itrial=True):
     training = {}
     posttest = {}
     experiment = {}
@@ -77,43 +77,46 @@ def load_turk_static(thresh=1):
     conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
     pids = get_bad_pids(allconds, thresh=thresh)
+    print "Bad pids (%d): %s" % (len(pids), pids)
+
+    kwargs = {
+        "exclude": pids,
+        "istim": istim,
+        "itrial": itrial
+        }
+
+    for cond in allconds:
+        training[cond] = load_turk_df(cond, "training", **kwargs)
+        posttest[cond] = load_turk_df(cond, "posttest", **kwargs)
+        experiment[cond] = load_turk_df(cond, "experiment", **kwargs)
+        if cond.split("-")[1] != "nfb":
+            queries[cond] = load_turk_df(cond, "queries", **kwargs)
+
+    return training, posttest, experiment, queries
+
+def load_turk_static(thresh=1):
+    ltraining, lposttest, lexperiment = load_turk_learning(
+        thresh=thresh, itrial=False)[:3]
+    lqueries = load_turk_learning(
+        thresh=thresh, istim=False)[3]
+
+    training = {}
+    posttest = {}
+    experiment = {}
+    queries = {}
+
+    suffix = ['-cb0', '-cb1']
+    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
 
     for cond in conds:
-        training[cond] = pd.concat([
-            load_turk_df(cond+s, "training", itrial=False, exclude=pids)
-            for s in suffix])
-        posttest[cond] = pd.concat([
-            load_turk_df(cond+s, "posttest", itrial=False, exclude=pids)
-            for s in suffix])
-        experiment[cond] = pd.concat([
-            load_turk_df(cond+s, "experiment", itrial=False, exclude=pids)
-            for s in suffix])
+        training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
+        posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
+        experiment[cond] = pd.concat([lexperiment[cond+s] for s in suffix])
         if cond.split("-")[1] != "nfb":
-            queries[cond] = pd.concat([
-                load_turk_df(cond+s, "queries", istim=False, exclude=pids)
-                for s in suffix])
+            queries[cond] = pd.concat([lqueries[cond+s] for s in suffix])
 
     return training, posttest, experiment, queries
 
-def load_turk_learning(thresh=1):
-    training = {}
-    posttest = {}
-    experiment = {}
-    queries = {}
-
-    suffix = ['-cb0', '-cb1']
-    conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    allconds = [c+s for c in conds for s in suffix]
-
-    pids = get_bad_pids(allconds, thresh=thresh)
-    for cond in allconds:
-        training[cond] = load_turk_df(cond, "training", exclude=pids)
-        posttest[cond] = load_turk_df(cond, "posttest", exclude=pids)
-        experiment[cond] = load_turk_df(cond, "experiment", exclude=pids)
-        if cond.split("-")[1] != "nfb":
-            queries[cond] = load_turk_df(cond, "queries", exclude=pids)
-
-    return training, posttest, experiment, queries
         
 def load_turk_df(conditions, mode="experiment", istim=True, itrial=True, exclude=None):
     assert istim or itrial
@@ -560,16 +563,17 @@ def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
 #     df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
 #     return df
 
-def plot_smoothing(samps, stims, nstim, nthresh, kappas):
-    # nfell = (rawipe['nfellA'] + rawipe['nfellB']) / 10.0
-    # samps = (nfell > nthresh).astype('f8')
-    # samps[np.isnan(nfell)] = 0.5
+def plot_smoothing(samps, stims, nstim, kappas):
+    reload(mo)
+    n_trial, n_kappas, n_samples = samps.shape
     alpha = np.sum(samps, axis=-1) + 0.5
     beta = np.sum(1-samps, axis=-1) + 0.5
     pfell_mean = alpha / (alpha + beta)
     pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
     pfell_std = np.sqrt(pfell_var)
-    pfell_meanstd = np.mean(pfell_std, axis=-1)
+    # pfell_meanstd = np.mean(pfell_std, axis=-1)
+    y_mean = mo.IPE(np.ones(n_trial), samps, kappas, smooth=True)
+    
     colors = cm.hsv(np.round(np.linspace(0, 220, nstim)).astype('i8'))
     xticks = np.linspace(-1.3, 1.3, 7)
     xticks10 = 10 ** xticks
@@ -578,8 +582,7 @@ def plot_smoothing(samps, stims, nstim, nthresh, kappas):
     yticks = np.linspace(0, 1, 3)
 
     plt.suptitle(
-        "Likelihood function for feedback given mass ratio\n"
-        "(%d IPE samples, threshold=%d%% blocks)" % (samps.shape[-1], nthresh*100),
+        "Likelihood function for feedback given mass ratio",
         fontsize=16)
     plt.ylim(0, 1)
     plt.xticks(xticks, xticks10)
@@ -588,13 +591,14 @@ def plot_smoothing(samps, stims, nstim, nthresh, kappas):
     plt.ylabel("\Pr(fall|$r$, $S$)", fontsize=14)
     plt.grid(True)
     order = (range(0, stims.size, 2) + range(1, stims.size, 2))[:nstim]
+
     for idx in xrange(nstim):
         i = order[idx]
         x = kappas
-        lam = pfell_meanstd[i] * 10
-        kde_smoother = mo.make_kde_smoother(x, lam)
-        y_mean = kde_smoother(pfell_mean[i])
-        plt.plot(x, y_mean,
+        # lam = pfell_meanstd[i] * 10
+        # kde_smoother = mo.make_kde_smoother(x, lam)
+        # y_mean = kde_smoother(pfell_mean[i])
+        plt.plot(x, y_mean[i],
                  color=colors[idx],
                  linewidth=3)        
         plt.errorbar(x, pfell_mean[i], pfell_std[i], None,
@@ -678,8 +682,8 @@ def random_model_lh(conds, n_trial, t0=None, tn=None):
 
     return lh
 
-def block_lh(responses, feedback, ipe_samps, prior, kappas,
-             t0=None, tn=None, f_smooth=True):
+def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
+             tn=None, f_smooth=True, f_average=False, f_round=False):
 
     reload(mo)
     n_trial = ipe_samps.shape[0]
@@ -696,9 +700,13 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas,
         order = order[t0:tn]
 
         # trial-by-trial likelihoods of judgments
-        resp = np.asarray(responses[cond])[..., t0:tn]
+        resp = np.asarray(responses[cond])[..., order]
+        if f_average:
+            resp = np.mean(resp, axis=0)[None]
+        if f_round:
+            resp = np.round(resp)
         lh[cond] = np.exp(mo.EvaluateObserver(
-            resp, feedback[..., t0:tn], ipe_samps[order], 
+            resp, feedback[..., order], ipe_samps[order], 
             kappas, prior=prior, smooth=f_smooth))
 
     return lh
