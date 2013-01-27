@@ -172,21 +172,35 @@ for i, ix in enumerate(idx):
 
 N = 40
 C = 0
-
 exp = list(order[np.nonzero(fb[0, order] != fb[1, order])[0]][:N])
-fbexp = np.sum(fb[:, exp], axis=1)
+fbexp = np.array([np.sum(fb[:, exp], axis=1), np.sum(1-fb[:, exp], axis=1)]).T
 newexp = order[np.nonzero(fb[0, order] == fb[1, order])[0]]
 for i in xrange(len(newexp)):
     print fbexp
+    newfb = np.array([fb[:, newexp[i]], 1-fb[:, newexp[i]]]).T
+    print newfb
     if (fbexp==(N/2)).all():
+        print "done"
         break
     if len(exp) == N:
+        print "oops"
         break
-    print fb[:, newexp[i]]
-    if ((fbexp==((N/2))) & fb[:, newexp[i]].astype('bool')).any():
+    if ((fbexp + newfb) > (N/2)).any():
+        print "nope"
         continue
-    fbexp += fb[:, newexp[i]]
+    fbexp += newfb
     exp.append(newexp[i])
+
+for i in xrange(len(newexp)):
+    if newexp[i] in exp:
+        continue
+    if len(exp) == N:
+        break
+    exp.append(newexp[i])
+
+assert len(exp) == N
+
+# <codecell>
 
 yes = np.nonzero((fb[:, order] == 0).all(axis=0))[0]
 assert order[yes[-1]] not in exp
@@ -266,13 +280,8 @@ for i, ix in enumerate(idx):
     l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[ix])
     print l
     with open(l, "w") as fh:
-    lines = "\n".join(exp_stims)
-    fh.write(lines)
-    # l = os.path.join(listpath, "mass-towers-stability-learning-catch~kappa-%s" % kappas[ix])
-    # print l
-    # with open(l, "w") as fh:
-    #     lines = "\n".join(catch_stims)
-    #     fh.write(lines)
+        lines = "\n".join(exp_stims)
+        fh.write(lines)
     
 
 # <codecell>
@@ -379,8 +388,8 @@ for i, ix in enumerate(idx):
     l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[ix])
     print l
     with open(l, "w") as fh:
-    lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
-    fh.write(lines)
+        lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
+        fh.write(lines)
 # l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
 # with open(l, "w") as fh:
 #     lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
@@ -393,42 +402,42 @@ fh = open("../../turk-experiment/www/config/stimuli-info.csv", "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
     for ix in idx:
-    fh.write(",".join(
-        ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
-         str(not(bool(feedback[ix,i]))),
-         str(False)]
-         ) + "\n")
-    fh.write(",".join(
-        ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
-         str(not(bool(feedback[ix,i]))),
-         str(False)]
-         ) + "\n")
+        fh.write(",".join(
+            ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
+             str(not(bool(feedback[ix,i]))),
+             str(False)]
+             ) + "\n")
+        fh.write(",".join(
+            ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
+             str(not(bool(feedback[ix,i]))),
+             str(False)]
+             ) + "\n")
 
 for i in catch:
     for ix in idx:
-    fh.write(",".join(
-        ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
-         str(not(bool(feedback[ix,i]))),
-         str(True)]
-         ) + "\n")
-    fh.write(",".join(
-        ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
-         str(not(bool(feedback[ix,i]))),
-         str(True)]
-         ) + "\n")
+        fh.write(",".join(
+            ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
+             str(not(bool(feedback[ix,i]))),
+             str(True)]
+            ) + "\n")
+        fh.write(",".join(
+            ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
+             str(not(bool(feedback[ix,i]))),
+             str(True)]
+             ) + "\n")
 
 for i in train:
     fh.write(",".join(
-    [original[i],
-     str(not(bool(ofb[i]))),
-     str(False)]
-     ) + "\n")
+        [original[i],
+         str(not(bool(ofb[i]))),
+         str(False)]
+         ) + "\n")
 for i in train_catch:
     fh.write(",".join(
-    [original[i],
-     str(not(bool(ofb[i]))),
-     str(True)]
-     ) + "\n")
+        [original[i],
+         str(not(bool(ofb[i]))),
+         str(True)]
+         ) + "\n")
 
 fh.close()
 
