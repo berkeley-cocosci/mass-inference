@@ -37,14 +37,6 @@ def parse_condition(cond):
 
 def get_bad_pids(conds, thresh=1):
 
-    # load posttest data
-    dfs = []
-    for cond in conds:
-        l = load_turk_df(cond, "posttest")
-        dfs.append(l)
-    df = pd.concat(dfs)
-    hstim = zip(*df.columns)[1]
-
     # load model data
     rawmodel, sstim, smeta = tat.load_model(1)#0)
     pfell, nfell, fell_persample = tat.process_model_stability(
@@ -55,17 +47,25 @@ def get_bad_pids(conds, thresh=1):
     with open(pth, "r") as fh:
         conv = pickle.load(fh)
         sstim = np.array([conv[x] for x in sstim])
-    # get the correct stimuli indices
-    idx = np.nonzero(np.array(hstim)[:, None] == np.array(sstim)[None])[1]
 
-    # model stability 
-    ofb = (fell_persample[0,0,0,:,0] > 0)[idx]
+    # load posttest data
+    all_pids = []
+    for cond in conds:
+        df = load_turk_df(cond, "posttest")
+        hstim = zip(*df.columns)[1]
 
-    wrong = (df != ofb).sum(axis=1)
-    bad = wrong > thresh
-    pids = sorted(list((bad).index[(bad).nonzero()]))
+        # get the correct stimuli indices
+        idx = np.nonzero(np.array(hstim)[:, None] == np.array(sstim)[None])[1]
 
-    return pids
+        # model stability 
+        ofb = (fell_persample[0,0,0,:,0] > 0)[idx]
+            
+        wrong = (df != ofb).sum(axis=1)
+        bad = wrong > thresh
+        pids = list((bad).index[(bad).nonzero()])
+        all_pids.extend(pids)
+
+    return sorted(all_pids)
 
 def load_turk_learning(thresh=1, istim=True, itrial=True):
     training = {}
@@ -76,6 +76,7 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
     conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
+             # 'D-vfb-10', 'D-vfb-0.1', 'D-fb-10', 'D-fb-0.1', 'D-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
     pids = get_bad_pids(allconds, thresh=thresh)
     print "Bad pids (%d): %s" % (len(pids), pids)
@@ -97,7 +98,7 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
 
 def load_turk_static(thresh=1):
     ltraining, lposttest, lexperiment = load_turk_learning(
-        thresh=thresh, itrial=False)[:3]
+        thresh=thresh, itrial=True)[:3]
     lqueries = load_turk_learning(
         thresh=thresh, istim=False)[3]
 
@@ -109,8 +110,10 @@ def load_turk_static(thresh=1):
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
     conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
+             # 'D-vfb-10', 'D-vfb-0.1', 'D-fb-10', 'D-fb-0.1', 'D-nfb-10']
 
     for cond in conds:
+        print cond, len([ltraining[cond+s] for s in suffix])
         training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
         posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
         experiment[cond] = pd.concat([lexperiment[cond+s] for s in suffix])

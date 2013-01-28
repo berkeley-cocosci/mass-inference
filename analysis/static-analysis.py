@@ -53,7 +53,7 @@ conds = experiment.keys()
 # with open(listpath, "r") as fh:
 #     Stims = np.array([x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""])
 
-Stims = np.array([x.split("~")[0] for x in experiment[experiment.keys()[0]].columns])
+Stims = np.array([x.split("~")[0] for x in zip(*experiment[experiment.keys()[0]].columns)[1]])
 
 # <codecell>
 
@@ -327,4 +327,78 @@ experiment['C-fb-0.1'].mean(axis=1)
 
 # <codecell>
 
+
+# <codecell>
+
+nbad = 1
+seed = 0
+n = 10
+
+while nbad > 0:
+    rso = np.random.RandomState(seed)
+
+    cond = 'C-fb-0.1'
+    cols = experiment[cond].columns
+    #order = np.argsort(zip(*cols)[0])[::-1]
+    order = rso.permutation(n_trial)
+    
+    model_joint, model_theta = mo.ModelObserver(
+	feedback[:, order][ratios.index(0.1)],
+	ipe_samps[order],
+	kappas,
+	prior=None, p_ignore=0, smooth=True)
+    model_lh = mo.IPE(
+	feedback[:, order][ratios.index(0.1)],
+	ipe_samps[order],
+	kappas,
+	smooth=True)
+
+    low01 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+    high01 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+    low01_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
+    high01_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+
+    # cond = 'C-fb-10'
+    # cols = experiment[cond].columns
+    # #order = np.argsort(zip(*cols)[0])[::-1]
+    # order = rso.permutation(n_trial)
+    
+    model_joint, model_theta = mo.ModelObserver(
+	feedback[:, order][ratios.index(10.0)],
+	ipe_samps[order],
+	kappas,
+	prior=None, p_ignore=0, smooth=True)
+    model_lh = mo.IPE(
+	feedback[:, order][ratios.index(10.0)],
+	ipe_samps[order],
+	kappas,
+	smooth=True)
+
+    low10 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+    high10 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+    low10_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
+    high10_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+    
+    s01 = np.sum((low01[1:] - low01[:-1])[:n] < 0)
+    s10 = np.sum((high10[1:] - high10[:-1])[:n] < 0)
+    nbad = s01+s10
+    # print seed, s01, s10
+    
+    seed += 1
+
+print order 
+
+# <codecell>
+
+plt.figure(6)
+plt.clf()
+plt.subplot(1, 2, 1)
+plt.plot(low01, label="r=0.1, p(r<1)")
+plt.plot(high10, label="r=10, p(r>1)")
+plt.legend()
+plt.subplot(1, 2, 2)
+plt.plot(low01_lh, label="r=0.1, p(r<1)")
+plt.plot(high10_lh, label="r=10, p(r>1)")
+#plt.plot(high, label=">1")
+plt.legend()
 

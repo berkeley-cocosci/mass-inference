@@ -54,7 +54,7 @@ training, posttest, experiment, queries = lat.load_turk_static(thresh=1)
 # 	x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""]))
 
 Stims = np.array([
-    x.split("~")[0] for x in experiment[experiment.keys()[0]].columns])
+    x.split("~")[0] for x in zip(*experiment[experiment.keys()[0]].columns)[1]])
 
 # <codecell>
 
@@ -128,7 +128,7 @@ for cond in sorted(experiment.keys()):
 	fbtype = "fb"
 
     cols = experiment[cond].columns
-    order = np.argsort(zip(*cols)[0])
+    #order = np.argsort(zip(*cols)[0])
     undo_order = np.argsort(order)
     #nfake = experiment[cond].shape[0]
 
@@ -509,6 +509,115 @@ lat.save("images/sliding-windows.png", close=False)
 
 # <codecell>
 
+
+# <codecell>
+
+
+# <codecell>
+
+nbad = 1
+seed = 0
+n = 10
+
+plt.figure(6)
+
+while nbad > 0:
+    rso = np.random.RandomState(seed)
+
+    cond = 'C-fb-0.1'
+    cols = experiment[cond].columns
+    #order = np.argsort(zip(*cols)[0])[::-1]
+    order = rso.permutation(n_trial)
+    
+    model_joint, model_theta = mo.ModelObserver(
+	feedback[:, order][ratios.index(0.1)],
+	ipe_samps[order],
+	kappas,
+	prior=None, p_ignore=0, smooth=True)
+    model_lh = mo.IPE(
+	feedback[:, order][ratios.index(0.1)],
+	ipe_samps[order],
+	kappas,
+	smooth=True)
+
+    low01 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+    high01 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+    low01_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
+    high01_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+
+    cond = 'C-fb-10'
+    # cols = experiment[cond].columns
+    # #order = np.argsort(zip(*cols)[0])[::-1]
+    # order = rso.permutation(n_trial)
+    
+    model_joint, model_theta = mo.ModelObserver(
+	feedback[:, order][ratios.index(10.0)],
+	ipe_samps[order],
+	kappas,
+	prior=None, p_ignore=0, smooth=True)
+    model_lh = mo.IPE(
+	feedback[:, order][ratios.index(10.0)],
+	ipe_samps[order],
+	kappas,
+	smooth=True)
+
+    low10 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+    high10 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+    low10_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
+    high10_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+
+    s01 = np.sum((low01[1:] - low01[:-1])[:n] < 0)
+    s10 = np.sum((high10[1:] - high10[:-1])[:n] < 0)
+    nbad = s01+s10
+    # print seed, s01, s10
+    
+    seed += 1
+
+print order 
+
+# <codecell>
+
+plt.figure(6)
+plt.clf()
+
+model_joint, model_theta = mo.ModelObserver(
+    feedback[:, order][ratios.index(0.1)],
+    ipe_samps[order],
+    kappas,
+    prior=None, p_ignore=0, smooth=True)
+
+lat.plot_theta(
+    2, 2, 1,
+    np.exp(model_theta),
+    cond,
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+
+model_joint, model_theta = mo.ModelObserver(
+    feedback[:, order][ratios.index(10.0)],
+    ipe_samps[order],
+    kappas,
+    prior=None, p_ignore=0, smooth=True)
+
+lat.plot_theta(
+    2, 2, 2,
+    np.exp(model_theta),
+    cond,
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+
+plt.subplot(2, 2, 3)
+plt.plot(low01, label="r=0.1, p(r<1)")
+plt.plot(high10, label="r=10, p(r>1)")
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(low01_lh, label="r=0.1, p(r<1)")
+plt.plot(high10_lh, label="r=10, p(r>1)")
+#plt.plot(high, label=">1")
+plt.legend()
 
 # <codecell>
 
