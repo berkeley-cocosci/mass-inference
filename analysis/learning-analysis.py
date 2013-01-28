@@ -519,8 +519,6 @@ nbad = 1
 seed = 0
 n = 10
 
-plt.figure(6)
-
 while nbad > 0:
     rso = np.random.RandomState(seed)
 
@@ -574,6 +572,13 @@ while nbad > 0:
     seed += 1
 
 print order 
+
+# <codecell>
+
+with open("../../turk-experiment/www/config/trial-order-E.txt", "w") as fh:
+    for stim in Stims[order]:
+	fh.write(stim + "\n")
+    
 
 # <codecell>
 
