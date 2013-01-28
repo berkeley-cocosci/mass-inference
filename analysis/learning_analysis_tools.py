@@ -75,7 +75,7 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
 
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-nfb-10']
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
     pids = get_bad_pids(allconds, thresh=thresh)
     print "Bad pids (%d): %s" % (len(pids), pids)
@@ -108,7 +108,7 @@ def load_turk_static(thresh=1):
 
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-nfb-10']
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
 
     for cond in conds:
         training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
@@ -686,7 +686,7 @@ def random_model_lh(conds, n_trial, t0=None, tn=None):
     return lh
 
 def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
-             tn=None, f_smooth=True, f_average=False, f_round=False):
+             tn=None, f_smooth=True, p_ignore=0.0):
 
     reload(mo)
     n_trial = ipe_samps.shape[0]
@@ -704,13 +704,9 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
 
         # trial-by-trial likelihoods of judgments
         resp = np.asarray(responses[cond])[..., order]
-        if f_average:
-            resp = np.mean(resp, axis=0)[None]
-        if f_round:
-            resp = np.round(resp)
         lh[cond] = np.exp(mo.EvaluateObserver(
             resp, feedback[..., order], ipe_samps[order], 
-            kappas, prior=prior, smooth=f_smooth))
+            kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth))
 
     return lh
 

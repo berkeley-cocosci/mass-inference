@@ -115,7 +115,7 @@ def predict(p_kappas, ipe_samps, kappas, smooth):
     p_outcomes = normalize(joint, axis=-1)[0]
     return p_outcomes
 
-def ModelObserver(feedback, ipe_samps, kappas, prior=None, smooth=True):
+def ModelObserver(feedback, ipe_samps, kappas, prior=None, p_ignore=0.0, smooth=True):
     """Computes a learning curve for a model observer, given raw
     samples from their internal 'intuitive mechanics engine', the
     prior over mass ratios, and the probability of each possible
@@ -164,15 +164,16 @@ def ModelObserver(feedback, ipe_samps, kappas, prior=None, smooth=True):
 
     return joint, posterior
 
-def EvaluateObserver(responses, feedback, ipe_samps, kappas, prior=None, smooth=True):
+def EvaluateObserver(responses, feedback, ipe_samps, kappas, prior=None, p_ignore=0.0, smooth=True):
     joint, posterior = ModelObserver(
-        feedback, ipe_samps, kappas, prior=prior, smooth=smooth)
+        feedback, ipe_samps, kappas, prior=prior, p_ignore=p_ignore, smooth=smooth)
 
     n_trial, n_kappas, n_samps = ipe_samps.shape
     lh = np.log(IPE(np.ones(n_trial), ipe_samps, kappas, smooth))
     lh[np.isnan(lh)] = np.log(0.5)
 
-    p_response = np.exp(normalize(posterior[..., :-1, :] + lh, axis=-1)[0])
+    p_fall = np.exp(normalize(posterior[..., :-1, :] + lh, axis=-1)[0])
+    p_response = (p_fall * (1-p_ignore)) + ((1-p_fall) * (p_ignore))
     
     # marginal and responses should be in the shape (..., n_trial)
     lh0 = responses[:, None] * p_response
@@ -182,3 +183,19 @@ def EvaluateObserver(responses, feedback, ipe_samps, kappas, prior=None, smooth=
     assert (lh<=1).all()
     llh = np.sum(np.log(lh), axis=-1)
     return llh
+
+def simulateResponses(n, feedback, ipe_samps, kappas, prior=None, p_ignore=0.0, smooth=True):
+    # learning model beliefs
+    model_joint, model_theta = ModelObserver(
+        feedback, ipe_samps, kappas, prior=prior, smooth=smooth)
+
+    # compute probability of falling
+    p_fall = np.exp(predict(
+        model_theta[:-1], ipe_samps, kappas, smooth))
+    p_response = (p_fall * (1-p_ignore)) + ((1-p_fall) * (p_ignore))
+
+    # sample responses
+    n_trial, n_kappas, n_samps = ipe_samps.shape
+    responses = np.random.rand(n, n_trial) < p_response
+
+    return responses, model_theta

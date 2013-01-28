@@ -99,7 +99,7 @@ n_trial      = Stims.size
 n_outcomes   = outcomes.size                     # number of possible outcomes
 
 f_smooth = True
-p_ignore_stimulus = 0.0
+p_ignore = 0.0
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 alpha = 0.2
@@ -135,26 +135,20 @@ for cond in sorted(experiment.keys()):
     # determine what feedback to give
     if fbtype == 'nfb':
 	fb = nofeedback[..., order]
-	prior = np.zeros((n_kappas,))
-	prior[kappas.index(0.0)] = 1
-	prior = normalize(np.log(prior))[1]
+	# prior = np.zeros((n_kappas,))
+	# prior[kappas.index(0.0)] = 1
+	# prior = normalize(np.log(prior))[1]
+	prior = None
     else:
 	ridx = ratios.index(ratio)
 	fb = feedback[:, order][ridx]
 	prior = None
-    
-    # learning model beliefs
-    model_joint, model_theta = mo.ModelObserver(
-	fb, ipe_samps[order], kappas, prior=prior, smooth=f_smooth)
 
-    # compute probability of falling
     #newcond = "-".join(["MO"] + cond.split("-")[1:])
     newcond = "%s-%s-%s" % ("MO", fbtype, cond.split("-")[2])
-    p_outcomes = np.exp(mo.predict(
-	model_theta[:-1], ipe_samps[order], kappas, f_smooth))
-
-    # sample responses
-    responses = np.random.rand(nfake, n_trial) < p_outcomes
+    responses, model_theta = mo.simulateResponses(
+	nfake, fb, ipe_samps[order], kappas, 
+	prior=prior, p_ignore=p_ignore, smooth=f_smooth)
     experiment[newcond] = pd.DataFrame(
 	responses[:, undo_order], 
 	columns=cols)
@@ -173,17 +167,21 @@ lat.save("images/ideal_observer_beliefs.png", close=False)
 # <codecell>
 
 cond_labels = {
-    'C-nfb-10': 'Human no-feedback',
-    'C-vfb-0.1': '(r=0.1) Human feedback',
-    'C-vfb-10': '(r=10) Human feedback',
+    'C-nfb-10': 'No-feedback',
+    'C-vfb-0.1': 'Visual feedback (r=0.1)',
+    'C-vfb-10': 'Visual feedback (r=10)',
+    'C-fb-0.1': 'Text feedback (r=0.1)',
+    'C-fb-10': 'Text feedback (r=10)',
     'MO-nfb-10': 'Uniform fixed observer',
-    'MO-fb-0.1': '(r=0.1) Learning observer',
-    'MO-fb-10': '(r=10) Learning observer',
+    'MO-fb-0.1': 'Learning observer (r=0.1)',
+    'MO-fb-10': 'Learning observer (r=10)',
     }
 
 conds = [
+    'C-fb-0.1',
     'C-vfb-0.1',
     'MO-fb-0.1',
+    'C-fb-10',
     'C-vfb-10',
     'MO-fb-10',
     'C-nfb-10',
@@ -230,7 +228,7 @@ def CI(data):
 	for i in xrange(shape[1]):
 	    shape = data[cond][:, i].shape
 	    if shape == (1,):
-		mean = lower = upper = np.log(data[cond][:, i][0])
+		mean = lower = upper = sum = np.log(data[cond][:, i][0])
 	    else:
 		#mean, (lower, upper) = bmvs(data[cond][:, i])[0]
 		mean = np.mean(data[cond][:, i])
@@ -238,8 +236,8 @@ def CI(data):
 		lower = np.log(mean - sem)
 		upper = np.log(mean + sem)
 		mean = np.log(mean)
-		# mean = lower = upper = np.sum(data[cond][:, i])
-	    info.append([mean, lower, upper])
+		sum = np.sum(np.log(data[cond][:, i]))
+	    info.append([mean, lower, upper, sum])
 	stats.append(info)
     stats = np.swapaxes(np.array(stats), 0, 1)
     return stats
@@ -269,7 +267,8 @@ thetas = normalize(np.log(thetas), axis=1)[1]
 fb = np.empty((3, n_trial))*np.nan
 
 model_uniform, model_true10, model_true01 = CI(lat.block_lh(
-    experiment, fb, ipe_samps, thetas, kappas, f_smooth=f_smooth))
+    experiment, fb, ipe_samps, thetas, kappas, 
+    f_smooth=f_smooth, p_ignore=p_ignore))
 	
 
 # <codecell>
@@ -278,11 +277,22 @@ reload(lat)
 
 # learning models
 model_learn01, model_learn10 = CI(lat.block_lh(
-    experiment, feedback[[ir01, ir10]], ipe_samps, None, kappas, f_smooth=f_smooth))
+    experiment, feedback[[ir01, ir10]], ipe_samps, None, kappas, 
+    f_smooth=f_smooth, p_ignore=p_ignore))
 
 # <codecell>
 
 # all the models
+mnames = np.array([
+	"random",
+	"fixed 0.1",
+	"learning 0.1",
+	"fixed uniform",
+	"fixed 10",
+	"learning 10"
+	])
+mparams = np.array([0, 1, 2, 1, 1, 2])
+
 models = np.concatenate([
     model_random[None],
     model_true01[None],
@@ -298,9 +308,9 @@ reload(lat)
 theta = np.log(np.eye(n_kappas))
 fb = np.empty((n_kappas, n_trial))*np.nan
 
-mean, lower, upper = CI(lat.block_lh(
+mean, lower, upper, sums = CI(lat.block_lh(
     experiment, fb, ipe_samps, theta, kappas, f_smooth=f_smooth,
-    f_average=False, f_round=False)).T
+    p_ignore=p_ignore)).T
 # sums, = CI(lat.block_lh(
 #     experiment, fb, ipe_samps, theta, kappas, f_smooth=f_smooth,
 #     f_average=False, f_round=False))
@@ -310,11 +320,13 @@ fig = plt.figure(3)
 plt.clf()
 
 for cidx, cond in enumerate(conds):
-    color = colors[(cidx/2) % len(colors)]
+    color = colors[(cidx/3) % len(colors)]
     if cond.startswith("MO"):
-	linestyle = '--'
-    else:
 	linestyle = '-'
+    elif cond.split("-")[1] == "fb":
+	linestyle = '-.'
+    else:
+	linestyle = '--'
     plt.fill_between(x, lower[cidx], upper[cidx], color=color, alpha=alpha)
     plt.plot(x, mean[cidx], label=cond_labels[cond], color=color, linewidth=2,
     	     linestyle=linestyle)
@@ -335,20 +347,65 @@ lat.save("images/fixed_model_performance.png", close=False)
 
 # <codecell>
 
+reload(lat)
+
+mean, lower, upper, sums = CI(lat.block_lh(
+    experiment, feedback, ipe_samps, None, kappas, f_smooth=f_smooth,
+    p_ignore=p_ignore)).T
+# sums, = CI(lat.block_lh(
+#     experiment, fb, ipe_samps, theta, kappas, f_smooth=f_smooth,
+#     f_average=False, f_round=False))
+
+x = np.arange(n_kappas)
+fig = plt.figure(30)
+plt.clf()
+
+alpha = 0.2
+
+for cidx, cond in enumerate(conds):
+    color = colors[(cidx/3) % len(colors)]
+    if cond.startswith("MO"):
+	linestyle = '-'
+    elif cond.split("-")[1] == "fb":
+	linestyle = '-.'
+    else:
+	linestyle = '--'
+    plt.fill_between(x, lower[cidx], upper[cidx], color=color, alpha=alpha)
+    plt.plot(x, mean[cidx], label=cond_labels[cond], color=color, linewidth=2,
+    	     linestyle=linestyle)
+    # plt.plot(x, sums[cidx], label=cond_labels[cond], color=color, linewidth=2,
+    # 	     linestyle=linestyle)
+
+plt.xticks(x, ratios, rotation=90)
+plt.xlabel("Learning model true mass ratio")
+plt.ylabel("Log likelihood of responses")
+plt.legend(loc=4, ncol=2, fontsize=12)
+plt.xlim(x[0], x[-1])
+plt.ylim(-34, -20)
+plt.title("Likelihood of responses under learning models")
+fig.set_figwidth(8)
+fig.set_figheight(6)
+
+lat.save("images/learning_model_performance.png", close=False)
+
+# <codecell>
+
 # plot model performance
 x0 = np.arange(models.shape[2])
 height = models[0]
-err = np.abs(models[[0]] - models[1:])
+err = np.abs(models[[0]] - models[[1,2]])
 width = 0.7 / n_cond
 fig = plt.figure(4)
 plt.clf()
 
 for cidx, cond in enumerate(conds):
-    color = colors[(cidx/2) % len(colors)]
+    color = colors[(cidx/3) % len(colors)]
     if cond.startswith("MO"):
+	alpha = 1.0
+    elif cond.split("-")[1] == "vfb":
 	alpha = 0.4
     else:
-	alpha = 1.0
+	alpha = 0.2
     x = x0 + width*(cidx-(n_cond/2.)) + (width/2.)
     plt.bar(x, height[cidx], yerr=err[:, cidx], 
 	    color=color,
@@ -378,113 +435,6 @@ lat.save("images/model_performance.png", close=False)
 
 # <codecell>
 
-
-# what I really want is not to evaluate it like this... but to
-# generate observers like this...
-
-# p_ratio = {}
-# for cond in conds:
-#     group, fbtype, ratio, cb = lat.parse_condition(cond)
-#     if group == 'B' and fbtype == 'fb':
-# 	arr = (np.log10(np.asarray(queries[cond]))+1)/2.
-# 	p_ratio[cond] = arr
-# p_ratio = np.exp(collapse(p_ratio, mean=True)[:, :, 0])
-
-reload(lat)
-window = 8
-nsteps = n_trial / window
-
-x = np.linspace(window, n_trial, nsteps)
-lh = np.empty((nsteps, 2, len(conds), 3))
-for t in xrange(nsteps):
-    thetas = np.zeros((2, n_kappas))
-    # thetas[:, :kappas.index(0.0)] = p_ratio[t][:, None]
-    # thetas[:, kappas.index(0.0)+1:] = 1-p_ratio[t][:, None]
-    # thetas[:, kappas.index(0.0)] = 0.0
-    #thetas[0, :kappas.index(0.0)] = 1
-    #thetas[1, kappas.index(0.0)+1:] = 1
-    thetas[:, kappas.index(-1.0)] = np.array([1, 0])
-    thetas[:, kappas.index(1.0)] = np.array([0, 1])
-    thetas = normalize(np.log(thetas), axis=1)[1]
-    fb = np.empty((2, n_trial)) * np.nan
-    lh[t] = CI(lat.block_lh(
-	experiment, fb, ipe_samps, thetas, 
-	kappas, t*window, (t+1)*window, f_smooth))
-
-# x = np.arange(10)
-# lh = np.empty((10, 2, len(conds), 3))
-# for t in xrange(10):
-#     #thetas = np.zeros((2, n_kappas))
-#     # thetas[:, :kappas.index(0.0)] = p_ratio[t][:, None]
-#     # thetas[:, kappas.index(0.0)+1:] = 1-p_ratio[t][:, None]
-#     # thetas[:, kappas.index(0.0)] = 0.0
-#     # thetas[0, :kappas.index(0.0)] = 1
-#     # thetas[1, kappas.index(0.0)+1:] = 1
-#     #thetas[0, kappas.index(-1.0)] = 1
-#     #thetas[1, kappas.index(1.0)] = 1
-#     thetas = np.ones((1, n_kappas))
-#     thetas = normalize(np.log(thetas), axis=1)[1]
-#     fb = np.empty((1, n_trial)) * np.nan
-#     lh[t] = collapse(lat.block_lh(
-# 	experiment, fb, ipe_samps, thetas, 
-# 	kappas, 0, t+1, f_smooth))
-
-# <codecell>
-
-fig1 = 30
-fig2 = 31
-titles = [("Fixed r=0.1", "r01"), ("Fixed r=10", "r10")]
-for fig in (fig1, fig2):
-    plt.figure(fig)
-    plt.clf()
-
-if window == 20:
-    plt.bar(np.arange(n_cond), lh[0, :, 0])
-
-else:
-    for cidx, cond in enumerate(conds):
-	color = colors[(cidx/2) % len(colors)]
-	if cond.startswith("MO"):
-	    linestyle = '--'
-	else:
-	    linestyle = '-'
-
-	plt.figure(fig1)
-	plt.fill_between(x, lh[:, 0, cidx, 1], lh[:, 0, cidx, 2],
-			 color=color, alpha=alpha)
-	plt.plot(x, lh[:, 0, cidx, 0], color=color, label=cond_labels[cond],
-		 linestyle=linestyle)
-	# plt.plot(x, lh[:, 0, cidx], color=color, label=cond_labels[cond],
-	# 	 linestyle=linestyle, linewidth=2)
-
-	plt.figure(fig2)
-	plt.fill_between(x, lh[:, 1, cidx, 1], lh[:, 1, cidx, 2],
-			 color=color, alpha=alpha)
-	plt.plot(x, lh[:, 1, cidx, 0], color=color, label=cond_labels[cond],
-		 linestyle=linestyle)
-	# plt.plot(x, lh[:, 1, cidx], color=color, label=cond_labels[cond],
-	# 	 linestyle=linestyle, linewidth=2)
-
-for i, fig in enumerate((fig1, fig2)):
-    plt.figure(fig)
-    plt.xlim(x.min(), x.max())
-    # plt.ylim(-2, 2)
-    # plt.xticks(np.arange(0, nsteps), np.linspace(window, n_trial, nsteps))
-    plt.xticks(x, x.astype('i8'))
-    plt.xlabel("Trial")
-
-    plt.legend(loc=0, ncol=2)
-    plt.gcf().set_figwidth(8)
-    plt.gcf().set_figheight(6)
-    plt.ylabel("Likelihood")
-    plt.title("Likelihood of responses over trial "
-	      "blocks, evaluated under '%s'" % titles[i][0])
-    #plt.ylim(lh.min()-0.5, lh.max()+0.5)
-
-    lat.save("images/likelihood_block_responses_%s.png" % titles[i][1], close=False)
-
-# <codecell>
-
 # BIC: -2*ln(L) + k*ln(n)
 # L : maximized likelihood function
 # k : number of parameters
@@ -497,18 +447,67 @@ def samplesize(data):
 	sizes.append(d.shape[0])
     return np.array(sizes)
 
-mnames = np.array([
-    "random", "fixed 0.1", "learning 0.1", 
-    "fixed uniform", "fixed 10", "learning 10"])
-
 L = models[0]
-k = np.array([0, 1, 2, 1, 1, 2])[None]
+k = np.array(mparams)[None]
 #k = np.zeros(L.shape)
 n = samplesize(experiment)[:, None]
 
 BIC = -2*L + k*np.log(n)
 best = np.argmin(BIC, axis=1)
 zip(conds, mnames[best])
+
+
+# <codecell>
+
+
+reload(lat)
+window = 10
+nsteps = n_trial / window
+
+lh = np.empty((n_trial, n_kappas, len(conds), 4))
+for t in xrange(1, n_trial):
+    t0 = max(0, t-window)
+    t1 = t
+    thetas = np.eye(n_kappas)
+    thetas = normalize(np.log(thetas), axis=1)[1]
+    fb = np.empty((n_kappas, n_trial)) * np.nan
+    lh[t] = CI(lat.block_lh(
+	experiment, fb, ipe_samps, thetas, 
+	kappas, t0, t1, 
+	f_smooth=f_smooth, p_ignore=p_ignore))
+
+# <codecell>
+
+# best = np.argmax(lh[..., -1], axis=1).T
+x = np.arange(0, n_trial, 1)
+
+plt.figure(100)
+plt.clf()
+
+for cidx, cond in enumerate(conds):
+    color = colors[(cidx/3) % len(colors)]
+    if cond.startswith("MO"):
+	linestyle = '-'
+    elif cond.split("-")[1] == "fb":
+	linestyle = '-.'
+    else:
+	linestyle = "--"
+    lat.plot_theta(
+	3, 3, cidx+1, 
+	np.exp(normalize(lh[:, :, cidx, -1], axis=1)[1]), 
+	cond_labels[conds[cidx]])
+    # plt.plot(x, np.array(kappas)[best[cidx]], label=cond_labels[cond], 
+    # 	     color=color, linestyle=linestyle, linewidth=2)
+
+#plt.yticks(kappas, ratios)
+#plt.grid(True)
+#plt.legend()
+
+plt.suptitle("Fixed model log likelihoods over time (window of %d)" % window)
+
+lat.save("images/sliding-windows.png", close=False)
+
+# <codecell>
 
 
 # <codecell>

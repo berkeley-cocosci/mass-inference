@@ -113,7 +113,7 @@ n_trial      = Stims.size
 n_outcomes   = outcomes.size                     # number of possible outcomes
 
 f_smooth = True
-p_ignore_stimulus = 0.0
+p_ignore = 0.0
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 alpha = 0.2
@@ -136,6 +136,8 @@ for cond in sorted(experiment.keys()):
     group, fbtype, ratio, cb = lat.parse_condition(cond)
     if group in ("MO", "old"):
 	continue
+    if fbtype == "vfb":
+	fbtype == "fb"
 
     cols = experiment[cond].columns
     order = np.argsort(cols)
@@ -159,7 +161,8 @@ for cond in sorted(experiment.keys()):
 	fb, ipe_samps[order], kappas, prior=prior, smooth=f_smooth)
 
     # compute probability of falling
-    newcond = "-".join(["MO"] + cond.split("-")[1:])
+    newcond = "%s-%s-%s" % ("MO", fbtype, cond.split("-")[2])
+    # newcond = "-".join(["MO"] + cond.split("-")[1:])
     p_outcomes = np.exp(mo.predict(
 	model_theta[:-1], ipe_samps[order], kappas, f_smooth))
 
@@ -170,7 +173,7 @@ for cond in sorted(experiment.keys()):
 	columns=cols)
 
     lat.plot_theta(
-	1, 3, cidx+1,
+	2, 3, cidx+1,
 	np.exp(model_theta),
 	cond,
 	exp=1.3,
@@ -208,6 +211,8 @@ for cidx1, cond1 in enumerate(conds):
     for cidx2, cond2 in enumerate(conds[cidx1+1:]):
 	if cond2 == "old-all-10":
 	    continue
+	if cond1.split("-")[-2:] != cond2.split("-")[-2:]:
+	    continue
 	arr2 = np.asarray(experiment[cond2])
 
 	corrs = lat.bootcorr(
@@ -220,8 +225,6 @@ for cidx1, cond1 in enumerate(conds):
 	print "(bootstrap) %-15s v %-15s: rho = %.4f +/- %.4f" % (
 	    cond1, cond2, meancorr, semcorr)
 
-    print
-
 # <codecell>
 
 rawipe0 = lat.load_model("stability")[1]
@@ -231,16 +234,11 @@ nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.
 nanmean = scipy.stats.nanmean
 nanstd = scipy.stats.nanstd
 
-suffix = "-vfb-10"
-ratio = 10
-
-hdata = np.asarray(experiment['C' + suffix])
+hdata = np.asarray(experiment['C-vfb-10'])
 hmean = nanmean(hdata, axis=0)
 hsem = nanstd(hdata, axis=0) / np.sqrt(hdata.shape[0])
 
-#sdata = ipe_samps[:, ratios.index(ratio)].T
-#sdata = nfell[:, ratios.index(ratio)].T
-sdata = np.asarray(experiment['MO' + suffix])
+sdata = np.asarray(experiment['MO-fb-10'])
 smean = nanmean(sdata, axis=0)
 ssem = nanstd(sdata, axis=0) / np.sqrt(sdata.shape[0])
 
@@ -284,7 +282,10 @@ for cond in conds:
     mean = np.mean(arr, axis=0)
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
     plt.errorbar(idx, mean, yerr=sem, 
-		 label="r=%s (n=%d)"% (cond.split("-")[-1], arr.shape[0]))
+		 label="%s r=%s (n=%d)"% (
+		     cond.split("-")[1],
+		     cond.split("-")[-1], 
+		     arr.shape[0]))
 
 arr = np.concatenate(allarr, axis=0)
 binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
@@ -315,6 +316,14 @@ print df
 
 chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
 print (chi2, p)
+
+# <codecell>
+
+queries['C-fb-0.1']
+
+# <codecell>
+
+experiment['C-fb-0.1'].mean(axis=1)
 
 # <codecell>
 
