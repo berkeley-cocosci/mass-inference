@@ -3,9 +3,6 @@
 
 # <codecell>
 
-
-# <codecell>
-
 # imports
 import collections
 import matplotlib.cm as cm
@@ -179,6 +176,8 @@ plt.plot(lhr01[order], label="r=0.1, p(r<1)/p(r>1)")
 plt.plot(lhr10[order], label="r=10, p(r>1)/p(r<1)")
 #plt.plot(high, label=">1")
 plt.legend()
+
+lat.save("images/model_belief_order-E.png", close=True)
 
 # <codecell>
 

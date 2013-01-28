@@ -78,7 +78,7 @@ lat.plot_smoothing(ipe_samps, Stims, 6, kappas)
 fig.set_figheight(6), 
 fig.set_figwidth(8)
 
-lat.save("images/likelihood_smoothing.png", close=False)
+lat.save("images/likelihood_smoothing.png", close=True)
 
 # <codecell>
 
@@ -128,7 +128,7 @@ for cond in sorted(experiment.keys()):
 	fbtype = "fb"
 
     cols = experiment[cond].columns
-    #order = np.argsort(zip(*cols)[0])
+    order = np.argsort(zip(*cols)[0])
     undo_order = np.argsort(order)
     #nfake = experiment[cond].shape[0]
 
@@ -162,7 +162,7 @@ for cond in sorted(experiment.keys()):
 	fontsize=14)
     cidx += 1
     
-lat.save("images/ideal_observer_beliefs.png", close=False)
+lat.save("images/ideal_observer_beliefs.png", close=True)
 
 # <codecell>
 
@@ -347,49 +347,6 @@ lat.save("images/fixed_model_performance.png", close=False)
 
 # <codecell>
 
-reload(lat)
-
-mean, lower, upper, sums = CI(lat.block_lh(
-    experiment, feedback, ipe_samps, None, kappas, f_smooth=f_smooth,
-    p_ignore=p_ignore)).T
-# sums, = CI(lat.block_lh(
-#     experiment, fb, ipe_samps, theta, kappas, f_smooth=f_smooth,
-#     f_average=False, f_round=False))
-
-x = np.arange(n_kappas)
-fig = plt.figure(30)
-plt.clf()
-
-alpha = 0.2
-
-for cidx, cond in enumerate(conds):
-    color = colors[(cidx/3) % len(colors)]
-    if cond.startswith("MO"):
-	linestyle = '-'
-    elif cond.split("-")[1] == "fb":
-	linestyle = '-.'
-    else:
-	linestyle = '--'
-    plt.fill_between(x, lower[cidx], upper[cidx], color=color, alpha=alpha)
-    plt.plot(x, mean[cidx], label=cond_labels[cond], color=color, linewidth=2,
-    	     linestyle=linestyle)
-    # plt.plot(x, sums[cidx], label=cond_labels[cond], color=color, linewidth=2,
-    # 	     linestyle=linestyle)
-
-plt.xticks(x, ratios, rotation=90)
-plt.xlabel("Learning model true mass ratio")
-plt.ylabel("Log likelihood of responses")
-plt.legend(loc=4, ncol=2, fontsize=12)
-plt.xlim(x[0], x[-1])
-plt.ylim(-34, -20)
-plt.title("Likelihood of responses under learning models")
-fig.set_figwidth(8)
-fig.set_figheight(6)
-
-lat.save("images/learning_model_performance.png", close=False)
-
-# <codecell>
-
 # plot model performance
 x0 = np.arange(models.shape[2])
 height = models[0]
@@ -506,4 +463,7 @@ for cidx, cond in enumerate(conds):
 plt.suptitle("Fixed model log likelihoods over time (window of %d)" % window)
 
 lat.save("images/sliding-windows.png", close=False)
+
+# <codecell>
+
 
