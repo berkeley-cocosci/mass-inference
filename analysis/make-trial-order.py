@@ -3,6 +3,9 @@
 
 # <codecell>
 
+
+# <codecell>
+
 # imports
 import collections
 import matplotlib.cm as cm
@@ -14,7 +17,6 @@ import pickle
 import scipy.stats
 import os
 import time
-import pyplot as plt
 
 import cogphysics
 import cogphysics.lib.circ as circ
@@ -98,63 +100,85 @@ colors = ['c', 'm', 'y']#'#FF9966', '#AAAA00', 'g', 'c', 'b', 'm']
 
 # <codecell>
 
-nbad = 1
 seed = 0
+rso = np.random.RandomState(seed)
+
+nbad = 1
 n = 10
 
-while nbad > 0:
-    rso = np.random.RandomState(seed)
+model_lh = mo.IPE(
+    feedback[[ratios.index(0.1), ratios.index(10.0)]],
+    ipe_samps,
+    kappas,
+    smooth=True)
 
-    cond = 'C-fb-0.1'
-    cols = experiment[cond].columns
-    #order = np.argsort(zip(*cols)[0])[::-1]
-    order = rso.permutation(n_trial)
-    
-    model_joint, model_theta = mo.ModelObserver(
-	feedback[:, order][ratios.index(0.1)],
-	ipe_samps[order],
-	kappas,
-	prior=None, p_ignore=0, smooth=True)
-    model_lh = mo.IPE(
-	feedback[:, order][ratios.index(0.1)],
-	ipe_samps[order],
-	kappas,
-	smooth=True)
+low01_lh = model_lh[0, :, :ratios.index(1.0)].sum(axis=-1)
+high01_lh = model_lh[0, :, ratios.index(1.0)+1:].sum(axis=-1)
+lhr01 = low01_lh / high01_lh
 
-    low01 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
-    high01 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
-    low01_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
-    high01_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+low10_lh = model_lh[1, :, :ratios.index(1.0)].sum(axis=-1)
+high10_lh = model_lh[1, :, ratios.index(1.0)+1:].sum(axis=-1)
+lhr10 = high10_lh / low10_lh
 
-    cond = 'C-fb-10'
-    # cols = experiment[cond].columns
-    # #order = np.argsort(zip(*cols)[0])[::-1]
-    # order = rso.permutation(n_trial)
-    
-    model_joint, model_theta = mo.ModelObserver(
-	feedback[:, order][ratios.index(10.0)],
-	ipe_samps[order],
-	kappas,
-	prior=None, p_ignore=0, smooth=True)
-    model_lh = mo.IPE(
-	feedback[:, order][ratios.index(10.0)],
-	ipe_samps[order],
-	kappas,
-	smooth=True)
+match = (lhr01 >= 1.5) & (lhr10 >= 1.5)
+#match = (lhr01 > 1) & (lhr10 > 1)
+idx0 = np.nonzero(match)[0]
+rso.shuffle(idx0)
+idx1 = np.nonzero(~match)[0]
+rso.shuffle(idx1)
+order = np.hstack([idx0, idx1])
+order
 
-    low10 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
-    high10 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
-    low10_lh = model_lh[:, :ratios.index(1.0)].sum(axis=1)
-    high10_lh = model_lh[:, ratios.index(1.0)+1:].sum(axis=1)
+# <codecell>
 
-    s01 = np.sum((low01[1:] - low01[:-1])[:n] < 0)
-    s10 = np.sum((high10[1:] - high10[:-1])[:n] < 0)
-    nbad = s01+s10
-    # print seed, s01, s10
-    
-    seed += 1
+plt.figure(6)
+plt.clf()
 
-print order 
+cond = "fb-0.1"
+model_joint, model_theta = mo.ModelObserver(
+    feedback[:, order][ratios.index(0.1)],
+    ipe_samps[order],
+    kappas,
+    prior=None, p_ignore=0, smooth=True)
+low01 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+high01 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+
+lat.plot_theta(
+    2, 2, 1,
+    np.exp(model_theta),
+    cond,
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+
+
+cond = "fb-10"
+model_joint, model_theta = mo.ModelObserver(
+    feedback[:, order][ratios.index(10.0)],
+    ipe_samps[order],
+    kappas,
+    prior=None, p_ignore=0, smooth=True)
+low10 = np.exp(model_theta[:, :ratios.index(1.0)]).sum(axis=1)
+high10 = np.exp(model_theta[:, ratios.index(1.0)+1:]).sum(axis=1)
+
+lat.plot_theta(
+    2, 2, 2,
+    np.exp(model_theta),
+    cond,
+    exp=1.3,
+    cmap=cmap,
+    fontsize=14)
+
+plt.subplot(2, 2, 3)
+plt.plot(low01, label="r=0.1, p(r<1)")
+plt.plot(high10, label="r=10, p(r>1)")
+plt.legend()
+
+plt.subplot(2, 2, 4)
+plt.plot(lhr01[order], label="r=0.1, p(r<1)/p(r>1)")
+plt.plot(lhr10[order], label="r=10, p(r>1)/p(r<1)")
+#plt.plot(high, label=">1")
+plt.legend()
 
 # <codecell>
 
@@ -163,50 +187,6 @@ with open("../../turk-experiment/www/config/trial-order-E.txt", "w") as fh:
 	fh.write(stim + "\n")
     
 
-# # <codecell>
-
-# plt.figure(6)
-# plt.clf()
-
-# model_joint, model_theta = mo.ModelObserver(
-#     feedback[:, order][ratios.index(0.1)],
-#     ipe_samps[order],
-#     kappas,
-#     prior=None, p_ignore=0, smooth=True)
-
-# lat.plot_theta(
-#     2, 2, 1,
-#     np.exp(model_theta),
-#     cond,
-#     exp=1.3,
-#     cmap=cmap,
-#     fontsize=14)
-
-# model_joint, model_theta = mo.ModelObserver(
-#     feedback[:, order][ratios.index(10.0)],
-#     ipe_samps[order],
-#     kappas,
-#     prior=None, p_ignore=0, smooth=True)
-
-# lat.plot_theta(
-#     2, 2, 2,
-#     np.exp(model_theta),
-#     cond,
-#     exp=1.3,
-#     cmap=cmap,
-#     fontsize=14)
-
-# plt.subplot(2, 2, 3)
-# plt.plot(low01, label="r=0.1, p(r<1)")
-# plt.plot(high10, label="r=10, p(r>1)")
-# plt.legend()
-
-# plt.subplot(2, 2, 4)
-# plt.plot(low01_lh, label="r=0.1, p(r<1)")
-# plt.plot(high10_lh, label="r=10, p(r>1)")
-# #plt.plot(high, label=">1")
-# plt.legend()
-
-# # <codecell>
+# <codecell>
 
 
