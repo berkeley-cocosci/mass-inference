@@ -39,39 +39,9 @@ LINE = "-"*195
 ######################################################################
 
 reload(lat)
-training, posttest, experiment, queries = lat.load_turk_static(thresh=1)
+training, posttest, experiment, queries = lat.load_turk(thresh=1)
 conds = experiment.keys()
-
-# <codecell>
-
-######################################################################
-## Load stimuli
-######################################################################
-
-# listpath = os.path.join(cogphysics.CPOBJ_LIST_PATH,
-# 			"mass-towers-stability-learning~kappa-1.0")
-# with open(listpath, "r") as fh:
-#     Stims = np.array([x.split("~")[0] for x in fh.read().strip().split("\n") if x != ""])
-
 Stims = np.array([x.split("~")[0] for x in zip(*experiment[experiment.keys()[0]].columns)[1]])
-
-# <codecell>
-
-######################################################################
-## Load old human data
-######################################################################
-
-out = lat.load_human('stability')
-rawoldhuman, rawoldhstim, rawoldorder = out
-idx = np.nonzero(Stims[None, :] == rawoldhstim[:, None])[0]
-oldhuman_all = pd.DataFrame(
-    (7-rawoldhuman.reshape((rawoldhuman.shape[0], -1)).T)/7.,
-    columns=rawoldhstim)
-oldhuman = pd.DataFrame(
-    (7-rawoldhuman[idx].reshape((idx.shape[0], -1)).T)/7.,
-    columns=Stims)
-experiment['old-fb-10'] = oldhuman
-experiment['old-all-10'] = oldhuman_all
 
 # <codecell>
 

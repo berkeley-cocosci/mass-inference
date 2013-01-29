@@ -67,7 +67,36 @@ def get_bad_pids(conds, thresh=1):
 
     return sorted(all_pids)
 
-def load_turk_learning(thresh=1, istim=True, itrial=True):
+# def load_turk(thresh=1, istim=True, itrial=True):
+#     training = {}
+#     posttest = {}
+#     experiment = {}
+#     queries = {}
+
+#     suffix = ['-cb0', '-cb1']
+#     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+#     conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
+#              'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
+#     allconds = [c+s for c in conds for s in suffix]
+#     pids = get_bad_pids(allconds, thresh=thresh)
+#     print "Bad pids (%d): %s" % (len(pids), pids)
+
+#     kwargs = {
+#         "exclude": pids,
+#         "istim": istim,
+#         "itrial": itrial
+#         }
+
+#     for cond in allconds:
+#         training[cond] = load_turk_df(cond, "training", **kwargs)
+#         posttest[cond] = load_turk_df(cond, "posttest", **kwargs)
+#         experiment[cond] = load_turk_df(cond, "experiment", **kwargs)
+#         if cond.split("-")[1] != "nfb":
+#             queries[cond] = load_turk_df(cond, "queries", **kwargs)
+
+#     return training, posttest, experiment, queries
+
+def load_turk(thresh=1):
     training = {}
     posttest = {}
     experiment = {}
@@ -81,43 +110,39 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
     pids = get_bad_pids(allconds, thresh=thresh)
     print "Bad pids (%d): %s" % (len(pids), pids)
 
-    kwargs = {
-        "exclude": pids,
-        "istim": istim,
-        "itrial": itrial
-        }
+    # ltraining, lposttest, lexperiment = load_turk_learning(
+    #     thresh=thresh, itrial=True)[:3]
+    # lqueries = load_turk_learning(
+    #     thresh=thresh, istim=False)[3]
 
-    for cond in allconds:
-        training[cond] = load_turk_df(cond, "training", **kwargs)
-        posttest[cond] = load_turk_df(cond, "posttest", **kwargs)
-        experiment[cond] = load_turk_df(cond, "experiment", **kwargs)
-        if cond.split("-")[1] != "nfb":
-            queries[cond] = load_turk_df(cond, "queries", **kwargs)
+    # training = {}
+    # posttest = {}
+    # experiment = {}
+    # queries = {}
 
-    return training, posttest, experiment, queries
-
-def load_turk_static(thresh=1):
-    ltraining, lposttest, lexperiment = load_turk_learning(
-        thresh=thresh, itrial=True)[:3]
-    lqueries = load_turk_learning(
-        thresh=thresh, istim=False)[3]
-
-    training = {}
-    posttest = {}
-    experiment = {}
-    queries = {}
-
-    suffix = ['-cb0', '-cb1']
-    #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
-             'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
+    # suffix = ['-cb0', '-cb1']
+    # #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
+    # conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
+    #          'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
         
     for cond in conds:
-        training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
-        posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
-        experiment[cond] = pd.concat([lexperiment[cond+s] for s in suffix])
+        training[cond] = pd.concat([
+            load_turk_df(cond+s, "training", exclude=pids, istim=True, itrial=True) 
+            for s in suffix])
+        posttest[cond] = pd.concat([
+            load_turk_df(cond+s, "posttest", exclude=pids, istim=True, itrial=True) 
+            for s in suffix])
+        experiment[cond] = pd.concat([
+            load_turk_df(cond+s, "experiment", exclude=pids, istim=True, itrial=True) 
+            for s in suffix])
         if cond.split("-")[1] != "nfb":
-            queries[cond] = pd.concat([lqueries[cond+s] for s in suffix])
+            queries[cond] = pd.concat([
+                load_turk_df(cond+s, "queries", exclude=pids, istim=False, itrial=True) 
+                for s in suffix])
+        # posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
+        # experiment[cond] = pd.concat([lexperiment[cond+s] for s in suffix])
+        # if cond.split("-")[1] != "nfb":
+        #     queries[cond] = pd.concat([lqueries[cond+s] for s in suffix])
 
     return training, posttest, experiment, queries
 
@@ -462,7 +487,9 @@ def save(path, fignum=None, close=True, width=None, height=None, ext=None):
         plt.cla()
         plt.close()
 
-def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot', fontsize=12):
+def plot_theta(nrow, ncol, idx, theta, title, 
+               exp=2.718281828459045, cmap='hot', 
+               fontsize=12, vmin=0, vmax=1):
     try:
         idx.cla()
     except AttributeError:
@@ -473,7 +500,7 @@ def plot_theta(nrow, ncol, idx, theta, title, exp=2.718281828459045, cmap='hot',
     img = ax.imshow(
         exp ** np.log(theta.T),
         aspect='auto', interpolation='nearest',
-        vmin=0, vmax=1, cmap=cmap)
+        vmin=vmin, vmax=vmax, cmap=cmap)
     ax.set_xticks([])
     ax.set_xticklabels([])
     ax.set_yticks([])
@@ -568,7 +595,7 @@ def make_truth_df(rawtruth, rawsstim, kappas, nthresh0):
 #     df = pd.DataFrame(ipe.T, index=kappas, columns=rawsstim)
 #     return df
 
-def plot_smoothing(samps, stims, nstim, kappas):
+def plot_smoothing(samps, stims, istim, kappas):
     reload(mo)
     n_trial, n_kappas, n_samples = samps.shape
     alpha = np.sum(samps, axis=-1) + 0.5
@@ -579,7 +606,7 @@ def plot_smoothing(samps, stims, nstim, kappas):
     # pfell_meanstd = np.mean(pfell_std, axis=-1)
     y_mean = mo.IPE(np.ones(n_trial), samps, kappas, smooth=True)
     
-    colors = cm.hsv(np.round(np.linspace(0, 220, nstim)).astype('i8'))
+    colors = cm.hsv(np.round(np.linspace(0, 220, len(istim))).astype('i8'))
     xticks = np.linspace(-1.3, 1.3, 7)
     xticks10 = 10 ** xticks
     xticks10[xticks < 0] = np.round(xticks10[xticks < 0], decimals=2)
@@ -593,11 +620,11 @@ def plot_smoothing(samps, stims, nstim, kappas):
     plt.xticks(xticks, xticks10)
     plt.xlabel("Mass ratio ($r$)", fontsize=14)
     plt.yticks(yticks, yticks)
-    plt.ylabel("\Pr(fall|$r$, $S$)", fontsize=14)
+    plt.ylabel("P(fall|$r$, $S$)", fontsize=14)
     plt.grid(True)
-    order = (range(0, stims.size, 2) + range(1, stims.size, 2))[:nstim]
+    order = istim
 
-    for idx in xrange(nstim):
+    for idx in xrange(len(istim)):
         i = order[idx]
         x = kappas
         # lam = pfell_meanstd[i] * 10
@@ -614,16 +641,16 @@ def plot_smoothing(samps, stims, nstim, kappas):
     # plt.legend(loc=8, prop={'size':12}, numpoints=1,
     #            scatterpoints=1, ncol=3, title="Stimuli")
 
-def plot_belief(model_theta, kappas, cmap):
-    ratios = np.round(10 ** kappas, decimals=1)
+def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
+    fig = plt.figure(fignum)
+    plt.clf()
+    ratios = np.round(10 ** np.array(kappas), decimals=1)
     n_kappas = len(kappas)
-    n_trial = model_theta.shape[1] - 1
-    r, c = 1, 3
     n = r*c
-    exp = np.exp(np.log(0.5) / np.log(1./27))    
+    exp = np.e#np.exp(np.log(0.5) / np.log(1./27))    
     gs = gridspec.GridSpec(r, c+1, width_ratios=[1]*c + [0.1])
     plt.suptitle(
-        "Posterior belief about mass ratio over time",
+        "Ideal observer posterior beliefs",
         fontsize=16)
     plt.subplots_adjust(
         wspace=0.2,
@@ -632,20 +659,28 @@ def plot_belief(model_theta, kappas, cmap):
         right=0.93,
         top=0.8,
         bottom=0.1)
+    vmax = 0
+    for cond in sorted(model_beliefs.keys()):
+        v = np.exp(model_beliefs[cond]).max()
+        if v > vmax:
+            vmax = v
     #kidxs = [0, 3, 6, 10, 13, 16, 20, 23, 26]
-    kidxs = [3, 13, 23]
-    for i, kidx in enumerate(kidxs):
+    for i, cond in enumerate(sorted(model_beliefs.keys())):
         irow, icol = np.unravel_index(i, (r, c))
         ax = plt.subplot(gs[irow, icol])
-        kappa = kappas[kidx]
-        subjname = "True $r=%s$" % float(ratios[kidx])
+        n_trial = model_beliefs[cond].shape[1] - 1
+        # kappa = kappas[kidx]
+        subjname = cond#"True $r=%s$" % float(ratios[kidx])
         img = plot_theta(
             None, None, ax,
-            np.exp(model_theta[kidx]),
+            # np.exp(model_theta[kidx]),
+            np.exp(model_beliefs[cond]),
             subjname,
             exp=exp,
             cmap=cmap,
-            fontsize=14)
+            fontsize=14,
+            vmin=0,
+            vmax=vmax)
         yticks = np.round(
             np.linspace(0, n_kappas-1, 5)).astype('i8')
         if (i%c) == 0:
@@ -660,11 +695,12 @@ def plot_belief(model_theta, kappas, cmap):
             plt.xlabel("Trial number ($t$)", fontsize=14)
         else:
             plt.xticks(xticks, [])
-    logcticks = np.array([0, 0.001, 0.05, 0.25, 1])
-    cticks = np.exp(np.log(logcticks) * np.log(exp))
+    #logcticks = np.array([0, 0.001, 0.05, 0.25, 1])
+    #cticks = np.exp(np.log(logcticks) * np.log(exp))
+    cticks = np.linspace(0, vmax, 5)
     cax = plt.subplot(gs[:, -1])
     cb = fig.colorbar(img, ax=ax, cax=cax, ticks=cticks)
-    cb.set_ticklabels(logcticks)
+    cb.set_ticklabels(np.round(cticks, decimals=2))#logcticks)
     cax.set_title("$\Pr(r|B_t)$", fontsize=14)
 
 def random_model_lh(conds, n_trial, t0=None, tn=None):
@@ -752,3 +788,40 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
 #         lh[cond] = np.exp(np.sum(lh_judgment, axis=-1))
 
 #     return lh
+
+def CI(data, conds):
+    bmvs = scipy.stats.bayes_mvs
+    stats = []
+    for cidx, cond in enumerate(conds):
+	shape = data[cond].shape
+	assert len(shape) == 2
+	info = []
+	for i in xrange(shape[1]):
+	    shape = data[cond][:, i].shape
+	    if shape == (1,):
+		mean = lower = upper = sum = np.log(data[cond][:, i][0])
+	    else:
+		#mean, (lower, upper) = bmvs(data[cond][:, i])[0]
+		mean = np.mean(data[cond][:, i])
+		sem = scipy.stats.sem(data[cond][:, i])
+		lower = np.log(mean - sem)
+		upper = np.log(mean + sem)
+		mean = np.log(mean)
+		sum = np.sum(np.log(data[cond][:, i]))
+	    info.append([mean, lower, upper, sum])
+	stats.append(info)
+    stats = np.swapaxes(np.array(stats), 0, 1)
+    return stats
+
+def plot_explicit_judgments(idx, arr, fbtype=None, ratio=None):
+    mean = np.mean(arr, axis=0)
+    sem = scipy.stats.sem(arr, axis=0, ddof=1)
+
+    if fbtype is None or ratio is None:
+        label = "all (n=%d)" % (arr.shape[0])
+    else:
+        label = "%s r=%s (n=%d)"% (
+            fbtype, ratio, arr.shape[0])
+
+    plt.errorbar(idx, mean, yerr=sem, label=label, linewidth=2)
+         
