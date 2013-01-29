@@ -191,11 +191,12 @@ def simulateResponses(n, feedback, ipe_samps, kappas, prior=None, p_ignore=0.0, 
 
     # compute probability of falling
     p_fall = np.exp(predict(
-        model_theta[:-1], ipe_samps, kappas, smooth))
+        model_theta[..., :-1, :], ipe_samps, kappas, smooth))
     p_response = (p_fall * (1-p_ignore)) + ((1-p_fall) * (p_ignore))
 
     # sample responses
     n_trial, n_kappas, n_samps = ipe_samps.shape
-    responses = np.random.rand(n, n_trial) < p_response
+    shape = (n,) + p_response.shape
+    responses = np.random.rand(*shape) < p_response
 
     return responses, model_theta

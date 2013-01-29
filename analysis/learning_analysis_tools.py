@@ -29,11 +29,12 @@ memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 
 def parse_condition(cond):
     args = cond.split("-")
-    group = args[0]
-    fbtype = args[1]
-    ratio = float(args[2]) if len(args) > 2 else None
-    cb = args[3] if len(args) > 3 else None
-    return group, fbtype, ratio, cb
+    obstype = args[0]
+    group = args[1]
+    fbtype = args[2]
+    ratio = args[3] if len(args) > 3 else None
+    cb = args[4] if len(args) > 4 else None
+    return obstype, group, fbtype, ratio, cb
 
 def get_bad_pids(conds, thresh=1):
 
@@ -126,17 +127,17 @@ def load_turk(thresh=1):
     #          'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
         
     for cond in conds:
-        training[cond] = pd.concat([
+        training["H-"+cond] = pd.concat([
             load_turk_df(cond+s, "training", exclude=pids, istim=True, itrial=True) 
             for s in suffix])
-        posttest[cond] = pd.concat([
+        posttest["H-"+cond] = pd.concat([
             load_turk_df(cond+s, "posttest", exclude=pids, istim=True, itrial=True) 
             for s in suffix])
-        experiment[cond] = pd.concat([
+        experiment["H-"+cond] = pd.concat([
             load_turk_df(cond+s, "experiment", exclude=pids, istim=True, itrial=True) 
             for s in suffix])
         if cond.split("-")[1] != "nfb":
-            queries[cond] = pd.concat([
+            queries["H-"+cond] = pd.concat([
                 load_turk_df(cond+s, "queries", exclude=pids, istim=False, itrial=True) 
                 for s in suffix])
         # posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
@@ -713,13 +714,9 @@ def random_model_lh(conds, n_trial, t0=None, tn=None):
         
     lh = {}
     for cond in conds:
-        lh[cond] = np.exp(np.array([np.log(0.5)*(tn-t0)])[None])
-
-    # lh = np.array([np.log(0.5)*(tn-t0)])
-    # mean = np.array([lh]*n_cond)
-    # lower = np.array([lh]*n_cond)
-    # upper = np.array([lh]*n_cond)
-    # out = np.array([mean, upper, lower]).T
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        if group != 'all':
+            lh[cond] = np.exp(np.array([np.log(0.5)*(tn-t0)])[None])
 
     return lh
 
@@ -748,80 +745,54 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
 
     return lh
 
-# def learning_model_lh(conds, experiment, ipe_samps, feedback, ikappas, kappas, 
-#                       t0=None, tn=None, f_smooth=True):
-    
-#     n_cond = len(conds)
-#     n_trial = ipe_samps.shape[0]
-#     outcomes = np.array([[0], [1]])
-
-#     if t0 is None:
-#         t0 = 0
-#     if tn is None:
-#         tn = n_trial
-        
-#     lh = {}
-    
-#     for cidx, cond in enumerate(conds):
-#         # trial ordering
-#         if cond in experiment:
-#             order = np.argsort(zip(*experiment[cond].columns)[0])
-#         else:
-#             order = np.arange(n_trial)
-            
-#         order = order[t0:tn]
-
-#         # learning model beliefs
-#         model_joint, model_theta = mo.ModelObserver(
-#             feedback[ikappas][:, order], ipe_samps[order], kappas, 
-#             prior=None, smooth=f_smooth)
-
-#         # trial-by-trial likelihoods of judgments
-#         resp = np.asarray(experiment[cond])[:, None]
-
-#         p_outcomes = np.exp(mo.predict(
-#             model_theta[:, :-1], ipe_samps[order], kappas, f_smooth))
-#         lh_judgment = np.log(
-#             (resp*p_outcomes) + ((1-resp)*(1-p_outcomes)))
-
-#         # overall likelihood
-#         lh[cond] = np.exp(np.sum(lh_judgment, axis=-1))
-
-#     return lh
-
 def CI(data, conds):
-    bmvs = scipy.stats.bayes_mvs
-    stats = []
-    for cidx, cond in enumerate(conds):
-	shape = data[cond].shape
-	assert len(shape) == 2
-	info = []
-	for i in xrange(shape[1]):
-	    shape = data[cond][:, i].shape
-	    if shape == (1,):
-		mean = lower = upper = sum = np.log(data[cond][:, i][0])
-	    else:
-		#mean, (lower, upper) = bmvs(data[cond][:, i])[0]
-		mean = np.mean(data[cond][:, i])
-		sem = scipy.stats.sem(data[cond][:, i])
-		lower = np.log(mean - sem)
-		upper = np.log(mean + sem)
-		mean = np.log(mean)
-		sum = np.sum(np.log(data[cond][:, i]))
-	    info.append([mean, lower, upper, sum])
-	stats.append(info)
-    stats = np.swapaxes(np.array(stats), 0, 1)
+    # consolidate data from different orderings
+    newdata = {}
+    for cond in conds:
+        if cond not in data:
+            continue
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        key = (obstype, fbtype, ratio)
+        if key not in newdata:
+            newdata[key] = []
+        newdata[key].append(data[cond])
+    for key in newdata.keys():
+        obstype, fbtype, ratio = key
+        newcond = "%s-all-%s-%s" % (obstype, fbtype, ratio)
+        data[newcond] = np.vstack(newdata[key])
+
+    # now compute statistics
+    stats = {}
+    for cond in conds:
+        if cond not in data:
+            continue
+        shape = data[cond].shape
+        assert len(shape) == 2
+        info = []
+        for i in xrange(shape[1]):
+            shape = data[cond][:, i].shape
+            if shape == (1,):
+                mean = lower = upper = sumlog = np.log(data[cond][:, i][0])
+            else:
+                mean = np.mean(data[cond][:, i])
+                sem = scipy.stats.sem(data[cond][:, i])
+                lower = np.log(mean - sem)
+                upper = np.log(mean + sem)
+                mean = np.log(mean)
+                sumlog = np.sum(np.log(data[cond][:, i]))
+            sum = np.sum(data[cond][:, i])
+            n = data[cond][:, i].size
+            info.append([mean, lower, upper, sumlog, sum, n])
+        if len(info) == 1:
+            stats[cond] = np.array(info[0])
+        else:
+            stats[cond] = np.array(info)
+
+    #stats = np.swapaxes(np.array(stats), 0, 1)
     return stats
 
-def plot_explicit_judgments(idx, arr, fbtype=None, ratio=None):
+def plot_explicit_judgments(stats, arr, fbtype=None, ratio=None):
     mean = np.mean(arr, axis=0)
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
 
-    if fbtype is None or ratio is None:
-        label = "all (n=%d)" % (arr.shape[0])
-    else:
-        label = "%s r=%s (n=%d)"% (
-            fbtype, ratio, arr.shape[0])
-
-    plt.errorbar(idx, mean, yerr=sem, label=label, linewidth=2)
          

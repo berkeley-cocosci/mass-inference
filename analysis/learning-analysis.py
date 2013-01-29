@@ -43,6 +43,8 @@ reload(lat)
 # human
 training, posttest, experiment, queries = lat.load_turk(thresh=1)
 hconds = sorted(experiment.keys())
+for cond in hconds:
+    print "%s: n=%d" % (cond, experiment[cond].shape[0])
 
 # stims
 Stims = np.array([
@@ -78,59 +80,8 @@ p_ignore = 0.0
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 alpha = 0.2
 #colors = ['r', '#AAAA00', 'g', 'c', 'b', 'm']
-colors = ["m", "c", "y"]
+colors = ["r", "c", "k"]
 #colors = cm.hsv(np.round(np.linspace(0, 220, n_cond)).astype('i8'))
-
-# <codecell>
-
-######################################################################
-## Conditions
-######################################################################
-
-groups = ["C", "E"]
-
-cond_labels = {
-    'C-nfb-10': 'No-feedback C',
-    'C-vfb-0.1': 'Visual feedback C (r=0.1)',
-    'C-vfb-10': 'Visual feedback C (r=10)',
-    'C-fb-0.1': 'Text feedback C (r=0.1)',
-    'C-fb-10': 'Text feedback C (r=10)',
-    'E-nfb-10': 'No-feedback E',
-    'E-vfb-0.1': 'Visual feedback E (r=0.1)',
-    'E-vfb-10': 'Visual feedback E (r=10)',
-    'E-fb-0.1': 'Text feedback E (r=0.1)',
-    'E-fb-10': 'Text feedback E (r=10)',
-    'MOC-nfb-10': 'Uniform fixed observer C',
-    'MOC-fb-0.1': 'Learning observer C (r=0.1)',
-    'MOC-fb-10': 'Learning observer C (r=10)',
-    'MOE-nfb-10': 'Uniform fixed observer E',
-    'MOE-fb-0.1': 'Learning observer E (r=0.1)',
-    'MOE-fb-10': 'Learning observer E (r=10)',
-    }
-
-conds = [
-    'C-fb-0.1',
-    'C-vfb-0.1',
-    'MOC-fb-0.1',
-    'E-fb-0.1',
-    'E-vfb-0.1',
-    'MOE-fb-0.1',
-    'C-fb-10',
-    'C-vfb-10',
-    'MOC-fb-10',
-    'E-fb-10',
-    'E-vfb-10',
-    'MOE-fb-10',
-    'C-nfb-10',
-    'MOC-nfb-10',
-    'E-nfb-10',
-    'MOE-nfb-10',
-    ]
-n_cond = len(conds)
-
-# cond_labels = dict([(c, c) for c in conds])
-# conds = sorted(np.unique(["-".join(c.split("-")[:-1]) for c in conds]))
-    
 
 # <codecell>
 
@@ -142,37 +93,164 @@ reload(mo)
 model_belief = {}
 for cond in hconds:
 
-    group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if group == "MO":
+    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    if obstype == "M" or fbtype == "vfb":
 	continue
-    if fbtype == "vfb":
-	fbtype = "fb"
 
     cols = experiment[cond].columns
     order = np.argsort(zip(*cols)[0])
     undo_order = np.argsort(order)
-    nfake = experiment[cond].shape[0]
+    #nfake = experiment[cond].shape[0]
+    nfake = n_fake_data
 
     # determine what feedback to give
     if fbtype == 'nfb':
-	fb = nofeedback[..., order]
-	# prior = np.zeros((n_kappas,))
-	# prior[kappas.index(0.0)] = 1
-	# prior = normalize(np.log(prior))[1]
-	prior = None
+	fb = np.empty((2, n_trial))*np.nan
+	prior = np.zeros((2, n_kappas,))
+	prior[0, :] = 1 # uniform
+	prior[1, kappas.index(0.0)] = 1 # r=1.0
+	prior = normalize(np.log(prior), axis=1)[1]
+	# prior = None
     else:
-	ridx = ratios.index(ratio)
+	ridx = ratios.index(float(ratio))
 	fb = feedback[:, order][ridx]
 	prior = None
 
-    newcond = "%s-%s-%s" % ("MO"+group, fbtype, cond.split("-")[2])
     responses, model_theta = mo.simulateResponses(
 	nfake, fb, ipe_samps[order], kappas, 
 	prior=prior, p_ignore=p_ignore, smooth=f_smooth)
-    experiment[newcond] = pd.DataFrame(
-	responses[:, undo_order], 
-	columns=cols)
-    model_belief[newcond] = model_theta
+
+    if fbtype == "nfb":
+	newcond = "M-%s-%s-%s" % (group, fbtype, ratio)
+	experiment[newcond] = pd.DataFrame(
+	    responses[:, 0][:, undo_order], 
+	    columns=cols)
+	model_belief[newcond] = model_theta[0]
+	
+	newcond = "M-%s-%s-1" % (group, fbtype)
+	experiment[newcond] = pd.DataFrame(
+	    responses[:, 1][:, undo_order], 
+	    columns=cols)
+	model_belief[newcond] = model_theta[1]
+
+    else:
+	newcond = "M-%s-%s-%s" % (group, fbtype, ratio)
+	experiment[newcond] = pd.DataFrame(
+	    responses[:, undo_order], 
+	    columns=cols)
+	model_belief[newcond] = model_theta
+
+    # explicit judgments
+    if fbtype == "fb":
+	cols = queries[cond].columns
+	idx = np.array(cols)-6-np.arange(len(cols))-1
+	theta = np.exp(model_theta[idx])
+	if float(ratio) > 1:
+	    pcorrect = np.sum(theta[:, ratios.index(1.0)+1:], axis=1)
+	    other = 0.1
+	else:
+	    pcorrect = np.sum(theta[:, :ratios.index(1.0)], axis=1)
+	    other = 10
+	r = np.random.rand(nfake, 1) < pcorrect[None]
+	responses = np.empty(r.shape)
+	responses[r] = float(ratio)
+	responses[~r] = other
+	queries[newcond] = pd.DataFrame(
+	    responses, columns=cols)
+	# print newcond, pcorrect
+	
+
+# <codecell>
+
+######################################################################
+## Conditions
+######################################################################
+
+groups = ["C", "E", "all"]
+
+cond_labels = {
+    # order C
+    'H-C-nfb-10': 'No feedback C',
+    'H-C-vfb-0.1': 'Visual feedback C (r=0.1)',
+    'H-C-vfb-10': 'Visual feedback C (r=10)',
+    'H-C-fb-0.1': 'Text feedback C (r=0.1)',
+    'H-C-fb-10': 'Text feedback C (r=10)',
+
+    'M-C-nfb-10': 'Fixed observer C (uniform)',
+    'M-C-nfb-1': 'Fixed observer C (r=1.0)',
+    'M-C-fb-0.1': 'Learning observer C (r=0.1)',
+    'M-C-fb-10': 'Learning observer C (r=10)',
+
+    # order E
+    'H-E-nfb-10': 'No feedback E',
+    'H-E-vfb-0.1': 'Visual feedback E (r=0.1)',
+    'H-E-vfb-10': 'Visual feedback E (r=10)',
+    'H-E-fb-0.1': 'Text feedback E (r=0.1)',
+    'H-E-fb-10': 'Text feedback E (r=10)',
+
+    'M-E-nfb-10': 'Fixed observer E (uniform)',
+    'M-E-nfb-1': 'Fixed observer E (r=1.0)',
+    'M-E-fb-0.1': 'Learning observer E (r=0.1)',
+    'M-E-fb-10': 'Learning observer E (r=10)',
+
+    # all orders
+    'H-all-nfb-10': 'No feedback all',
+    'H-all-vfb-0.1': 'Visual feedback all (r=0.1)',
+    'H-all-vfb-10': 'Visual feedback all (r=10)',
+    'H-all-fb-0.1': 'Text feedback all (r=0.1)',
+    'H-all-fb-10': 'Text feedback all (r=10)',
+
+    'M-all-nfb-10': 'Fixed observer E (uniform)',
+    'M-all-nfb-1': 'Fixed observer E (r=1.0)',
+    'M-all-fb-0.1': 'Learning observer all (r=0.1)',
+    'M-all-fb-10': 'Learning observer all (r=10)',
+    }
+
+conds = [
+    # order C
+    'H-C-fb-0.1',
+    'H-C-vfb-0.1',
+    'M-C-fb-0.1',
+
+    'H-C-fb-10',
+    'H-C-vfb-10',
+    'M-C-fb-10',
+
+    'H-C-nfb-10',
+    'M-C-nfb-10',
+    'M-C-nfb-1',
+
+    # order E
+    'H-E-fb-0.1',
+    'H-E-vfb-0.1',
+    'M-E-fb-0.1',
+
+    'H-E-fb-10',
+    'H-E-vfb-10',
+    'M-E-fb-10',
+
+    'H-E-nfb-10',
+    'M-E-nfb-10',
+    'M-E-nfb-1',
+
+    # all orders
+    'H-all-fb-0.1',
+    'H-all-vfb-0.1',
+    'M-all-fb-0.1',
+
+    'H-all-fb-10',
+    'H-all-vfb-10',
+    'M-all-fb-10',
+
+    'H-all-nfb-10',
+    'M-all-nfb-10',
+    'M-all-nfb-1',
+    ]
+n_cond = len(conds)
+
+# cond_labels = dict([(c, c) for c in conds])
+# conds = sorted(np.unique(["-".join(c.split("-")[:-1]) for c in conds]))
+    
 
 # <codecell>
 
@@ -187,7 +265,7 @@ ir10 = list(kappas).index(1.0)
 ir01 = list(kappas).index(-1.0)
 
 # random model
-model_random, = lat.CI(lat.random_model_lh(conds, n_trial), conds)
+model_random = lat.CI(lat.random_model_lh(conds, n_trial), conds)
 
 # fixed models
 theta = np.log(np.eye(n_kappas))
@@ -195,36 +273,40 @@ fb = np.empty((n_kappas, n_trial))*np.nan
 model_fixed = lat.CI(lat.block_lh(
     experiment, fb, ipe_samps, theta, kappas, 
     f_smooth=f_smooth, p_ignore=p_ignore), conds)
-model_true10 = model_fixed[ir10]
-model_true01 = model_fixed[ir01]
-model_true1 = model_fixed[1]
-model_uniform, = lat.CI(lat.block_lh(
+model_true01 = dict([(cond, model_fixed[cond][ir01]) for cond in model_fixed])
+model_true1 = dict([(cond, model_fixed[cond][ir1]) for cond in model_fixed])
+model_true10 = dict([(cond, model_fixed[cond][ir10]) for cond in model_fixed])
+model_uniform = lat.CI(lat.block_lh(
     experiment, nofeedback, ipe_samps, None, kappas,
     f_smooth=f_smooth, p_ignore=p_ignore), conds)
 	
 # learning models
-model_learn01, model_learn10 = lat.CI(lat.block_lh(
+model_learn = lat.CI(lat.block_lh(
     experiment, feedback[[ir01, ir10]], ipe_samps, None, kappas, 
     f_smooth=f_smooth, p_ignore=p_ignore), conds)
+model_learn01 = dict([(cond, model_learn[cond][0]) for cond in model_fixed])
+model_learn10 = dict([(cond, model_learn[cond][1]) for cond in model_fixed])
 
 # all the models
 mnames = np.array([
 	"random",
 	"fixed 0.1",
 	"learning 0.1",
-	"fixed uniform",
 	"fixed 10",
 	"learning 10"
+	"fixed uniform",
+	"fixed r=1",
 	])
-mparams = np.array([0, 1, 2, 1, 1, 2])
-models = np.concatenate([
-    model_random[None],
-    model_true01[None],
-    model_learn01[None],
-    model_uniform[None],
-    model_true10[None],
-    model_learn10[None]
-    ], axis=0).T
+mparams = np.array([0, 1, 2, 1, 2, 1, 1])
+models = [
+    model_random,
+    model_true01,
+    model_learn01,
+    model_true10,
+    model_learn10,
+    model_uniform,
+    model_true1,
+    ]
 
 # <codecell>
 
@@ -237,61 +319,80 @@ reload(lat)
 fig = plt.figure(10)
 plt.clf()
 
-allgroups = {}
+emjs = {}
+for cond in conds:
+    if cond not in queries:
+	continue
+    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    emjs[cond] = np.asarray(queries[cond]) == float(ratio)
+    index = np.array(queries[cond].columns, dtype='i8')
+    X = np.array(index)-6-np.arange(len(index))-1
+emj_stats = lat.CI(emjs, conds)
 
 for i, group in enumerate(groups):
 
-    allarr = []
     plt.subplot(1, 3, i+1)
+    idx = 0
 
-    for cond in sorted(conds):
-	grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group or fbtype == "nfb":
+    for cidx, cond in enumerate(conds):
+	if cond not in emj_stats:
 	    continue
-	if (fbtype, ratio) not in allgroups:
-	    allgroups[fbtype, ratio] = []
+	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	if (grp != group):
+	    continue
+	mean, lower, upper, logsums, sums, n = emj_stats[cond].T
+	mean = np.exp(mean)
+	sem = mean - np.exp(lower)
 
-	arr = np.asarray(queries[cond]) == ratio
-	index = np.array(queries[cond].columns, dtype='i8')
-	idx = np.array(index)-6-np.arange(len(index))-1
+	color = colors[(idx/3) % len(colors)]
+	if obstype == "M":
+	    linestyle = '-'
+	elif fbtype == "fb":
+	    linestyle = '-.'
+	elif fbtype in ("vfb", "nfb"):
+	    linestyle = '--'
 
-	allarr.append(arr)
-	allgroups[fbtype, ratio].append(arr)
-	lat.plot_explicit_judgments(idx, arr, fbtype, ratio)
+	label = "%s %s r=%s (n=%d)" % (
+	    obstype, fbtype, ratio, n[0])
+	plt.errorbar(X, mean, yerr=sem, label=label, 
+		     linewidth=2, color=color, linestyle=linestyle)
 
-    arr = np.concatenate(allarr, axis=0)
-    lat.plot_explicit_judgments(idx, arr)
+	idx += 1
+
+    # arr = np.concatenate(allarr, axis=0)
+    # lat.plot_explicit_judgments(idx, arr)
 	
-    plt.xlim(idx.min(), idx.max())
-    plt.xticks(idx, idx)
+    plt.xlim(X.min(), X.max())
+    plt.xticks(X, X)
     plt.xlabel("Trial")
     plt.ylabel("P(judge correct mass ratio)")
     plt.title("Explicit mass judgments (group %s)" % group)
     plt.legend(loc=0, fontsize=10)
 
-allarr = []
-plt.subplot(1, 3, 3)
+# allarr = []
+# plt.subplot(1, 3, 3)
 
-for fbtype, ratio in sorted(allgroups.keys()):
-    arr = np.concatenate(allgroups[fbtype, ratio], axis=0)
-    allarr.append(arr)
-    lat.plot_explicit_judgments(idx, arr, fbtype, ratio)
+# for group, fbtype, ratio in sorted(allgroups.keys()):
+#     arr = np.concatenate(allgroups[group, fbtype, ratio], axis=0)
+#     if group == "Human":
+# 	allarr.append(arr)
+#     lat.plot_explicit_judgments(idx, arr, "%s %s" % (group, fbtype), ratio)
 
-arr = np.concatenate(allarr, axis=0)
-lat.plot_explicit_judgments(idx, arr)
+# arr = np.concatenate(allarr, axis=0)
+# lat.plot_explicit_judgments(idx, arr)
 	
-plt.xlim(idx.min(), idx.max())
-plt.xticks(idx, idx)
-plt.xlabel("Trial")
-plt.ylabel("P(judge correct mass ratio)")
-plt.title("Explicit mass judgments (all)")
-plt.legend(loc=0, fontsize=10)
+# plt.xlim(idx.min(), idx.max())
+# plt.xticks(idx, idx)
+# plt.xlabel("Trial")
+# plt.ylabel("P(judge correct mass ratio)")
+# plt.title("Explicit mass judgments (all)")
+# plt.legend(loc=0, fontsize=10)
 
 fig = plt.gcf()
 fig.set_figwidth(12)
 fig.set_figheight(4)
 
-lat.save("images/explicit_mass_judgments_%s.png" % group, close=False)
+lat.save("images/explicit_mass_judgments.png", close=False)
     
 
 # <codecell>
@@ -300,27 +401,29 @@ lat.save("images/explicit_mass_judgments_%s.png" % group, close=False)
 ## Binomial analysis of explicit judgments
 ######################################################################
 
+reload(lat)
 for i, group in enumerate(groups):
     allarr = []
 
-    for cond in sorted(conds):
-	grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group or fbtype == "nfb":
+    for cidx, cond in enumerate(conds):
+	if cond not in emj_stats:
 	    continue
+	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	if (grp != group):
+	    continue
+	mean, lower, upper, logsums, sums, n = emj_stats[cond].T
 
-	arr = np.asarray(queries[cond]) == ratio
-	binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) 
-		 for x in np.sum(arr, axis=0)]
-	allarr.append(arr)
+	# arr = np.asarray(queries[cond]) == float(ratio)
+	binom = [scipy.stats.binom_test(x, n[0], 0.5) for x in sums]
 
         print cond
         print "  ", np.round(binom, decimals=3)
 
-    arr = np.concatenate(allarr, axis=0)
-    binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) 
-	     for x in np.sum(arr, axis=0)]
-    print "All %s" % group
-    print "  ", np.round(binom, decimals=3)
+    # arr = np.concatenate(allarr, axis=0)
+    # binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) 
+    # 	     for x in np.sum(arr, axis=0)]
+    # print "All %s" % group
+    # print "  ", np.round(binom, decimals=3)
     
 
 # <codecell>
@@ -332,18 +435,24 @@ for i, group in enumerate(groups):
 for i, group in enumerate(groups):
     allarr = []
 
-    for cond in sorted(conds):
-	grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group or fbtype == "nfb":
+    for cond in conds:
+	if cond not in queries:
 	    continue
+	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	if grp != group or obstype == "M":
+	    continue
+	print cond
 
-	arr = np.asarray(queries[cond]) == ratio
+	arr = np.asarray(queries[cond]) == float(ratio)
 	allarr.append(arr)
+
+    if allarr == []:
+	continue
 
     arr = np.concatenate(allarr, axis=0)
     df = pd.DataFrame(
 	np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
-	index=idx,
+	index=X,
 	columns=["incorrect", "correct"])
     print group
     print df
@@ -365,7 +474,7 @@ istim = [0, 1]
 print Stims[istim]
 lat.plot_smoothing(ipe_samps, Stims, istim, kappas)
 
-lat.save("images/likelihood_smoothing.png", close=False)
+lat.save("images/likelihood_smoothing.png", close=True)
 
 # <codecell>
 
@@ -376,12 +485,14 @@ lat.save("images/likelihood_smoothing.png", close=False)
 reload(lat)
 beliefs = {}
 for cond in conds:
-    group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if group.startswith("MO") and fbtype not in ("vfb", "nfb"):
+    if cond not in model_belief:
+	continue
+    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    if obstype == "M" and fbtype not in ("vfb", "nfb"):
 	beliefs[cond] = model_belief[cond]
 
 lat.plot_belief(2, 2, 2, beliefs, kappas, cmap)
-lat.save("images/ideal_observer_beliefs.png", close=False)
+lat.save("images/ideal_observer_beliefs.png", close=True)
 
 # <codecell>
 
@@ -390,30 +501,32 @@ lat.save("images/ideal_observer_beliefs.png", close=False)
 ######################################################################
 
 reload(lat)
-mean, lower, upper, sums = model_fixed.T
 x = np.arange(n_kappas)
-
-fig = plt.figure(3)
-plt.clf()
 
 for i, group in enumerate(groups):
     idx = 0
-    plt.subplot(2, 1, i+1)
+    plt.figure(30+i)
+    plt.clf()
+
     for cidx, cond in enumerate(conds):
-	grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group and grp != "MO"+group:
+	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	
+	if grp != group:
 	    continue
 		
 	color = colors[(idx/3) % len(colors)]
-	if cond.startswith("MO"):
+	if obstype == "M":
 	    linestyle = '-'
 	elif fbtype == "fb":
 	    linestyle = '-.'
-	elif fbtype in ("vfb", "nfb"):
+	else:
 	    linestyle = '--'
+	if obstype == "M" and fbtype == "nfb" and ratio == "1":
+	    color = "#996600"
 	    
-	plt.fill_between(x, lower[cidx], upper[cidx], color=color, alpha=0.2)
-	plt.plot(x, mean[cidx], label=cond_labels[cond], color=color, linewidth=2,
+	mean, lower, upper, sumlogs, sums, n = model_fixed[cond].T
+	plt.fill_between(x, lower, upper, color=color, alpha=0.2)
+	plt.plot(x, mean, label=cond_labels[cond], color=color, linewidth=2,
 		 linestyle=linestyle)
 	# plt.plot(x, sums[cidx], label=cond_labels[cond], color=color, linewidth=2,
 	# 	     linestyle=linestyle)
@@ -425,13 +538,13 @@ for i, group in enumerate(groups):
     plt.ylabel("Log likelihood of responses")
     plt.legend(loc=4, ncol=2, fontsize=9)
     plt.xlim(x[0], x[-1])
-    plt.ylim(-40, -20)
+    plt.ylim(-35, -20)
 
-plt.suptitle("Likelihood of responses under fixed models")
-fig.set_figwidth(8)
-fig.set_figheight(8)
+    plt.suptitle("Likelihood of responses under fixed models (%s)" % group)
+    fig.set_figwidth(8)
+    fig.set_figheight(6)
 
-lat.save("images/fixed_model_performance.png", close=False)
+    lat.save("images/fixed_model_performance_%s.png" % group, close=False)
 
 # <codecell>
 
@@ -439,30 +552,36 @@ lat.save("images/fixed_model_performance.png", close=False)
 ## Plot likelihoods under other models
 ######################################################################
 
-x0 = np.arange(models.shape[2])
-height = models[0]
-err = np.abs(models[[0]] - models[[1,2]])
-width = 0.7 / (n_cond/2.)
-fig = plt.figure(4)
-plt.clf()
+n = n_cond / len(groups)
+width = 0.7 / n
+x0 = np.arange(len(models))
 
 for i, group in enumerate(groups):
     idx = 0
-    plt.subplot(2, 1, i+1)
+    plt.figure(40+i)
+    plt.clf()
+    
     for cidx, cond in enumerate(conds):
-	grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group and grp != "MO"+group:
+	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	if grp != group:
 	    continue
 
+	height = np.array([models[x][cond][0] for x in xrange(len(models))])
+	err = np.array([np.abs(models[x][cond][0] - models[x][cond][[1,2]])
+			for x in xrange(len(models))])
+
 	color = colors[(idx/3) % len(colors)]
-	if cond.startswith("MO"):
+	if obstype == "M":
 	    alpha = 1.0
 	elif fbtype == "vfb":
 	    alpha = 0.4
 	elif fbtype in ("fb", "nfb"):
 	    alpha = 0.2
-	x = x0 + width*(idx-(n_cond/4.)) + (width/2.)
-	plt.bar(x, height[cidx], yerr=err[:, cidx], 
+	if obstype == "M" and fbtype == "nfb" and ratio == "1":
+	    color = "#996600"
+
+	x = x0 + width*(idx-(n/2.)) + (width/2.)
+	plt.bar(x, height, yerr=err.T, 
 		color=color,
 		ecolor='k', align='center', width=width, 
 		label=cond_labels[cond], alpha=alpha)
@@ -470,17 +589,19 @@ for i, group in enumerate(groups):
 	idx += 1
 
     plt.xticks(x0, mnames)
-    plt.ylim(-40, -20)
+    plt.ylim(-35, -20)
     plt.xlim(x0.min()-0.5, x0.max()+0.5)
     plt.legend(loc=0, ncol=2, fontsize=9)
     plt.xlabel("Model", fontsize=14)
     plt.ylabel("Log likelihood", fontsize=14)
 
-plt.suptitle("Likelihood of human and ideal observer judgments", fontsize=16)
-fig.set_figwidth(8)
-fig.set_figheight(6)
+    plt.suptitle(
+	    "Likelihood of human and ideal observer judgments (%s)" % group, 
+	    fontsize=16)
+    fig.set_figwidth(8)
+    fig.set_figheight(6)
 
-lat.save("images/model_performance.png", close=False)
+    lat.save("images/model_performance_%s.png" % group, close=False)
 
 # <codecell>
 
@@ -554,6 +675,9 @@ n = samplesize(experiment)[:, None]
 BIC = -2*L + k*np.log(n)
 best = np.argmin(BIC, axis=1)
 zip(conds, mnames[best])
+
+
+# <codecell>
 
 
 # <codecell>
