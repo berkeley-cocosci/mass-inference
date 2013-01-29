@@ -103,7 +103,7 @@ p_ignore = 0.0
 
 cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 alpha = 0.2
-colors = ['c', 'm', 'y']#'#FF9966', '#AAAA00', 'g', 'c', 'b', 'm']
+colors = ['r', '#FF9966', '#AAAA00', 'g', 'c', 'b']#, 'm']
 #colors = cm.hsv(np.round(np.linspace(0, 220, n_cond)).astype('i8'))
 
 # <codecell>
@@ -145,7 +145,7 @@ for cond in sorted(experiment.keys()):
 	prior = None
 
     #newcond = "-".join(["MO"] + cond.split("-")[1:])
-    newcond = "%s-%s-%s" % ("MO", fbtype, cond.split("-")[2])
+    newcond = "%s-%s-%s" % ("MO"+group, fbtype, cond.split("-")[2])
     responses, model_theta = mo.simulateResponses(
 	nfake, fb, ipe_samps[order], kappas, 
 	prior=prior, p_ignore=p_ignore, smooth=f_smooth)
@@ -153,39 +153,56 @@ for cond in sorted(experiment.keys()):
 	responses[:, undo_order], 
 	columns=cols)
 
-    lat.plot_theta(
-	3, 2, cidx+1,
-	np.exp(model_theta),
-	cond,
-	exp=1.3,
-	cmap=cmap,
-	fontsize=14)
-    cidx += 1
+    if lat.parse_condition(cond)[1] not in ("vfb", "nfb"):
+	lat.plot_theta(
+	    2, 2, cidx+1,
+	    np.exp(model_theta),
+	    cond,
+	    exp=1.3,
+	    cmap=cmap,
+	    fontsize=14)
+	cidx += 1
     
 lat.save("images/ideal_observer_beliefs.png", close=True)
 
 # <codecell>
 
 cond_labels = {
-    'C-nfb-10': 'No-feedback',
-    'C-vfb-0.1': 'Visual feedback (r=0.1)',
-    'C-vfb-10': 'Visual feedback (r=10)',
-    'C-fb-0.1': 'Text feedback (r=0.1)',
-    'C-fb-10': 'Text feedback (r=10)',
-    'MO-nfb-10': 'Uniform fixed observer',
-    'MO-fb-0.1': 'Learning observer (r=0.1)',
-    'MO-fb-10': 'Learning observer (r=10)',
+    'C-nfb-10': 'No-feedback C',
+    'C-vfb-0.1': 'Visual feedback C (r=0.1)',
+    'C-vfb-10': 'Visual feedback C (r=10)',
+    'C-fb-0.1': 'Text feedback C (r=0.1)',
+    'C-fb-10': 'Text feedback C (r=10)',
+    'E-nfb-10': 'No-feedback E',
+    'E-vfb-0.1': 'Visual feedback E (r=0.1)',
+    'E-vfb-10': 'Visual feedback E (r=10)',
+    'E-fb-0.1': 'Text feedback E (r=0.1)',
+    'E-fb-10': 'Text feedback E (r=10)',
+    'MOC-nfb-10': 'Uniform fixed observer C',
+    'MOC-fb-0.1': 'Learning observer C (r=0.1)',
+    'MOC-fb-10': 'Learning observer C (r=10)',
+    'MOE-nfb-10': 'Uniform fixed observer E',
+    'MOE-fb-0.1': 'Learning observer E (r=0.1)',
+    'MOE-fb-10': 'Learning observer E (r=10)',
     }
 
 conds = [
     'C-fb-0.1',
     'C-vfb-0.1',
-    'MO-fb-0.1',
+    'MOC-fb-0.1',
+    'E-fb-0.1',
+    'E-vfb-0.1',
+    'MOE-fb-0.1',
     'C-fb-10',
     'C-vfb-10',
-    'MO-fb-10',
+    'MOC-fb-10',
+    'E-fb-10',
+    'E-vfb-10',
+    'MOE-fb-10',
     'C-nfb-10',
-    'MO-nfb-10',
+    'MOC-nfb-10',
+    'E-nfb-10',
+    'MOE-nfb-10',
     ]
 n_cond = len(conds)
 
@@ -336,9 +353,9 @@ for cidx, cond in enumerate(conds):
 plt.xticks(x, ratios, rotation=90)
 plt.xlabel("Fixed model mass ratio")
 plt.ylabel("Log likelihood of responses")
-plt.legend(loc=4, ncol=2, fontsize=12)
+plt.legend(loc=4, ncol=2, fontsize=9)
 plt.xlim(x[0], x[-1])
-plt.ylim(-34, -20)
+plt.ylim(-45, -20)
 plt.title("Likelihood of responses under fixed models")
 fig.set_figwidth(8)
 fig.set_figheight(6)
@@ -351,7 +368,7 @@ lat.save("images/fixed_model_performance.png", close=False)
 x0 = np.arange(models.shape[2])
 height = models[0]
 err = np.abs(models[[0]] - models[[1,2]])
-width = 0.7 / n_cond
+width = 0.9 / n_cond
 fig = plt.figure(4)
 plt.clf()
 
@@ -378,9 +395,9 @@ plt.xticks(x0, [
     "Learning\nr=10.0"
     ])
 #plt.ylim(int(np.min(height-err))-1, int(np.max(height))+1)
-plt.ylim(-34, -20)
+plt.ylim(-45, -20)
 plt.xlim(x0.min()-0.5, x0.max()+0.5)
-plt.legend(loc=0, ncol=2, fontsize=12)
+plt.legend(loc=0, ncol=2, fontsize=9)
 plt.xlabel("Model", fontsize=14)
 plt.ylabel("Log likelihood of responses, $\Pr(J|S,B)$", fontsize=14)
 plt.title("Likelihood of human and ideal observer judgments", fontsize=16)
@@ -450,7 +467,7 @@ for cidx, cond in enumerate(conds):
     else:
 	linestyle = "--"
     lat.plot_theta(
-	3, 3, cidx+1, 
+	6, 3, cidx+1, 
 	np.exp(normalize(lh[:, :, cidx, -1], axis=1)[1]), 
 	cond_labels[conds[cidx]])
     # plt.plot(x, np.array(kappas)[best[cidx]], label=cond_labels[cond], 

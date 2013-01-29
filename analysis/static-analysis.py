@@ -124,10 +124,10 @@ alpha = 0.2
 ## Generate fake human data
 ######################################################################
 
-fig = plt.figure(2)
-plt.clf()
-plt.suptitle("Ideal Observer Beliefs")
-cidx = 0
+# fig = plt.figure(2)
+# plt.clf()
+# plt.suptitle("Ideal Observer Beliefs")
+# cidx = 0
 
 reload(mo)
 nfake = 2000
@@ -172,17 +172,17 @@ for cond in sorted(experiment.keys()):
 	responses[:, undo_order], 
 	columns=cols)
 
-    lat.plot_theta(
-	2, 3, cidx+1,
-	np.exp(model_theta),
-	cond,
-	exp=1.3,
-	cmap=cmap,
-	fontsize=14)
-    cidx += 1
+    # lat.plot_theta(
+    # 	2, 3, cidx+1,
+    # 	np.exp(model_theta),
+    # 	cond,
+    # 	exp=1.3,
+    # 	cmap=cmap,
+    # 	fontsize=14)
+    # cidx += 1
 
 conds = sorted(experiment.keys())
-lat.save("images/ideal_observer_static_beliefs.png", close=True)
+# lat.save("images/ideal_observer_static_beliefs.png", close=True)
 
 # <codecell>
 
@@ -256,11 +256,15 @@ lat.save("images/human_v_model.png", close=False)
 
 # <codecell>
 
-plt.figure(10)
+fig = plt.figure(10)
+plt.clf()
+fig = plt.figure(11)
 plt.clf()
 
-allarr = []
-allconds = []
+allarrC = []
+allarrE = []
+allcondsC = []
+allcondsE = []
 
 for cond in conds:
     if cond.startswith("MO"):
@@ -275,51 +279,65 @@ for cond in conds:
     index = np.array(queries[cond].columns, dtype='i8')
     idx = np.array(index)-6-np.arange(len(index))-1
     print idx
-    allarr.append(arr)
-    allconds.append(cond)
     binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
     print np.round(binom, decimals=8)
     mean = np.mean(arr, axis=0)
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
+
+    if cond.startswith("E-"):
+	plt.figure(11)
+	allarrE.append(arr)
+	allcondsE.append(cond)
+    else:
+	plt.figure(10)
+	allarrC.append(arr)
+	allcondsC.append(cond)
+
     plt.errorbar(idx, mean, yerr=sem, 
 		 label="%s r=%s (n=%d)"% (
 		     cond.split("-")[1],
 		     cond.split("-")[-1], 
 		     arr.shape[0]))
 
-arr = np.concatenate(allarr, axis=0)
-binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
-print np.round(binom, decimals=8)
-mean = np.mean(arr, axis=0)
-sem = scipy.stats.sem(arr, axis=0)
-plt.errorbar(idx, mean, yerr=sem, 
-	     label="all (n=%d)"% (arr.shape[0]))
+for allarr, fignum, group in ((allarrC, 10, "C"), (allarrE, 11, "E")):
+    arr = np.concatenate(allarr, axis=0)
+    binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) for x in np.sum(arr, axis=0)]
+    print np.round(binom, decimals=8)
+    mean = np.mean(arr, axis=0)
+    sem = scipy.stats.sem(arr, axis=0)
 
-plt.xlim(idx.min(), idx.max())
-plt.xticks(idx, idx)
-plt.xlabel("Trial")
-plt.ylabel("P(judge correct mass ratio)")
-plt.title("Explicit mass judgments")
-plt.legend(loc=0)
+    plt.figure(fignum)
+    plt.errorbar(idx, mean, yerr=sem, 
+		 label="all (n=%d)"% (arr.shape[0]))
 
-lat.save("images/explicit_mass_judgments.png", close=False)
+    plt.xlim(idx.min(), idx.max())
+    plt.xticks(idx, idx)
+    plt.xlabel("Trial")
+    plt.ylabel("P(judge correct mass ratio)")
+    plt.title("Explicit mass judgments (group %s)" % group)
+    plt.legend(loc=0)
+    
+    lat.save("images/explicit_mass_judgments_%s.png" % group, close=False)
     
 
 # <codecell>
 
-arr = np.concatenate(allarr, axis=0)
-df = pd.DataFrame(
-    np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
-    index=idx,
-    columns=["incorrect", "correct"])
-print df
+for allarr, group in ((allarrC, "C"), (allarrE, "E")):
+    arr = np.concatenate(allarr, axis=0)
+    df = pd.DataFrame(
+	np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
+	index=idx,
+	columns=["incorrect", "correct"])
+    print group
+    print df
 
-chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
-print (chi2, p)
+    chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
+    print (chi2, p)
+    print
 
 # <codecell>
 
-queries['C-fb-0.1']
+queries['E-fb-0.1']
 
 # <codecell>
 

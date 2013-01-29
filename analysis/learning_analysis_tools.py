@@ -75,8 +75,8 @@ def load_turk_learning(thresh=1, istim=True, itrial=True):
 
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
-             # 'D-vfb-10', 'D-vfb-0.1', 'D-fb-10', 'D-fb-0.1', 'D-nfb-10']
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
+             'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
     pids = get_bad_pids(allconds, thresh=thresh)
     print "Bad pids (%d): %s" % (len(pids), pids)
@@ -109,11 +109,10 @@ def load_turk_static(thresh=1):
 
     suffix = ['-cb0', '-cb1']
     #conds = ['B-fb-10', 'B-fb-0.1', 'B-nfb-10']
-    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10']
-             # 'D-vfb-10', 'D-vfb-0.1', 'D-fb-10', 'D-fb-0.1', 'D-nfb-10']
-
+    conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
+             'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
+        
     for cond in conds:
-        print cond, len([ltraining[cond+s] for s in suffix])
         training[cond] = pd.concat([ltraining[cond+s] for s in suffix])
         posttest[cond] = pd.concat([lposttest[cond+s] for s in suffix])
         experiment[cond] = pd.concat([lexperiment[cond+s] for s in suffix])
