@@ -498,8 +498,12 @@ def plot_theta(nrow, ncol, idx, theta, title,
     else:
         ax = idx
     ax.cla()
+    if exp is not None:
+        x = exp ** np.log(theta.T)
+    else:
+        x = theta.T
     img = ax.imshow(
-        exp ** np.log(theta.T),
+        x,
         aspect='auto', interpolation='nearest',
         vmin=vmin, vmax=vmax, cmap=cmap)
     ax.set_xticks([])
