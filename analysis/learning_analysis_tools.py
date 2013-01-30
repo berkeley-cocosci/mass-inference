@@ -19,6 +19,9 @@ import time
 import cogphysics.tower.analysis_tools as tat
 import model_observer as mo
 
+import cogphysics.lib.rvs as rvs
+normalize = rvs.util.normalize
+
 from cogphysics.lib.corr import xcorr, partialcorr
 
 from joblib import Memory
@@ -54,7 +57,8 @@ def get_bad_pids(conds, thresh=1):
         sstim = np.array([conv[x] for x in sstim])
 
     # load posttest data
-    all_pids = []
+    failed_pids = []
+    invalid_pids = []
     for cond in conds:
         df = load_turk_df(cond, "posttest")
         hstim = zip(*df.columns)[1]
@@ -69,10 +73,10 @@ def get_bad_pids(conds, thresh=1):
         bad = wrong > thresh
         bad_pids = list((bad).index[(bad).nonzero()])
 
-        all_pids.extend(bad_pids)
-        all_pids.extend([x for x in bad.index if (x, cond) not in valid_pids])
+        failed_pids.extend(bad_pids)
+        invalid_pids.extend([x for x in bad.index if (x, cond) not in valid_pids])
 
-    return sorted(set(all_pids))
+    return sorted(set(failed_pids)), sorted(set(invalid_pids))
 
 # def load_turk(thresh=1, istim=True, itrial=True):
 #     training = {}
@@ -114,8 +118,10 @@ def load_turk(thresh=1):
     conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
              'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
     allconds = [c+s for c in conds for s in suffix]
-    pids = get_bad_pids(allconds, thresh=thresh)
-    print "Bad pids (%d): %s" % (len(pids), pids)
+    failed_pids, invalid_pids = get_bad_pids(allconds, thresh=thresh)
+    print "Failed posttest (%d): %s" % (len(failed_pids), failed_pids)
+    print "Ineligible pids (%d): %s" % (len(invalid_pids), invalid_pids)
+    pids = sorted(set(failed_pids + invalid_pids))
 
     # ltraining, lposttest, lexperiment = load_turk_learning(
     #     thresh=thresh, itrial=True)[:3]
@@ -649,8 +655,8 @@ def plot_smoothing(samps, stims, istim, kappas):
                      markeredgecolor=colors[idx],
                      markersize=5,
                      label=str(stims[i]).split("_")[1])
-    # plt.legend(loc=8, prop={'size':12}, numpoints=1,
-    #            scatterpoints=1, ncol=3, title="Stimuli")
+    plt.legend(loc=8, prop={'size':12}, numpoints=1,
+               scatterpoints=1, ncol=3, title="Stimuli")
 
 def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
     fig = plt.figure(fignum)
@@ -714,19 +720,18 @@ def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
     cb.set_ticklabels(np.round(cticks, decimals=2))#logcticks)
     cax.set_title("$\Pr(r|B_t)$", fontsize=14)
 
-def random_model_lh(conds, n_trial, t0=None, tn=None):
+def random_model_lh(responses, n_trial, t0=None, tn=None):
     if t0 is None:
         t0 = 0
     if tn is None:
         tn = n_trial
 
-    n_cond = len(conds)
-        
     lh = {}
-    for cond in conds:
+        
+    for cond in responses.keys():
         obstype, group, fbtype, ratio, cb = parse_condition(cond)
-        if group != 'all':
-            lh[cond] = np.exp(np.array([np.log(0.5)*(tn-t0)])[None])
+        lh[cond] = np.zeros((responses[cond].shape[0], 1)) + np.log(0.5)*(tn-t0)
+        # lh[cond] = np.exp(np.array([np.log(0.5)*(tn-t0)])[None])
 
     return lh
 
@@ -749,9 +754,9 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas, t0=None,
 
         # trial-by-trial likelihoods of judgments
         resp = np.asarray(responses[cond])[..., order]
-        lh[cond] = np.exp(mo.EvaluateObserver(
+        lh[cond] = mo.EvaluateObserver(
             resp, feedback[..., order], ipe_samps[order], 
-            kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth))
+            kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth)
 
     return lh
 
@@ -773,6 +778,7 @@ def CI(data, conds):
 
     # now compute statistics
     stats = {}
+    bmv = scipy.stats.bayes_mvs
     for cond in conds:
         if cond not in data:
             continue
@@ -780,19 +786,20 @@ def CI(data, conds):
         assert len(shape) == 2
         info = []
         for i in xrange(shape[1]):
-            shape = data[cond][:, i].shape
-            if shape == (1,):
-                mean = lower = upper = sumlog = np.log(data[cond][:, i][0])
+            d = data[cond][:, i]
+            shape = d.shape
+            # mean = np.mean(d)
+            # sem = scipy.stats.sem(d)
+            # lower = mean - sem
+            # upper = mean + sem
+            if (d == d[0]).all():
+                mean = lower = upper = d[0]
             else:
-                mean = np.mean(data[cond][:, i])
-                sem = scipy.stats.sem(data[cond][:, i])
-                lower = np.log(mean - sem)
-                upper = np.log(mean + sem)
-                mean = np.log(mean)
-                sumlog = np.sum(np.log(data[cond][:, i]))
-            sum = np.sum(data[cond][:, i])
-            n = data[cond][:, i].size
-            info.append([mean, lower, upper, sumlog, sum, n])
+                mean, (lower, upper) = bmv(d, alpha=0.95)[0]
+            assert not np.isnan(mean), d
+            sum = np.sum(d)
+            n = d.size
+            info.append([mean, lower, upper, sum, n])
         if len(info) == 1:
             stats[cond] = np.array(info[0])
         else:
@@ -806,3 +813,50 @@ def plot_explicit_judgments(stats, arr, fbtype=None, ratio=None):
     sem = scipy.stats.sem(arr, axis=0, ddof=1)
 
          
+def infer_beliefs(data, ipe_samps, feedback, kappas, f_smooth):
+    post = {}
+    n_trial, n_kappas, n_samp = ipe_samps.shape
+    # prior = np.zeros(n_kappas) + 0.5
+    # prior[kappas.index(0.0)] = 1
+    # prior = np.abs(kappas.index(0.0) - np.arange(n_kappas)) + 10
+    # prior[kappas.index(0.0)] += 10
+    # prior = 1. / prior
+    # prior = np.zeros(n_kappas) + 0.5
+    # prior[kappas.index(0.2)] = 1
+    # prior[kappas.index(-0.2)] = 1
+    prior = np.ones(n_kappas)
+    prior = normalize(np.log(prior))[1]
+    # lhF = np.log(mo.IPE(feedback, ipe_samps, kappas, f_smooth))
+    print prior
+    for cond in data:
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        d = data[cond]
+        order = np.argsort(zip(*d.columns)[0])
+        logpr = np.empty((d.shape[0], n_trial+1, n_kappas))
+        logpr[:, 0] = prior.copy()
+        lhJ = np.log(mo.IPE(np.asarray(d)[:, order], ipe_samps[order], kappas, f_smooth))
+        # if fbtype == "nfb":
+        lh = lhJ.copy()
+        # else:
+        #     lh = lhJ + lhF[kappas.index(np.log10(float(ratio)))][order]
+        for t in xrange(0, n_trial):
+            logpr[:, t+1] = normalize(lh[:, t] + logpr[:, t], axis=1)[1]
+        post[cond] = np.exp(logpr)
+    return post
+
+def infer_CI(data, conds):
+    # consolidate data from different orderings
+    newdata = {}
+    for cond in conds:
+        if cond not in data:
+            continue
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        key = (obstype, fbtype, ratio)
+        if key not in newdata:
+            newdata[key] = []
+        newdata[key].append(data[cond])
+    for key in newdata.keys():
+        obstype, fbtype, ratio = key
+        newcond = "%s-all-%s-%s" % (obstype, fbtype, ratio)
+        data[newcond] = np.vstack(newdata[key])
+    return data

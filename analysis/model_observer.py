@@ -61,7 +61,8 @@ def IPE(F, samps, kappas, smooth):
 
     else:
         # using bernoulli fall/not fall plus kernel smoothing
-        lam = (pfell_meanstd * 10)
+        #lam = (pfell_meanstd * 10)
+        lam = 0.2
         # calculate distances
         # shape is (n_kappas, n_kappas)
         dists = np.abs(x[:, None] - x[None, :]) / lam
