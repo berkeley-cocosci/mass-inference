@@ -38,6 +38,10 @@ def parse_condition(cond):
 
 def get_bad_pids(conds, thresh=1):
 
+    # load valid pids
+    valid_pids = np.load("../../turk-experiment/data/valid_pids.npy")
+    valid_pids = [("%03d" % int(x[0]), str(x[1])) for x in valid_pids]
+    
     # load model data
     rawmodel, sstim, smeta = tat.load_model(1)#0)
     pfell, nfell, fell_persample = tat.process_model_stability(
@@ -63,10 +67,12 @@ def get_bad_pids(conds, thresh=1):
             
         wrong = (df != ofb).sum(axis=1)
         bad = wrong > thresh
-        pids = list((bad).index[(bad).nonzero()])
-        all_pids.extend(pids)
+        bad_pids = list((bad).index[(bad).nonzero()])
 
-    return sorted(all_pids)
+        all_pids.extend(bad_pids)
+        all_pids.extend([x for x in bad.index if (x, cond) not in valid_pids])
+
+    return sorted(set(all_pids))
 
 # def load_turk(thresh=1, istim=True, itrial=True):
 #     training = {}
