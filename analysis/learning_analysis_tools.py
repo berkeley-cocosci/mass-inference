@@ -658,10 +658,10 @@ def plot_smoothing(samps, stims, istim, kappas):
     plt.legend(loc=8, prop={'size':12}, numpoints=1,
                scatterpoints=1, ncol=3, title="Stimuli")
 
-def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
+def plot_belief(fignum, r, c, model_beliefs, kappas, cmap, cond_labels):
     fig = plt.figure(fignum)
     plt.clf()
-    ratios = np.round(10 ** np.array(kappas), decimals=1)
+    ratios = np.round(10 ** np.array(kappas), decimals=2)
     n_kappas = len(kappas)
     n = r*c
     exp = np.e#np.exp(np.log(0.5) / np.log(1./27))    
@@ -687,7 +687,8 @@ def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
         ax = plt.subplot(gs[irow, icol])
         n_trial = model_beliefs[cond].shape[1] - 1
         # kappa = kappas[kidx]
-        subjname = cond#"True $r=%s$" % float(ratios[kidx])
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        subjname = "$r_0=%s$, order %s" % (ratio, group)
         img = plot_theta(
             None, None, ax,
             # np.exp(model_theta[kidx]),
@@ -698,8 +699,11 @@ def plot_belief(fignum, r, c, model_beliefs, kappas, cmap):
             fontsize=14,
             vmin=0,
             vmax=vmax)
-        yticks = np.round(
-            np.linspace(0, n_kappas-1, 5)).astype('i8')
+        # yticks = np.round(
+        #     np.linspace(0, n_kappas-1, 5)).astype('i8')
+        yticks = np.array([kappas.index(-1.0), 
+                           kappas.index(0.0),
+                           kappas.index(1.0)])
         if (i%c) == 0:
             plt.yticks(yticks, ratios[yticks], fontsize=14)
             plt.ylabel("Mass ratio ($r$)", fontsize=14)

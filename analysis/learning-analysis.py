@@ -370,7 +370,7 @@ for i, group in enumerate(groups):
 	ax.set_xticklabels(X)
 	ax.set_xlabel("Trial")
 	if ax == r01ax:
-	    ax.set_ylabel("Probability")
+	    ax.set_ylabel("Proportion correct")
 	else:
 	    ax.set_yticklabels([])
 	ax.legend(loc=4, fontsize=11)
@@ -381,14 +381,14 @@ for i, group in enumerate(groups):
 	title += " (%s)" % group
     plt.suptitle(title, fontsize=16)
     fig = plt.gcf()
-    fig.set_figwidth(12)
+    fig.set_figwidth(11)
     fig.set_figheight(4)
-    plt.subplots_adjust(top=0.84, wspace=0.1)
+    plt.subplots_adjust(top=0.84, wspace=0.1, left=0.07, right=0.95)
 
     if p_ignore > 0:
-	lat.save("images/explicit_mass_judgments_%s_ignore.png" % group, close=True)
+	lat.save("images/explicit_mass_judgments_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
     else:
-	lat.save("images/explicit_mass_judgments_%s.png" % group, close=True)
+	lat.save("images/explicit_mass_judgments_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
 	    
 
 # <codecell>
@@ -479,7 +479,7 @@ plt.xticks([kappas[x] for x in plot_ticks], plot_ratios)
 fig.set_figwidth(8)
 fig.set_figheight(6)
 
-lat.save("images/likelihood_smoothing.png", close=True)
+lat.save("images/likelihood_smoothing", close=True, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
@@ -496,8 +496,8 @@ for cond in conds:
     if obstype == "M" and fbtype not in ("vfb", "nfb"):
 	beliefs[cond] = model_belief[cond]
 
-lat.plot_belief(2, 2, 2, beliefs, kappas, cmap)
-lat.save("images/ideal_observer_beliefs.png", close=True)
+lat.plot_belief(2, 2, 2, beliefs, kappas, cmap, cond_labels)
+lat.save("images/ideal_observer_beliefs", close=True, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
@@ -568,6 +568,9 @@ for i, group in enumerate(groups):
 	idx += 1
 
     for ax, title in [(nfbax, nfbtitle), (r10ax, r10title), (r01ax, r01title)]:
+	for k in (-1.0, 0.0, 1.0):
+	    ax.plot([k]*2, [-40, -22], 'k', linestyle=':', alpha=1)
+
 	ax.set_xticks([kappas[x] for x in plot_ticks])
 	ax.set_xticklabels(plot_ratios, rotation=30)
 	ax.set_xlabel("Assumed mass ratio ($r$)")
@@ -575,8 +578,8 @@ for i, group in enumerate(groups):
 	ax.set_ylim(-40, -22)
 	if ax == r01ax:
 	    ax.set_ylabel("Log likelihood of judgments")
-	# else:
-	#     ax.set_yticklabels([])
+	else:
+	    ax.set_yticklabels([])
 	ax.legend(loc=4, ncol=1, fontsize=12)
 	ax.set_title(title)
 
@@ -584,15 +587,15 @@ for i, group in enumerate(groups):
     if group != "all":
 	title += " (%s)" % group
     plt.suptitle(title , fontsize=20)
-    fig.set_figwidth(18)
+    fig.set_figwidth(16)
     fig.set_figheight(6)
 
-    plt.subplots_adjust(bottom=0.2, top=0.85, wspace=0.1)
+    plt.subplots_adjust(bottom=0.2, top=0.85, wspace=0.1, left=0.07, right=0.95)
 	
     if p_ignore > 0:
-	lat.save("images/fixed_model_performance_%s_ignore.png" % group, close=True)
+	lat.save("images/fixed_model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
     else:
-	lat.save("images/fixed_model_performance_%s.png" % group, close=True)
+	lat.save("images/fixed_model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
 	
 
 # <codecell>
@@ -690,9 +693,9 @@ for i, group in enumerate(groups):
     plt.subplots_adjust(bottom=0.18, top = 0.9)
 
     if p_ignore > 0:
-	lat.save("images/model_performance_%s_ignore.png" % group, close=True)
+	lat.save("images/model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
     else:
-	lat.save("images/model_performance_%s.png" % group, close=True)
+	lat.save("images/model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
 
 performance_table = np.array(performance_table)
 
@@ -780,15 +783,16 @@ for i, group in enumerate(groups):
     fig = plt.gcf()
     fig.set_figwidth(8)
     fig.set_figheight(6)
-    lat.save("images/inferred_belief_%s.png" % group, close=False)
+    lat.save("images/inferred_belief_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
 
     plt.figure(600+i)
     plt.legend(loc=0, fontsize=9)
     fig = plt.gcf()
     fig.set_figwidth(8)
     fig.set_figheight(6)
-    lat.save("images/estimated_mass_judgments_%s.png" % group, close=False)
+    lat.save("images/estimated_mass_judgments_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
+hi
 
