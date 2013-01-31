@@ -467,7 +467,7 @@ reload(lat)
 fig = plt.figure(1)
 plt.clf()
 istim = [
-    list(Stims).index("mass-tower_00035_0110101001"),
+    #list(Stims).index("mass-tower_00035_0110101001"),
     #list(Stims).index("mass-tower_00352_0010011011"),
     list(Stims).index("mass-tower_00357_0111011000"),
     list(Stims).index("mass-tower_00388_0011101001")
@@ -675,7 +675,7 @@ for i, group in enumerate(groups):
 	idx += 1
 
     plt.xticks(x0, mnames)#, rotation=15)
-    plt.ylim(-32, -20)
+    plt.ylim(-34, -22)
     plt.xlim(x0.min()-0.5, x0.max()+0.5)
     plt.legend(loc=4, ncol=2, fontsize=10)
     plt.xlabel("Model", fontsize=14)
@@ -695,19 +695,6 @@ for i, group in enumerate(groups):
 	lat.save("images/model_performance_%s.png" % group, close=True)
 
 performance_table = np.array(performance_table)
-
-# <codecell>
-
-samplesize = {}
-for cond in conds:
-    if cond not in experiment:
-	continue
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    key = "%s-all-%s-%s" % (obstype, fbtype, ratio)
-    if key not in samplesize:
-	samplesize[key] = 0
-    samplesize[key] += experiment[cond].shape[0]
-samplesize	
 
 # <codecell>
 
@@ -731,12 +718,10 @@ print "\hline"
 #     index=[cond_labels[x] + " &" for x in table_conds[gidx]],
 #     columns=["& " + x for x in mnames]) + " &"
 
-table
-
 # <codecell>
 
-print performance_table[gidx, 0, :, 0]
-print performance_table[gidx, 0, :, 3] / 49.
+print performance_table[gidx, 0, 0]
+print performance_table[gidx, 0, 3] / 56.
 
 # <codecell>
 
@@ -759,7 +744,7 @@ for i, group in enumerate(groups):
 	
     for cidx, cond in enumerate(conds):
 	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group:
+	if (grp != group) or (obstype == "M" and fbtype == "nfb" and ratio != "0"):
 	    continue
 	avgpr = np.mean(pr[cond], axis=0)
 
@@ -795,193 +780,14 @@ for i, group in enumerate(groups):
     fig = plt.gcf()
     fig.set_figwidth(8)
     fig.set_figheight(6)
-    lat.save("images/inferred_belief_%s.png" % group, close=True)
+    lat.save("images/inferred_belief_%s.png" % group, close=False)
 
     plt.figure(600+i)
     plt.legend(loc=0, fontsize=9)
     fig = plt.gcf()
     fig.set_figwidth(8)
     fig.set_figheight(6)
-    lat.save("images/estimated_mass_judgments_%s.png" % group, close=True)
-
-# <codecell>
-
-
-# <codecell>
-
-
-# <codecell>
-
-plt.figure(200)
-plt.clf()
-idx = 0
-for cond in conds:
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if group != 'C' or fbtype == "nfb":
-	continue
-    plt.subplot(2, 3, idx+1)
-    plt.plot(T1, emj_stats[cond][:, 0], label="p(correct)")
-    plt.plot(pcorrect[idx], label="p(correct | responses)")
-    plt.title(cond)
-    plt.ylim(0.3, 1)
-    plt.xticks(T1, T1)
-    #plt.xlim(T1.min(), T1.max())
-    idx += 1
-plt.legend(fontsize=9, loc=0)
-	
-
-# <codecell>
-
-
-reload(lat)
-window = 10
-
-
-all_lh = {}
-for t0, t1 in zip(T0, T1):
-    # t0 = t
-    # t1 = t+window
-    thetas = np.eye(n_kappas)
-    thetas = normalize(np.log(thetas), axis=1)[1]
-    fb = np.empty((n_kappas, n_trial)) * np.nan
-    l = lat.CI(lat.block_lh(
-	experiment, fb, ipe_samps, thetas, 
-	kappas, t0, t1, 
-	f_smooth=f_smooth, p_ignore=p_ignore), conds)
-    for cond in conds:
-	if cond not in l:
-	    continue
-	if cond not in all_lh:
-	    all_lh[cond] = []
-	all_lh[cond].append(l[cond])
-
-# <codecell>
-
-	
-vmin = np.inf
-vmax = -np.inf
-norm_lh = {}
-for cidx, cond in enumerate(conds):
-    if cond not in all_lh:
-	continue
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    #lh = np.exp(np.array(all_lh[cond])[:, :, 0] / (T1-T0)[:, None])
-    lh = normalize(np.array(all_lh[cond])[:, :, 0], axis=1)[1]
-    norm_lh[cond] = lh
-    if lh.min() < vmin:
-	vmin = lh.min()
-    if lh.max() > vmax:
-	vmax = lh.max()
-
-plt.figure(100)
-plt.clf()
-
-for i, group in enumerate(groups):
-    plt.figure(100+i)
-    plt.clf()
-    plt.figure(150+i)
-    plt.clf()
-    idx = 0
-    
-    for cidx, cond in enumerate(conds):
-	if cond not in all_lh:
-	    continue
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if grp != group:
-	    continue
-	tt = np.empty((n_trial, n_kappas))
-	for ix, (t0, t1) in enumerate(zip(T0, T1)):
-	    tt[t0:t1] = norm_lh[cond][ix]
-	plt.figure(100+i)
-	img = lat.plot_theta(
-	    3, 3, idx+1, 
-	    tt,
-	    cond_labels[conds[cidx]], exp=None,
-	    vmin=vmin, vmax=vmax, cmap='gray')
-	if (idx % 3) != 0:
-	    plt.ylabel("")
-	if ((len(conds) / len(groups))-idx-1) > 2:
-	    plt.xticks(T1, [])
-	else:
-	    # x = np.round(np.linspace(0, n_trial-window, 5)).astype('i8')
-	    #x = np.arange(T1.size)
-	    # plt.xticks(x, x+window)
-	    plt.xticks(T1, T1)
-	    plt.xlabel("Trial")
-	if fbtype != "nfb":
-	    plt.figure(150+i)
-	    if float(ratio) > 1:
-		p = np.sum(norm_lh[cond][:, ratios.index(1.0)+1:], axis=1)
-	    else:
-		p = np.sum(norm_lh[cond][:, :ratios.index(1.0)], axis=1)
-	    plt.plot(T1, p, label=cond)
-	idx += 1
-
-    plt.figure(100+i)
-    plt.colorbar(img)
-
-    fig = plt.gcf()
-    fig.set_figwidth(8)
-    fig.set_figheight(6)
-
-    plt.subplots_adjust(hspace=0.5)
-    plt.suptitle("Fixed model log likelihoods over time (%s, window of %d)" % (
-	group, window))
-
-    if p_ignore > 0:
-	lat.save("images/sliding-windows_%s_ignore.png" % group, close=True)
-    else:
-	lat.save("images/sliding-windows_%s.png" % group, close=True)
-
-    plt.figure(150+i)
-    plt.xticks(T1, T1)
-    plt.xlim(T1.min(), T1.max())
-    plt.legend()
-
-# <codecell>
-
-norm_lh = {}
-other = {}
-for cidx, cond in enumerate(conds):
-    if cond not in all_lh:
-	continue
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    # lh = normalize(np.array(all_lh[cond])[:, :, 0], axis=1)[1]
-    arr = np.array(all_lh[cond])[:, :, 0] 
-    lh = normalize(arr.ravel(), 
-		   axis=0)[1].reshape(arr.shape)
-    norm_lh[cond] = lh
-    # if obstype == "M" and fbtype == "nfb" and ratio == "1":
-    # 	other[group] = lh.copy()
-    if obstype == "M":
-    	other[group, fbtype, ratio] = lh.copy()
-
-# <codecell>
-
-# BIC: -2*ln(L) + k*ln(n)
-# L : maximized likelihood function
-# k : number of parameters
-# n : sample size
-
-def samplesize(data):
-    sizes = []
-    for cond in conds:
-	d = data[cond]
-	sizes.append(d.shape[0])
-    return np.array(sizes)
-
-L = models[0]
-k = np.array(mparams)[None]
-#k = np.zeros(L.shape)
-n = samplesize(experiment)[:, None]
-
-BIC = -2*L + k*np.log(n)
-best = np.argmin(BIC, axis=1)
-zip(conds, mnames[best])
-
-
-# <codecell>
-
+    lat.save("images/estimated_mass_judgments_%s.png" % group, close=False)
 
 # <codecell>
 
