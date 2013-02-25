@@ -864,3 +864,168 @@ def infer_CI(data, conds):
         newcond = "%s-all-%s-%s" % (obstype, fbtype, ratio)
         data[newcond] = np.vstack(newdata[key])
     return data
+
+def model_lhs(data, feedback, nofeedback, ipe_samps, kappas, ratios, conds, f_smooth=True, p_ignore=0.0):
+    ir1 = list(kappas).index(0.0)
+    ir10 = list(kappas).index(1.0)
+    ir01 = list(kappas).index(-1.0)
+
+    n_trial, n_kappas, n_samp = ipe_samps.shape
+    
+    # random model
+    model_random = CI(random_model_lh(data, n_trial), conds)
+
+    # fixed models
+    theta = np.zeros((1, n_kappas))
+    theta[:, ir1] = 1
+    theta = normalize(np.log(theta), axis=1)[1]
+    fb = np.empty((1, n_trial)) * np.nan
+    model_true1 = CI(block_lh(
+        data, fb, ipe_samps, theta, kappas, 
+        f_smooth=f_smooth, p_ignore=p_ignore), conds)
+    #model_true1 = dict([(cond, model_true1[cond][0].copy()) for cond in model_true1])
+
+    theta = np.zeros((4, n_kappas))
+    theta[0, :ir1] = 1
+    theta[1, ir1+1:] = 1
+    theta[2, :ir1] = 1
+    theta[3, ir1+1:] = 1
+    # theta[0, ir01] = 1
+    # theta[1, ir10] = 1
+    theta = normalize(np.log(theta), axis=1)[1]
+    fb = np.empty((4, n_trial)) * np.nan
+    model_fixed = CI(block_lh(
+        data, fb, ipe_samps, theta, kappas, 
+        f_smooth=f_smooth, p_ignore=p_ignore), conds)
+
+    model_true = {}
+    model_wrong = {}
+    for cond in model_fixed:
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        if ratio != '0':
+            # if fbtype == 'nfb':
+            #     model_true[cond] = np.empty(5)*np.nan
+            #     model_wrong[cond] = np.empty(5)*np.nan
+            if float(ratio) > 1:
+                model_true[cond] = model_fixed[cond][1].copy()
+                model_wrong[cond] = model_fixed[cond][2]
+            else:
+                model_true[cond] = model_fixed[cond][0].copy()
+                model_wrong[cond] = model_fixed[cond][3].copy()
+
+    model_uniform = CI(block_lh(
+            data, nofeedback, ipe_samps, None, kappas,
+            f_smooth=f_smooth, p_ignore=p_ignore), conds)
+	
+    # learning models
+    theta = np.ones((2, n_kappas))
+    theta = normalize(np.log(theta), axis=1)[1]
+    fb = feedback[[ir01, ir10]]
+    model_not_fixed = CI(block_lh(
+        data, fb, ipe_samps, theta, kappas, 
+        f_smooth=f_smooth, p_ignore=p_ignore), conds)
+
+    model_learn = {}
+    for cond in model_not_fixed:
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        if ratio != '0':
+            if float(ratio) > 1:
+                model_learn[cond] = model_not_fixed[cond][1].copy()
+            else:
+                model_learn[cond] = model_not_fixed[cond][0].copy()
+
+    # model_learn01 = dict([(cond, model_learn[cond][0]) for cond in model_fixed])
+    # model_learn10 = dict([(cond, model_learn[cond][1]) for cond in model_fixed])
+
+    # all the models
+    mnames = np.array([
+        "Random",
+        "Equal",
+        # "Uniform Wrong",
+        "Uniform",
+        # "Uniform Correct",
+        "Learning",
+	])
+
+    models = [
+        model_random,
+        model_true1,
+        # model_wrong,
+        model_uniform,
+        # model_true,
+        model_learn,
+    ]
+
+    return models, mnames
+
+def make_performance_table(groups, conds, models, mnames):
+    performance_table = []
+    table_conds = []
+    table_models = list(mnames.copy())
+    table_models.remove("Random")
+    table_models.remove("Equal")
+    print table_models
+    for i, group in enumerate(groups):
+        performance_table.append([])
+        table_conds.append([])
+        for cidx, cond in enumerate(conds):
+            obstype, grp, fbtype, ratio, cb = parse_condition(cond)
+            if (grp != group) or obstype == "M":
+                continue
+            data = []
+            for x in xrange(len(models)):
+                if mnames[x] not in table_models:
+                    continue
+                if cond in models[x]:
+                    data.append(models[x][cond].copy())
+            if len(data) == 0:
+                continue
+            data = np.array(data)
+            table_conds[-1].append(cond)
+            performance_table[-1].append(data)
+    performance_table = np.array(performance_table)
+    print performance_table.shape
+    #norm = normalize(performance_table[..., 3], axis=-1)[1]
+    norm = performance_table[..., 3] / performance_table[..., 4]
+    performance_table[..., 3] = norm
+    return performance_table, table_conds, table_models
+
+def print_performance_table(performance_table, table_conds, groups, mnames, cond_labels):
+    for gidx, group in enumerate(groups):
+        if group == "C":
+            name = "Random"
+        elif group == "E":
+            name = "Diagnostic"
+        else:
+            name = "All"
+            continue
+        # group, condition, model, stat
+        table = performance_table[gidx, :, :, 3]
+        samplesize = performance_table[gidx, :, :, 4]
+        print r"\subfloat{\begin{tabular}[b]{|c|c||%s|}\hline" % ("c"*len(mnames))
+        print (r"\textbf{%s} & $n$ & " % name) + " & ".join(mnames) + r"\\\hline"
+        for lidx, line in enumerate(table):
+            midx = np.nanargmax(np.array(line, dtype='f8'))
+            cond = table_conds[gidx][lidx]
+            obstype, group, fbtype, ratio, cb = parse_condition(cond)
+            if fbtype == "fb" and ratio == "0.1":
+                clabel = r"\fblow{}"
+            elif fbtype == "fb" and ratio == "10":
+                clabel = r"\fbhigh{}"
+            elif fbtype == "vfb" and ratio == "0.1":
+                clabel = r"\vfblow{}"
+            elif fbtype == "vfb" and ratio == "10":
+                clabel = r"\vfbhigh{}"
+            elif fbtype == "nfb":
+                clabel = r"\nfb{}"
+
+            entries = [str(clabel), str(int(samplesize[lidx][0]))]
+            entries.extend([
+                "" if np.isnan(line[idx]) else 
+                (r"\textbf{%.2f}" if idx == midx 
+                 else "%.2f") % float(line[idx])
+                for idx in xrange(len(line))])
+            print " & ".join(entries) + r"\\"
+        print r"\hline"
+        print r"\end{tabular}} &" 
+        

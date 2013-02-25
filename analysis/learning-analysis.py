@@ -43,8 +43,11 @@ reload(lat)
 # human
 training, posttest, experiment, queries = lat.load_turk(thresh=1)
 hconds = sorted(experiment.keys())
+total = 0
 for cond in hconds:
     print "%s: n=%d" % (cond, experiment[cond].shape[0])
+    total += experiment[cond].shape[0]
+print "All: n=%d" % total
 
 # stims
 Stims = np.array([
@@ -103,7 +106,7 @@ for cond in hconds:
     cols = experiment[cond].columns
     order = np.argsort(zip(*cols)[0])
     undo_order = np.argsort(order)
-    #nfake = experiment[cond].shape[0]
+    # nfake = experiment[cond].shape[0]
     nfake = n_fake_data
 
     # determine what feedback to give
@@ -125,23 +128,23 @@ for cond in hconds:
 	prior=prior, p_ignore=p_ignore, smooth=f_smooth)
 
     if fbtype == "nfb":
-	newcond = "M-%s-%s-0" % (group, fbtype)
+	newcond = "M-%s-%s-10" % (group, fbtype)
 	experiment[newcond] = pd.DataFrame(
 	    responses[:, 0][:, undo_order], 
 	    columns=cols)
 	model_belief[newcond] = model_theta[0]
 	
-	newcond = "M-%s-%s-0.1" % (group, fbtype)
-	experiment[newcond] = pd.DataFrame(
-	    responses[:, 1][:, undo_order], 
-	    columns=cols)
-	model_belief[newcond] = model_theta[1]
+	# newcond = "M-%s-%s-0.1" % (group, fbtype)
+	# experiment[newcond] = pd.DataFrame(
+	#     responses[:, 1][:, undo_order], 
+	#     columns=cols)
+	# model_belief[newcond] = model_theta[1]
 
-	newcond = "M-%s-%s-10" % (group, fbtype)
-	experiment[newcond] = pd.DataFrame(
-	    responses[:, 2][:, undo_order], 
-	    columns=cols)
-	model_belief[newcond] = model_theta[2]
+	# newcond = "M-%s-%s-10" % (group, fbtype)
+	# experiment[newcond] = pd.DataFrame(
+	#     responses[:, 2][:, undo_order], 
+	#     columns=cols)
+	# model_belief[newcond] = model_theta[2]
 
 
     else:
@@ -156,11 +159,12 @@ for cond in hconds:
 	cols = queries[cond].columns
 	idx = np.array(cols)-6-np.arange(len(cols))-1
 	theta = np.exp(model_theta[idx])
+	p1 = theta[:, ratios.index(1.0)]
 	if float(ratio) > 1:
-	    pcorrect = np.sum(theta[:, ratios.index(1.0)+1:], axis=1)
+	    pcorrect = np.sum(theta[:, ratios.index(1.0)+1:], axis=1) + (p1 / 2.)
 	    other = 0.1
 	else:
-	    pcorrect = np.sum(theta[:, :ratios.index(1.0)], axis=1)
+	    pcorrect = np.sum(theta[:, :ratios.index(1.0)], axis=1) + (p1 / 2.)
 	    other = 10
 	r = np.random.rand(nfake, 1) < pcorrect[None]
 	responses = np.empty(r.shape)
@@ -177,22 +181,22 @@ for cond in hconds:
 ## Conditions
 ######################################################################
 
-groups = ["C", "E", "all"]
+groups = ["E", "C", "all"]
 
 cond_labels = dict([
     (key % group, value % {'group': group}) 
     for group in groups
     for key, value in {
-	    'H-%s-nfb-10': 'No feedback condition',
-	    'H-%s-vfb-0.1': 'Video $r_0=0.1$ feedback condition',
-	    'H-%s-vfb-10': 'Video $r_0=10$ feedback condition',
-	    'H-%s-fb-0.1': 'Text $r_0=0.1$ feedback condition',
-	    'H-%s-fb-10': 'Text $r_0=10$ feedback condition',
+	    'H-%s-nfb-10': 'No feedback',
+	    'H-%s-vfb-0.1': 'Video $r_0=0.1$',
+	    'H-%s-vfb-10': 'Video $r_0=10$',
+	    'H-%s-fb-0.1': 'Text $r_0=0.1$',
+	    'H-%s-fb-10': 'Text $r_0=10$',
 	    
-	    'M-%s-nfb-0': 'Ideal observer w/ fixed uniform belief',
-	    'M-%s-nfb-0.1': 'Ideal observer w/ fixed belief that $r_0=0.1$',
+	    'M-%s-nfb-10': 'Ideal observer w/ fixed uniform belief',
+	    #'M-%s-nfb-0.1': 'Ideal observer w/ fixed belief that $r_0=0.1$',
 	    #'M-%s-nfb-1': 'Ideal observer w/ fixed belief that $r_0=1.0$',
-	    'M-%s-nfb-10': 'Ideal observer w/ fixed belief that $r_0=10$',
+	    #'M-%s-nfb-10': 'Ideal observer w/ fixed belief that $r_0=10$',
 	    'M-%s-fb-0.1': 'Ideal observer w/ text feedback',
 	    'M-%s-fb-10': 'Ideal observer w/ text feedback',
 	    }.items()])
@@ -209,8 +213,8 @@ conds = [cond % group
 		 'M-%s-fb-10',
 
 		 'H-%s-nfb-10',
-		 'M-%s-nfb-0',
-		 'M-%s-nfb-0.1',
+		 #'M-%s-nfb-0',
+		 #'M-%s-nfb-0.1',
 		 #'M-%s-nfb-1',
 		 'M-%s-nfb-10',
 		 ]]
@@ -223,73 +227,147 @@ n_cond = len(conds)
 ######################################################################
 ## Compute likelihoods under various models
 ######################################################################
-
 reload(lat)
 
-ir1 = list(kappas).index(0.0)
-ir10 = list(kappas).index(1.0)
-ir01 = list(kappas).index(-1.0)
+models, mnames = lat.model_lhs(
+    experiment, feedback, nofeedback, ipe_samps, 
+    kappas, ratios, conds, f_smooth=True, p_ignore=0.0)
 
-# random model
-model_random = lat.CI(lat.random_model_lh(experiment, n_trial), conds)
+# <codecell>
 
-# fixed models
-theta = np.log(np.eye(n_kappas))
-fb = np.empty((n_kappas, n_trial))*np.nan
-model_fixed = lat.CI(lat.block_lh(
-    experiment, fb, ipe_samps, theta, kappas, 
-    f_smooth=f_smooth, p_ignore=p_ignore), conds)
-# model_true01 = dict([(cond, model_fixed[cond][ir01]) for cond in model_fixed])
-model_true1 = dict([(cond, model_fixed[cond][ir1]) for cond in model_fixed])
-# model_true10 = dict([(cond, model_fixed[cond][ir10]) for cond in model_fixed])
-model_true = {}
-for cond in model_fixed:
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if ratio != "0":
-	model_true[cond] = model_fixed[cond][ratios.index(float(ratio))]
-model_uniform = lat.CI(lat.block_lh(
-    experiment, nofeedback, ipe_samps, None, kappas,
-    f_smooth=f_smooth, p_ignore=p_ignore), conds)
+reload(lat)
+table, table_conds, table_models = lat.make_performance_table(groups, conds, models, mnames)
+lat.print_performance_table(table, table_conds, groups, table_models, cond_labels)
+
+# <codecell>
+
+######################################################################
+## Plot likelihoods under other models
+######################################################################
+
+nc = 5#n_cond / len(groups)
+nm = len(table_models)
+width = 0.8 / (2*nm)
+x0 = np.arange(nc)/2.
+colors = ["b", "g", "m"]#, "g", "y", 'r']
+
+for gidx, group in enumerate(groups):
+    idx = 0
+    fig = plt.figure(40+gidx)
+    plt.clf()
+
+    # allheights = []
 	
-# learning models
-model_not_fixed = lat.CI(lat.block_lh(
-    experiment, feedback, ipe_samps, None, kappas, 
-    f_smooth=f_smooth, p_ignore=p_ignore), conds)
-model_learn = {}
-for cond in model_not_fixed:
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
-    if ratio != "0":
-	model_learn[cond] = model_not_fixed[cond][ratios.index(float(ratio))]
+    #for cidx, cond in enumerate(conds):
+    for midx, model in enumerate(table_models):
+	# height = []
+	# err = []
+	# ticks = []
+	# for cond in table_conds:
+	#     obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	#     if (grp != group):# or (obstype == "M"):
+	# 	continue
+	#     # if obstype == "M":
+	#     height.append(models[midx][cond][3])
+	#     # height.append(models[midx][cond][0])
+	#     #err.append(np.abs(models[midx][cond][0] - models[midx][cond][[1,2]]))
+	#     ticks.append(cond_labels[cond])
 
-# model_learn01 = dict([(cond, model_learn[cond][0]) for cond in model_fixed])
-# model_learn10 = dict([(cond, model_learn[cond][1]) for cond in model_fixed])
+	# obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	# if (obstype == "M") or (grp != group):
+	#     continue
 
-# all the models
-mnames = np.array([
-	"Random",
-	# "fixed 0.1",
-	# "learning 0.1",
-	# "fixed 10",
-	# "learning 10",
-	"Uniform",
-	"Equal",
-	"Correct",
-	"Learning",
-	# "fixed uniform",
-	# "fixed r=1",
-	])
-mparams = np.array([0, 1, 2, 1, 2, 1, 1])
-models = [
-    model_random,
-    # model_true01,
-    # model_learn01,
-    # model_true10,
-    # model_learn10,
-    model_uniform,
-    model_true1,
-    model_true,
-    model_learn,
-    ]
+	# data = np.array([models[x][cond] for x in xrange(len(models))])
+	# height = data[:, 0]
+	# lower = data[:, 1]
+	# upper = data[:, 2]
+	# err = np.array([np.abs(models[x][cond][0] - models[x][cond][[1,2]])
+	# 		for x in xrange(len(models))])# if cond in models[x]])
+	# err = np.array([np.abs(height - lower), np.abs(height-upper)]).T
+
+	# height = np.array(height)
+	# allheights.append(height.copy())
+	# height[np.isnan(height)] = 0
+	# err = np.array(err)
+	height = table[gidx, :, midx, 3].copy()
+	ticks = []
+	for i in xrange(len(table_conds[gidx])):
+	    cond = table_conds[gidx][i]
+	    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+	    if fbtype == "fb" and ratio == "0.1":
+                clabel = r"B(0.1)"
+            elif fbtype == "fb" and ratio == "10":
+                clabel = r"B(10)"
+            elif fbtype == "vfb" and ratio == "0.1":
+                clabel = r"V(0.1)"
+            elif fbtype == "vfb" and ratio == "10":
+                clabel = r"V(10)"
+            elif fbtype == "nfb":
+                clabel = r"NFB"
+	    ticks.append(clabel)
+		
+	#color = colors[(idx/2) % len(colors)]
+	color = colors[idx]
+	# if obstype == "M":
+	#     alpha = 1.0
+	# elif fbtype == "vfb":
+	#     alpha = 0.4
+	# elif fbtype in ("fb", "nfb"):
+	#     alpha = 0.2
+	# if obstype == "M" and fbtype == "nfb" and ratio == "1":
+	#     color = "#996600"
+
+	x = x0 + width*(idx-(nm/2.)) + width/2.# (width/2.)
+	plt.bar(x, height, #yerr=err.T, 
+		color=color,
+		ecolor='k', align='center', width=width, 
+		label=model)#, alpha=0.7)
+	plt.xticks(x0, ticks)#, rotation=20)
+
+	idx += 1
+
+    # best = list(np.nanargmax(np.array(allheights), axis=0)), list(np.arange(nc))
+    best = np.nanargmax(table[gidx, :, :, 3], axis=1), list(np.arange(nc))
+    print best
+    # heights = np.array(allheights)[best]
+    heights = table[gidx, :, :, 3].T[best]
+    print heights
+    b = np.array(best[1])/2. + width*(np.array(best[0])-(nm/2.)) + (width/2.)
+    for x, h in zip(b, heights):
+	plt.text(x, h, '*', fontweight='bold', fontsize=16, ha='center', color='w')
+
+    #plt.xticks(x0, mnames)#, rotation=15)
+    # if group == "all":
+    # 	plt.ylim(-1800, -1400)
+    # elif group == "E":
+    # 	plt.ylim(-1200, -800)
+    # elif group == "C":
+    # 	plt.ylim(-800, -500)
+    plt.ylim(-30.5, -25)
+    plt.xlim(x0.min()-0.3, x0.max()+0.3)
+    plt.plot([x0.min()-0.3, x0.max()+0.3], [np.log(0.5)*n_trial]*2, 
+	     'k--', label="Chance", linewidth=2)
+
+    plt.legend(loc=8, ncol=4, fontsize=12, frameon=False)
+    plt.xlabel("%s-order condition" % ("Diagnostic" if group == "E" else "Random"), fontsize=14)
+    plt.ylabel("Average log likelihood", fontsize=14)
+
+    title = "Model likelihoods for \"Will it fall?\" judgments"
+    # if group != "all":
+    # 	title += " (%s)" % group
+    # if group == "E":
+    # 	title += " (Diagnostic)"
+    # elif group == "C":
+    # 	title += " (Random)"
+    plt.suptitle(title, fontsize=16)
+    fig.set_figwidth(6)
+    fig.set_figheight(4)
+    plt.subplots_adjust(bottom=0.18, top = 0.9, left=0.11)
+
+    if p_ignore > 0:
+	lat.save("images/model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
+    else:
+	lat.save("images/model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
@@ -309,10 +387,13 @@ for cond in conds:
     X = np.array(index)-6-np.arange(len(index))-1
 emj_stats = lat.CI(emjs, conds)
 
-for i, group in enumerate(groups):
+fig = plt.figure(10)#+i)
+plt.clf()
 
-    fig = plt.figure(10+i)
-    plt.clf()
+for i, group in enumerate(groups):
+    if group == "all":
+	continue
+
     idx = 0
 
     for cidx, cond in enumerate(conds):
@@ -321,6 +402,7 @@ for i, group in enumerate(groups):
 	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
 	if (grp != group):# or obstype == "M":
 	    continue
+	print cond, group
 	mean, lower, upper, sums, n = emj_stats[cond].T
 	sem = np.array([np.abs(mean - lower), np.abs(mean-upper)]).T
 
@@ -334,12 +416,20 @@ for i, group in enumerate(groups):
 
 	# if fbtype == "nfb":
 	#     plt.subplot(1, 3, 3)
-	if ratio == "10":
-	    r10ax = plt.subplot(1, 2, 2)
-	    r10title = "$r_0=10$"
-	elif ratio == "0.1":
-	    r01ax = plt.subplot(1, 2, 1)
-	    r01title = "$r_0=0.1$"
+	if group == "E":
+	    if ratio == "10":
+		plt.subplot(1, 4, 2)
+		plt.title("$r_0=10$  (diagnostic order)")
+	    elif ratio == "0.1":
+		plt.subplot(1, 4, 1)
+		plt.title("$r_0=0.1$ (diagnostic order)")
+	elif group == "C":
+	    if ratio == "10":
+		plt.subplot(1, 4, 4)
+		plt.title("$r_0=10$ (random order)")
+	    elif ratio == "0.1":
+		plt.subplot(1, 4, 3)
+		plt.title("$r_0=0.1$ (random order)")
 
 	if obstype == "M":
 	    linestyle = "-"
@@ -363,32 +453,38 @@ for i, group in enumerate(groups):
     # arr = np.concatenate(allarr, axis=0)
     # lat.plot_explicit_judgments(idx, arr)
 
-    for ax, title in (r10ax, r10title), (r01ax, r01title):
-	ax.set_xlim(X.min(), X.max())
-	ax.set_ylim(0.3, 1.0)
-	ax.set_xticks(X)
-	ax.set_xticklabels(X)
-	ax.set_xlabel("Trial")
-	if ax == r01ax:
-	    ax.set_ylabel("Proportion correct")
-	else:
-	    ax.set_yticklabels([])
-	ax.legend(loc=4, fontsize=11)
-	ax.set_title(title)
-
-    title = "Proportion of correct \"Which color is heavier?\" judgments"
-    if group != "all":
-	title += " (%s)" % group
-    plt.suptitle(title, fontsize=16)
-    fig = plt.gcf()
-    fig.set_figwidth(11)
-    fig.set_figheight(4)
-    plt.subplots_adjust(top=0.84, wspace=0.1, left=0.07, right=0.95)
-
-    if p_ignore > 0:
-	lat.save("images/explicit_mass_judgments_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
+#for ax, title in (r10ax, r10title), (r01ax, r01title):
+for idx in xrange(4):
+    ax = plt.subplot(1, 4, idx+1)
+    ax.plot([1, 40], [0.5, 0.5], 'k:')
+    ax.set_xlim(X.min(), X.max())
+    ax.set_ylim(0.25, 1.0)
+    ax.set_xticks(X)
+    if idx == 0:
+	ax.set_yticks([0.25, 0.5, 0.75, 1.0])
+	ax.set_ylabel("Proportion correct")
     else:
-	lat.save("images/explicit_mass_judgments_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
+    	ax.set_yticklabels([])
+    ax.set_xticklabels(X)
+    ax.set_xlabel("Trial")
+	
+    ax.legend(loc=4, fontsize=11)
+    # ax.set_title(title)
+
+title = "Proportion of correct \"Which color is heavier?\" judgments"
+# if group != "all":
+#     title += " (%s)" % group
+plt.suptitle(title, fontsize=16)
+fig = plt.gcf()
+fig.set_figwidth(16)
+fig.set_figheight(4)
+plt.subplots_adjust(top=0.85, wspace=0.1, hspace=0.2,
+		    left=0.07, right=0.95)
+
+if p_ignore > 0:
+    lat.save("images/explicit_mass_judgments_ignore", close=True, ext=['png', 'pdf', 'svg'])
+else:
+    lat.save("images/explicit_mass_judgments", close=True, ext=['png', 'pdf', 'svg'])
 	    
 
 # <codecell>
@@ -405,15 +501,28 @@ for i, group in enumerate(groups):
 	if cond not in emj_stats:
 	    continue
 	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if (grp != group):
+	if (grp != group) or obstype == "M":
 	    continue
 	mean, lower, upper, sums, n = emj_stats[cond].T
-
+	mcond = "M-%s-fb-%s" % (grp, ratio)
+	mmean = emj_stats[mcond][:, 0]
+	
 	# arr = np.asarray(queries[cond]) == float(ratio)
-	binom = [scipy.stats.binom_test(x, n[0], 0.5) for x in sums]
+	binom0 = [scipy.stats.binom.sf(x-1, n[0], 0.5) for x in sums]
+	binom1 = [scipy.stats.binom_test(x, n[0], 0.5) for x in sums]
+	binom2 = [scipy.stats.binom.sf(
+		sums[idx]-1, n[0], mmean[idx])
+		for idx in xrange(len(sums))]
 
         print cond
-        print "  ", np.round(binom, decimals=3)
+	# print "  mmean: ", np.round(mmean, decimals=2)
+	print "  mean:  ", np.round(mean, decimals=2)
+        print "  1-tail:", np.round(binom0, decimals=4)
+        print "  2-tail:", np.round(binom1, decimals=4)
+	print "  model: ", np.round(binom2, decimals=4)
+	# print "  rate:  ", np.round(eff, decimals=2)
+
+    print
 
     # arr = np.concatenate(allarr, axis=0)
     # binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) 
@@ -428,6 +537,7 @@ for i, group in enumerate(groups):
 ## Chi-square analysis of explicit judgments
 ######################################################################
 
+grouparr = []
 for i, group in enumerate(groups):
     allarr = []
 
@@ -441,6 +551,7 @@ for i, group in enumerate(groups):
 
 	arr = np.asarray(queries[cond]) == float(ratio)
 	allarr.append(arr)
+	grouparr.append(arr)
 
     if allarr == []:
 	continue
@@ -454,8 +565,20 @@ for i, group in enumerate(groups):
     print df
 
     chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
-    print (chi2, p)
+    print "X2(%s, n=%s)=%s, p=%s" % (dof, df.sum(axis=1)[1], chi2, p)
     print
+
+arr = np.concatenate(grouparr, axis=0)
+df = pd.DataFrame(
+    np.array([np.sum(1-arr, axis=0), np.sum(arr, axis=0)]).T,
+    index=X,
+    columns=["incorrect", "correct"])
+print group
+print df
+
+chi2, p, dof, ex = scipy.stats.chi2_contingency(df)
+print "X2(%s, n=%s)=%s, p=%s" % (dof, df.sum(axis=1)[1], chi2, p)
+print
 
 # <codecell>
 
@@ -495,7 +618,8 @@ for cond in conds:
     obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
     if obstype == "M" and fbtype not in ("vfb", "nfb"):
 	beliefs[cond] = model_belief[cond]
-
+	
+cmap = lat.make_cmap("lh", (0, 0, 0), (.55, .55, .55), (1, 1, 1))
 lat.plot_belief(2, 2, 2, beliefs, kappas, cmap, cond_labels)
 lat.save("images/ideal_observer_beliefs", close=True, ext=['png', 'pdf', 'svg'])
 
@@ -504,8 +628,30 @@ lat.save("images/ideal_observer_beliefs", close=True, ext=['png', 'pdf', 'svg'])
 ######################################################################
 ## Plot likelihoods under fixed models
 ######################################################################
-
 reload(lat)
+
+# theta = np.zeros(((n_kappas*2)-1, n_kappas))
+# I = []
+# J = []
+# i=0
+# j=1
+# for k in xrange((n_kappas*2)-1):
+#     theta[k, i:j] = 1
+#     I.append(i)
+#     J.append(j)
+#     if j == n_kappas:
+# 	i += 1
+#     else:
+# 	j += 1
+# theta = normalize(np.log(theta), axis=1)[1]    
+# fb = np.empty(((n_kappas*2)-1, n_trial))*np.nan
+# theta = normalize(np.log(np.ones((n_kappas, n_kappas))), axis=1)
+# fb = feedback.copy()
+theta = np.log(np.eye(n_kappas))
+fb = np.empty((n_kappas, n_trial))*np.nan
+model_fixed = lat.CI(lat.block_lh(
+    experiment, fb, ipe_samps, theta, kappas, 
+    f_smooth=f_smooth, p_ignore=p_ignore), conds)
 
 for i, group in enumerate(groups):
     idx = 0
@@ -517,10 +663,10 @@ for i, group in enumerate(groups):
 	
 	if grp != group:
 	    continue
-	if obstype == "M" and fbtype == "fb":
-	    continue
+	# if obstype == "M":# and fbtype == "fb":
+	#     continue
 
-	if obstype == "H" and fbtype == "nfb":
+	if fbtype == "nfb":
 	    nfbax = plt.subplot(1, 3, 3)
 	    nfbtitle = "No feedback"
 	elif ratio == "10":
@@ -529,9 +675,9 @@ for i, group in enumerate(groups):
 	elif ratio == "0.1":
 	    r01ax = plt.subplot(1, 3, 1)
 	    r01title = "Feedback generated w/ $r_0=0.1$"
-	else:
-	    nfbax = plt.subplot(1, 3, 3)
-	    nfbtitle = "No feedback"
+	# else:
+	#     nfbax = plt.subplot(1, 3, 3)
+	#     nfbtitle = "No feedback"
 
 	if obstype == "M":
 	    linestyle = "-"
@@ -556,38 +702,51 @@ for i, group in enumerate(groups):
 	color = 'k'
 	    
 	mean, lower, upper, sums, n = model_fixed[cond].T
+	# if obstype == "M":
+	#     sums = (sums / float(n_fake_data))
+	#     if group == "C":
+	# 	sums *= 20
+	#     elif group == "E":
+	# 	sums *= 40
+	#     elif group == "all":
+	# 	sums *= 30
 	# mean = np.exp(mean)
 	# lower = np.exp(lower)
 	# upper = np.exp(upper)
-	plt.fill_between(kappas, lower, upper, color=color, alpha=0.2)
-	plt.plot(kappas, mean, label=cond_labels[cond], color=color, linewidth=4,
+	# plt.fill_between(kappas, lower, upper, color=color, alpha=0.2)
+	# plt.plot(kappas, mean, label=cond_labels[cond], color=color, linewidth=4,
+	# 	 linestyle=linestyle)
+
+	plt.plot(kappas, sums/n, label=cond_labels[cond], color=color, linewidth=4,
 		 linestyle=linestyle)
-	# plt.plot(x, sums[cidx], label=cond_labels[cond], color=color, linewidth=2,
-	# 	     linestyle=linestyle)
+	# plt.plot(np.arange((n_kappas*2)-1), sums, label=cond_labels[cond], color=color, linewidth=4,
+	# 	 linestyle=linestyle)
 
 	idx += 1
 
     for ax, title in [(nfbax, nfbtitle), (r10ax, r10title), (r01ax, r01title)]:
-	for k in (-1.0, 0.0, 1.0):
-	    ax.plot([k]*2, [-40, -22], 'k', linestyle=':', alpha=1)
-
 	ax.set_xticks([kappas[x] for x in plot_ticks])
 	ax.set_xticklabels(plot_ratios, rotation=30)
+	# ax.set_xticks(np.arange((n_kappas*2)-1)[::2])
+	# ax.set_xticklabels(np.array([str(x) for x in zip(I, J)])[::2], rotation=90)
 	ax.set_xlabel("Assumed mass ratio ($r$)")
 	ax.set_xlim(min(kappas), max(kappas))
-	ax.set_ylim(-40, -22)
+	if group == "all":
+	    ax.set_ylim(-2350, -1300)
+	    for k in (-1.0, 0.0, 1.0):
+		ax.plot([k]*2, [-2350, -1300], 'k', linestyle=':', alpha=1)
 	if ax == r01ax:
 	    ax.set_ylabel("Log likelihood of judgments")
 	else:
 	    ax.set_yticklabels([])
-	ax.legend(loc=4, ncol=1, fontsize=12)
+	ax.legend(loc=3, ncol=1, fontsize=12, frameon=False)
 	ax.set_title(title)
 
     title = "Likelihood of \"Will it fall?\" judgments under fixed belief models"
     if group != "all":
 	title += " (%s)" % group
     plt.suptitle(title , fontsize=20)
-    fig.set_figwidth(16)
+    fig.set_figwidth(20)
     fig.set_figheight(6)
 
     plt.subplots_adjust(bottom=0.2, top=0.85, wspace=0.1, left=0.07, right=0.95)
@@ -597,134 +756,6 @@ for i, group in enumerate(groups):
     else:
 	lat.save("images/fixed_model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
 	
-
-# <codecell>
-
-######################################################################
-## Plot likelihoods under other models
-######################################################################
-
-n = 5#n_cond / len(groups)
-width = 0.7 / n
-x0 = np.arange(len(models))
-colors = ["m", "r", "c", "b", "y"]
-performance_table = []
-table_conds = []
-
-for i, group in enumerate(groups):
-    idx = 0
-    fig = plt.figure(40+i)
-    plt.clf()
-    performance_table.append([])
-    table_conds.append([])
-
-    #for midx, model in enumerate(mnames):
-    for cidx, cond in enumerate(conds):
-	# height = []
-	# err = []
-	    
-	# for cidx, cond in enumerate(conds):
-	#     obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	#     if (obstype == "M") or (grp != group) or (cond not in models[midx]):
-	# 	continue
-	#     height.append(models[midx][cond][0])
-	#     err.append(models[midx][cond][0] - models[midx][cond][[1,2]])
-
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if (obstype == "M") or (grp != group):
-	    continue
-
-	data = np.array([models[x][cond] for x in xrange(len(models))])
-	# height = np.array([models[x][cond][0] for x in xrange(len(models))])
-	# lower = np.array([models[x][cond][1] for x in xrange(len(models))])
-	# upper = np.array([models[x][cond][2] for x in xrange(len(models))])
-	# sums = np.array([models[x][cond][3] for x in xrange(len(models))])
-	# ssize = np.array([models[x][cond][4] for x in xrange(len(models))])
-	height = data[:, 0]
-	lower = data[:, 1]
-	upper = data[:, 2]
-	# err = np.array([np.abs(models[x][cond][0] - models[x][cond][[1,2]])
-	# 		for x in xrange(len(models))])# if cond in models[x]])
-	err = np.array([np.abs(height - lower), np.abs(height-upper)]).T
-	#performance_table[-1].append([height, lower, upper])
-	table_conds[-1].append(cond)
-
-	# performance_table[-1].append(["%.2f [%.2f, %.2f]" % (
-	# 	height[x], lower[x], upper[x])
-	# 	for x in xrange(height.size)])
-	performance_table[-1].append(data.T)
-
-	# height = np.array(height)
-	# err = np.array(err)
-	#n = height.size
-	
-	#color = colors[(idx/2) % len(colors)]
-	color = colors[idx]
-	# if obstype == "M":
-	#     alpha = 1.0
-	# elif fbtype == "vfb":
-	#     alpha = 0.4
-	# elif fbtype in ("fb", "nfb"):
-	#     alpha = 0.2
-	# if obstype == "M" and fbtype == "nfb" and ratio == "1":
-	#     color = "#996600"
-
-	x = x0 + width*(idx-(n/2.)) + (width/2.)
-	plt.bar(x, height, yerr=err.T, 
-		color=color,
-		ecolor='k', align='center', width=width, 
-		label=cond_labels[cond], alpha=0.7)
-
-	idx += 1
-
-    plt.xticks(x0, mnames)#, rotation=15)
-    plt.ylim(-34, -22)
-    plt.xlim(x0.min()-0.5, x0.max()+0.5)
-    plt.legend(loc=4, ncol=2, fontsize=10)
-    plt.xlabel("Model", fontsize=14)
-    plt.ylabel("Log likelihood", fontsize=14)
-
-    title = "Likelihood of \"Will it fall?\" judgments under different models"
-    if group != "all":
-	title += " (%s)" % group
-    plt.suptitle(title, fontsize=16)
-    fig.set_figwidth(8)
-    fig.set_figheight(5)
-    plt.subplots_adjust(bottom=0.18, top = 0.9)
-
-    if p_ignore > 0:
-	lat.save("images/model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
-    else:
-	lat.save("images/model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
-
-performance_table = np.array(performance_table)
-
-# <codecell>
-
-gidx = groups.index('all')
-# group, condition, model, stat
-table = performance_table[gidx, :, 3]
-samplesize = performance_table[gidx, :, 4]
-print "& " + " & ".join(mnames) + r"\\\hline"
-for lidx, line in enumerate(table):
-    midx = np.argmax(np.array(line, dtype='f8'))
-    cond = table_conds[gidx][lidx]
-    entries = [cond_labels[cond] + " ($n=%d$)" % samplesize[lidx][0]]
-    entries.extend([
-	(r"\textbf{%d}" if idx == midx else "%d") % float(line[idx])
-	for idx in xrange(len(line))])
-    print " & ".join(entries) + r"\\"
-print "\hline"	    
-
-# table = pd.DataFrame(
-#     ptable[gidx],
-#     index=[cond_labels[x] + " &" for x in table_conds[gidx]],
-#     columns=["& " + x for x in mnames]) + " &"
-
-# <codecell>
-
-print performance_table[gidx, 0, 0]
-print performance_table[gidx, 0, 3] / 56.
 
 # <codecell>
 
@@ -791,8 +822,4 @@ for i, group in enumerate(groups):
     fig.set_figwidth(8)
     fig.set_figheight(6)
     lat.save("images/estimated_mass_judgments_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
-
-# <codecell>
-
-hi
 
