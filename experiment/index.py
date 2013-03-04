@@ -6,9 +6,7 @@ import json
 import logging
 import os
 import httplib
-import random
 import shutil
-import sys
 
 from os import environ
 from hashlib import sha1
@@ -17,10 +15,10 @@ import db_tools as dbt
 
 # configure logging
 logging.basicConfig(
-    filename="logs/experiment.log", 
+    filename="logs/experiment.log",
     level=logging.WARNING,
     # level=logging.DEBUG,
-    format='%(levelname)s %(asctime)s -- %(message)s', 
+    format='%(levelname)s %(asctime)s -- %(message)s',
     datefmt='%m/%d/%Y %I:%M:%S %p')
 
 # enable debugging
@@ -36,7 +34,8 @@ DATA_DIR = "data"
 CONF_DIR = "config"
 HTML_DIR = "html"
 
-KEYWORDS = ("finished training", "finished experiment", "finished posttest", "query ratio")
+KEYWORDS = ("finished training", "finished experiment",
+            "finished posttest", "query ratio")
 FIELDS = ("index", "trial", "stimulus", "response", "time", "angle", "ttype")
 PFORMAT = "%03d"
 
@@ -59,21 +58,23 @@ def validate(form):
         logging.debug("couldn't get validation code")
         return None
 
-    logging.debug("pid is %s and validation code is %s" % ((PFORMAT % pid), validation_code))
+    logging.debug("pid is %s and validation code is %s" % (
+        (PFORMAT % pid), validation_code))
 
     # check in the database
     valid = dbt.validate_participant(pid, validation_code)
     if not valid:
         logging.debug("pid/validation code don't match")
         return None
-    
+
     # check that the data file exists
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
     if not os.path.exists(datafile):
         logging.debug("datafile doesn't exist")
         return None
-    
+
     return pid, validation_code
+
 
 def parse_trialindex(t):
     if t == "index":
@@ -81,7 +82,8 @@ def parse_trialindex(t):
     else:
         trialindex = int(t) + 1
     return trialindex
-    
+
+
 def get_trialindex(pid):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
     with open(datafile, "r") as fh:
@@ -89,6 +91,7 @@ def get_trialindex(pid):
     lines = data.strip().split("\n")
     index = parse_trialindex(lines[-1].split(",")[0])
     return index
+
 
 def create_datafile(ip_address, condition):
     p = dbt.add_participant(ip_address, condition, F_CHECK_IP)
@@ -109,7 +112,8 @@ def create_datafile(ip_address, condition):
         fh.write(",".join(FIELDS) + "\n")
 
     return pid, validation_code
-        
+
+
 def write_data(pid, data):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
 
@@ -124,15 +128,18 @@ def write_data(pid, data):
     with open(datafile, "a") as fh:
         fh.write(vals)
 
+
 def get_all_trialinfo(pid):
     triallist = os.path.join(DATA_DIR, "%s_trials.json" % (PFORMAT % pid))
     with open(triallist, "r") as fh:
         trialinfo = json.load(fh)
     return trialinfo
-    
+
+
 def get_trialinfo(pid, index):
     trialinfo = get_all_trialinfo(pid)
     return trialinfo[index]
+
 
 def get_training_playlist(pid):
     trialinfo = get_all_trialinfo(pid)
@@ -142,6 +149,7 @@ def get_training_playlist(pid):
             break
         playlist.append(trial['stimulus'])
     return playlist
+
 
 def get_experiment_playlist(pid):
     trialinfo = get_all_trialinfo(pid)
@@ -154,6 +162,7 @@ def get_experiment_playlist(pid):
         playlist.append(trial['stimulus'])
     return playlist
 
+
 def get_posttest_playlist(pid):
     trialinfo = get_all_trialinfo(pid)
     playlist = []
@@ -161,8 +170,9 @@ def get_posttest_playlist(pid):
         if trial == "finished posttest":
             break
         playlist.append(trial['stimulus'])
-    return playlist    
-        
+    return playlist
+
+
 def gen_completion_code(pid):
     datafile = os.path.join(DATA_DIR, "%s.csv" % (PFORMAT % pid))
     with open(datafile, "r") as fh:
@@ -171,7 +181,7 @@ def gen_completion_code(pid):
     dbt.set_completion_code(pid, code)
     return code
 
-    
+
 #################
 # Http functions
 
@@ -180,14 +190,15 @@ def http_status(code):
     response = "Status: %d %s\n\n" % (code, msg)
     return response
 
+
 def http_content_type(mime):
     response = "Content-Type: %s\n\n" % mime
     return response
 
-    
+
 #################
 # Server functions
-    
+
 def error(msg, code=400):
     # log the error
     response = http_status(code)
@@ -196,6 +207,7 @@ def error(msg, code=400):
     # respond
     print response
     print msg
+
 
 def send_html(html):
 
@@ -206,6 +218,7 @@ def send_html(html):
     # respond
     print http_content_type("text/html")
     print html
+
 
 def initialize(form):
     # get ip address
@@ -219,7 +232,7 @@ def initialize(form):
                      "used in this experiment.", 403)
     else:
         pid, validation_code = info
-        
+
     # initialization data we'll be sending
     index = get_trialindex(pid)
     playlist = get_training_playlist(pid)
@@ -230,30 +243,31 @@ def initialize(form):
         'index': index - 1,
         }
     json_init = json.dumps(init)
-    
+
     # log information about what we're sending
-    logging.info("(%s) Sending init data: %s" % 
+    logging.info("(%s) Sending init data: %s" %
                  ((PFORMAT % pid), json_init))
 
     # respond
     print http_content_type("application/json")
     print json.dumps(json_init)
 
+
 def getTrialInfo(form):
-    
+
     # make sure the pid is valid
     info = validate(form)
     if info is None:
         return error("Bad pid and/or validation code")
     pid, validation_code = info
-    
+
     # get the index
     r_index = int(form.getvalue("index"))
     index = get_trialindex(pid)
     if r_index != index:
         return error("Requested index is %s but "
                      "actual index is %s" % (r_index, index), 405)
-    
+
     # look up the trial information
     trialinfo = get_trialinfo(pid, index)
     if trialinfo in KEYWORDS:
@@ -263,7 +277,7 @@ def getTrialInfo(form):
             data['trial'] = trialinfo
             write_data(pid, data)
 
-        info = { 
+        info = {
             'index': index,
             'trial': trialinfo,
             }
@@ -292,7 +306,8 @@ def getTrialInfo(form):
     # respond
     print http_content_type("application/json")
     print json_info
-    
+
+
 def submit(form):
 
     # make sure the pid is valid
@@ -323,18 +338,17 @@ def submit(form):
 
         # now get the feedback
         response = {
-            'feedback' : None,
-            'visual' : None,
-            'text' : None,
-            'index' : index,
-            'trial' : trialinfo,
+            'feedback': None,
+            'visual': None,
+            'text': None,
+            'index': index,
+            'trial': trialinfo,
             }
 
     else:
         data.update(trialinfo)
         # write the data to file
         write_data(pid, data)
-
 
         visual_fb = trialinfo['visual_fb']
         text_fb = trialinfo['text_fb']
@@ -346,31 +360,17 @@ def submit(form):
 
         # now get the feedback
         response = {
-            'feedback' : feedback,
-            'visual' : visual_fb,
-            'text' : text_fb,
-            'index' : index,
-            'trial' : trialinfo['trial'],
+            'feedback': feedback,
+            'visual': visual_fb,
+            'text': text_fb,
+            'index': index,
+            'trial': trialinfo['trial'],
             }
 
     # response
     print http_content_type("application/json")
     print json.dumps(response)
 
-# def submitRatio(form):
-#     # make sure the pid is valid
-#     info = validate(form)
-#     if info is None:
-#         return error("Bad pid and/or validation code")
-#     pid, validation_code = info
-
-#     # extract all the relevant information
-#     heavy_color = form.getvalue("color")
-#     dbt.set_heavy_color(pid, heavy_color)
-
-#     print http_status(200)
-#     print
-    
 #################
 # Request handling
 
@@ -386,7 +386,7 @@ form = cgi.FieldStorage()
 logging.debug("Got request: " + str(form))
 for key in sorted(environ.keys()):
     logging.debug("%s %s" % (key, environ[key]))
-    
+
 # parse the action
 if cgi.escape(environ['REQUEST_METHOD']) == 'POST':
     action = form.getvalue('a', None)

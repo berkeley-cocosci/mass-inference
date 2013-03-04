@@ -1,12 +1,13 @@
-import os, random, time
-import numpy as np
+import os
+import time
 import sqlite3 as sql
 from hashlib import sha1
 
 DATA_DB = "data/data.db"
 BACKUP_DB = "data/data.db.bak"
 CONF_DIR = "config"
-    
+
+
 def create():
     # back up any existing database
     if os.path.exists(DATA_DB):
@@ -22,23 +23,12 @@ def create():
     conn = sql.connect(DATA_DB)
     with conn:
         cur = conn.cursor()
-        
+
         # create participants table
         cur.execute("CREATE TABLE Participants(pid INTEGER PRIMARY KEY AUTOINCREMENT, validation_code TEXT, condition TEXT, ip_address TEXT, completion_code TEXT)")
         print "Created 'Participants' table"
 
-        # # create and conditions table
-        # cur.execute("CREATE TABLE Conditions(id TEXT)")
-        # print "Created 'Conditions' table"
 
-        # # populate conditions table
-        # lists = [x for x in os.listdir(CONF_DIR) if x.endswith("_trials.json")]
-        # conditions = sorted([x.split("_")[0] for x in lists])
-        # for condition in conditions:
-        #     cur.execute("INSERT INTO Conditions VALUES (?)", (condition,))
-        #     print "Inserted condition '%s'" % condition
-
-            
 def check_ip(cur, ip_address):
     cur.execute(
         "SELECT pid,validation_code FROM Participants WHERE ip_address=?",
@@ -46,34 +36,12 @@ def check_ip(cur, ip_address):
     pids = cur.fetchall()
     return pids
 
-# def choose_condition(cur):
-#     # get available conditions
-#     cur.execute("SELECT id FROM Conditions")
-#     conditions = np.array(cur.fetchall())
-
-#     # get conditions of participants that have finished
-#     cur.execute("SELECT condition FROM Participants WHERE NOT completion_code=NULL")
-#     vals = np.array(cur.fetchall())
-
-#     # count up the number of participants in each condition
-#     if vals.size == 0:
-#         counts = np.zeros(conditions.shape[0], dtype='i4')
-#     else:
-#         counts = np.sum(vals == conditions.T, axis=0)
-
-#     # randomly choose the condition out of the conditions with the
-#     # least number of completed participants
-#     mins = np.nonzero(counts == np.min(counts))[0]
-#     idx = random.choice(mins)
-#     condition = conditions[idx].ravel()[0]
-    
-#     return condition
 
 def add_participant(ip_address, condition, f_check_ip):
     conn = sql.connect(DATA_DB)
     with conn:
         cur = conn.cursor()
-        
+
         # make sure the IP address doesn't exist already
         pids = check_ip(cur, ip_address)
         if f_check_ip and len(pids) > 0:
@@ -82,10 +50,10 @@ def add_participant(ip_address, condition, f_check_ip):
         else:
             # # get the condition
             # condition = choose_condition(cur)
-    
+
             # generate a unique validation code
             validation_code = sha1(ip_address + str(time.time())).hexdigest()
-    
+
             # add a new row for this participant
             cur.execute(
                 "INSERT INTO Participants VALUES (NULL, ?, ?, ?, NULL)",
@@ -93,17 +61,18 @@ def add_participant(ip_address, condition, f_check_ip):
 
             # get the new participant's info
             cur.execute(
-                "SELECT * FROM Participants WHERE validation_code=?", 
+                "SELECT * FROM Participants WHERE validation_code=?",
                 (validation_code,))
             rows = cur.fetchall()
-    
+
             # double check that the validation code is unique...
             assert len(rows) == 1
-            
+
             # return the pid & validation code
             participant = rows[0][:2]
-            
+
     return participant
+
 
 def validate_participant(pid, validation_code):
     conn = sql.connect(DATA_DB)
@@ -118,6 +87,7 @@ def validate_participant(pid, validation_code):
 
     return valid
 
+
 def set_completion_code(pid, completion_code):
     conn = sql.connect(DATA_DB)
     with conn:
@@ -126,19 +96,12 @@ def set_completion_code(pid, completion_code):
             "UPDATE Participants SET completion_code=? WHERE pid=?",
             (completion_code, pid))
 
-# def set_heavy_color(pid, heavy_color):
-#     conn = sql.connect(DATA_DB)
-#     with conn:
-#         cur = conn.cursor()
-#         cur.execute(
-#             "UPDATE Participants SET heavy_color=? WHERE pid=?",
-#             (heavy_color, pid))
 
 def list_participants():
     conn = sql.connect(DATA_DB)
     with conn:
         cur = conn.cursor()
-        
+
         cur.execute("SELECT * FROM Participants")
         col_names = [cn[0] for cn in cur.description]
         rows = cur.fetchall()
@@ -160,5 +123,3 @@ def list_participants():
 # assert validate_participant(pid, validation_code)
 # assert not validate_participant(pid+1, validation_code)
 # assert not validate_participant(pid, validation_code + "a")
-
-
