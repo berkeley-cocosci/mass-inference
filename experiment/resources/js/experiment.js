@@ -13,8 +13,8 @@
 var DEBUG = false;
 
 var actionUrl = "index.py?a=";
-var videoUrl = "resources/video/";
-var imageUrl = "resources/images/";
+var videoUrl = "stimuli/video/";
+var imageUrl = "stimuli/images/";
 var imageExt = "png";
 
 var fade = 200;
@@ -556,12 +556,14 @@ $(document).ready(function () {
                 splash: true,
                 tooltip: false });
         });
-    preloadImages(
-        ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
-        function () {
+    // preloadImages(
+    //     ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
+    //     function () {
             slides.show("index");
 	    // $(".slide").show();
 	    // $("#instructions3").show();
-        });
+        // });
 });
+
+
 

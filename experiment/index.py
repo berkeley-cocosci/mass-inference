@@ -28,7 +28,7 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = True
+F_CHECK_IP = False
 
 DATA_DIR = "data"
 CONF_DIR = "config"

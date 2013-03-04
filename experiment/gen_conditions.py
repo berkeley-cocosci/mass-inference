@@ -1,4 +1,5 @@
-import os, json, random, sys
+import os
+import json
 import numpy as np
 
 F_TRAINING = True
@@ -6,18 +7,21 @@ F_EXPERIMENT = True
 F_POSTTEST = True
 
 CONF_DIR = "www/config"
+INFO_DIR = "../stimuli"
+
 
 def get_all_stiminfo(idx):
-    filename = os.path.join(CONF_DIR, "stimuli-converted.json")
+    filename = os.path.join(INFO_DIR, "stimuli-converted.json")
     with open(filename, "r") as fh:
         all_stiminfo = json.load(fh)
     stiminfo = {}
     suffix = "-".join(idx.split("-")[-2:])
     for stim in all_stiminfo:
-        if (all_stiminfo[stim]['training'] or 
+        if (all_stiminfo[stim]['training'] or
             all_stiminfo[stim]['condition'] == suffix):
             stiminfo[stim] = all_stiminfo[stim]
     return stiminfo
+
 
 def create_condition(idx, text_fb, visual_fb, qidx=None, seed=None, order=None):
     triallist = os.path.join(CONF_DIR, "%s_trials.json" % idx)
@@ -25,10 +29,12 @@ def create_condition(idx, text_fb, visual_fb, qidx=None, seed=None, order=None):
 
     if qidx is None:
         qidx = []
-    
+
     stiminfo = get_all_stiminfo(idx)
-    train0 = sorted([stim for stim in stiminfo.keys() if stiminfo[stim]['training']])
-    stims0 = sorted([stim for stim in stiminfo.keys() if not stiminfo[stim]['training']])
+    train0 = sorted([stim for stim in stiminfo.keys()
+                     if stiminfo[stim]['training']])
+    stims0 = sorted([stim for stim in stiminfo.keys()
+                     if not stiminfo[stim]['training']])
 
     if seed is not None:
         rso = np.random.RandomState(seed)
@@ -48,7 +54,7 @@ def create_condition(idx, text_fb, visual_fb, qidx=None, seed=None, order=None):
         t = 0
         for stim in train:
             info = stiminfo[stim].copy()
-            info.update(stimulus=stim, trial=t, index=i, ttype='training', 
+            info.update(stimulus=stim, trial=t, index=i, ttype='training',
                         text_fb=True, visual_fb=True)
             del info['training']
             del info['catch']
@@ -83,7 +89,7 @@ def create_condition(idx, text_fb, visual_fb, qidx=None, seed=None, order=None):
             if t in qidx and (text_fb or visual_fb):
                 todump.append("query ratio")
                 i += 1
-            
+
     todump.append("finished experiment")
     i += 1
 
@@ -104,7 +110,7 @@ def create_condition(idx, text_fb, visual_fb, qidx=None, seed=None, order=None):
             todump.append(info)
             t += 1
             i += 1
-            
+
     todump.append("finished posttest")
     i += 1
 
@@ -147,7 +153,7 @@ if __name__ == "__main__":
     # create_condition("C-vfb-0.1-cb1", text_fb=True, visual_fb=True, **kwargs)
     # create_condition("C-nfb-10-cb0", text_fb=False, visual_fb=False, **kwargs)
     # create_condition("C-nfb-10-cb1", text_fb=False, visual_fb=False, **kwargs)
-    
+
     # kwargs = {
     #     'seed': 3,
     #     'qidx': list(np.round(np.logspace(
