@@ -15,19 +15,9 @@ import scipy.stats
 import os
 import time
 
-import cogphysics
-import cogphysics.lib.circ as circ
-import cogphysics.lib.nplib as npl
-import cogphysics.lib.rvs as rvs
-
-import cogphysics.tower.analysis_tools as tat
-import cogphysics.tower.mass.model_observer as mo
-import cogphysics.tower.mass.learning_analysis_tools as lat
-
-from cogphysics.lib.corr import xcorr, partialcorr
-
-normalize = rvs.util.normalize
-weightedSample = rvs.util.weightedSample
+from stats_tools import xcorr, normalize
+import analysis_tools as at
+import model_observer as mo
 
 pd.set_option('line_width', 195)
 LINE = "-"*195
@@ -38,10 +28,13 @@ LINE = "-"*195
 ## Load data
 ######################################################################
 
-reload(lat)
+reload(at)
 
 # human
-training, posttest, experiment, queries = lat.load_turk(thresh=1)
+conds = ['C-vfb-10', 'C-vfb-0.1', 'C-fb-10', 'C-fb-0.1', 'C-nfb-10',
+         'E-vfb-10', 'E-vfb-0.1', 'E-fb-10', 'E-fb-0.1', 'E-nfb-10']
+suffixes = ['-cb0', '-cb1']
+training, posttest, experiment, queries = at.load_turk(conds, suffixes, thresh=1)
 hconds = sorted(experiment.keys())
 total = 0
 for cond in hconds:
@@ -56,8 +49,8 @@ Stims = np.array([
 # model
 nthresh0 = 0
 nthresh = 0.4
-rawipe, ipe_samps, rawtruth, feedback, kappas = lat.process_model_turk(
-    Stims, nthresh0, nthresh)
+rawipe, ipe_samps, rawtruth, feedback, kappas = at.load_model(
+    "stability", nthresh0=nthresh0, nthresh=nthresh, fstim=Stims)
 nofeedback = np.empty(feedback.shape[1])*np.nan
 
 # <codecell>
@@ -80,7 +73,7 @@ n_fake_data  = 2000
 f_smooth = True
 p_ignore = 0.0
 
-cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
+cmap = at.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
 alpha = 0.2
 #colors = ['r', '#AAAA00', 'g', 'c', 'b', 'm']
 colors = ["r", "c", "k"]
@@ -99,7 +92,7 @@ reload(mo)
 model_belief = {}
 for cond in hconds:
 
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    obstype, group, fbtype, ratio, cb = at.parse_condition(cond)
     if obstype == "M" or fbtype == "vfb":
 	continue
 
@@ -227,17 +220,17 @@ n_cond = len(conds)
 ######################################################################
 ## Compute likelihoods under various models
 ######################################################################
-reload(lat)
+reload(at)
 
-models, mnames = lat.model_lhs(
+models, mnames = at.model_lhs(
     experiment, feedback, nofeedback, ipe_samps, 
     kappas, ratios, conds, f_smooth=True, p_ignore=0.0)
 
 # <codecell>
 
-reload(lat)
-table, table_conds, table_models = lat.make_performance_table(groups, conds, models, mnames)
-lat.print_performance_table(table, table_conds, groups, table_models, cond_labels)
+reload(at)
+table, table_conds, table_models = at.make_performance_table(groups, conds, models, mnames)
+at.print_performance_table(table, table_conds, groups, table_models, cond_labels)
 
 # <codecell>
 
@@ -245,55 +238,23 @@ lat.print_performance_table(table, table_conds, groups, table_models, cond_label
 ## Plot likelihoods under other models
 ######################################################################
 
-nc = 5#n_cond / len(groups)
+nc = 5
 nm = len(table_models)
 width = 0.8 / (2*nm)
 x0 = np.arange(nc)/2.
-colors = ["b", "g", "m"]#, "g", "y", 'r']
+colors = ["b", "g", "m"]
 
 for gidx, group in enumerate(groups):
     idx = 0
     fig = plt.figure(40+gidx)
     plt.clf()
 
-    # allheights = []
-	
-    #for cidx, cond in enumerate(conds):
     for midx, model in enumerate(table_models):
-	# height = []
-	# err = []
-	# ticks = []
-	# for cond in table_conds:
-	#     obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	#     if (grp != group):# or (obstype == "M"):
-	# 	continue
-	#     # if obstype == "M":
-	#     height.append(models[midx][cond][3])
-	#     # height.append(models[midx][cond][0])
-	#     #err.append(np.abs(models[midx][cond][0] - models[midx][cond][[1,2]]))
-	#     ticks.append(cond_labels[cond])
-
-	# obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	# if (obstype == "M") or (grp != group):
-	#     continue
-
-	# data = np.array([models[x][cond] for x in xrange(len(models))])
-	# height = data[:, 0]
-	# lower = data[:, 1]
-	# upper = data[:, 2]
-	# err = np.array([np.abs(models[x][cond][0] - models[x][cond][[1,2]])
-	# 		for x in xrange(len(models))])# if cond in models[x]])
-	# err = np.array([np.abs(height - lower), np.abs(height-upper)]).T
-
-	# height = np.array(height)
-	# allheights.append(height.copy())
-	# height[np.isnan(height)] = 0
-	# err = np.array(err)
 	height = table[gidx, :, midx, 3].copy()
 	ticks = []
 	for i in xrange(len(table_conds[gidx])):
 	    cond = table_conds[gidx][i]
-	    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+	    obstype, group, fbtype, ratio, cb = at.parse_condition(cond)
 	    if fbtype == "fb" and ratio == "0.1":
                 clabel = r"B(0.1)"
             elif fbtype == "fb" and ratio == "10":
@@ -306,43 +267,24 @@ for gidx, group in enumerate(groups):
                 clabel = r"NFB"
 	    ticks.append(clabel)
 		
-	#color = colors[(idx/2) % len(colors)]
 	color = colors[idx]
-	# if obstype == "M":
-	#     alpha = 1.0
-	# elif fbtype == "vfb":
-	#     alpha = 0.4
-	# elif fbtype in ("fb", "nfb"):
-	#     alpha = 0.2
-	# if obstype == "M" and fbtype == "nfb" and ratio == "1":
-	#     color = "#996600"
-
-	x = x0 + width*(idx-(nm/2.)) + width/2.# (width/2.)
-	plt.bar(x, height, #yerr=err.T, 
+	x = x0 + width*(idx-(nm/2.)) + width/2.
+	plt.bar(x, height,
 		color=color,
 		ecolor='k', align='center', width=width, 
-		label=model)#, alpha=0.7)
-	plt.xticks(x0, ticks)#, rotation=20)
+		label=model)
+	plt.xticks(x0, ticks)
 
 	idx += 1
 
-    # best = list(np.nanargmax(np.array(allheights), axis=0)), list(np.arange(nc))
     best = np.nanargmax(table[gidx, :, :, 3], axis=1), list(np.arange(nc))
     print best
-    # heights = np.array(allheights)[best]
     heights = table[gidx, :, :, 3].T[best]
     print heights
     b = np.array(best[1])/2. + width*(np.array(best[0])-(nm/2.)) + (width/2.)
     for x, h in zip(b, heights):
 	plt.text(x, h, '*', fontweight='bold', fontsize=16, ha='center', color='w')
 
-    #plt.xticks(x0, mnames)#, rotation=15)
-    # if group == "all":
-    # 	plt.ylim(-1800, -1400)
-    # elif group == "E":
-    # 	plt.ylim(-1200, -800)
-    # elif group == "C":
-    # 	plt.ylim(-800, -500)
     plt.ylim(-30.5, -25)
     plt.xlim(x0.min()-0.3, x0.max()+0.3)
     plt.plot([x0.min()-0.3, x0.max()+0.3], [np.log(0.5)*n_trial]*2, 
@@ -353,21 +295,15 @@ for gidx, group in enumerate(groups):
     plt.ylabel("Average log likelihood", fontsize=14)
 
     title = "Model likelihoods for \"Will it fall?\" judgments"
-    # if group != "all":
-    # 	title += " (%s)" % group
-    # if group == "E":
-    # 	title += " (Diagnostic)"
-    # elif group == "C":
-    # 	title += " (Random)"
     plt.suptitle(title, fontsize=16)
     fig.set_figwidth(6)
     fig.set_figheight(4)
     plt.subplots_adjust(bottom=0.18, top = 0.9, left=0.11)
 
     if p_ignore > 0:
-	lat.save("images/model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
+	at.savefig("images/model_performance_%s_ignore" % group, close=False, ext=['png', 'pdf', 'svg'])
     else:
-	lat.save("images/model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
+	at.savefig("images/model_performance_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
@@ -375,19 +311,19 @@ for gidx, group in enumerate(groups):
 ## Plot explicit judgments
 ######################################################################
 
-reload(lat)
+reload(at)
 
 emjs = {}
 for cond in conds:
     if cond not in queries:
 	continue
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    obstype, group, fbtype, ratio, cb = at.parse_condition(cond)
     emjs[cond] = np.asarray(queries[cond]) == float(ratio)
     index = np.array(queries[cond].columns, dtype='i8')
     X = np.array(index)-6-np.arange(len(index))-1
-emj_stats = lat.CI(emjs, conds)
+emj_stats = at.CI(emjs, conds)
 
-fig = plt.figure(10)#+i)
+fig = plt.figure(10)
 plt.clf()
 
 for i, group in enumerate(groups):
@@ -399,23 +335,13 @@ for i, group in enumerate(groups):
     for cidx, cond in enumerate(conds):
 	if cond not in emj_stats:
 	    continue
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if (grp != group):# or obstype == "M":
+	obstype, grp, fbtype, ratio, cb = at.parse_condition(cond)
+	if (grp != group):
 	    continue
 	print cond, group
 	mean, lower, upper, sums, n = emj_stats[cond].T
 	sem = np.array([np.abs(mean - lower), np.abs(mean-upper)]).T
 
-	# color = colors[(idx/3) % len(colors)]
-	# if obstype == "M":
-	#     linestyle = '-'
-	# elif fbtype == "fb":
-	#     linestyle = ':'
-	# elif fbtype in ("vfb", "nfb"):
-	#     linestyle = '--'
-
-	# if fbtype == "nfb":
-	#     plt.subplot(1, 3, 3)
 	if group == "E":
 	    if ratio == "10":
 		plt.subplot(1, 4, 2)
@@ -439,21 +365,12 @@ for i, group in enumerate(groups):
 	    linestyle = "--"
 
 	color = 'k'
-
-	# label = "%s %s r=%s (n=%d)" % (
-	#     obstype, fbtype, ratio, n[0])
-	# plt.errorbar(X, mean, yerr=sem, label=label, 
-	# 	     linewidth=2, color=color, linestyle=linestyle)
 	plt.fill_between(X, lower, upper, color=color, alpha=0.2)
 	plt.plot(X, mean, label=cond_labels[cond], 
 		 linewidth=4, color=color, linestyle=linestyle)
 
 	idx += 1
 
-    # arr = np.concatenate(allarr, axis=0)
-    # lat.plot_explicit_judgments(idx, arr)
-
-#for ax, title in (r10ax, r10title), (r01ax, r01title):
 for idx in xrange(4):
     ax = plt.subplot(1, 4, idx+1)
     ax.plot([1, 40], [0.5, 0.5], 'k:')
@@ -469,11 +386,8 @@ for idx in xrange(4):
     ax.set_xlabel("Trial")
 	
     ax.legend(loc=4, fontsize=11)
-    # ax.set_title(title)
 
 title = "Proportion of correct \"Which color is heavier?\" judgments"
-# if group != "all":
-#     title += " (%s)" % group
 plt.suptitle(title, fontsize=16)
 fig = plt.gcf()
 fig.set_figwidth(16)
@@ -482,9 +396,9 @@ plt.subplots_adjust(top=0.85, wspace=0.1, hspace=0.2,
 		    left=0.07, right=0.95)
 
 if p_ignore > 0:
-    lat.save("images/explicit_mass_judgments_ignore", close=True, ext=['png', 'pdf', 'svg'])
+    at.savefig("images/explicit_mass_judgments_ignore", close=False, ext=['png', 'pdf', 'svg'])
 else:
-    lat.save("images/explicit_mass_judgments", close=True, ext=['png', 'pdf', 'svg'])
+    at.savefig("images/explicit_mass_judgments", close=False, ext=['png', 'pdf', 'svg'])
 	    
 
 # <codecell>
@@ -493,21 +407,20 @@ else:
 ## Binomial analysis of explicit judgments
 ######################################################################
 
-reload(lat)
+reload(at)
 for i, group in enumerate(groups):
     allarr = []
 
     for cidx, cond in enumerate(conds):
 	if cond not in emj_stats:
 	    continue
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	obstype, grp, fbtype, ratio, cb = at.parse_condition(cond)
 	if (grp != group) or obstype == "M":
 	    continue
 	mean, lower, upper, sums, n = emj_stats[cond].T
 	mcond = "M-%s-fb-%s" % (grp, ratio)
 	mmean = emj_stats[mcond][:, 0]
 	
-	# arr = np.asarray(queries[cond]) == float(ratio)
 	binom0 = [scipy.stats.binom.sf(x-1, n[0], 0.5) for x in sums]
 	binom1 = [scipy.stats.binom_test(x, n[0], 0.5) for x in sums]
 	binom2 = [scipy.stats.binom.sf(
@@ -515,20 +428,12 @@ for i, group in enumerate(groups):
 		for idx in xrange(len(sums))]
 
         print cond
-	# print "  mmean: ", np.round(mmean, decimals=2)
 	print "  mean:  ", np.round(mean, decimals=2)
         print "  1-tail:", np.round(binom0, decimals=4)
         print "  2-tail:", np.round(binom1, decimals=4)
 	print "  model: ", np.round(binom2, decimals=4)
-	# print "  rate:  ", np.round(eff, decimals=2)
 
     print
-
-    # arr = np.concatenate(allarr, axis=0)
-    # binom = [scipy.stats.binom_test(x, arr.shape[0], 0.5) 
-    # 	     for x in np.sum(arr, axis=0)]
-    # print "All %s" % group
-    # print "  ", np.round(binom, decimals=3)
     
 
 # <codecell>
@@ -544,7 +449,7 @@ for i, group in enumerate(groups):
     for cond in conds:
 	if cond not in queries:
 	    continue
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	obstype, grp, fbtype, ratio, cb = at.parse_condition(cond)
 	if grp != group or obstype == "M":
 	    continue
 	print cond
@@ -586,23 +491,21 @@ print
 ## Plot smoothed likelihoods
 ######################################################################
 
-reload(lat)
+reload(at)
 fig = plt.figure(1)
 plt.clf()
 istim = [
-    #list(Stims).index("mass-tower_00035_0110101001"),
-    #list(Stims).index("mass-tower_00352_0010011011"),
     list(Stims).index("mass-tower_00357_0111011000"),
     list(Stims).index("mass-tower_00388_0011101001")
     ]
     
 print Stims[istim]
-lat.plot_smoothing(ipe_samps, Stims, istim, kappas)
+at.plot_smoothing(ipe_samps, Stims, istim, kappas)
 plt.xticks([kappas[x] for x in plot_ticks], plot_ratios)
 fig.set_figwidth(8)
 fig.set_figheight(6)
 
-lat.save("images/likelihood_smoothing", close=True, ext=['png', 'pdf', 'svg'])
+at.savefig("images/likelihood_smoothing", close=False, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
@@ -610,46 +513,29 @@ lat.save("images/likelihood_smoothing", close=True, ext=['png', 'pdf', 'svg'])
 ## Plot ideal learning observer beliefs
 ######################################################################
 
-reload(lat)
+reload(at)
 beliefs = {}
 for cond in conds:
     if cond not in model_belief:
 	continue
-    obstype, group, fbtype, ratio, cb = lat.parse_condition(cond)
+    obstype, group, fbtype, ratio, cb = at.parse_condition(cond)
     if obstype == "M" and fbtype not in ("vfb", "nfb"):
 	beliefs[cond] = model_belief[cond]
 	
-cmap = lat.make_cmap("lh", (0, 0, 0), (.55, .55, .55), (1, 1, 1))
-lat.plot_belief(2, 2, 2, beliefs, kappas, cmap, cond_labels)
-lat.save("images/ideal_observer_beliefs", close=True, ext=['png', 'pdf', 'svg'])
+cmap = at.make_cmap("lh", (0, 0, 0), (.55, .55, .55), (1, 1, 1))
+at.plot_belief(2, 2, 2, beliefs, kappas, cmap, cond_labels)
+at.savefig("images/ideal_observer_beliefs", close=False, ext=['png', 'pdf', 'svg'])
 
 # <codecell>
 
 ######################################################################
 ## Plot likelihoods under fixed models
 ######################################################################
-reload(lat)
+reload(at)
 
-# theta = np.zeros(((n_kappas*2)-1, n_kappas))
-# I = []
-# J = []
-# i=0
-# j=1
-# for k in xrange((n_kappas*2)-1):
-#     theta[k, i:j] = 1
-#     I.append(i)
-#     J.append(j)
-#     if j == n_kappas:
-# 	i += 1
-#     else:
-# 	j += 1
-# theta = normalize(np.log(theta), axis=1)[1]    
-# fb = np.empty(((n_kappas*2)-1, n_trial))*np.nan
-# theta = normalize(np.log(np.ones((n_kappas, n_kappas))), axis=1)
-# fb = feedback.copy()
 theta = np.log(np.eye(n_kappas))
 fb = np.empty((n_kappas, n_trial))*np.nan
-model_fixed = lat.CI(lat.block_lh(
+model_fixed = at.CI(at.block_lh(
     experiment, fb, ipe_samps, theta, kappas, 
     f_smooth=f_smooth, p_ignore=p_ignore), conds)
 
@@ -659,12 +545,10 @@ for i, group in enumerate(groups):
     plt.clf()
 
     for cidx, cond in enumerate(conds):
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
+	obstype, grp, fbtype, ratio, cb = at.parse_condition(cond)
 	
 	if grp != group:
 	    continue
-	# if obstype == "M":# and fbtype == "fb":
-	#     continue
 
 	if fbtype == "nfb":
 	    nfbax = plt.subplot(1, 3, 3)
@@ -675,9 +559,6 @@ for i, group in enumerate(groups):
 	elif ratio == "0.1":
 	    r01ax = plt.subplot(1, 3, 1)
 	    r01title = "Feedback generated w/ $r_0=0.1$"
-	# else:
-	#     nfbax = plt.subplot(1, 3, 3)
-	#     nfbtitle = "No feedback"
 
 	if obstype == "M":
 	    linestyle = "-"
@@ -688,53 +569,22 @@ for i, group in enumerate(groups):
 	elif fbtype == "nfb":
 	    linestyle = ":"
 
-	# color = 'k'
-	# color = colors[(idx/3) % len(colors)]
-	# if obstype == "M":
-	#     linestyle = '-'
-	# elif fbtype == "fb":
-	#     linestyle = ':'
-	# else:
-	#     linestyle = '--'
-	# if obstype == "M" and fbtype == "nfb" and ratio == "0":
-	#     color = "#996600"
-	# else:
 	color = 'k'
-	    
 	mean, lower, upper, sums, n = model_fixed[cond].T
-	# if obstype == "M":
-	#     sums = (sums / float(n_fake_data))
-	#     if group == "C":
-	# 	sums *= 20
-	#     elif group == "E":
-	# 	sums *= 40
-	#     elif group == "all":
-	# 	sums *= 30
-	# mean = np.exp(mean)
-	# lower = np.exp(lower)
-	# upper = np.exp(upper)
-	# plt.fill_between(kappas, lower, upper, color=color, alpha=0.2)
-	# plt.plot(kappas, mean, label=cond_labels[cond], color=color, linewidth=4,
-	# 	 linestyle=linestyle)
-
 	plt.plot(kappas, sums/n, label=cond_labels[cond], color=color, linewidth=4,
 		 linestyle=linestyle)
-	# plt.plot(np.arange((n_kappas*2)-1), sums, label=cond_labels[cond], color=color, linewidth=4,
-	# 	 linestyle=linestyle)
 
 	idx += 1
 
     for ax, title in [(nfbax, nfbtitle), (r10ax, r10title), (r01ax, r01title)]:
 	ax.set_xticks([kappas[x] for x in plot_ticks])
 	ax.set_xticklabels(plot_ratios, rotation=30)
-	# ax.set_xticks(np.arange((n_kappas*2)-1)[::2])
-	# ax.set_xticklabels(np.array([str(x) for x in zip(I, J)])[::2], rotation=90)
 	ax.set_xlabel("Assumed mass ratio ($r$)")
 	ax.set_xlim(min(kappas), max(kappas))
-	if group == "all":
-	    ax.set_ylim(-2350, -1300)
-	    for k in (-1.0, 0.0, 1.0):
-		ax.plot([k]*2, [-2350, -1300], 'k', linestyle=':', alpha=1)
+	# if group == "all":
+	#     ax.set_ylim(-2350, -1300)
+	#     for k in (-1.0, 0.0, 1.0):
+	# 	ax.plot([k]*2, [-2350, -1300], 'k', linestyle=':', alpha=1)
 	if ax == r01ax:
 	    ax.set_ylabel("Log likelihood of judgments")
 	else:
@@ -752,74 +602,11 @@ for i, group in enumerate(groups):
     plt.subplots_adjust(bottom=0.2, top=0.85, wspace=0.1, left=0.07, right=0.95)
 	
     if p_ignore > 0:
-	lat.save("images/fixed_model_performance_%s_ignore" % group, close=True, ext=['png', 'pdf', 'svg'])
+	at.savefig("images/fixed_model_performance_%s_ignore" % group, close=False, ext=['png', 'pdf', 'svg'])
     else:
-	lat.save("images/fixed_model_performance_%s" % group, close=True, ext=['png', 'pdf', 'svg'])
+	at.savefig("images/fixed_model_performance_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
 	
 
 # <codecell>
 
-reload(lat)
-pr = lat.infer_CI(lat.infer_beliefs(
-    experiment, ipe_samps, feedback, kappas, f_smooth), conds)
-
-# <codecell>
-
-tidx = np.array([0] + list(X))
-T0 = tidx.copy()[:-1]
-T1 = tidx.copy()[1:]
-
-for i, group in enumerate(groups):
-    idx = 0
-    plt.figure(500+i)
-    plt.clf()
-    plt.figure(600+i)
-    plt.clf()
-	
-    for cidx, cond in enumerate(conds):
-	obstype, grp, fbtype, ratio, cb = lat.parse_condition(cond)
-	if (grp != group) or (obstype == "M" and fbtype == "nfb" and ratio != "0"):
-	    continue
-	avgpr = np.mean(pr[cond], axis=0)
-
-	if fbtype != "nfb":
-	    if float(ratio) > 1:
-		arr = pr[cond][:, :, ratios.index(1.0)+1:]
-	    else:
-		arr = pr[cond][:, :, :ratios.index(1.0)]
-	    pcorrect = np.mean(np.sum(arr, axis=-1), axis=0)
-	    
-	    plt.figure(600+i)
-	    plt.subplot(2, 3, idx+1)
-	    plt.plot(T1, emj_stats[cond][:, 0], label="explicit mass judgments")
-	    plt.plot(pcorrect, label="P(correct | responses)")
-	    plt.title(cond_labels[cond], fontsize=12)
-	    plt.ylim(0.3, 1)
-	    plt.xticks(T1, T1)
-	    plt.xlim(T1.min(), T1.max())
-
-	plt.figure(500+i)
-	img = lat.plot_theta(
-	    3, 3, idx+1,
-	    avgpr,
-	    cond_labels[cond], 
-	    exp=np.e,
-	    vmin=0, vmax=0.1,
-	    cmap=cmap)
-	
-	idx += 1
-
-    plt.colorbar(img)
-    plt.suptitle("P(r | J) -- %s" % group)
-    fig = plt.gcf()
-    fig.set_figwidth(8)
-    fig.set_figheight(6)
-    lat.save("images/inferred_belief_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
-
-    plt.figure(600+i)
-    plt.legend(loc=0, fontsize=9)
-    fig = plt.gcf()
-    fig.set_figwidth(8)
-    fig.set_figheight(6)
-    lat.save("images/estimated_mass_judgments_%s" % group, close=False, ext=['png', 'pdf', 'svg'])
 
