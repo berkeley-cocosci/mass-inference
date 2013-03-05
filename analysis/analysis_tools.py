@@ -224,8 +224,8 @@ def load_turk(conds, suffixes, thresh=1):
 
     # get bad pids
     failed_pids, invalid_pids = get_bad_pids(allconds, thresh=thresh)
-    print "Failed posttest (%d): %s" % (len(failed_pids), failed_pids)
-    print "Ineligible pids (%d): %s" % (len(invalid_pids), invalid_pids)
+    print "%d failed posttest" % len(failed_pids)
+    print "%d ineligible" % len(invalid_pids)
     pids = sorted(set(failed_pids + invalid_pids))
 
     for cond in conds:
@@ -557,6 +557,79 @@ def load_model(predicate, nthresh0=0, nthresh=0.4, fstim=None):
 #     return feedback, ipe_samps
 
 
+def generate_model_responses(conds, experiment, queries, feedback, ipe_samps,
+                             kappas, ratios, n_trial, n_fake=2000):
+    """Generate model stability responses, explicit mass judgments,
+    and belief over time for each experimental condition in 'conds'.
+
+    """
+
+    model_belief = {}
+    model_experiment = {}
+    model_queries = {}
+    n_kappas = len(kappas)
+
+    for cond in conds:
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        if obstype == "M" or fbtype == "vfb":
+            continue
+
+        cols = experiment[cond].columns
+        order = np.argsort(zip(*cols)[0])
+        undo_order = np.argsort(order)
+
+        ## Stability judgments
+        if fbtype == 'nfb':
+            fb = np.empty((3, n_trial)) * np.nan
+            prior = np.zeros((3, n_kappas,))
+            # uniform
+            prior[0, :] = 1
+            prior = normalize(np.log(prior), axis=1)[1]
+        else:
+            ridx = ratios.index(float(ratio))
+            fb = feedback[:, order][ridx]
+            prior = None
+        responses, model_theta = mo.simulateResponses(
+            n_fake, fb, ipe_samps[order], kappas,
+            prior=prior, p_ignore=0.0, smooth=True)
+
+        ## Model belief over time
+        if fbtype == "nfb":
+            newcond = "M-%s-%s-10" % (group, fbtype)
+            model_experiment[newcond] = pd.DataFrame(
+                responses[:, 0][:, undo_order],
+                columns=cols)
+            model_belief[newcond] = model_theta[0]
+        else:
+            newcond = "M-%s-%s-%s" % (group, fbtype, ratio)
+            model_experiment[newcond] = pd.DataFrame(
+                responses[:, undo_order],
+                columns=cols)
+            model_belief[newcond] = model_theta
+
+        ## Explicit mass judgments
+        if fbtype == "fb":
+            cols = queries[cond].columns
+            idx = np.array(cols) - np.arange(len(cols)) - 7
+            theta = np.exp(model_theta[idx])
+            r1 = ratios.index(1.0)
+            p1 = theta[:, r1]
+            if float(ratio) > 1:
+                pcorrect = np.sum(theta[:, r1:], axis=1) + (p1 / 2.)
+                other = 0.1
+            else:
+                pcorrect = np.sum(theta[:, :r1], axis=1) + (p1 / 2.)
+                other = 10
+            r = np.random.rand(n_fake, 1) < pcorrect[None]
+            responses = np.empty(r.shape)
+            responses[r] = float(ratio)
+            responses[~r] = other
+            model_queries[newcond] = pd.DataFrame(
+                responses, columns=cols)
+
+    return model_experiment, model_queries, model_belief
+
+
 ######################################################################
 # Plotting functions
 ######################################################################
@@ -581,7 +654,7 @@ def make_cmap(name, c1, c2, c3):
     return cmap
 
 
-def savefig(path, fignum=None, close=True, width=None, height=None, ext=None):
+def savefig(path, fignum=None, close=True, width=None, height=None, ext=None, verbose=False):
     """Save a figure from pyplot"""
 
     if fignum is None:
@@ -611,10 +684,12 @@ def savefig(path, fignum=None, close=True, width=None, height=None, ext=None):
         else:
             name = filename + "." + ex
 
-        print "Saving figure to %s...'" % (
-            os.path.join(directory, name)),
+        if verbose:
+            print "Saving figure to %s...'" % (
+                os.path.join(directory, name)),
         plt.savefig(os.path.join(directory, name))
-        print "Done"
+        if verbose:
+            print "Done"
 
     if close:
         plt.clf()
@@ -1022,8 +1097,8 @@ def print_performance_table(performance_table, table_conds,
         elif group == "E":
             name = "Diagnostic"
         else:
-            name = "All"
             continue
+
         # group, condition, model, stat
         table = performance_table[gidx, :, :, 3]
         samplesize = performance_table[gidx, :, :, 4]
