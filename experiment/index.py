@@ -32,7 +32,7 @@ F_CHECK_IP = False
 
 DATA_DIR = "data"
 CONF_DIR = "config"
-HTML_DIR = "html"
+HTML_DIR = "resources/html"
 
 KEYWORDS = ("finished training", "finished experiment",
             "finished posttest", "query ratio")
