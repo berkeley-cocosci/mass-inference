@@ -20,13 +20,13 @@
 
 To run the experiment, you'll need to do two things in particular.
 
-1. **Create a symlink to *stimuli*.** This requires access to the mass
+1. **Create a symlink to `stimuli`.** This requires access to the mass
    learning stimuli repository. If you have this repository checked
    out in a folder called `stimuli` at the same level as this
    repository (i.e., `../stimuli`), then the following command should
    work:
 
-	`ln -s ../stimuli/www stimuli`
+	```ln -s ../stimuli/www stimuli```
 
 2. **Initialize the database.** The database stores IP addresses,
    validation codes, completion codes, conditions, and participant
@@ -34,8 +34,8 @@ To run the experiment, you'll need to do two things in particular.
    should never be committed; you will need to manually initialize
    it. To do this:
 
-	`$ python -i db_tools.py  
+	```$ python -i db_tools.py  
 	create()  
 	Backing up old database to 'data/data.db.bak'...  
 	Creating new database 'data/data.db'...  
-	Created 'Participants' table`
+	Created 'Participants' table```
