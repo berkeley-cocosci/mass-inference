@@ -1,4 +1,4 @@
-# Mass Learning: Experiment
+# Mass Inference Experiment
 
 ## Structure
 
