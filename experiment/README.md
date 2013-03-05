@@ -26,11 +26,12 @@ To run the experiment, you'll need to do a few thingsf first.
 
 2. **Initialize the database.** The database stores IP addresses, validation codes, completion codes, conditions, and participant ids. It is not included in the repository for privacy reasons and should never be committed; you will need to manually initialize it. To do this:
 
-   ```$ python -i db_tools.py  
+   ```
+   $ python -i db_tools.py  
    create()  
    Backing up old database to 'data/data.db.bak'...  
    Creating new database 'data/data.db'...  
-   Created 'Participants' table 
+   Created 'Participants' table
    ```
 
 3. **Make `index.py` executable.** The following command should do it:
