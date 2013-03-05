@@ -1,0 +1,9 @@
+[submodule "data"]
+	path = data
+	url = jhamrick@rainbow-dash:/media/external/Git/mass-learning-data.git
+[submodule "experiment"]
+	path = experiment
+	url = jhamrick@rainbow-dash:/media/external/Git/mass-learning-experiment.git
+[submodule "stimuli"]
+	path = stimuli
+	url = jhamrick@rainbow-dash:/media/external/Git/mass-learning-stimuli.git
