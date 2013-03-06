@@ -4,29 +4,16 @@ import matplotlib.gridspec as gridspec
 import matplotlib
 import numpy as np
 import pandas as pd
-import pickle
 import scipy.stats
 import os
 
 import model_observer as mo
 from stats_tools import normalize
 
-# try to import cogphysics, for things like loading old data
-try:
-    import cogphysics
-except ImportError:
-    print "Could not import cogphysics, some functions may not work"
-    cogphysics = None
-finally:
-    import cogphysics.tower.analysis_tools as tat
-    from cogphysics import RESOURCE_PATH
-
-# for caching function return values
-from joblib import Memory
-memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
-
 # global variables
 HUMAN_DATA_PATH = "../data/human"
+OLD_HUMAN_DATA_PATH = "../data/old-human"
+MODEL_DATA_PATH = "../data/model"
 
 
 ######################################################################
@@ -73,22 +60,13 @@ def get_bad_pids(conds, thresh=1):
 
     """
 
-    if cogphysics is None:
-        raise(RuntimeError, "cogphysics is not imported")
-
     # load valid pids
     valid_pids = np.load(os.path.join(HUMAN_DATA_PATH, "valid_pids.npy"))
     valid_pids = [("%03d" % int(x[0]), str(x[1])) for x in valid_pids]
 
     # load model data
-    rawmodel, sstim, smeta = tat.load_model(1)
-    pfell, nfell, fell_persample = tat.process_model_stability(
-        rawmodel, mthresh=0.095, zscore=False)
-    # convert model stim ids
-    pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
-    with open(pth, "r") as fh:
-        conv = pickle.load(fh)
-        sstim = np.array([conv[x] for x in sstim])
+    d = load_model('stability-sameheight')
+    rawipe, ipe_samps, rawtruth, feedback, kappas, sstim = d
 
     # load posttest data
     failed_pids = []
@@ -101,7 +79,7 @@ def get_bad_pids(conds, thresh=1):
         idx = np.nonzero(np.array(hstim)[:, None] == np.array(sstim)[None])[1]
 
         # model stability
-        ofb = (fell_persample[0, 0, 0, :, 0] > 0)[idx]
+        ofb = feedback[0, idx]
 
         wrong = (df != ofb).sum(axis=1)
         bad = wrong > thresh
@@ -273,202 +251,23 @@ def load_turk(conds, suffixes, thresh=1):
     return training, posttest, experiment, queries
 
 
-# def order_by_trial(human, stimuli, order, truth, ipe):
-
-#     n_subjs = human.shape[1]
-#     n_stim = stimuli.size
-#     n_rep = human.shape[2]
-
-#     htrial = human.transpose((1, 0, 2)).reshape((n_subjs, -1))
-#     horder = order.transpose((1, 0, 2)).reshape((n_subjs, -1))
-
-#     shape = np.ones((n_stim, n_rep))
-#     sidx = list((np.arange(n_stim)[:, None] * shape).ravel())
-
-#     ho = horder[0]
-#     assert (ho == horder).all()
-
-#     sort = np.argsort(ho)
-#     sorder = ho[sort]
-#     sstim = stimuli[..., sidx, :, :][..., sort, :, :]
-#     struth = truth[..., sidx, :, :][..., sort, :, :]
-#     sipe = ipe[..., sidx, :, :][..., sort, :, :]
-
-#     trial_human = None
-#     trial_order = sort[None].copy()
-#     trial_stim = sstim[None].copy()
-#     trial_truth = struth[None].copy()
-#     trial_ipe = sipe[None].copy()
-
-#     for hidx in xrange(n_subjs):
-#         hd = htrial[hidx]
-#         shuman = hd[sort]
-#         if trial_human is None:
-#             trial_human = np.empty(
-#                 (n_subjs,) + shuman.shape, dtype=shuman.dtype)
-#         trial_human[hidx] = shuman
-
-#     out = (trial_human, trial_stim, trial_order, trial_truth, trial_ipe)
-#     return out
-
-
-@memory.cache
-def _summarize(samps, mass, assigns, mthresh=0.095):
-    """Given IPE samples, mass ratios, and mass-to-block assignments,
-    summarize the IPE data. Internal analysis tools function.
-
-    Parameters
-    ----------
-    samps: numpy array of IPE samples
-    mass: mass ratios for each sample
-    assigns: binary assignments of block type
-    mthresh (default 0.095): block movement threshold
+def load_old_human(predicate):
+    """Load human data from original experiments.
 
     Returns
     -------
-    posdiff: difference in position for each block
-    comdiff: difference in center of mass for the tower
-    nfellA: number of blocks of one type to fall
-    nfellB: number of blocks of the other type to fall
+    (human means,
+     raw human data,
+     stimuli names)
 
     """
 
-    # calculate individual block displacements
-    pos0 = samps[..., 1, :3].transpose((1, 0, 2, 3, 4))
-    posT = samps[..., 2, :3].transpose((1, 0, 2, 3, 4))
-    posT[np.any(posT[..., 2] < mthresh, axis=-1)] = np.nan
-    posdiff = posT - pos0
+    with np.load(os.path.join(OLD_HUMAN_DATA_PATH, predicate + ".npz")) as fh:
+        human = fh['human']
+        rawhuman = fh['rawhuman']
+        stims = fh['stims']
 
-    m = mass[0, 0].transpose((1, 0, 2, 3, 4))
-    a = assigns[0, 0].transpose((1, 0, 2, 3, 4))
-
-    # calculate center of mass displacement
-    towermass = np.sum(m, axis=-2)[..., None, :]
-    com0 = np.sum(pos0 * m / towermass, axis=-2)
-    comT = np.sum(posT * m / towermass, axis=-2)
-    comdiff = comT - com0
-
-    # calculate the number of each type of block that fell
-    fellA = np.abs(((a == 0) * posdiff)[..., 2]) > mthresh
-    fellB = np.abs(((a == 1) * posdiff)[..., 2]) > mthresh
-    assert (~(fellA & fellB)).all()
-    nfellA = np.sum(fellA, axis=-1).astype('f8')
-    nfellB = np.sum(fellB, axis=-1).astype('f8')
-    nfellA[np.isnan(comdiff).any(axis=-1)] = np.nan
-    nfellB[np.isnan(comdiff).any(axis=-1)] = np.nan
-
-    return posdiff, comdiff, nfellA, nfellB
-
-
-@memory.cache
-def load_human(predicate):
-    """Load human data from original mass stability or direction
-    prediction experiments.
-
-    Returns
-    -------
-    rawhuman: human data
-    rawhstim: stimuli names
-    raworder: trial ordering
-
-    """
-
-    if cogphysics is None:
-        raise(RuntimeError, "cogphysics is not loaded")
-
-    if predicate == 'stability':
-        exp_ver = 7
-    elif predicate == 'direction':
-        exp_ver = 8
-    else:
-        raise(ValueError, predicate)
-
-    rawhuman, rawhstim, rawhmeta, raworder = tat.load_human(
-        exp_ver=exp_ver, return_order=True)
-    n_subjs, n_reps = rawhuman.shape[1:]
-
-    return rawhuman, rawhstim, raworder
-
-
-@memory.cache
-def load_model_summary(predicate):
-    """Load IPE simulation data for either 'stability',
-    'direction', or 'all' mass stimuli.
-
-    Returns
-    -------
-    data_true: true outcomes (sigma == 0)
-    data_ipe: model samples (sigma > 0)
-    rawsstim: stimuli
-    kappas: log mass ratios
-
-    """
-
-    if cogphysics is None:
-        raise(RuntimeError, "cogphysics is not loaded")
-
-    # using 14 and 15, which correspond to simulations with the wide
-    # range of mass ratios, as opposed to 6 and 7, which only have
-    # mass ratios greater than 1:1
-    if predicate == 'stability':
-        #sim_ver = 6
-        sim_ver = 14
-    elif predicate == 'direction':
-        #sim_ver = 7
-        sim_ver = 15
-    elif predicate == 'all':
-        sim_ver = 16
-    else:
-        raise(ValueError, predicate)
-
-    # load the raw model data
-    rawmodel, rawsstim, rawsmeta = tat.load_model(sim_ver=sim_ver)
-    sigmas = rawsmeta["sigmas"]
-    phis = rawsmeta["phis"]
-    kappas = rawsmeta["kappas"]
-
-    # extract the truth samples
-    sigma0 = list(sigmas).index(0.0)
-    phi0 = list(phis).index(0.0)
-    truth = rawmodel[sigma0, phi0][:, :, [0]]
-
-    # extract IPE samples
-    sigma1 = list(sigmas).index(0.05)
-    ipe = rawmodel[sigma1, phi0]
-
-    # summarize data
-    mass, cpoids, assigns, intassigns = tat.stimnames2mass(
-        rawsstim, kappas)
-    tout = _summarize(truth, mass, assigns)
-    posdiff_true, comdiff_true, nfellA_true, nfellB_true = tout
-    iout = _summarize(ipe, mass, assigns)
-    posdiff_ipe, comdiff_ipe, nfellA_ipe, nfellB_ipe = iout
-
-    # put the summary data into arrays
-    dtype = np.dtype([
-        ('nfellA', 'f8'),
-        ('nfellB', 'f8'),
-        ('comdiff', [('x', 'f8'), ('y', 'f8'), ('z', 'f8')])])
-    data_true = np.empty(nfellA_true.shape, dtype=dtype)
-    data_true['nfellA'] = nfellA_true
-    data_true['nfellB'] = nfellB_true
-    data_true['comdiff']['x'] = comdiff_true[..., 0]
-    data_true['comdiff']['y'] = comdiff_true[..., 1]
-    data_true['comdiff']['z'] = comdiff_true[..., 2]
-    data_ipe = np.empty(nfellA_ipe.shape, dtype=dtype)
-    data_ipe['nfellA'] = nfellA_ipe
-    data_ipe['nfellB'] = nfellB_ipe
-    data_ipe['comdiff']['x'] = comdiff_ipe[..., 0]
-    data_ipe['comdiff']['y'] = comdiff_ipe[..., 1]
-    data_ipe['comdiff']['z'] = comdiff_ipe[..., 2]
-
-    return data_true, data_ipe, rawsstim, kappas
-
-
-# def load(predicate):
-#     rawhuman, rawhstim, raworder = load_human(predicate)
-#     data_true, data_ipe, rawsstim, kappas = load_model(predicate)
-#     return rawhuman, rawhstim, raworder, data_true, data_ipe, kappas
+    return human, rawhuman, stims
 
 
 def load_model(predicate, nthresh0=0, nthresh=0.4, fstim=None):
@@ -494,67 +293,39 @@ def load_model(predicate, nthresh0=0, nthresh=0.4, fstim=None):
     """
 
     # load the summary model data
-    rawtruth0, rawipe0, rawsstim, kappas = load_model_summary(predicate)
+    with np.load(os.path.join(MODEL_DATA_PATH, predicate + ".npz")) as fh:
+        stims0 = fh['stims']
 
-    # figure out the filter indices
-    if fstim is not None:
-        sstim = np.array(rawsstim)
-        idx = np.nonzero((sstim[:, None] == fstim[None, :]))[0]
-        assert idx.size > 0
-    else:
-        idx = slice(None)
+        # figure out the filter indices
+        if fstim is not None:
+            sstim = np.array(stims0)
+            idx = np.nonzero((sstim[:, None] == fstim[None, :]))[0]
+            stims = None
+            assert idx.size > 0
+        else:
+            idx = slice(None)
+            stims = stims0
+
+        truth = fh['truth'][:, idx]
+        ipe = fh['ipe'][idx]
+        kappas = fh['kappas']
 
     # compute feedback/truth
-    nfell = (rawtruth0[idx]['nfellA'] + rawtruth0[idx]['nfellB']) / 10.0
-    feedback = (nfell > nthresh0)[:, :, 0].T
+    feedback = truth > nthresh0
     feedback[np.isnan(feedback)] = 0.5
 
     # compute ipe samples
-    nfell = (rawipe0[idx]['nfellA'] + rawipe0[idx]['nfellB']) / 10.0
-    ipe_samps = (nfell > nthresh).astype('f8')
-    ipe_samps[np.isnan(nfell)] = 0.5
+    ipe_samps = ipe > nthresh
+    ipe_samps[np.isnan(ipe_samps)] = 0.5
 
-    return (rawipe0[idx],
-            ipe_samps,
-            rawtruth0[idx][:, :, 0].T,
-            feedback,
-            kappas)
-
-
-# @memory.cache
-# def make_observer_data(nthresh0, nthresh, nsamps, order=True, ver='stability'):
-
-#     # # new data
-#     # hdata = np.load("../../turk-experiment/data.npz")
-#     # rawhuman = hdata['data']['response'][..., None]
-#     # rawhstim = np.array([x.split("~")[0] for x in hdata['stims']])
-#     # raworder = hdata['data']['trial'][..., None]
-#     # idx = np.nonzero((rawhstim0[:, None] == rawhstim[None, :]))[0]
-#     # rawtruth = rawtruth0[idx].copy()
-#     # rawipe = rawipe0[idx].copy()
-
-#     if order:
-#         out = load(ver)
-#         rawhuman, rawstim, raworder, rawtruth, rawipe, kappas = out
-#         human, stimuli, sort, truth, ipe = order_by_trial(
-#             rawhuman, rawstim, raworder, rawtruth, rawipe)
-#         truth = truth[0]
-#         ipe = ipe[0]
-#     else:
-#         rawtruth, rawipe, rawstim, kappas = load_model(ver)
-#         truth = rawtruth.copy()
-#         ipe = rawipe.copy()
-
-#     ipe_samps = np.concatenate([
-#         ((ipe['nfellA'] + ipe['nfellB']) > nthresh).astype(
-#             'i8')[..., None],
-#         ], axis=-1)[..., :nsamps, :]
-#     feedback = np.concatenate([
-#         ((truth['nfellA'] + truth['nfellB']) > nthresh0).astype(
-#             'i8'),
-#         ], axis=-1)
-
-#     return feedback, ipe_samps
+    out = (ipe,
+           ipe_samps,
+           truth,
+           feedback,
+           kappas)
+    if stims is not None:
+        out = out + (stims,)
+    return out
 
 
 def generate_model_responses(conds, experiment, queries, feedback, ipe_samps,
