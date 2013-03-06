@@ -68,7 +68,7 @@ nthresh = 0.4
 
 # load the data
 rawipe, ipe_samps, rawtruth, feedback, kappas = at.load_model(
-    "stability", nthresh0=nthresh0, nthresh=nthresh, fstim=Stims)
+    "mass-prediction-stability", nthresh0=nthresh0, nthresh=nthresh, fstim=Stims)
 nofeedback = np.empty(feedback.shape[1])*np.nan
 n_kappas = len(kappas)
 
