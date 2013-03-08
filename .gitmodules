@@ -3,7 +3,10 @@
 	url = jhamrick@rainbow-dash:/media/external/Git/mass-inference-data.git
 [submodule "experiment"]
 	path = experiment
-	url = jhamrick@rainbow-dash:/media/external/Git/mass-inference-experiment.git
+	url = git@github.com:jhamrick/mass-inference-experiment.git
 [submodule "stimuli"]
 	path = stimuli
-	url = jhamrick@rainbow-dash:/media/external/Git/mass-inference-stimuli.git
+	url = git@github.com:jhamrick/mass-inference-stimuli.git
+[submodule "analysis"]
+	path = analysis
+	url = git@github.com:jhamrick/mass-inference-analysis.git
