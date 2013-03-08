@@ -15,11 +15,13 @@ from cogphysics import RESOURCE_PATH
 model_datadir = "../data/model/"
 human_datadir = "../data/old-human/"
 
-dataname = [
-    "stability-original",
-    "stability-sameheight",
-    "mass-prediction-stability",
-    ]
+# dataname = [
+#     "stability-original",
+#     "stability-sameheight",
+#     "mass-prediction-stability",
+#     ]
+
+dataname = ["mass-all"]
 
 ##########
 
@@ -90,6 +92,8 @@ def load_simulations(predicate):
         sim_ver = 1
     elif predicate == 'mass-prediction-stability':
         sim_ver = 14
+    elif predicate == 'mass-all':
+        sim_ver = 16
     else:
         raise ValueError, predicate
 
@@ -132,7 +136,10 @@ def load_simulations(predicate):
 
 
 def save_model(predicate):
-    truth, ipe, stims, kappas = load_simulations(predicate)
+    out = load_simulations(predicate)
+    if out is None:
+        return
+    truth, ipe, stims, kappas = out
     if not os.path.exists(model_datadir):
         os.makedirs(model_datadir)
     datapath = os.path.join(model_datadir, predicate + ".npz")
@@ -151,6 +158,8 @@ def load_human(predicate):
         exp_ver = 2
     elif predicate == 'mass-prediction-stability':
         exp_ver = 7
+    elif predicate == 'mass-all':
+        return
     else:
         raise ValueError, predicate
 
@@ -169,7 +178,10 @@ def load_human(predicate):
 
 
 def save_human(predicate):
-    human, human_nonmean, stims = load_human(predicate)
+    out = load_human(predicate)
+    if out is None:
+        return
+    human, human_nonmean, stims = out
     if not os.path.exists(human_datadir):
         os.makedirs(human_datadir)
     datapath = os.path.join(human_datadir, predicate + ".npz")
