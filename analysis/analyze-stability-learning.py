@@ -208,7 +208,6 @@ emj_stats = at.CI(emjs, conds)
 # <codecell>
 
 for i, group in enumerate(groups):
-    allarr = []
 
     for cidx, cond in enumerate(conds):
 	if cond not in emj_stats:
@@ -226,12 +225,12 @@ for i, group in enumerate(groups):
 		sums[idx]-1, n[0], mmean[idx])
 		for idx in xrange(len(sums))]
 
-    print cond
-    print "  mean:  ", np.round(mean, decimals=2)
-    print "  1-tail:", np.round(binom0, decimals=4)
-    print "  2-tail:", np.round(binom1, decimals=4)
-    print "  model: ", np.round(binom2, decimals=4)
-    print
+	print cond
+	print "  mean:  ", np.round(mean, decimals=2)
+	print "  1-tail:", np.round(binom0, decimals=4)
+	print "  2-tail:", np.round(binom1, decimals=4)
+	print "  model: ", np.round(binom2, decimals=4)
+	print
 
 # <markdowncell>
 
