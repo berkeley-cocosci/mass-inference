@@ -1,6 +1,6 @@
 [submodule "data"]
 	path = data
-	url = jhamrick@rainbow-dash:/media/external/Git/mass-inference-data.git
+	url = rainbow-dash:/media/external/Git/mass-inference-data.git
 [submodule "experiment"]
 	path = experiment
 	url = git@github.com:jhamrick/mass-inference-experiment.git
