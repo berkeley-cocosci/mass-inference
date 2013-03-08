@@ -3,95 +3,53 @@
 
 # <codecell>
 
-# imports
-import collections
-import matplotlib.cm as cm
-import matplotlib.gridspec as gridspec
 import numpy as np
-import pdb
 import pickle
-import scipy.stats
 import os
-import time
+import yaml
 
-import cogphysics
-#import cogphysics.lib.circ as circ
-#import cogphysics.lib.nplib as npl
-from cogphysics import path as cppath
-from cogphysics import CPOBJ_LIST_PATH
-import cogphysics.lib.rvs as rvs
+import model_observer as mo
+import analysis_tools as at
+from stats_tools import normalize
 
-import cogphysics.tower.analysis_tools as tat
-import cogphysics.tower.mass.model_observer as mo
-import cogphysics.tower.mass.learning_analysis_tools as lat
+# <markdowncell>
 
-from cogphysics.lib.corr import xcorr
+# ## Configuration
 
 # <codecell>
 
-# global variables
-normalize = rvs.util.normalize
-weightedSample = rvs.util.weightedSample
+listpath = "../stimuli/lists"
+confdir = "../stimuli/meta"
+exp_ver = "F"
+stim_ratios = [0.1, 10]
+nsamps = 300
+nexp = 40
+ntrain = 6
 
-cmap = lat.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
+# <markdowncell>
 
-listpath = cppath(CPOBJ_LIST_PATH, 'local')
-
-# <codecell>
-
-######################################################################
-## Load and process data
-out = lat.load('stability')
-rawhuman, rawhstim, raworder, rawtruth, rawipe, kappas = out
+# ## Load Data
 
 # <codecell>
 
+out = at.load_model('mass-prediction-stability', nthresh0=0.0, nthresh=0.4)
+rawipe, ipe_samps, rawtruth, feedback, kappas, stimuli = out
+
+n_kappas = len(kappas)
 ratios = 10 ** kappas
 ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
-# human, stimuli, sort, truth, ipe = lat.order_by_trial(
-#     rawhuman, rawhstim, raworder, rawtruth, rawipe)
-# truth = truth[0]
-# ipe = ipe[0]
+# find indices of the ratios that we want
+ridx = [int(np.nonzero(ratios==r)[0][0]) for r in stim_ratios]
 
-stimuli = rawhstim.copy()
-truth = rawtruth.copy()
-ipe = rawipe.copy()
+# <markdowncell>
 
-# variables
-n_trial      = stimuli.shape[0]
-n_kappas     = len(kappas)
+# ## Compute informativeness
+# ### Calculate stimuli fall probabilities
 
 # <codecell>
 
-nthresh0 = 1
-nthresh = 4
-nsamps = 300
-ext = ['png', 'pdf']
-f_save = False
-f_close = False
-smooth = True
-idx = [
-    int(np.nonzero(ratios==0.1)[0][0]),
-    int(np.nonzero(ratios==10)[0][0]),
-]
-
-# <codecell>
-
-feedback, ipe_samps = lat.make_observer_data(
-    nthresh0, nthresh, nsamps, order=False)
-feedback = feedback[..., 0].T
-ipe_samps = ipe_samps[..., 0]
-
-# <codecell>
-
-# model_joint, model_theta = mo.ModelObserver(
-#     feedback.T,
-#     ipe_samps[..., 0],
-#     kappas,
-#     prior=None,
-#     smooth=True)
 model_lh = np.log(mo.IPE(feedback, ipe_samps, kappas, True))
 
 # <codecell>
@@ -103,20 +61,22 @@ def KL(qi, idx):
     """
     pi = (np.eye(n_kappas) + (1./n_kappas))[idx][:, None]
     for i, ix in enumerate(idx):
-    pi[i, :, ix] += nsamps
+	pi[i, :, ix] += nsamps
     pi /= nsamps + 1
     kl = np.sum(np.log(pi / qi)*pi, axis=-1)
     return kl
-    
+
+# <markdowncell>
+
+# ### Order by KL divergence
 
 # <codecell>
 
-
 # figure out the starting stimulus (minimum entropy=most information)
-fb = feedback[idx]
-lh = model_lh[idx].copy()
+fb = feedback[ridx]
+lh = model_lh[ridx].copy()
 p = normalize(lh, axis=-1)[1]
-H = KL(np.exp(p), idx)
+H = KL(np.exp(p), ridx)
 
 order = [np.argmin(np.sum(H**2, axis=0))]
 nums = [stimuli[order[0]].split("_")[1]]
@@ -130,7 +90,7 @@ for t in xrange(T-1):
     # calculate possible posterior values for each stimulus
     p = normalize(joint[:, None] + lh, axis=-1)[1]
     # compute entropies
-    H = KL(np.exp(p), idx)
+    H = KL(np.exp(p), ridx)
     # choose stimulus that would result in the lowest entropy, without
     # repeating stimuli
     for s in np.argsort(np.prod(H, axis=0)):
@@ -148,11 +108,15 @@ nums = np.array(nums)
 allJoint = np.array(allJoint)
 allH = np.array(allH)    
 
+# <markdowncell>
+
+# ### Plot model belief, ordered by informativeness
 
 # <codecell>
 
 plt.close('all')
-for i, ix in enumerate(idx):
+cmap = at.make_cmap("lh", (0, 0, 0), (.55, .55, .55), (1, 1, 1))
+for i, ix in enumerate(ridx):
     plt.figure()
     plt.clf()
     plt.suptitle(ratios[ix])
@@ -160,248 +124,198 @@ for i, ix in enumerate(idx):
     plt.plot(allH[:, i])
     plt.ylim(0, 3)
 
-    lat.plot_theta(
-    1, 2, 2,
-        np.exp(normalize(allJoint[:, i], axis=-1)[1]),
-    "",
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
+    at.plot_theta(
+	1, 2, 2,
+	np.exp(normalize(allJoint[:, i], axis=-1)[1]),
+	"",
+	exp=np.e,
+	cmap=cmap,
+	fontsize=14)
+
+# <markdowncell>
+
+# ## Choose stimuli
+# ### Experiment stimuli
+# 
+# Make sure there are (approximately) equal number of stable and
+# unstable stimuli with high informativeness.
 
 # <codecell>
 
-N = 40
-C = 0
-exp = list(order[np.nonzero(fb[0, order] != fb[1, order])[0]][:N])
-fbexp = np.array([np.sum(fb[:, exp], axis=1), np.sum(1-fb[:, exp], axis=1)]).T
+# all stimuli that have opposite feedback
+exp = list(order[np.nonzero(fb[0, order] != fb[1, order])[0]][:nexp])
+# all other stimuli
 newexp = order[np.nonzero(fb[0, order] == fb[1, order])[0]]
+# number of each stimulus type (stable/unstable)
+fbexp = np.array([np.sum(fb[:, exp], axis=1), np.sum(1-fb[:, exp], axis=1)]).T
+
+# add to the list of stimuli from stimuli that have the same feedback,
+# until we get a list of nexp stimuli
 for i in xrange(len(newexp)):
-    print fbexp
     newfb = np.array([fb[:, newexp[i]], 1-fb[:, newexp[i]]]).T
-    print newfb
-    if (fbexp==(N/2)).all():
-        print "done"
+    if (fbexp==(nexp/2)).all():
         break
-    if len(exp) == N:
-        print "oops"
+    if len(exp) == nexp:
         break
-    if ((fbexp + newfb) > (N/2)).any():
-        print "nope"
+    if ((fbexp + newfb) > (nexp/2)).any():
         continue
     fbexp += newfb
     exp.append(newexp[i])
-
 for i in xrange(len(newexp)):
     if newexp[i] in exp:
         continue
-    if len(exp) == N:
+    if len(exp) == nexp:
         break
     exp.append(newexp[i])
 
-assert len(exp) == N
+# make sure we actually have nexp stimuli
+assert len(exp) == nexp
 
-# <codecell>
-
-yes = np.nonzero((fb[:, order] == 0).all(axis=0))[0]
-assert order[yes[-1]] not in exp
-mass_example = stimuli[order[yes[-1]]]
-
-# exp = order[np.sort(np.hstack([
-#     yes[:N/2], 
-#     no[:N/2]]))]
-# if C > 0:
-#     catch = order[np.sort(np.hstack([  
-#         yes[-(C/2)-1:-1],
-#     no[-C/2:]]))]
-# else:
 exp = np.array(exp)
-catch = np.array([], dtype='i8')
-eqorder = np.hstack([exp, catch])
-print eqorder
-print stimuli[eqorder]
-print fb[:, eqorder]
-print np.sum(fb[:, eqorder], axis=1)
+print stimuli[exp]
+print zip(["stable", "unstable"], np.sum(fb[:, exp], axis=1))
+
+# <markdowncell>
+
+# ### Mass example stimulus
 
 # <codecell>
 
-np.random.shuffle(eqorder)
-print eqorder 
-exp_ipe_samps = ipe_samps[eqorder]
-exp_feedback = feedback[idx][:, eqorder]
+# choose a (stable) mass example
+mfall = np.nonzero((fb[:, order] == 0).all(axis=0))[0]
+assert order[mfall[-1]] not in exp
+mass_example = order[mfall[-1]]
+print stimuli[mass_example]
 
-exp_joint, exp_theta = mo.ModelObserver(
-    exp_feedback,
-    exp_ipe_samps,
-    kappas,
-    prior=None,
-    smooth=True)
+# <markdowncell>
 
-plt.figure(1)
-plt.clf()
-for i in xrange(len(idx)):
-    lat.plot_theta(
-    1, len(idx), i+1,
-    np.exp(exp_theta[i]),
-    ratios[idx[i]],
-    exp=1.3,
-    cmap=cmap,
-    fontsize=14)
-
-# lat.plot_theta(
-#     1, 3, 3,
-#     np.exp(exp_theta[1]),
-#     "",
-#     exp=1.3,
-#     cmap=cmap,
-#     fontsize=14)
-# plt.title(ratios[idx[1]])
-
-# exp_feedback = feedback[eqorder][:, [list(kappas).index(0)]]
-# exp_lh, exp_joint, exp_theta = mo.ModelObserver(
-#     exp_ipe_samps,
-#     exp_feedback[:, None],
-#     outcomes=None,
-#     respond=False,
-#     smooth=smooth)
-# lat.plot_theta(
-#     1, 3, 2,
-#     np.exp(exp_theta[0]),
-#     "",
-#     exp=1.3,
-#     cmap=cmap,
-#     fontsize=14)
-# plt.title(ratios[list(kappas).index(0)])
+# ### Used stimuli numbers
 
 # <codecell>
 
-for i, ix in enumerate(idx):
-    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
-    catch_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[catch])]
-    l = os.path.join(listpath, "mass-towers-stability-learning~kappa-%s" % kappas[ix])
-    print l
-    with open(l, "w") as fh:
-        lines = "\n".join(exp_stims)
-        fh.write(lines)
-    
-
-# <codecell>
-
-uidx = np.hstack([exp, catch])
-used = stimuli[uidx]
+used = list(stimuli[exp]) + [stimuli[mass_example]]
 used_nums = [x.split("_")[1] for x in used]
 
-# <codecell>
+# <markdowncell>
 
-# want to pick training towers that are half and half, and are really
-# obvious to people (based on previous experiment results)
-
-rawhuman, hstimuli, hmeta = tat.load_human(2)#0)
-rawmodel, sstimuli, smeta = tat.load_model(1)#0)
-
-human, human_nonmean = tat.process_human_stability(rawhuman, zscore=False)
-pfell, nfell, fell_persample = tat.process_model_stability(
-    rawmodel, mthresh=0.095, zscore=False)
+# ### Training stimuli
+# 
+# We want to pick training towers that are half and half, and are really
+# obvious to people (based on previous sameheight experiment results).
 
 # <codecell>
 
-from cogphysics import RESOURCE_PATH
-pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_stability.pkl')
-#pth = os.path.join(RESOURCE_PATH, 'cpobj_conv_sameheight.pkl')
-with open(pth, "r") as fh:
-    conv = pickle.load(fh)
-hstims = hmeta['dimvals']['stimulus']
-original = np.array([conv[x] for x in hstims])
-original_nums = [x[len('stability'):] for x in original]
+# load sameheight model and human data
+reload(at)
+model_sh = at.load_model('stability-sameheight')
+rawipe_sh, ipe_sh, rawtruth_sh, fb_sh, kappas_sh, sstimuli = model_sh
+human, rawhuman_sh, stim_sh = at.load_old_human('stability-sameheight')
 
-# <codecell>
+sh_nums = [x[len('stability'):] for x in stim_sh]
+ok = np.array([x not in used_nums for x in sh_nums])
 
-original_nums
-ok = np.array([x not in used_nums for x in original_nums])
+tstable = ~fb_sh[0] & ok
+tunstable = fb_sh[0] & ok
 
-# <codecell>
-
-# 1 if stable, 0 if unstable
-ofb = (fell_persample[0,0,0,:,0] > 0)
-tstable = ~(fell_persample[0,0,0,:,0] > 0) & ok
-tunstable = (fell_persample[0,0,0,:,0] > 0) & ok
 hstable = 1 - human.copy()
-
-# <codecell>
-
 hsort = np.argsort(hstable)
 unstable = hsort[np.nonzero(tunstable[hsort])[0]]
 stable = hsort[np.nonzero(tstable[hsort])[0]][::-1]
 
-stable_example = original[stable[0]]
-unstable_example = original[unstable[0]]
+# <codecell>
 
-ntrain = 6
-ntrain_catch = 0
-
-train = np.hstack([
-    unstable[1:(ntrain/2)+1],
-    stable[1:(ntrain/2)+1]])
-train_stims = np.sort(original[train])
-if ntrain_catch > 0:
-    train_catch = np.hstack([
-        unstable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1],
-    stable[(ntrain/2)+1:(ntrain/2)+(ntrain_catch/2)+1]])
-    train_catch_stims = np.sort(original[train_catch])
-else:
-    train_catch = np.array([], dtype='S')
-    train_catch_stims = np.array([], dtype='S')
-
-print train_stims
-print train_catch_stims
+# examples
+stable_example = stable[0]
+unstable_example = unstable[0]
+print stim_sh[stable_example]
+print stim_sh[unstable_example]
 
 # <codecell>
 
-l = os.path.join(listpath, "mass-towers-stability-learning-training")
+# training stimuli
+train = np.hstack([
+    unstable[1:(ntrain/2)+1],
+    stable[1:(ntrain/2)+1]])
+train_stims = np.sort(stim_sh[train])
+print train_stims
+
+# <markdowncell>
+
+# ## Save stimuli lists to file
+# ### Unstable example
+
+# <codecell>
+
+l = os.path.join(listpath, "stability-example-unstable")
+print l
+with open(l, "w") as fh:
+    lines = "\n".join([stim_sh[unstable_example]])
+    fh.write(lines)
+
+# <markdowncell>
+
+# ### Stable example
+
+# <codecell>
+
+l = os.path.join(listpath, "stability-example-stable")
+print l
+with open(l, "w") as fh:
+    lines = "\n".join([stim_sh[stable_example]])
+    fh.write(lines)
+
+# <markdowncell>
+
+# ### Training stimuli
+
+# <codecell>
+
+l = os.path.join(listpath, "mass-learning-training")
 print l
 with open(l, "w") as fh:
     lines = "\n".join(train_stims)
     fh.write(lines)
-# l = os.path.join(listpath, "mass-towers-stability-learning-training-catch")
-# with open(l, "w") as fh:
-#     lines = "\n".join(train_catch_stims)
-#     fh.write(lines)
+
+# <markdowncell>
+
+# ### Mass example
 
 # <codecell>
 
-print "mass:", mass_example
-print "stable:", stable_example
-print "unstable:", unstable_example
-
-# <codecell>
-
-l = os.path.join(listpath, "stable-example")
-print l
-with open(l, "w") as fh:
-    lines = "\n".join([stable_example])
-    fh.write(lines)
-l = os.path.join(listpath, "unstable-example")
-print l
-with open(l, "w") as fh:
-    lines = "\n".join([unstable_example])
-    fh.write(lines)
-for i, ix in enumerate(idx):
+for i, ix in enumerate(ridx):
     l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[ix])
     print l
     with open(l, "w") as fh:
-        lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[ix])])
+        lines = "\n".join(["%s~kappa-%s" % (stimuli[mass_example], kappas[ix])])
         fh.write(lines)
-# l = os.path.join(listpath, "mass-example~kappa-%s" % kappas[nidx])
-# with open(l, "w") as fh:
-#     lines = "\n".join(["%s~kappa-%s" % (mass_example, kappas[nidx])])
-#     fh.write(lines)
+
+# <markdowncell>
+
+# ### Experiment stimuli
 
 # <codecell>
 
-import yaml
-fh = open("../../turk-experiment/www/config/stimuli-info.csv", "w")
+for i, ix in enumerate(ridx):
+    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
+    l = os.path.join(listpath, "mass-learning-%s~kappa-%s" % (exp_ver, kappas[ix]))
+    print l
+    with open(l, "w") as fh:
+        lines = "\n".join(exp_stims)
+        fh.write(lines)    
+
+# <markdowncell>
+
+# ## Save stimuli metadata
+# 
+# For example, stability.
+
+# <codecell>
+
+infofile = "mass-learning-%s-stiminfo.csv" % exp_ver
+fh = open(os.path.join(confdir, infofile), "w")
 fh.write("stimulus,stable,catch\n")
 for i in exp:
-    for ix in idx:
+    for ix in ridx:
         fh.write(",".join(
             ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
              str(not(bool(feedback[ix,i]))),
@@ -411,36 +325,14 @@ for i in exp:
             ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
              str(not(bool(feedback[ix,i]))),
              str(False)]
-             ) + "\n")
-
-for i in catch:
-    for ix in idx:
-        fh.write(",".join(
-            ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
-             str(not(bool(feedback[ix,i]))),
-             str(True)]
-            ) + "\n")
-        fh.write(",".join(
-            ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
-             str(not(bool(feedback[ix,i]))),
-             str(True)]
              ) + "\n")
 
 for i in train:
     fh.write(",".join(
-        [original[i],
-         str(not(bool(ofb[i]))),
+        [stim_sh[i],
+         str(not(bool(fb_sh[0, i]))),
          str(False)]
-         ) + "\n")
-for i in train_catch:
-    fh.write(",".join(
-        [original[i],
-         str(not(bool(ofb[i]))),
-         str(True)]
          ) + "\n")
 
 fh.close()
-
-# <codecell>
-
 
