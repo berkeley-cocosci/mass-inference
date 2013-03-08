@@ -5,8 +5,8 @@ import os
 import numpy as np
 
 ttypes = ["training", "experiment", "queries", "posttest"]
-data_path = "data/human/processed_data"
-data_out_path = "data/human/consolidated_data/%s_data~%s.npz"
+data_path = "../data/human/processed_data"
+data_out_path = "../data/human/consolidated_data/%s_data~%s.npz"
 
 for ttype in ttypes:
 

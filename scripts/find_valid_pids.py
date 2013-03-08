@@ -13,7 +13,8 @@ def get_completed(data_db):
     good = [(x[0], str(x[1]), str(x[2])) for x in vals if x[2] != None]
     return good
 
-base = 'data/human'
+base = '../data/human'
+
 data_dirs = [
     os.path.join(base, x) for x in os.listdir(base) 
     if x.startswith("raw_data")]

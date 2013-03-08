@@ -6,10 +6,12 @@ import json
 cmd_template = "ffmpeg -loglevel error -i %s -r 30 -b 2048k -s 640x480 %s"
 outext = ["mp4", "flv", "ogg", "wmv"]
 
-video_path = "stimuli/www/video"
-image_path = "stimuli/www/images"
-stim_path = "stimuli/render"
-conf_path = "stimuli"
+video_path = "../stimuli/www/video"
+image_path = "../stimuli/www/images"
+stim_path = "../stimuli/render"
+conf_path = "../stimuli/meta"
+
+exp_ver = "E"
 
 DRYRUN = False
 CONVERT = True
@@ -235,7 +237,8 @@ for stim in info_training:
 
 print "Merging info..."
 all_info = merge_info_dicts([
-    parse_info(os.path.join(conf_path, "stimuli-info.csv")),
+    parse_info(os.path.join(
+        conf_path, "mass-learning-%s-stiminfo.csv" % exp_ver)),
     info,
     info_training])
 
@@ -249,7 +252,9 @@ for i in xrange(len(stims)):
     converted_info[newstims[i]] = all_info[stim]
 
 if not DRYRUN:
-    with open(os.path.join(conf_path, "stimuli.json"), "w") as fh:
+    filename = "mass-learning-%s-stimuli.json" % exp_ver
+    with open(os.path.join(conf_path, filename), "w") as fh:
         json.dump(all_info, fh)
-    with open(os.path.join(conf_path, "stimuli-converted.json"), "w") as fh:
+    filename = "mass-learning-%s-stimuli-converted.json" % exp_ver
+    with open(os.path.join(conf_path, filename), "w") as fh:
         json.dump(converted_info, fh)

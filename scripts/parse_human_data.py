@@ -4,9 +4,9 @@ import numpy as np
 import sqlite3 as sql
 import os
 
-render_path = "stimuli/render"
-data_dir = "data/human/raw_data"
-data_out_dir = "data/human/processed_data"
+render_path = "../stimuli/render"
+data_dir = "../data/human/raw_data"
+data_out_dir = "../data/human/processed_data"
 
 def convert_stim_name(name):
     with open(os.path.join(render_path, "conversion.csv"), "r") as fh:
