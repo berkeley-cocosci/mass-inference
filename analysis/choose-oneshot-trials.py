@@ -13,9 +13,8 @@ import shutil
 import model_observer as mo
 import analysis_tools as at
 from stats_tools import normalize
+from cp_helper import copy_stims
 import stats_tools as st
-
-import cogphysics
 
 # <markdowncell>
 
@@ -234,48 +233,6 @@ fig = plt.gcf()
 fig.set_figwidth(8)
 fig.set_figheight(6)
 
-# <codecell>
-
-
-all_stim_idx = sorted(exp)
-all_stim = stimuli[all_stim_idx]
-
-
-for i, ix in enumerate(ridx):
-    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(all_stim)]
-    l = os.path.join(listpath, "mass-towers-oneshot-learning~kappa-%s" % kappas[ix])
-    print l
-    with open(l, "w") as fh:
-        lines = "\n".join(exp_stims)
-        fh.write(lines)
-
-name_table_path = os.path.join(
-    cogphysics.STIM_PATH, 
-    "tower_mass_all",
-    "name_table.pkl")
-with open(name_table_path, "r") as fid:
-    name_table = dict(pickle.load(fid))
-
-newnames = [name_table[x] for x in all_stim]
-newdir1 = os.path.join(cogphysics.STIM_PATH, "tower_mass_oneshot")
-newdir2 = os.path.join(cogphysics.CPOBJ_PATH, "mass", "tower_mass_oneshot")
-if not os.path.exists(newdir1):
-    os.makedirs(newdir1)
-if not os.path.exists(newdir2):
-    os.makedirs(newdir2)
-for name1, name2 in zip(newnames, all_stim):
-    print name1, "-->", name2
-    oldpath1 = os.path.join(
-        cogphysics.STIM_PATH, 
-        "tower_mass_all", name1)
-    newpath1 = os.path.join(newdir1, name1)
-    oldpath2 = os.path.join(
-        cogphysics.CPOBJ_PATH, 
-        "mass", "all-towers", name2)
-    newpath2 = os.path.join(newdir2, name2)
-    shutil.copy(oldpath1, newpath1)
-    shutil.copy(oldpath2, newpath2)
-
 # <markdowncell>
 
 # ### Mass example stimulus
@@ -347,11 +304,13 @@ print train_stims
 
 # <codecell>
 
-l = os.path.join(listpath, "stability-example-unstable-%s" % exp_ver)
+name = "stability-example-unstable-%s" % exp_ver
+l = os.path.join(listpath, name)
 print l
 with open(l, "w") as fh:
     lines = "\n".join([stim_sh[unstable_example]])
     fh.write(lines)
+copy_stims(name, "tower_originalSH")
 
 # <markdowncell>
 
@@ -359,11 +318,13 @@ with open(l, "w") as fh:
 
 # <codecell>
 
-l = os.path.join(listpath, "stability-example-stable-%s" % exp_ver)
+name = "stability-example-stable-%s" % exp_ver
+l = os.path.join(listpath, name)
 print l
 with open(l, "w") as fh:
     lines = "\n".join([stim_sh[stable_example]])
     fh.write(lines)
+copy_stims(name, "tower_originalSH")
 
 # <markdowncell>
 
@@ -371,11 +332,13 @@ with open(l, "w") as fh:
 
 # <codecell>
 
-l = os.path.join(listpath, "mass-oneshot-training-%s" % exp_ver)
+name = "mass-oneshot-training-%s" % exp_ver
+l = os.path.join(listpath, name)
 print l
 with open(l, "w") as fh:
     lines = "\n".join(train_stims)
     fh.write(lines)
+copy_stims(name, "tower_originalSH")
 
 # <markdowncell>
 
@@ -383,12 +346,14 @@ with open(l, "w") as fh:
 
 # <codecell>
 
+name = "mass-oneshot-example-%s" % exp_ver
 for i, ix in enumerate(ridx):
-    l = os.path.join(listpath, "mass-oneshot-example-%s~kappa-%s" % (exp_ver, kappas[ix]))
+    l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ix]))
     print l
     with open(l, "w") as fh:
         lines = "\n".join(["%s~kappa-%s" % (stimuli[mass_example], kappas[ix])])
         fh.write(lines)
+copy_stims(name, "tower_mass_all")
 
 # <markdowncell>
 
@@ -396,13 +361,15 @@ for i, ix in enumerate(ridx):
 
 # <codecell>
 
+name = "mass-oneshot-%s" % exp_ver
 for i, ix in enumerate(ridx):
-    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
-    l = os.path.join(listpath, "mass-oneshot-%s~kappa-%s" % (exp_ver, kappas[ix]))
+    l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ix]))
     print l
+    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
     with open(l, "w") as fh:
         lines = "\n".join(exp_stims)
-        fh.write(lines)    
+        fh.write(lines)
+copy_stims(name, "tower_mass_all")
 
 # <markdowncell>
 
@@ -436,7 +403,4 @@ for i in train:
          ) + "\n")
 
 fh.close()
-
-# <codecell>
-
 
