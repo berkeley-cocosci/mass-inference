@@ -20,12 +20,14 @@ class ViewTowers(ShowBase, object):
 
     towerscene_type = None
 
-    def __init__(self, cpopath):
+    def __init__(self, cpopath, playback):
 
         ShowBase.__init__(self)
 
         # set the path to stimuli objects
         self.cpopath = cpopath
+        # set the filepath for playback files
+        self.pbpath = "../../data/playback"
 
         # position camera, create lights, create the environment (e.g. sky),
         # other misc graphics settings
@@ -49,12 +51,18 @@ class ViewTowers(ShowBase, object):
             mat.clearAmbient()
             mat.clearDiffuse()
 
+        # whether to use playback files
+        self.playback = playback
+
         # set physics properties
         Physics.setGravity((0.0, 0.0, -9.8))
 
         # physics variables
         self.phys_accum = 0
         self.phys_step = 1.0 / 1000.0
+        # for playback
+        self.pb_timePlaying = 0.0
+        self.pb_maxTimePlaying = 1.0
 
         # camera variables
         self.cam_start = 0
@@ -71,7 +79,7 @@ class ViewTowers(ShowBase, object):
 
         # add tasks
         self.taskMgr.add(self.simulatePhysics, "physics")
-        self.taskMgr.add(self.spinCamera, "camera")
+        self.taskMgr.add(self.spinCameraForever, "camera")
 
         # key bindings dictionart
         self.keybindings = {
@@ -82,7 +90,9 @@ class ViewTowers(ShowBase, object):
             'p': self.toggleSpinCamera,
             'w': self.toggleWireframe,
             'arrow_right': self.nextScene,
-            'arrow_left': self.prevScene
+            'arrow_left': self.prevScene,
+            'c': self.resetCamera,
+            'a': self.printAngle
             }
 
         # actually accept keybindings
@@ -91,19 +101,35 @@ class ViewTowers(ShowBase, object):
 
     def loadScene(self, scene, cpopath=None):
 
+        # unload the previous scene
+        print "Unloading previous scene"
         if self.towerscene:
             self.table.parent = None
             self.towerscene.destroy()
             self.towerscene = None
 
+        # if there is no new scene to load, return
         if not scene:
             return
 
+        # set the path from which to load stimuli
         if cpopath is None:
             cpopath = self.cpopath
 
-        self.towerscene = self.towerscene_type.create(
+        # load the new scene
+        print " ** Loading scene '%s'" % scene
+        ts = self.towerscene_type.create(
             scene, table=self.table, cpopath=cpopath)
+        self.towerscene = ts
+
+        # load playback into the new scene
+        if self.playback:
+            print "Loading playback"
+            ts.scene.pbLoad(scene, self.pbpath, fchildren=True)
+            self.pb_maxTimePlaying = ts.scene._playback['times'][-1]
+            ts.setBlockProperties()
+            ts.setGraphics()
+
         self.reset()
 
     def placeCamera(self):
@@ -178,7 +204,8 @@ class ViewTowers(ShowBase, object):
         #     print "Video driver reports that shaders are not supported."
         #     sys.exit()
         # if (base.win.getGsg().getSupportsDepthTexture()==0):
-        #     print "Video driver reports that depth textures are not supported."
+        #     print("Video driver reports that depth textures "
+        #           "are not supported.")
         #     sys.exit()
 
         # # base.camLens.setNearFar(1.0,10000)
@@ -195,19 +222,19 @@ class ViewTowers(ShowBase, object):
         #     props, winprops,
         #     p3d.GraphicsPipe.BFRefuseWindow,
         #     base.win.getGsg(), base.win)
-    
+
         # if (LBuffer == None):
         #    print "Video driver cannot create an offscreen buffer."
         #    sys.exit()
 
         # Ldepthmap = p3d.Texture()
         # LBuffer.addRenderTexture(
-        #     Ldepthmap, 
-        #     p3d.GraphicsOutput.RTMBindOrCopy, 
+        #     Ldepthmap,
+        #     p3d.GraphicsOutput.RTMBindOrCopy,
         #     p3d.GraphicsOutput.RTPDepthStencil)
         # if (base.win.getGsg().getSupportsShadowFilter()):
         #     Ldepthmap.setMinfilter(p3d.Texture.FTShadow)
-        #     Ldepthmap.setMagfilter(p3d.Texture.FTShadow) 
+        #     Ldepthmap.setMagfilter(p3d.Texture.FTShadow)
 
         # slnp = base.makeCamera(LBuffer)
         # slnp.node().setScene(render)
@@ -221,13 +248,13 @@ class ViewTowers(ShowBase, object):
         # render.setShaderInput('ambient', ambient, 0, 0, 1.0)
         # render.setShaderInput('texDisable', 0, 0, 0, 0)
         # render.setShaderInput('scale', 1, 1, 1, 1)
-    
+
         # # Put a shader on the Light camera
         # lci = lp.NodePath(lp.PandaNode("Light Camera Initializer"))
         # lci.setShader(p3d.Shader.load(
         #     os.path.join(cogphysics.SHADER_PATH, 'caster.sha')))
         # slnp.node().setInitialState(lci.getState())
-    
+
         # # Put a shader on the Main camera.
         # # Some video cards have special hardware for shadow maps.
         # # If the card has that, use it.  If not, use a different
@@ -238,7 +265,8 @@ class ViewTowers(ShowBase, object):
         #         os.path.join(cogphysics.SHADER_PATH, 'shadow.sha')))
         # else:
         #     mci.setShader(p3d.Shader.load(
-        #         os.path.join(cogphysics.SHADER_PATH, 'shadow-nosupport.sha')))
+        #         os.path.join(cogphysics.SHADER_PATH,
+        #                      'shadow-nosupport.sha')))
         # base.cam.node().setInitialState(mci.getState())
 
         # render.setShaderInput('push', 0.04, 0.04, 0.04, 0)
@@ -250,31 +278,30 @@ class ViewTowers(ShowBase, object):
         # # slnp.lookAt(0, 0, 0)
         # # slnp.reparentTo(self.lights)
 
+    # def makeEnvironment(self):
+    #     modelpath = cogphysics.path(cogphysics.BAM_PATH, 'local')
+    #     texpath = cogphysics.path(cogphysics.TEXTURE_PATH, 'local')
 
-    def makeEnvironment(self):
-        modelpath = cogphysics.path(cogphysics.BAM_PATH, 'local')
-        texpath = cogphysics.path(cogphysics.TEXTURE_PATH, 'local')
+    #     self.environment = loader.loadModel('smiley.egg')
+    #     self.environment.clearMaterial()
+    #     self.environment.clearTexture()
+    #     self.environment.setAttrib(lp.CullFaceAttrib.make(
+    #         lp.CullFaceAttrib.MCullCounterClockwise))
+    #     self.environment.setScale(20, 20, 20)
+    #     self.environment.setPos(0, 0, 10)
+    #     #self.environment.reparentTo(render)
+    #     self.envtex = loader.loadTexture(
+    #         os.path.join(texpath, 'sky_map.png'))
+    #     self.environment.setTexture(self.envtex, 1)
 
-        self.environment = loader.loadModel('smiley.egg')
-        self.environment.clearMaterial()
-        self.environment.clearTexture()
-        self.environment.setAttrib(lp.CullFaceAttrib.make(
-            lp.CullFaceAttrib.MCullCounterClockwise))
-        self.environment.setScale(20, 20, 20)
-        self.environment.setPos(0, 0, 10)
-        #self.environment.reparentTo(render)
-        self.envtex = loader.loadTexture(
-            os.path.join(texpath, 'sky_map.png'))
-        self.environment.setTexture(self.envtex, 1)
+    #     for mat in self.environment.findAllMaterials():
+    #         mat.clearDiffuse()
+    #         mat.clearAmbient()
+    #         mat.clearSpecular()
+    #         mat.setShininess(0)
 
-        for mat in self.environment.findAllMaterials():
-            mat.clearDiffuse()
-            mat.clearAmbient()
-            mat.clearSpecular()
-            mat.setShininess(0)
-
-        self.environment.setLightOff()
-        self.environment.setColor((.6, .6, .6, 1))
+    #     self.environment.setLightOff()
+    #     self.environment.setColor((.6, .6, .6, 1))
 
     def makeWorld(self):
         self.placeCamera()
@@ -284,8 +311,14 @@ class ViewTowers(ShowBase, object):
         base.disableMouse()
         render.setShaderAuto()
 
-    def toggleDebug(self):
+    def printAngle(self):
+        print self.rotating.getH()
 
+    def resetCamera(self):
+        self.fspincam = False
+        self.rotating.setH(self.cam_start)
+
+    def toggleDebug(self):
         if not self.fdebug:
             render.setShaderOff()
         else:
@@ -298,61 +331,46 @@ class ViewTowers(ShowBase, object):
 
     def togglePhysics(self):
         self.fphysics = not(self.fphysics)
+        state = 'ON' if self.fphysics else 'OFF'
+        print "Physics is %s" % state
 
     def nextScene(self):
         if self.fwireframe:
             self.toggleWireframe()
         self.sidx = min(self.sidx+1, len(self.scenes)-1)
         self.loadScene(self.scenes[self.sidx])
-        print self.scenes[self.sidx]
 
     def prevScene(self):
         if self.fwireframe:
             self.toggleWireframe()
         self.sidx = max(self.sidx-1, 0)
         self.loadScene(self.scenes[self.sidx])
-        print self.scenes[self.sidx]
 
     def reset(self):
-        fwireframe = self.fwireframe
-        if fwireframe:
-            self.toggleWireframe()
-
         self.fphysics = False
         self.phys_accum = 0.0
 
-        self.towerscene.destroyPhysics()
-        Physics.destroyGlobals()
-        Physics.createGlobals()
-        self.towerscene.createPhysics()
-        self.towerscene.scene.reset(fchildren=True)
-        self.towerscene.setBlockProperties()
-        self.towerscene.setGraphics()
+        if not self.playback:
+            fwireframe = self.fwireframe
+            if fwireframe:
+                self.toggleWireframe()
 
-        if fwireframe:
-            self.toggleWireframe()
+            self.towerscene.destroyPhysics()
+            Physics.destroyGlobals()
+            Physics.createGlobals()
+            self.towerscene.createPhysics()
+            self.towerscene.scene.reset(fchildren=True)
+            self.towerscene.setBlockProperties()
+            self.towerscene.setGraphics()
 
-    def _wobberp(self, t, A, profile="sine_sine"):
-        """ Compute wobble angle at time 't', where t \in [0,1] and 'A' is the
-        maximum angle over t=[0,1].
-        
-        profile='sine_sine': uses sin(2*pi*t) * sin(pi*t)
-        profile='sine': uses sin(2*pi*t)
-        """
+            if fwireframe:
+                self.toggleWireframe()
 
-        if profile == "sine_sine":
-            X = np.sin(2. * np.pi * t) * np.sin(np.pi * t)
-            mx = 4. / (3 * np.sqrt(3)) # from wolfram alpha
-        elif profile == "sine":
-            X = np.sin(2. * np.pi * t)
-            mx = 1.
-            
-        # Scale to [-A, A]
-        X *= float(A) / mx
+        else:
+            self.pb_timePlaying = 0.0
+            self.towerscene.scene.pbSeekIndex(0)
 
-        return X
-
-    def spinCamera(self, task):
+    def spinCameraOnce(self, task):
         if self.fspincam:
             self.cam_accum += globalClock.getDt()
             self.cam_accum = min(self.cam_accum, self.total_cam_time)
@@ -375,18 +393,29 @@ class ViewTowers(ShowBase, object):
 
     def simulatePhysics(self, task):
         if self.fphysics:
-            frametime = globalClock.getDt()
-            self.phys_accum += frametime
-            numsteps = int(self.phys_accum / self.phys_step)
-            physutil.step(
-                Physics,
-                cpos=self.towerscene.blocks,
-                numsteps=numsteps,
-                physstep=self.phys_step,
-                forces=[])
-            self.phys_accum -= numsteps * self.phys_step
+            if not self.playback:
+                frametime = globalClock.getDt()
+                self.phys_accum += frametime
+                numsteps = int(self.phys_accum / self.phys_step)
+                physutil.step(
+                    Physics,
+                    cpos=self.towerscene.blocks,
+                    numsteps=numsteps,
+                    physstep=self.phys_step,
+                    forces=[])
+                self.phys_accum -= numsteps * self.phys_step
+            else:
+                self.phys_accum += globalClock.getDt() * 2
+                timedelta = self.towerscene.scene.pbSeekTime(self.phys_accum)
+
+                self.pb_timePlaying += timedelta
+                self.phys_accum -= timedelta
+
+                if self.pb_timePlaying >= self.pb_maxTimePlaying:
+                    self.reset()
+
         return task.cont
-    
+
     def captureImage(self, name=None):
         """
         Captures current screenshot and saves to disk
@@ -417,3 +446,51 @@ class ViewTowers(ShowBase, object):
             # error handling
             raise ValueError("Screenshot NOT saved to filename: '%s'" % name)
 
+    def setWireframeColors(self):
+        assert NotImplementedError
+
+    def unsetWireframeColors(self):
+        assert NotImplementedError
+
+    def toggleWireframe(self):
+
+        if not self.fwireframe:
+            # turn on wireframe mode
+            self.render.setRenderModeWireframe()
+            self.render.setRenderMode(self.render.getRenderMode(), 5.0)
+
+            # remove the table and the environment background from the scene
+            self.table.disableGraphics()
+            self.environment.hide()
+
+            # turn off shaders
+            render.setShaderOff()
+            render.setLightOff()
+
+            # set block wireframe colors
+            self.setWireframeColors()
+
+        else:
+            # turn off wireframe mode
+            self.render.setRenderModeFilled()
+            self.render.setRenderMode(self.render.getRenderMode(), 1.0)
+
+            # add the table and environment background back in
+            self.table.enableGraphics()
+            self.environment.show()
+
+            # turn shading back on
+            render.setShaderAuto()
+
+            # turn lights back on 
+            for light in self.lights.getChildren():
+                render.setLight(light)
+
+            # set the block colors back to normal
+            self.unsetWireframeColors()
+
+        # toggle texturing
+        self.toggleTexture()
+
+        # our own flag to let us know if wirefram is on or off
+        self.fwireframe = not(self.fwireframe)
