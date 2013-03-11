@@ -33,7 +33,7 @@ class TowerScene(object):
             obj.tower = cpObject.loadFile(obj.cpopath, cponame)
 
         # set the label (name) for the scene based on the tower's name
-        obj.scene.label = obj.tower.label
+        obj.scene.label = stimname
         # give the tower a generic name
         obj.tower.label = 'tower'
         # set the parent of the tower to be the scene

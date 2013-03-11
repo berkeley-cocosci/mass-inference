@@ -10,12 +10,17 @@ import numpy as np
 import os
 
 
-class PredictionTowerScene(TowerScene):
+class InferenceTowerScene(TowerScene):
 
     def setBlockProperties(self, kappa=None, mu=None, counterbalance=None):
         if counterbalance is None:
             counterbalance = False
 
+        strparams = self.scene.label.split("~")[1].split("_")
+        paramdict = dict([x.split("-", 1) for x in strparams])
+
+        if not kappa and 'kappa' in paramdict:
+            kappa = float(paramdict['kappa'])
         if kappa:
             d0 = 170
             d1 = 170 * (10 ** kappa)
@@ -29,7 +34,9 @@ class PredictionTowerScene(TowerScene):
         surface = "mass_tower_%02d" % int(mu * 10)
 
         type0 = 'red_block' if not counterbalance else 'yellow_block'
+        color0 = (1, 0, 0, 1) if not counterbalance else (1, 1, 0, 1)
         type1 = 'yellow_block' if not counterbalance else 'red_block'
+        color1 = (1, 1, 0, 1) if not counterbalance else (1, 0, 0, 1)
 
         for bidx, block in enumerate(self.blocks):
             # friction setting
@@ -38,11 +45,13 @@ class PredictionTowerScene(TowerScene):
             # set density according to the counterbalance
             if block.meta['type'] == 0:
                 block.model = type0
+                block.color = color0
                 if d0 is not None:
                     block.density = d0
 
             elif block.meta['type'] == 1:
                 block.model = type1
+                block.color = color1
                 if d1 is not None:
                     block.density = d1
 
