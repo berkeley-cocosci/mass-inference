@@ -14,11 +14,6 @@ import colorsys
 
 class OriginalTowerScene(TowerScene):
 
-    def __init__(self):
-        super(TowerScene, self).__init__()
-        self.cpopath = cogphysics.path(os.path.join(
-            cogphysics.CPOBJ_PATH, "stability"), 'local', 'afs')
-        
     def setBlockProperties(self, kappa=None, mu=None):
         if not mu:
             mu = 0.8
@@ -47,7 +42,7 @@ class OriginalTowerScene(TowerScene):
             block.graphics.node.clearTexture()
             block.graphics.node.setScale((0.1, 0.1, 0.1))
             # block.graphics.node.setDepthOffset(1)
-                
+
             tex = loader.loadTexture(
                 os.path.join(texpath, 'noise.rgb'))
             scl = np.max(block.scale) / 5

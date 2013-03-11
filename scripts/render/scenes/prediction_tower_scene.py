@@ -18,11 +18,24 @@ class PredictionTowerScene(TowerScene):
         hcscale = 0.1
         clip = lambda x: np.clip(x, 0, 1)
 
+        try:
+            strparams = self.scene.label.split("~")[1].split("_")
+            paramdict = dict([x.split("-", 1) for x in strparams])
+        except:
+            paramdict = {}
+
+        if not kappa and 'kappa' in paramdict:
+            kappa = float(paramdict['kappa'])
+
         if kappa:
             d0 = 170
             d1 = 170 * (10 ** kappa)
         else:
+            print "Warning: no kappa specified, defaulting to 1:1 ratio"
             d0 = d1 = None
+
+        self.kappa = kappa
+        print "kappa is", kappa
 
         if not mu:
             mu = 0.8

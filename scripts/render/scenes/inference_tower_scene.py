@@ -16,16 +16,22 @@ class InferenceTowerScene(TowerScene):
         if counterbalance is None:
             counterbalance = False
 
-        strparams = self.scene.label.split("~")[1].split("_")
-        paramdict = dict([x.split("-", 1) for x in strparams])
+        try:
+            strparams = self.scene.label.split("~")[1].split("_")
+            paramdict = dict([x.split("-", 1) for x in strparams])
+        except:
+            paramdict = {}
 
         if not kappa and 'kappa' in paramdict:
             kappa = float(paramdict['kappa'])
+
         if kappa:
             d0 = 170
             d1 = 170 * (10 ** kappa)
         else:
+            print "Warning: no kappa specified, defaulting to 1:1 ratio"
             d0 = d1 = None
+
         self.kappa = kappa
         print "kappa is", kappa
 
@@ -65,34 +71,6 @@ class InferenceTowerScene(TowerScene):
         self.scene.graphics = Graphics
         self.scene.enableGraphics()
         self.scene.propagate('graphics')
-
-        if self.kappa == 0.0 or self.kappa is None:
-            texpath = cogphysics.path(cogphysics.TEXTURE_PATH, 'local')
-            rand = np.random.RandomState(1)
-
-            for block in self.blocks:
-                block.graphics.node.clearMaterial()
-                block.graphics.node.clearTexture()
-                block.graphics.node.setScale((0.1, 0.1, 0.1))
-
-                tex = loader.loadTexture(
-                    os.path.join(texpath, 'noise.rgb'))
-                scl = np.max(block.scale) / 5
-                offset = (
-                    rand.rand()*scl*2 - scl,
-                    rand.rand()*scl*2 - scl)
-                scale = (2.0, 2.0)
-
-                ts = lp.TextureStage('ts_%s' % block.label)
-                block.graphics.node.setTexture(ts, tex, 1)
-                block.graphics.node.setTexOffset(ts, *offset)
-                block.graphics.node.setTexScale(ts, *scale)
-
-                for mat in block.graphics.node.findAllMaterials():
-                    mat.clearDiffuse()
-                    mat.clearAmbient()
-                    mat.setShininess(10)
-                    mat.setSpecular((0.2, 0.2, 0.2, 1.0))
 
         for mat in self.table.graphics.node.findAllMaterials():
             mat.setShininess(0)
