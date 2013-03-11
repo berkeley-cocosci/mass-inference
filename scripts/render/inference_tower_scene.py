@@ -1,5 +1,4 @@
 import cogphysics
-
 from cogphysics.core.graphics import PandaGraphics as Graphics
 from tower_scene import TowerScene
 
