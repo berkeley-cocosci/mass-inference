@@ -1,13 +1,5 @@
-import cogphysics
 from cogphysics.core.graphics import PandaGraphics as Graphics
 from tower_scene_base import TowerScene
-
-import panda3d.core as p3d
-import pandac.PandaModules as pm
-import libpanda as lp
-
-import numpy as np
-import os
 
 
 class InferenceTowerScene(TowerScene):
@@ -24,16 +16,14 @@ class InferenceTowerScene(TowerScene):
 
         if not kappa and 'kappa' in paramdict:
             kappa = float(paramdict['kappa'])
-
-        if kappa:
-            d0 = 170
-            d1 = 170 * (10 ** kappa)
-        else:
+        elif not kappa:
             print "Warning: no kappa specified, defaulting to 1:1 ratio"
-            d0 = d1 = None
+            kappa = 0.0
 
-        self.kappa = kappa
+        d0 = 170
+        d1 = 170 * (10 ** kappa)
         print "kappa is", kappa
+        self.kappa = kappa
 
         if not mu:
             mu = 0.8
