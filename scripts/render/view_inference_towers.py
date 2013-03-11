@@ -4,7 +4,7 @@ import sys
 from optparse import OptionParser
 
 from view_towers import ViewTowers
-from inference_tower_scene import InferenceTowerScene
+from scenes import InferenceTowerScene
 
 
 class ViewInferenceTowers(ViewTowers):

@@ -1,6 +1,6 @@
 import cogphysics
 from cogphysics.core.graphics import PandaGraphics as Graphics
-from tower_scene import TowerScene
+from tower_scene_base import TowerScene
 
 import panda3d.core as p3d
 import pandac.PandaModules as pm

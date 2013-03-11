@@ -6,8 +6,7 @@ from optparse import OptionParser
 from cogphysics.core.physics import OdePhysics as Physics
 from cogphysics.lib.physutil import recordPlayback
 
-from prediction_tower_scene import PredictionTowerScene
-from original_tower_scene import OriginalTowerScene
+from scenes import PredictionTowerScene, OriginalTowerScene
 
 PBPATH = "../../data/playback"
 CPOPATH = "../../stimuli/obj/old"

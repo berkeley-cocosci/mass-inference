@@ -15,12 +15,10 @@ import os
 import sys
 import numpy as np
 
-from tower_scene import TowerScene
-
 
 class ViewTowers(ShowBase, object):
 
-    towerscene_type = TowerScene
+    towerscene_type = None
 
     def __init__(self, cpopath):
 
