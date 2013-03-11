@@ -1,6 +1,6 @@
 import numpy as np
 
-from stat_util import normalize
+from stats_tools import normalize
 
 # from joblib import Memory
 # memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
