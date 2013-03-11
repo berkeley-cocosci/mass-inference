@@ -1,17 +1,14 @@
-import cogphysics
 import cogphysics.lib.physutil as physutil
 
 from cogphysics.core.graphics import PandaGraphics as Graphics
 from cogphysics.core.physics import OdePhysics as Physics
 
 import pandac.PandaModules as pm
-import libpanda as lp
 import panda3d.core as p3d
 from direct.showbase.ShowBase import ShowBase
 p3d.loadPrcFileData("", "prefer-parasite-buffer #f")
 
 import datetime
-import os
 import sys
 import numpy as np
 
@@ -118,6 +115,7 @@ class ViewTowers(ShowBase, object):
 
         # load the new scene
         print " ** Loading scene '%s'" % scene
+        #cponame = scene.split("~")[0] if "~" in scene else scene
         ts = self.towerscene_type.create(
             scene, table=self.table, cpopath=cpopath)
         self.towerscene = ts
@@ -125,7 +123,15 @@ class ViewTowers(ShowBase, object):
         # load playback into the new scene
         if self.playback:
             print "Loading playback"
-            ts.scene.pbLoad(scene, self.pbpath, fchildren=True)
+            try:
+                ts.scene.pbLoad(scene, self.pbpath, fchildren=True)
+            except IOError:
+                # hack
+                if hasattr(ts, 'kappa') and "~" not in scene:
+                    scene = scene + "~kappa-%s" % ts.kappa
+                    ts.scene.pbLoad(scene, self.pbpath, fchildren=True)
+                else:
+                    raise
             self.pb_maxTimePlaying = ts.scene._playback['times'][-1]
             ts.setBlockProperties()
             ts.setGraphics()

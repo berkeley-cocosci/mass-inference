@@ -1,5 +1,3 @@
-import sys
-
 from view_towers_base import ViewTowers
 from scenes import OriginalTowerScene
 from arghelper import parseargs
