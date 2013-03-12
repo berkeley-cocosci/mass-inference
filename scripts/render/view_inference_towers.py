@@ -1,11 +1,11 @@
 from view_towers_base import ViewTowers
-from scenes import InferenceTowerScene
+from scenes import RYTowerScene
 from arghelper import parseargs
 
 
 class ViewInferenceTowers(ViewTowers):
 
-    towerscene_type = InferenceTowerScene
+    towerscene_type = RYTowerScene
 
     def setWireframeColors(self):
         # set block wireframe colors

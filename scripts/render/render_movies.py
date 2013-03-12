@@ -1,7 +1,6 @@
 import sys
 import os
 import subprocess as sp
-import numpy as np
 import shutil
 
 from optparse import OptionParser
@@ -16,13 +15,14 @@ from view_towers_base import ViewTowers
 
 CPOPATH = "../../stimuli/obj/old"
 LISTPATH = "../../stimuli/lists"
+LOGPATH = "../../stimuli/meta"
 MOVIEPATH = "../../stimuli/render"
 
 
 class RenderOneshotMovies(ViewTowers):
 
     def __init__(self, scenes, target, basename, scenetype, feedback,
-                 occlude, counterbalance, render_full):
+                 occlude, counterbalance):
 
         # set the scene type class
         if scenetype == "original":
@@ -41,7 +41,7 @@ class RenderOneshotMovies(ViewTowers):
             print "Creating movie path because it does not exist"
             os.makedirs(self.moviepath)
         self.logpath = os.path.join(
-            self.moviepath, "%s~rendering-info.csv" % basename)
+            LOGPATH, "%s-rendering-info.csv" % target)
 
         # initialize the viewer app
         RenderOneshotMovies.towerscene_type = st
@@ -53,7 +53,7 @@ class RenderOneshotMovies(ViewTowers):
         self.f_feedback = feedback
         self.f_occlude = occlude
         self.f_counterbalance = counterbalance
-        self.f_render_full = render_full
+        self.f_render_full = None
 
         # load/save rendering info
         self.processScenes(scenes)
@@ -64,8 +64,9 @@ class RenderOneshotMovies(ViewTowers):
         self.fps = 30
         self.fmt = "png"
         self.factor = 2
-        self.time = 5.0 if self.f_render_full else 4.0
+        self.fulltime = 6.5
         self.fbtime = 2.5
+        self.time = 4.0
         self.encode = " ".join([
             "mencoder",
             "-really-quiet",
@@ -118,28 +119,7 @@ class RenderOneshotMovies(ViewTowers):
         # load old stimlus info
         stiminfo, angles = self.loadRenderingInfo()
 
-        # process each stim
-        for scene in self.scenes:
-            if scene in stiminfo:
-                # look up previously rendered info, if it exists
-                if 'catch' in stiminfo[scene]:
-                    stiminfo[scene]['full'] = stiminfo[scene]['catch']
-                    del stiminfo[scene]['catch']
-            else:
-                # otherwise save new info
-                basescene = scene.split('~')[0]
-                if basescene in angles:
-                    angle = angles[basescene]
-                else:
-                    angle = np.random.randint(0, 360)
-                    angles[basescene] = angle
-
-                stiminfo[scene] = {}
-                stiminfo[scene]['angle'] = angle
-                stiminfo[scene]['full'] = self.f_render_full
-
         self.stiminfo = stiminfo
-        self.saveRenderingInfo()
 
     def createOccluder(self):
         """Create the occluder, which drops down after people view the
@@ -172,55 +152,14 @@ class RenderOneshotMovies(ViewTowers):
         keys = lines[0].split(",")
         sidx = keys.index('stimulus')
         del keys[sidx]
-        aidx = keys.index('angle')
-        fidx = keys.index('full')
         # build a dictionary of stimuli info
         for line in lines[1:]:
             parts = line.split(",")
             stim = parts[sidx]
             del parts[sidx]
             stiminfo[stim] = dict(zip(keys, parts))
-            # look up the angle, and make sure it matches stimuli
-            # that have the same basic model (but might, for
-            # example, have different kappas)
-            angle = int(parts[aidx])
-            stiminfo[stim]['angle'] = angle
-            basescene = stim.split('~')[0]
-            if basescene in angles:
-                assert angles[basescene] == angle
-            else:
-                angles[basescene] = angle
-            render_full = True if parts[fidx] == 'True' else False
-            assert render_full == self.f_render_full
 
         return stiminfo, angles
-
-    def saveRenderingInfo(self):
-        # find the csv column headers
-        keys = set()
-        for scene in self.stiminfo:
-            keys.update(self.stiminfo[scene].keys())
-        keys = ['stimulus'] + sorted(keys)
-        strkeys = ','.join(keys)
-        print "\n" + "-"*70
-        print "Saving rendering info..."
-        print "\t" + strkeys
-
-        # open the file to write to
-        fh = open(self.logpath, "w")
-        # write headers
-        fh.write(strkeys + "\n")
-
-        for scene in sorted(self.stiminfo.keys()):
-            # load stimulus info
-            info = self.stiminfo[scene]
-            info['stimulus'] = scene
-            line = ','.join([str(info.get(key, '')) for key in keys])
-            print "\t" + line
-            # write to file
-            fh.write(line + "\n")
-
-        fh.close()
 
     ##################################################################
     # Tasks
@@ -230,6 +169,11 @@ class RenderOneshotMovies(ViewTowers):
 
         if self.is_init or self.is_capturing:
             return task.cont
+
+        for taskname in ("simulatePhysics", "dropOccluder", "raiseOcccluder"):
+            if self.taskMgr.hasTaskNamed(taskname):
+                print "Warning: removing task '%s'" % taskname
+                self.taskMgr.remove(taskname)
 
         # render the stimulus presentation
         if self.render_stage is None:
@@ -301,6 +245,7 @@ class RenderOneshotMovies(ViewTowers):
             sys.exit()
 
         # load the next scene in the sequence
+        print "-"*70
         self.nextScene()
         self.currscene = self.scenes[self.sidx]
         self.currmovie = os.path.join(self.moviepath, self.currscene)
@@ -319,8 +264,12 @@ class RenderOneshotMovies(ViewTowers):
         self.occluder.pos = pos
         self.occluder.disableGraphics()
 
+        # set if full recording
+        full = self.stiminfo[self.currscene]['full']
+        self.f_render_full = True if full == "True" else False
+
         # set the camera angle
-        ang = self.stiminfo[self.currscene]['angle']
+        ang = int(self.stiminfo[self.currscene]['angle'])
         self.rotating.setH(ang)
 
         # remove old files
@@ -328,6 +277,21 @@ class RenderOneshotMovies(ViewTowers):
                  for f in os.listdir(self.moviepath)]
         files = [f for f in files if f.startswith(self.currmovie)]
         map(os.remove, files)
+
+        # set block colors
+        color0 = self.stiminfo[self.currscene]['color0']
+        color1 = self.stiminfo[self.currscene]['color1']
+        if color0 and color1:
+            print "Colors are: %s, %s" % (color0, color1)
+            self.towerscene.setBlockProperties(
+                color0=color0, color1=color1)
+
+        # print stability
+        stable = self.stiminfo[self.currscene]['stable']
+        if stable == "True":
+            print "Tower is STABLE"
+        else:
+            print "Tower is UNSTABLE"
 
         # load graphics for the scene
         self.towerscene.setGraphics()
@@ -351,7 +315,7 @@ class RenderOneshotMovies(ViewTowers):
             if self.f_render_full:
                 print " + simulate physics"
                 self.taskMgr.doMethodLater(
-                    0.5, self.simulatePhysics, "simulatePhysics")
+                    1.0, self.simulatePhysics, "simulatePhysics")
             elif self.f_occlude:
                 print " + drop occluder"
                 self.taskMgr.doMethodLater(
@@ -472,7 +436,10 @@ class RenderOneshotMovies(ViewTowers):
     def startRender(self):
         # choose duration, depending on which stage we're at
         if self.render_stage == "stimulus":
-            time = self.time
+            if self.f_render_full:
+                time = self.fulltime
+            else:
+                time = self.time
         elif self.render_stage == "feedback":
             time = self.fbtime
         else:
@@ -547,10 +514,6 @@ if __name__ == "__main__":
         "--occlude",
         action="store_true", dest="occlude", default=False,
         help="drop occluder after stimulus presentation")
-    parser.add_option(
-        "--full",
-        action="store_true", dest="render_full", default=False,
-        help="render the full scene duration (no break, no occlusion)")
 
     (options, args) = parser.parse_args()
     if len(args) == 0:
@@ -575,24 +538,8 @@ if __name__ == "__main__":
     scenetype = options.scenetype
     occlude = options.occlude
     counterbalance = options.counterbalance
-    render_full = options.render_full
-
-    if render_full and not feedback and feedback is not None:
-        print("Warning: the no-feedback flag was passed, but a full "
-              "render was requested. This video WILL have feedback, "
-              "but it will be in the same file as the stimulus "
-              "presentation.")
-    if render_full:
-        feedback = False
-
-    if render_full and occlude:
-        print("Warning: the occlude flag was passed, but a full "
-              "render was requested. This video WILL NOT have "
-              "occlusion because it is incompatible with a full "
-              "render.")
-        occlude = False
 
     app = RenderOneshotMovies(
         scenes, target, options.stype, scenetype, feedback,
-        occlude, counterbalance, render_full)
+        occlude, counterbalance)
     app.run()
