@@ -123,6 +123,18 @@ class ViewTowers(ShowBase, object):
         # load playback into the new scene
         if self.playback:
             print "Loading playback"
+            # hack
+            if "~" in scene:
+                cponame, strparams = scene.split("~")
+                params = strparams.split("_")
+                params = [x for x in params
+                          if not (x.split("-", 1)[0] == "cb")]
+                if len(params) > 0:
+                    strparams = "_".join(params)
+                    scene = "%s~%s" % (cponame, strparams)
+                else:
+                    scene = cponame
+
             try:
                 ts.scene.pbLoad(scene, self.pbpath, fchildren=True)
             except IOError:
@@ -133,25 +145,28 @@ class ViewTowers(ShowBase, object):
                 else:
                     raise
             self.pb_maxTimePlaying = ts.scene._playback['times'][-1]
-            ts.setBlockProperties()
-            ts.setGraphics()
+            # ts.setBlockProperties()
+            # ts.setGraphics()
 
         self.reset()
 
     def placeCamera(self):
-        # Position the camera
-        base.camera.setPos(0, -10, 1.75)
-        #base.camera.setPos(0, -20, 5)
+        base.camera.setPos(0, -8, 2.75)
         base.camera.lookAt(0, 0, 1.5)
-        # lens = lp.PerspectiveLens()
-        # base.cam.node().setLens(lens)
-        # base.camLens = lens
-        #lens = base.camLens
-        #lens.setNearFar(1.0, 1000.0)
-        #lens.setFov(40)
+
+        # # Position the camera
+        # base.camera.setPos(0, -10, 1.75)
+        # #base.camera.setPos(0, -20, 5)
+        # base.camera.lookAt(0, 0, 1.5)
+        # # lens = lp.PerspectiveLens()
+        # # base.cam.node().setLens(lens)
+        # # base.camLens = lens
+        # #lens = base.camLens
+        # #lens.setNearFar(1.0, 1000.0)
+        # #lens.setFov(40)
         self.rotating = render.attachNewNode("rotating")
         base.camera.reparentTo(self.rotating)
-        print base.camera.getPos()
+        # print base.camera.getPos()
 
     def createLights(self):
         # Create some lights

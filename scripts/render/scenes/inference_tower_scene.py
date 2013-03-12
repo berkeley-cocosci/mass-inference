@@ -5,14 +5,18 @@ from tower_scene_base import TowerScene
 class InferenceTowerScene(TowerScene):
 
     def setBlockProperties(self, kappa=None, mu=None, counterbalance=None):
-        if counterbalance is None:
-            counterbalance = False
-
         try:
             strparams = self.scene.label.split("~")[1].split("_")
             paramdict = dict([x.split("-", 1) for x in strparams])
         except:
             paramdict = {}
+
+        if counterbalance is None and 'cb' in paramdict:
+            counterbalance = bool(int(paramdict['cb']))
+        elif counterbalance is None:
+            print("Warning: no counterbalance specified, "
+                  "so not counterbalancing")
+            counterbalance = False
 
         if not kappa and 'kappa' in paramdict:
             kappa = float(paramdict['kappa'])
