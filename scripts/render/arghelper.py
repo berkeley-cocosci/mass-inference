@@ -10,7 +10,7 @@ def parseargs():
              "       %prog [options] stim1 ... stimN")
     parser = OptionParser(usage=usage)
     parser.add_option(
-        "-s", "--stype", dest="stype",
+        "-s", "--stype", dest="stype", action="store",
         help="stimulus type, e.g. original [required]",
         metavar="STIM_TYPE")
     parser.add_option(
