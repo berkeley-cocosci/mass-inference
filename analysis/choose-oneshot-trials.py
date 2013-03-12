@@ -27,10 +27,37 @@ confdir = "../stimuli/meta"
 exp_ver = "F"
 stim_ratios = [0.1, 10]
 nsamps = 300
-nexp = 40
+nexp = 10
 ntrain = 6
 
 cmap = at.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
+rso = np.random.RandomState(8397)
+
+# <markdowncell>
+
+# ### Colors
+
+# <codecell>
+
+colors = {
+    'red': '#FF0033',
+    'orange': '#FF7000',
+    'yellow': '#FFFF00',
+    'green': '#00FF00',
+    'blue': '#0033FF',
+    'magenta': '#FF00FF'
+    }
+
+blacklist = [
+    ('red', 'green'),
+    ('red', 'magenta'),
+    ('red', 'orange'),
+    ('orange', 'yellow'),
+    ('yellow', 'green'),
+    ('orange', 'magenta'),
+    ('orange', 'green'),
+    ]
+blacklist = [tuple(sorted(b)) for b in blacklist]
 
 # <markdowncell>
 
@@ -148,13 +175,13 @@ plt.legend()
 
 # <codecell>
 
-nstim = 10
-target_scores = np.linspace(score[ok].min(), score[ok].max(), nstim)
+nexp = 10
+target_scores = np.linspace(score[ok].min(), score[ok].max(), nexp)
 print "target scores:", target_scores
 scorediff = np.abs(score[:, None] - target_scores)
 scorediff[~ok] = np.inf
 exp = []
-for sidx in xrange(nstim):
+for sidx in xrange(nexp):
     best = np.argmin(scorediff[:, sidx], axis=0)
     exp.append(best)
     print stimuli[best], fb[:, best], score[best], scorediff[best, sidx]
@@ -182,8 +209,9 @@ while more > 0:
     # the target scores with bad feedback
     goodstim = np.argmin(scorediff[:, badidx]*good[:, None], axis=0)
     # choose the best stimulus out of these
-    argbest = badidx[np.argmin(scorediff[goodstim, badidx])]
+    argbest = np.argmin(scorediff[goodstim, badidx])
     best = goodstim[argbest]
+    argbest = badidx[argbest]
     exp[argbest] = best
     
     print stimuli[best], fb[:, best], score[best], scorediff[best, argbest]
@@ -198,10 +226,32 @@ assert num_each_fb[0] == num_each_fb[1]
 
 # <codecell>
 
+cnames = sorted(colors.keys())
+pairs = [tuple(sorted((ci, cj))) for ci in cnames for cj in cnames if ci != cj]
+pairs = sorted(set(pairs))
+pairs = np.array([p for p in pairs if p not in blacklist])
+color_pairs = []
+for i in xrange(nexp+1):
+    pair = pairs[i % len(pairs)]
+    cpair = np.array((colors[pair[0]], colors[pair[1]]))
+    color_pairs.append(cpair[rso.permutation(2)])
+color_pairs = np.array(color_pairs)
+rso.shuffle(color_pairs)
+example_color_pair = color_pairs[0]
+color_pairs = color_pairs[1:]
+color_pairs
+
+# <codecell>
+
+angles = rso.randint(0, 360, nexp + ntrain + 3)
+angles
+
+# <codecell>
+
 low = []
 high = []
 
-for sidx in xrange(nstim):
+for sidx in xrange(nexp):
     model_joint, model_theta = mo.ModelObserver(
 	fb[:, [exp[sidx]]],
 	ipe_samps[[exp[sidx]]],
@@ -379,28 +429,100 @@ copy_stims(name, "tower_mass_all")
 
 # <codecell>
 
-infofile = "mass-oneshot-%s-stiminfo.csv" % exp_ver
-fh = open(os.path.join(confdir, infofile), "w")
-fh.write("stimulus,stable,catch\n")
-for i in exp:
-    for ix in ridx:
-        fh.write(",".join(
-            ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
-             str(not(bool(feedback[ix,i]))),
-             str(False)]
-             ) + "\n")
-        fh.write(",".join(
-            ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
-             str(not(bool(feedback[ix,i]))),
-             str(False)]
-             ) + "\n")
-
-for i in train:
+infofile = os.path.join(confdir, "%s-rendering-info.csv" % exp_ver)
+rikeys = ["stimulus", "angle", "stable", "full", "color0", "color1"]
+    
+with open(infofile, "w") as fh:
+    
+    # column headers
+    fh.write(",".join(rikeys) + "\n")
+    
+    # unstable example
     fh.write(",".join(
-        [stim_sh[i],
-         str(not(bool(fb_sh[0, i]))),
-         str(False)]
-         ) + "\n")
+	[stim_sh[unstable_example],
+	 str(angles[0]),
+	 str(not(bool(fb_sh[0, unstable_example]))),
+	 str(True), '', ''
+	 ]) + "\n")
+
+    # stable example
+    fh.write(",".join(
+	[stim_sh[stable_example],
+	 str(angles[1]),
+	 str(not(bool(fb_sh[0, stable_example]))),
+	 str(True), '', ''
+	 ]) + "\n")
+    
+    # training
+    for k, i in enumerate(train):
+	fh.write(",".join(
+	    [stim_sh[i],
+	     str(angles[2+k]),
+	     str(not(bool(fb_sh[0, i]))),
+	     str(False), '', ''
+	     ]) + "\n")
+
+    for ix in ridx:
+	# mass example
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ix]),
+	     str(angles[2+ntrain]),
+	     str(not(bool(feedback[ix, mass_example]))),
+	     str(True), 
+	     example_color_pair[0],
+	     example_color_pair[1]
+	     ]) + "\n")
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ix]),
+	     str(angles[2+ntrain]),
+	     str(not(bool(feedback[ix, mass_example]))),
+	     str(True), 
+	     example_color_pair[0],
+	     example_color_pair[1]
+	     ]) + "\n")
+	
+	# experiment
+	for k, i in enumerate(exp):
+	    fh.write(",".join(
+		["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
+		 str(angles[3+ntrain+k]),
+		 str(not(bool(feedback[ix,i]))),
+		 str(False),
+		 color_pairs[k, 0],
+		 color_pairs[k, 1]
+		 ]) + "\n")
+	    fh.write(",".join(
+		["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
+		 str(angles[3+ntrain+k]),
+		 str(not(bool(feedback[ix,i]))),
+		 str(False),
+		 color_pairs[k, 0],
+		 color_pairs[k, 1]
+		 ]) + "\n")
+
+fh.close()
+
+# <codecell>
+
+infofile = os.path.join(confdir, "%s-demo-rendering-info.csv" % exp_ver)
+rikeys = ["stimulus", "angle", "stable", "full", "color0", "color1"]
+    
+with open(infofile, "w") as fh:
+    
+    # column headers
+    fh.write(",".join(rikeys) + "\n")
+    
+    # experiment
+    for ix in ridx:
+	for k, i in enumerate(exp):
+	    fh.write(",".join(
+		["%s~kappa-%s" % (stimuli[i], kappas[ix]),
+		 str(angles[3+ntrain+k]),
+		 str(not(bool(feedback[ix,i]))),
+		 str(True),
+		 color_pairs[k, 0],
+		 color_pairs[k, 1]
+		 ]) + "\n")
 
 fh.close()
 
