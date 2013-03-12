@@ -21,7 +21,7 @@ MOVIEPATH = "../../stimuli/render"
 
 class RenderOneshotMovies(ViewTowers):
 
-    def __init__(self, scenes, basename, scenetype, feedback,
+    def __init__(self, scenes, target, basename, scenetype, feedback,
                  occlude, counterbalance, render_full):
 
         # set the scene type class
@@ -35,7 +35,7 @@ class RenderOneshotMovies(ViewTowers):
             raise ValueError("invalid scene type: %s" % scenetype)
 
         # compute various paths
-        self.moviepath = os.path.join(MOVIEPATH, basename)
+        self.moviepath = os.path.join(MOVIEPATH, target)
         print "Rendering movies to '%s'" % self.moviepath
         if not os.path.exists(self.moviepath):
             print "Creating movie path because it does not exist"
@@ -513,10 +513,10 @@ class RenderOneshotMovies(ViewTowers):
 
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] list1 [list2 ... listN]"
+    usage = "usage: %prog [options] target list1 [list2 ... listN]"
     parser = OptionParser(usage=usage)
     parser.add_option(
-        "-s", "--stype", dest="stype",
+        "-s", "--stype", dest="stype", action="store",
         help="stimulus type, e.g. mass-learning [required]",
         metavar="STIM_TYPE")
     parser.add_option(
@@ -554,11 +554,15 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     if len(args) == 0:
+        raise ValueError("no target directory name specified")
+    elif len(args) == 1:
         print("Warning: no stimuli lists passed. "
               "Assuming '%s' instead." % options.stype)
         lists = [options.stype]
+        target = args[0]
     else:
-        lists = args
+        lists = args[1:]
+        target = args[0]
 
     scenes = []
     for listname in lists:
@@ -589,6 +593,6 @@ if __name__ == "__main__":
         occlude = False
 
     app = RenderOneshotMovies(
-        scenes, options.stype, scenetype, feedback,
+        scenes, target, options.stype, scenetype, feedback,
         occlude, counterbalance, render_full)
     app.run()
