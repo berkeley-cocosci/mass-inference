@@ -25,7 +25,7 @@ def parseargs():
         metavar="LOG_RATIO")
     parser.add_option(
         "-p", "--playback", dest="playback",
-        action="store_false", default=True,
+        action="store_true", default=False,
         help="use playback files instead of computing physics")
 
     (options, args) = parser.parse_args()
