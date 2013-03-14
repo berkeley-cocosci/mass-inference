@@ -19,7 +19,7 @@ LOGPATH = "../../stimuli/meta"
 MOVIEPATH = "../../stimuli/render"
 
 
-class RenderOneshotMovies(ViewTowers):
+class RenderMovies(ViewTowers):
 
     def __init__(self, scenes, target, basename, scenetype, feedback,
                  occlude, counterbalance):
@@ -44,7 +44,7 @@ class RenderOneshotMovies(ViewTowers):
             LOGPATH, "%s-rendering-info.csv" % target)
 
         # initialize the viewer app
-        RenderOneshotMovies.towerscene_type = st
+        RenderMovies.towerscene_type = st
         cpopath = os.path.join(CPOPATH, basename)
         ViewTowers.__init__(self, cpopath, playback=True)
 
@@ -310,6 +310,7 @@ class RenderOneshotMovies(ViewTowers):
             # reset the camera
             self.cam_accum = 0
             ret = task.done
+            print " - spin camera"
 
             # start the next step in the scene
             if self.f_render_full:
@@ -345,6 +346,7 @@ class RenderOneshotMovies(ViewTowers):
             new_zpos = end
             self.occluder_accum = 0
             ret = task.done
+            print " - drop occluder"
 
         else:
             amt = self.occluder_accum / time
@@ -372,6 +374,7 @@ class RenderOneshotMovies(ViewTowers):
             new_zpos = end
             self.occluder_accum = 0
             ret = task.done
+            print " - raise occluder"
 
             # disable occluder graphics
             self.occluder.enableGraphics()
@@ -392,6 +395,11 @@ class RenderOneshotMovies(ViewTowers):
         return ret
 
     def simulatePhysics(self, task):
+        # don't actually simulate anything if it's stable
+        stable = self.stiminfo[self.currscene]['stable']
+        if stable:
+            print " - simulate physics"
+            return task.done
         # seek to new time in the playback
         self.phys_accum += globalClock.getDt() * self.factor
         timedelta = self.towerscene.scene.pbSeekTime(self.phys_accum)
@@ -399,6 +407,7 @@ class RenderOneshotMovies(ViewTowers):
         self.phys_accum -= timedelta
         # check if we're past the length of the playback
         if self.pb_timePlaying >= self.pb_maxTimePlaying:
+            print " - simulate physics"
             return task.done
         return task.cont
 
@@ -539,7 +548,7 @@ if __name__ == "__main__":
     occlude = options.occlude
     counterbalance = options.counterbalance
 
-    app = RenderOneshotMovies(
+    app = RenderMovies(
         scenes, target, options.stype, scenetype, feedback,
         occlude, counterbalance)
     app.run()
