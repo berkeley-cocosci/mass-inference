@@ -287,8 +287,8 @@ class RenderMovies(ViewTowers):
                 color0=color0, color1=color1)
 
         # print stability
-        stable = self.stiminfo[self.currscene]['stable']
-        if stable == "True":
+        self.stable = self.stiminfo[self.currscene]['stable']
+        if self.stable == "True":
             print "Tower is STABLE"
         else:
             print "Tower is UNSTABLE"
@@ -396,8 +396,7 @@ class RenderMovies(ViewTowers):
 
     def simulatePhysics(self, task):
         # don't actually simulate anything if it's stable
-        stable = self.stiminfo[self.currscene]['stable']
-        if stable:
+        if self.stable == "True":
             print " - simulate physics"
             return task.done
         # seek to new time in the playback
