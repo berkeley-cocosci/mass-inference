@@ -280,28 +280,33 @@ for sidx in xrange(nexp):
 
 plt.clf()
 plt.subplot(1, 2, 1)
-plt.plot(lhr[expF0], highF0, 'b-', label="F=0")
+plt.plot(lhr[expF0], highF0, 'b-', label="stable")
 plt.plot(lhr[expF0], highF0, 'bo')
-plt.plot(lhr[expF1], highF1, 'r-', label="F=1")
+plt.plot(lhr[expF1], highF1, 'r-', label="unstable")
 plt.plot(lhr[expF1], highF1, 'ro')
-plt.title("Effect of likelihood ratio on model")
-plt.xlabel("Likelihood ratio")
+plt.xlabel("Log likelihood ratio")
+plt.ylabel("Probability of correct ratio")
 plt.ylim(0.0, 1.0)
-plt.legend(loc=0)
+plt.legend(loc=4)
 
 plt.subplot(1, 2, 2)
-plt.plot(gain[expF0], highF0, 'b-', label="F=0")
+plt.plot(gain[expF0], highF0, 'b-', label="stable")
 plt.plot(gain[expF0], highF0, 'bo')
-plt.plot(gain[expF1], highF1, 'r-', label="F=1")
+plt.plot(gain[expF1], highF1, 'r-', label="unstable")
 plt.plot(gain[expF1], highF1, 'ro')
-plt.title("Effect of information on model")
 plt.xlabel("Information gain")
+plt.ylabel("Probability of correct ratio")
 plt.ylim(0.0, 1.0)
-plt.legend(loc=0)
+plt.legend(loc=4)
+
+plt.suptitle("Effect of log likelihood and information on model mass judgments",
+	     fontsize=16)
 
 fig = plt.gcf()
 fig.set_figwidth(10)
 fig.set_figheight(4)
+
+at.savefig("images/stimuli-metrics.png", close=False)
 
 
 # <codecell>
@@ -545,8 +550,10 @@ with open(infofile, "w") as fh:
 	     str(angles[3+ntrain+k]),
 	     str(not(bool(feedback[ridx,i]))),
 	     str(True),
-	     color_pairs[k, 0],
-	     color_pairs[k, 1]
+	     # color_pairs[k, 0],
+	     # color_pairs[k, 1]
+	     colors['red'],
+	     colors['blue'],
 	     ]) + "\n")
 
 fh.close()
