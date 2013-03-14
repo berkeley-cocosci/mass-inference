@@ -66,6 +66,7 @@ class ViewTowers(ShowBase, object):
         self.cam_accum = 0.0
         self.total_cam_time = 2.8
         self.cam_range = np.pi / 2.0
+        self.cam_dir = 1
         self.rotating.setH(self.cam_start)
 
         # task flags
@@ -84,7 +85,8 @@ class ViewTowers(ShowBase, object):
             'space': self.togglePhysics,
             'r': self.reset,
             's': self.captureImage,
-            'p': self.toggleSpinCamera,
+            'p': self.toggleSpinCameraRight,
+            'o': self.toggleSpinCameraLeft,
             'w': self.toggleWireframe,
             'arrow_right': self.nextScene,
             'arrow_left': self.prevScene,
@@ -145,8 +147,8 @@ class ViewTowers(ShowBase, object):
                 else:
                     raise
             self.pb_maxTimePlaying = ts.scene._playback['times'][-1]
-            # ts.setBlockProperties()
-            # ts.setGraphics()
+            ts.setBlockProperties()
+            ts.setGraphics()
 
         self.reset()
 
@@ -347,7 +349,12 @@ class ViewTowers(ShowBase, object):
 
         self.fdebug = not(self.fdebug)
 
-    def toggleSpinCamera(self, task=None):
+    def toggleSpinCameraLeft(self):
+        self.cam_dir = 1
+        self.fspincam = not(self.fspincam)
+
+    def toggleSpinCameraRight(self):
+        self.cam_dir = -1
         self.fspincam = not(self.fspincam)
 
     def togglePhysics(self):
@@ -400,7 +407,7 @@ class ViewTowers(ShowBase, object):
 
             norm_cam_time = self.cam_accum / self.total_cam_time
             ang = norm_cam_time * self.cam_range
-            deg = np.degrees(ang)
+            deg = np.degrees(ang) * self.cam_dir
             self.rotating.setH(deg + self.cam_start)
 
         return task.cont
@@ -408,7 +415,7 @@ class ViewTowers(ShowBase, object):
     def spinCameraForever(self, task):
         if self.fspincam:
             time = globalClock.getDt()
-            deg = time * 60
+            deg = time * 60 * self.cam_dir
             self.rotating.setH(self.rotating.getH() + deg)
         return task.cont
 
