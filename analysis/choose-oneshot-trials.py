@@ -25,13 +25,13 @@ import stats_tools as st
 listpath = "../stimuli/lists"
 confdir = "../stimuli/meta"
 exp_ver = "F"
-stim_ratios = [0.1, 10]
+stim_ratio = 10
 nsamps = 300
-nexp = 10
+nexp = 20
 ntrain = 6
 
 cmap = at.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
-rso = np.random.RandomState(8397)
+rso = np.random.RandomState(23)
 
 # <markdowncell>
 
@@ -65,7 +65,8 @@ blacklist = [tuple(sorted(b)) for b in blacklist]
 
 # <codecell>
 
-out = at.load_model('mass-all', nthresh0=0.0, nthresh=0.4)
+reload(at)
+out = at.load_model('mass-all', nthresh0=(0.0, 0.2), nthresh=0.4)
 rawipe, ipe_samps, rawtruth, feedback, kappas, stimuli = out
 
 n_kappas = len(kappas)
@@ -74,7 +75,7 @@ ratios[kappas < 0] = np.round(ratios[kappas < 0], decimals=2)
 ratios[kappas >= 0] = np.round(ratios[kappas >= 0], decimals=1)
 
 # find indices of the ratios that we want
-ridx = [int(np.nonzero(ratios==r)[0][0]) for r in stim_ratios]
+ridx = int(np.nonzero(ratios==stim_ratio)[0][0])
 r1 = list(ratios).index(1.0)
 
 # numbers for stimuli
@@ -82,147 +83,142 @@ nums = np.array([x.split("_")[1] for x in stimuli])
 
 # <codecell>
 
-model_lh = np.log(mo.IPE(feedback, ipe_samps, kappas, smooth=False))
+model_lh = mo.IPE(feedback, ipe_samps, kappas, smooth=False)
+model_prior = np.log(np.ones(n_kappas) / n_kappas)[None]
+model_prior[:, r1] = -5
+model_prior = normalize(model_prior, axis=1)[1]
+model_joint = model_prior + np.log(model_lh)
 
 # <codecell>
 
 fb = feedback[ridx]
-lh = np.exp(model_lh[ridx].copy())
-p = normalize(lh, axis=-1)[1]
+lh = model_lh[ridx].copy()
+pfell1 = lh * fb[..., None]
+pfell0 = (1-lh) * (1-fb[..., None])
+pfell = pfell0 + pfell1
+prior = np.exp(model_prior)
+post = np.exp(normalize(model_joint, axis=-1)[1])[ridx]
 
 # <codecell>
 
-lowsl = slice(None, r1)
-highsl = slice(r1 + 1, None)
-# lowsl = slice(ridx[0], ridx[0] + 1)
-# highsl = slice(ridx[1], ridx[1] + 1)
+hyps = [
+    slice(None, r1),
+    slice(r1 + 1, None)
+    ]
 
-r1_lh = lh[0, :, r1] / 2.
+hyp_lh = np.empty((lh.shape[0], len(hyps),))
+for hi, h in enumerate(hyps):
+    hyp_lh[:, hi] = lh[:, h].sum(axis=-1)
 
-# likelihood for r < 1 when r0 = 0.1
-low01_lh = lh[0, :, lowsl].sum(axis=-1) + r1_lh
-# likelihood for r > 1 when r0 = 0.1
-high01_lh = lh[0, :, highsl].sum(axis=-1) + r1_lh
-# likelihood ratio for r0 = 0.1
-lhr01 = np.log(low01_lh / high01_lh)
-
-# likelihood for r < 1 when r0 = 10
-low10_lh = lh[1, :, lowsl].sum(axis=-1) + r1_lh
-# likelihood for r > 1 when r0 = 10
-high10_lh = lh[1, :, highsl].sum(axis=-1) + r1_lh
-# likelihood ratio for r0 = 10
-lhr10 = np.log(high10_lh / low10_lh)
+lhr = (np.log(hyp_lh[:, 1] / hyp_lh[:, 0]))
 
 # <codecell>
 
-fb_00 = (fb == np.array([0, 0])[:, None]).all(axis=0)
-fb_01 = (fb == np.array([0, 1])[:, None]).all(axis=0)
-fb_10 = (fb == np.array([1, 0])[:, None]).all(axis=0)
-fb_11 = (fb == np.array([1, 1])[:, None]).all(axis=0)
+# compute information gain
+I0 = np.sum(prior * np.log(1. / prior), axis=-1)
+I1 = np.sum(post * np.log(1. / post), axis=-1)
+gain = I0 - I1
+gain[gain < 0] = np.nan
 
 # <codecell>
 
-same = fb_00 | fb_11
-diff = fb_01 | fb_10
-plt.plot(lhr01[same], lhr10[same], 'b.', alpha=0.5, label='same feedback')
-plt.plot(lhr01[diff], lhr10[diff], 'r.', alpha=0.5, label='different feedback')
-plt.xlabel("Log diagnosticity when $r_0=0.1$")
-plt.ylabel("Log diagnosticity when $r_0=10$")
-plt.title("Stimuli log diagnosticities")
-plt.legend()
+ok = ~np.isnan(lhr) & ~np.isnan(gain)
+print np.sum(ok)
 
 # <codecell>
 
-same = fb_00 | fb_11# & informative
-diff = fb_01 | fb_10# & informative
-
-skew = np.abs(lhr01 - lhr10)
-skewthresh = 0.1
-
-# score = np.sqrt(lhr01**2 + lhr10**2)
-# score[np.sign(lhr01) != np.sign(lhr10)] = np.nan
-# score *= np.sign(lhr01)
-# score = np.sqrt(lhr01**2 + lhr10**2)
-# score[lhr10 < -lhr01] *= -1
-score = (lhr01 + lhr10) / 2.
-
-notnan = ~np.isnan(score)
-ok = (skew <= skewthresh) & diff & notnan
-
-plt.plot(lhr01[ok], lhr10[ok], 'r.', alpha=0.5)
-
-lim = 3
-plt.plot(np.linspace(-lim, lim, 10), np.linspace(-lim, lim, 10), 'k-')
-plt.xlabel("Log diagnosticity when $r_0=0.1$")
-plt.ylabel("Log diagnosticity when $r_0=10$")
-plt.title("Approximately equivalently diagnostic stimuli")
+lhrsort = np.sort(lhr[ok])
+plt.plot(lhrsort)
+plt.xlim(0, lhrsort.size)
+plt.xlabel("Stimulus")
+plt.ylabel("Log likelihood ratio $r_0>1/r_0<1$")
+plt.title("Stimuli likelihood ratios")
 
 # <codecell>
 
-kwargs = {
-    'range': [-2.5, 2.5], 
-    'bins': 51, 
-    'normed': False,
-    'alpha': 0.5,
-    }
-
-plt.hist(score[ok & fb_01], label="no fall/fall", **kwargs)
-plt.hist(score[ok & fb_10], label="fall/no fall", **kwargs)
-plt.xlabel("Log diagnosticity")
-plt.ylabel("Number of stimuli")
-plt.title("Histogram of log diagnosticities")
-plt.legend()
+gainsort = np.sort(gain[ok])
+plt.plot(gainsort)
+plt.xlim(0, gainsort.size)
+plt.xlabel("Stimulus")
+plt.ylabel("Information gain from feedback w/ $r_0=10$")
+plt.title("Stimuli information content")
 
 # <codecell>
 
-nexp = 10
-target_scores = np.linspace(score[ok].min(), score[ok].max(), nexp)
-print "target scores:", target_scores
-scorediff = np.abs(score[:, None] - target_scores)
-scorediff[~ok] = np.inf
-exp = []
-for sidx in xrange(nexp):
-    best = np.argmin(scorediff[:, sidx], axis=0)
-    exp.append(best)
-    print stimuli[best], fb[:, best], score[best], scorediff[best, sidx]
-    bad = nums == nums[best]
-    scorediff[bad] = np.inf
-	
+plt.plot(lhr[ok], gain[ok], '.', alpha=0.5)
+x = np.linspace(-3, 3, 100)
+f = lambda x: (x**2) / 10.
+plt.plot(x, f(x), 'r-')
+plt.xlabel("Log likelihood ratio $r_0>1/r_0<1$")
+plt.ylabel("Information gain")
+plt.title("Likelihood and information when $r_0=10$")
+plt.xlim(-3, 3)
+plt.ylim(0, 0.6)
 
 # <codecell>
 
-num_each_fb = np.sum(fb[:, exp], axis=1)
-more = np.max(num_each_fb) - np.min(num_each_fb)
+target_gain = f(lhr)
+gaindiff = (gain - target_gain)**2
+good = gaindiff < 0.005
+print np.sum(good & ok)
+plt.plot(lhr[ok & good], gain[ok & good], '.')
+plt.plot(x, f(x), 'r-')
+plt.xlabel("Log likelihood ratio")
+plt.ylabel("Information gain")
 
-while more > 0:
-    # the feedback we have too much of and too little of
-    i = np.argmax(num_each_fb)
-    bad_fb = np.array([1-i, i])
-    good_fb = np.array([i, 1-i])
-    # multiplication mask for stimuli that have the feedback we want
-    good = (fb == good_fb[:, None]).all(axis=0).astype('f8')
-    good[good==0] = np.inf
-    # indices of target the scores corresponding to stimuli that have
-    # the feedback we don't want
-    badidx = np.nonzero((fb[:, exp] == bad_fb[:, None]).all(axis=0))[0]
-    # find stimuli with desired feedback that are closest to each of
-    # the target scores with bad feedback
-    goodstim = np.argmin(scorediff[:, badidx]*good[:, None], axis=0)
-    # choose the best stimulus out of these
-    argbest = np.argmin(scorediff[goodstim, badidx])
-    best = goodstim[argbest]
-    argbest = badidx[argbest]
-    exp[argbest] = best
-    
-    print stimuli[best], fb[:, best], score[best], scorediff[best, argbest]
-    bad = nums == nums[best]
-    scorediff[bad] = np.inf
+# <codecell>
 
-    num_each_fb = np.sum(fb[:, exp], axis=1)
-    more = np.max(num_each_fb) - np.min(num_each_fb)
+guess_err = np.abs(np.sum(prior*pfell, axis=1) - fb)
 
-print "num each:", num_each_fb
-assert num_each_fb[0] == num_each_fb[1]
+# <codecell>
+
+lowest = lhr[ok & good].min()
+highest = lhr[ok & good].max()
+lowedge = np.sort(lhr[ok & good])[50]
+highedge = np.sort(lhr[ok & good])[-50]
+edges = np.linspace(lowedge, highedge, (nexp/2)-1)
+# binsize = (np.ptp([lowedge, highedge]) / (nexp-2)) / 2.
+# if (np.abs(edges) < binsize).any():
+#     val = edges[np.nonzero(np.abs(edges) < binsize)]
+#     edges -= (binsize - np.abs(val))
+bins = np.hstack([
+    [lowest],
+    edges,
+    [highest+0.001]])
+inbins = (lhr[:, None] >= bins[:-1]) & (lhr[:, None] < bins[1:])
+print np.sum(inbins, axis=0)
+
+# <codecell>
+
+exp = np.empty((2, nexp/2), dtype='i8')
+nummask = np.ones(lhr.shape, dtype='bool')
+for bi in xrange(nexp/2):
+    for fbtype in rso.permutation(2):
+	inbin = (lhr >= bins[bi]) & (lhr < bins[bi+1])
+	goodfb = fb == fbtype
+	mask = (ok & good & inbin & nummask & goodfb).astype('f8')
+	assert np.sum(mask) > 0
+	mask[mask==0] = np.nan
+	score = guess_err * mask
+	argbest = np.nanargmin(score)
+	best = score[argbest]
+	assert not np.isnan(best)
+	print nums[argbest], fb[argbest], best
+	exp[fbtype, bi] = argbest
+	num = nums[argbest]
+	nummask[nums == num] = False
+exp = exp.T.ravel()
+expF0 = exp[np.nonzero(fb[exp] == 0)[0]]
+expF1 = exp[np.nonzero(fb[exp] == 1)[0]]
+
+# <codecell>
+
+plt.plot(lhr[expF0], gain[expF0], 'bo', label='F=0')
+plt.plot(lhr[expF1], gain[expF1], 'ro', label='F=1')
+plt.xlabel("Likelihood ratio")
+plt.ylabel("Information gain")
+plt.title("Experimental stimuli")
+plt.legend(loc=0)
 
 # <codecell>
 
@@ -233,13 +229,15 @@ pairs = np.array([p for p in pairs if p not in blacklist])
 color_pairs = []
 for i in xrange(nexp+1):
     pair = pairs[i % len(pairs)]
-    cpair = np.array((colors[pair[0]], colors[pair[1]]))
-    color_pairs.append(cpair[rso.permutation(2)])
-color_pairs = np.array(color_pairs)
-rso.shuffle(color_pairs)
+    color_pairs.append(pair[rso.permutation(2)])
+color_pairs_hr = np.array(color_pairs)
+rso.shuffle(color_pairs_hr)
+print color_pairs_hr
+color_pairs = np.array([[colors[p] for p in pair] for pair in color_pairs_hr])
+example_color_pair_hr = color_pairs_hr[0]
 example_color_pair = color_pairs[0]
+color_pairs_hr = color_pairs_hr[1:]
 color_pairs = color_pairs[1:]
-color_pairs
 
 # <codecell>
 
@@ -248,40 +246,72 @@ angles
 
 # <codecell>
 
-low = []
-high = []
+for sidx, best in enumerate(exp):
+    print stimuli[best], fb[best]
+    print "\t lhr   = %s" % lhr[best]
+    print "\t gain  = %s" % gain[best]
+    print "\t err   = %s" % guess_err[best]
+    # print "\t light = %s" % color_pairs_hr[sidx, 0]
+    # print "\t heavy = %s" % color_pairs_hr[sidx, 1]
+    print
+
+# <codecell>
+
+highF0 = []
+highF1 = []
 
 for sidx in xrange(nexp):
     model_joint, model_theta = mo.ModelObserver(
-	fb[:, [exp[sidx]]],
+	fb[[exp[sidx]]],
 	ipe_samps[[exp[sidx]]],
 	kappas,
 	prior=None, 
 	p_ignore=0, 
 	smooth=False)
-
-    r1theta = np.exp(model_theta[:, 1, r1]) / 2.
-    lowtheta = np.exp(model_theta[:, 1, lowsl]).sum(axis=1) + r1theta
-    hightheta = np.exp(model_theta[:, 1, highsl]).sum(axis=1) + r1theta
+    r1theta = np.exp(model_theta[1, r1]) / 2.
+    lowtheta = np.exp(model_theta[1, hyps[0]]).sum() + r1theta
+    hightheta = np.exp(model_theta[1, hyps[1]]).sum() + r1theta
     Z = lowtheta + hightheta
-    low.append((lowtheta / Z)[0])
-    high.append((hightheta / Z)[1])
+    high = hightheta / Z
+    if fb[exp[sidx]] == 0:
+	highF0.append(high)
+    else:
+	highF1.append(high)
 
 plt.clf()
-plt.plot(score[exp], low, label="r=0.1, p(r<1)")
-plt.plot(score[exp], high, label="r=10, p(r>1)")
-plt.title("Model probability of correct ratio")
-plt.xlabel("Score")
-plt.ylim(0.3, 0.8)
+plt.subplot(1, 2, 1)
+plt.plot(lhr[expF0], highF0, 'b-', label="F=0")
+plt.plot(lhr[expF0], highF0, 'bo')
+plt.plot(lhr[expF1], highF1, 'r-', label="F=1")
+plt.plot(lhr[expF1], highF1, 'ro')
+plt.title("Effect of likelihood ratio on model")
+plt.xlabel("Likelihood ratio")
+plt.ylim(0.0, 1.0)
 plt.legend(loc=0)
+
+plt.subplot(1, 2, 2)
+plt.plot(gain[expF0], highF0, 'b-', label="F=0")
+plt.plot(gain[expF0], highF0, 'bo')
+plt.plot(gain[expF1], highF1, 'r-', label="F=1")
+plt.plot(gain[expF1], highF1, 'ro')
+plt.title("Effect of information on model")
+plt.xlabel("Information gain")
+plt.ylim(0.0, 1.0)
+plt.legend(loc=0)
+
+fig = plt.gcf()
+fig.set_figwidth(10)
+fig.set_figheight(4)
 
 
 # <codecell>
 
-at.plot_smoothing(ipe_samps, stimuli, exp, kappas)
+i = 0
+at.plot_smoothing(ipe_samps, stimuli, [exp[i]], kappas)
+print stimuli[exp[i]], fb[exp[i]], lhr[exp[i]], guess_err[exp[i]]
 fig = plt.gcf()
-fig.set_figwidth(8)
-fig.set_figheight(6)
+fig.set_figwidth(6)
+fig.set_figheight(4)
 
 # <markdowncell>
 
@@ -290,10 +320,10 @@ fig.set_figheight(6)
 # <codecell>
 
 # choose a (stable) mass example
-goodex = np.nonzero((lh[:, :, [0]] == lh).all(axis=-1).all(axis=0) & fb_00)[0]
-goodex = [x for x in goodex if x not in exp]
-mass_example = goodex[0]
-print stimuli[mass_example]
+goodex = np.nonzero((lh[:, [0]] == lh).all(axis=1) & (fb == 0))[0]
+goodex = [x for x in goodex if nums[x] not in list(nums[exp])]
+mass_example = goodex[np.argmin(lh[goodex, 0])]
+print stimuli[mass_example], lh[mass_example]
 
 # <markdowncell>
 
@@ -301,8 +331,7 @@ print stimuli[mass_example]
 
 # <codecell>
 
-used = list(stimuli[exp]) + [stimuli[mass_example]]
-used_nums = [x.split("_")[1] for x in used]
+used_nums = list(nums[exp]) + [nums[mass_example]]
 
 # <markdowncell>
 
@@ -320,10 +349,10 @@ rawipe_sh, ipe_sh, rawtruth_sh, fb_sh, kappas_sh, sstimuli = model_sh
 human, rawhuman_sh, stim_sh = at.load_old_human('stability-sameheight')
 
 sh_nums = [x[len('stability'):] for x in stim_sh]
-ok = np.array([x not in used_nums for x in sh_nums])
+oknums = np.array([x not in used_nums for x in sh_nums])
 
-tstable = ~fb_sh[0] & ok
-tunstable = fb_sh[0] & ok
+tstable = (fb_sh[0] == 0) & oknums
+tunstable = (fb_sh[0] == 1) & oknums
 
 hstable = 1 - human.copy()
 hsort = np.argsort(hstable)
@@ -397,12 +426,11 @@ copy_stims(name, "tower_originalSH")
 # <codecell>
 
 name = "mass-oneshot-example-%s" % exp_ver
-for i, ix in enumerate(ridx):
-    l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ix]))
-    print l
-    with open(l, "w") as fh:
-        lines = "\n".join(["%s~kappa-%s" % (stimuli[mass_example], kappas[ix])])
-        fh.write(lines)
+l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ridx]))
+print l
+with open(l, "w") as fh:
+    lines = "\n".join(["%s~kappa-%s" % (stimuli[mass_example], kappas[ridx])])
+    fh.write(lines)
 copy_stims(name, "tower_mass_all")
 
 # <markdowncell>
@@ -412,13 +440,12 @@ copy_stims(name, "tower_mass_all")
 # <codecell>
 
 name = "mass-oneshot-%s" % exp_ver
-for i, ix in enumerate(ridx):
-    l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ix]))
-    print l
-    exp_stims = ["%s~kappa-%s" % (x, kappas[ix]) for x in np.sort(stimuli[exp])]
-    with open(l, "w") as fh:
-        lines = "\n".join(exp_stims)
-        fh.write(lines)
+l = os.path.join(listpath, "%s~kappa-%s" % (name, kappas[ridx]))
+print l
+exp_stims = ["%s~kappa-%s" % (x, kappas[ridx]) for x in stimuli[exp]]
+with open(l, "w") as fh:
+    lines = "\n".join(exp_stims)
+    fh.write(lines)
 copy_stims(name, "tower_mass_all")
 
 # <markdowncell>
@@ -462,43 +489,42 @@ with open(infofile, "w") as fh:
 	     str(False), '', ''
 	     ]) + "\n")
 
-    for ix in ridx:
-	# mass example
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ix]),
-	     str(angles[2+ntrain]),
-	     str(not(bool(feedback[ix, mass_example]))),
-	     str(True), 
-	     example_color_pair[0],
-	     example_color_pair[1]
-	     ]) + "\n")
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ix]),
-	     str(angles[2+ntrain]),
-	     str(not(bool(feedback[ix, mass_example]))),
-	     str(True), 
-	     example_color_pair[0],
-	     example_color_pair[1]
-	     ]) + "\n")
+    # mass example
+    fh.write(",".join(
+	["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ridx]),
+	 str(angles[2+ntrain]),
+	 str(not(bool(feedback[ridx, mass_example]))),
+	 str(True), 
+	 example_color_pair[0],
+	 example_color_pair[1]
+	 ]) + "\n")
+    fh.write(",".join(
+	["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ridx]),
+	 str(angles[2+ntrain]),
+	 str(not(bool(feedback[ridx, mass_example]))),
+	 str(True), 
+	 example_color_pair[0],
+	 example_color_pair[1]
+	 ]) + "\n")
 	
-	# experiment
-	for k, i in enumerate(exp):
-	    fh.write(",".join(
-		["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ix]),
-		 str(angles[3+ntrain+k]),
-		 str(not(bool(feedback[ix,i]))),
-		 str(False),
-		 color_pairs[k, 0],
-		 color_pairs[k, 1]
-		 ]) + "\n")
-	    fh.write(",".join(
-		["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ix]),
-		 str(angles[3+ntrain+k]),
-		 str(not(bool(feedback[ix,i]))),
-		 str(False),
-		 color_pairs[k, 0],
-		 color_pairs[k, 1]
-		 ]) + "\n")
+    # experiment
+    for k, i in enumerate(exp):
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ridx]),
+	     str(angles[3+ntrain+k]),
+	     str(not(bool(feedback[ridx,i]))),
+	     str(False),
+	     color_pairs[k, 0],
+	     color_pairs[k, 1]
+	     ]) + "\n")
+	fh.write(",".join(
+	    ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ridx]),
+	     str(angles[3+ntrain+k]),
+	     str(not(bool(feedback[ridx,i]))),
+	     str(False),
+	     color_pairs[k, 0],
+	     color_pairs[k, 1]
+	     ]) + "\n")
 
 fh.close()
 
@@ -513,16 +539,15 @@ with open(infofile, "w") as fh:
     fh.write(",".join(rikeys) + "\n")
     
     # experiment
-    for ix in ridx:
-	for k, i in enumerate(exp):
-	    fh.write(",".join(
-		["%s~kappa-%s" % (stimuli[i], kappas[ix]),
-		 str(angles[3+ntrain+k]),
-		 str(not(bool(feedback[ix,i]))),
-		 str(True),
-		 color_pairs[k, 0],
-		 color_pairs[k, 1]
-		 ]) + "\n")
+    for k, i in enumerate(exp):
+	fh.write(",".join(
+	    ["%s~kappa-%s" % (stimuli[i], kappas[ridx]),
+	     str(angles[3+ntrain+k]),
+	     str(not(bool(feedback[ridx,i]))),
+	     str(True),
+	     color_pairs[k, 0],
+	     color_pairs[k, 1]
+	     ]) + "\n")
 
 fh.close()
 

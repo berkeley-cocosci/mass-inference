@@ -311,12 +311,20 @@ def load_model(predicate, nthresh0=0, nthresh=0.4, fstim=None):
         kappas = fh['kappas']
 
     # compute feedback/truth
-    feedback = truth > nthresh0
-    feedback[np.isnan(feedback)] = 0.5
+    if hasattr(nthresh0, "__iter__"):
+        lower, upper = nthresh0
+        print "Note: interval %s specified for nthresh0" % (nthresh0,)
+        feedback = (truth > upper).astype('f8')
+        feedback[truth <= upper] = np.nan
+        feedback[truth <= lower] = 0
+        feedback[np.isnan(truth)] = np.nan
+    else:
+        feedback = (truth > nthresh0).astype('f8')
+        feedback[np.isnan(truth)] = 0.5
 
     # compute ipe samples
-    ipe_samps = ipe > nthresh
-    ipe_samps[np.isnan(ipe_samps)] = 0.5
+    ipe_samps = (ipe > nthresh).astype('f8')
+    ipe_samps[np.isnan(ipe)] = 0.5
 
     out = (ipe,
            ipe_samps,
