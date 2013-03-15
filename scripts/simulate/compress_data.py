@@ -125,7 +125,7 @@ def compress(sim_ver, sigmas0=None, phis0=None, kappas0=None, timeidx=None):
     np.save(os.path.join(SAVEPATH, npyname), data)
 
 if __name__ == "__main__":
-    usage = "usage: %prog [options] target"
+    usage = "usage: %prog [options] sim_ver"
     parser = OptionParser(usage=usage)
     parser.add_option(
         "--sigmas", dest="sigmas", action="store",
@@ -150,11 +150,11 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
     if len(args) == 0:
-        raise ValueError("no target directory name specified")
+        raise ValueError("no simulation version specified")
     else:
-        target = args[0]
+        sim_ver = args[0]
 
-    compress(target,
+    compress(sim_ver,
              sigmas0=options.sigmas,
              phis0=options.phis,
              kappas0=options.kappas,
