@@ -31,10 +31,11 @@ def compress(sim_ver, sigmas0=None, phis0=None, kappas0=None, timeidx=None):
     # Load the conversion table between old and new names
     with open(name_table_path, "r") as fh:
         name_table = pickle.load(fh)
+    name_table_inv = dict([(name_table[x], x) for x in name_table])
     # Convert the new names back to old names
     old_stims = []
     for new_name in new_stims:
-        old_name = name_table[new_name]
+        old_name = name_table_inv[new_name]
         old_stims.append(old_name)
         print "%s --> %s" % (new_name, old_name)
 
