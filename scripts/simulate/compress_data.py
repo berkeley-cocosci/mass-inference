@@ -115,6 +115,10 @@ def compress(sim_ver, sigmas0=None, phis0=None, kappas0=None, timeidx=None):
     metaname = "%s.meta" % sim_ver
     npyname = "%s.npy" % sim_ver
 
+    # create save directory if it does not exist
+    if not os.path.exists(SAVEPATH):
+        os.makedirs(SAVEPATH)
+    # save metadata and data
     with open(os.path.join(SAVEPATH, metaname), "w") as fid:
         pickle.dump(meta, fid)
     print "Saved to %s" % os.path.join(SAVEPATH, npyname)
