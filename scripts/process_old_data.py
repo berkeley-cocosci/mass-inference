@@ -7,8 +7,11 @@ consistent access.
 import numpy as np
 import os
 import pickle
+
 import cogphysics.tower.analysis_tools as tat
 from cogphysics import RESOURCE_PATH
+
+from util.summarize import compute_nfell
 
 ## Configuration
 
@@ -24,54 +27,6 @@ human_datadir = "../data/old-human/"
 dataname = ["mass-all"]
 
 ##########
-
-
-def _summarize(samps, mass, assigns, mthresh=0.095):
-    """Given IPE samples, mass ratios, and mass-to-block assignments,
-    summarize the IPE data. Internal analysis tools function.
-
-    Parameters
-    ----------
-    samps: numpy array of IPE samples
-    mass: mass ratios for each sample
-    assigns: binary assignments of block type
-    mthresh (default 0.095): block movement threshold
-
-    Returns
-    -------
-    posdiff: difference in position for each block
-    comdiff: difference in center of mass for the tower
-    nfellA: number of blocks of one type to fall
-    nfellB: number of blocks of the other type to fall
-
-    """
-
-    # calculate individual block displacements
-    pos0 = samps[..., 1, :3].transpose((1, 0, 2, 3, 4))
-    posT = samps[..., 2, :3].transpose((1, 0, 2, 3, 4))
-    posT[np.any(posT[..., 2] < mthresh, axis=-1)] = np.nan
-    posdiff = posT - pos0
-
-    m = mass[0, 0].transpose((1, 0, 2, 3, 4))
-    a = assigns[0, 0].transpose((1, 0, 2, 3, 4))
-
-    # calculate center of mass displacement
-    towermass = np.sum(m, axis=-2)[..., None, :]
-    com0 = np.sum(pos0 * m / towermass, axis=-2)
-    comT = np.sum(posT * m / towermass, axis=-2)
-    comdiff = comT - com0
-
-    # calculate the number of each type of block that fell
-    fellA = np.abs(((a == 0) * posdiff)[..., 2]) > mthresh
-    fellB = np.abs(((a == 1) * posdiff)[..., 2]) > mthresh
-    assert (~(fellA & fellB)).all()
-    nfellA = np.sum(fellA, axis=-1).astype('f8')
-    nfellB = np.sum(fellB, axis=-1).astype('f8')
-    nfellA[np.isnan(comdiff).any(axis=-1)] = np.nan
-    nfellB[np.isnan(comdiff).any(axis=-1)] = np.nan
-    nfell = nfellA + nfellB
-
-    return nfell
 
 
 def load_simulations(predicate):
@@ -126,8 +81,8 @@ def load_simulations(predicate):
         # summarize data
         mass, cpoids, assigns, intassigns = tat.stimnames2mass(
             stims, kappas)
-        nfell_truth = _summarize(truth, mass, assigns)[:, :, 0].T
-        nfell_ipe = _summarize(ipe, mass, assigns)
+        nfell_truth = compute_nfell(truth, mass, assigns)[:, :, 0].T
+        nfell_ipe = compute_nfell(ipe, mass, assigns)
 
     nfell_truth /= 10.
     nfell_ipe /= 10.
