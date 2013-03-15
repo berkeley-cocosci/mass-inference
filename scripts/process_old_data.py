@@ -95,7 +95,7 @@ def load_simulations(predicate):
     elif predicate == 'mass-all':
         sim_ver = 16
     else:
-        raise ValueError, predicate
+        raise ValueError(predicate)
 
     # load the raw model data
     rawmodel, stims, meta = tat.load_model(sim_ver=sim_ver)
@@ -161,7 +161,7 @@ def load_human(predicate):
     elif predicate == 'mass-all':
         return
     else:
-        raise ValueError, predicate
+        raise ValueError(predicate)
 
     # load the raw model data
     rawhuman, stims, meta = tat.load_human(exp_ver=exp_ver)
