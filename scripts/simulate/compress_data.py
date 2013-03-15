@@ -81,7 +81,7 @@ def compress(sim_ver, sigmas0=None, phis0=None, kappas0=None, timeidx=None):
     timeax = 4
 
     # Path where the simulation data and meta data were saved
-    sim_root = os.path.join(script["sim_dir"], "%%s.npy")
+    sim_root = os.path.join(script["sim_dir"], "%s.npy")
     # Reduce the data down to one file
     data = np.empty((n_sigmas, n_phis, n_kappas, n_stims, n_samples,
                      n_times, n_blocks, n_states))
