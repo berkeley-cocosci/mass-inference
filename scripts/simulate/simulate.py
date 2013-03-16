@@ -104,8 +104,6 @@ def simulate(sim_ver, f_graphics, f_save):
         os.makedirs(sim_dir)
 
     # Load and cache stimuli
-    # stim_paths = np.array_split(
-    #     info["loadinfo"]["stim_paths"], numthreads)[ithread]
     stim_paths = info["loadinfo"]["stim_paths"]
     print "Loading and caching %d stimuli..." % len(stim_paths)
     stims, stim_caches = st.load_and_cache(stim_paths)
@@ -319,7 +317,6 @@ def simulate(sim_ver, f_graphics, f_save):
                         ######################################
                         # Sync to graphics -- DEBUGGING
                         map(sync, *zip(*sync_nodes))
-                        #[sync(sn[0], sn[1]) for sn in sync_nodes]
                         lbase.render_frame()
                         ######################################
 
