@@ -79,7 +79,7 @@ def process(sim_ver, summary_type):
     """
 
     if summary_type == "nfell":
-         summary_func = summarize.compute_nfell
+        summary_func = summarize.compute_nfell
 
     # load the raw model data
     rawmodel, stims, meta = load(sim_ver)
