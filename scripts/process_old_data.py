@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Uses cogphysics data handling functions to load model and old human
 data and save it into the 'data' submodule for easier and more
 consistent access.

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-""" Script that compresses data further by computing specific features
+""" Script that compresses simulation data by computing specific features
 (e.g., stability).
 
 """

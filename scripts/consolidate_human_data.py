@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Consolidates numpy arrays of individual participants into a single
 array"""
 

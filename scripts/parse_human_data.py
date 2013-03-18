@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """Parses raw experiment csv files into numpy arrays"""
 
 import numpy as np
