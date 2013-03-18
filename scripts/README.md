@@ -2,13 +2,15 @@
 
 ## Directories
 
-* `scripts/render`: Scripts to view stimuli and render videos of them.
+* [`scripts/render`](https://github.com/jhamrick/mass-inference/tree/master/scripts/render):
+  Scripts to view stimuli and render videos of them.
 
-* `scripts/simulate`: Scripts to generate raw IPE ("Intuitive Physics
-  Engine") simulations.
+* [`scripts/simulate`](https://github.com/jhamrick/mass-inference/tree/master/scripts/simulate):
+  Scripts to generate raw IPE ("Intuitive Physics Engine")
+  simulations.
 
-* `scripts/util`: Module containing helper functions for programs in
-  `scripts`.
+* [`scripts/util`](https://github.com/jhamrick/mass-inference/tree/master/scripts/util):
+  Module containing helper functions for programs in `scripts`.
 
 ## Scripts
 
