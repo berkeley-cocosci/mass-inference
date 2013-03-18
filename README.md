@@ -7,20 +7,23 @@ objects.
 
 ### Submodules
 
-* [https://github.com/jhamrick/mass-inference-analysis](`analysis`
-  submodule): Code that involves analysis of human and/or model data,
-  such as using model predictions to select stimuli, or evaluating
-  experiment data under the model.
+* [`analysis`
+  submodule](https://github.com/jhamrick/mass-inference-analysis):
+  Code that involves analysis of human and/or model data, such as
+  using model predictions to select stimuli, or evaluating experiment
+  data under the model.
 
 * `data` submodule: Storage of human and model data. Not publicly
   available for privacy reasons.
 
-* [https://github.com/jhamrick/mass-inference-experiment](`experiment`
-  submodule): Code to run the experiments.
+* [`experiment`
+  submodule](https://github.com/jhamrick/mass-inference-experiment):
+  Code to run the experiments.
 
-* [https://github.com/jhamrick/mass-inference-stimuli](`stimuli`
-  submodule): Storage of stimuli in various forms, including code
-  objects and rendered video.
+* [`stimuli`
+  submodule](https://github.com/jhamrick/mass-inference-stimuli):
+  Storage of stimuli in various forms, including code objects and
+  rendered video.
 
 ### Directories
 
