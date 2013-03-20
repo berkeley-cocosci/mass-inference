@@ -68,6 +68,21 @@ def copy_stims(target, source):
     new_name_table1 = dict(zip(all_stim, newnames))
     new_name_table2 = dict(zip(newnames, all_stim))
 
+    # remove other stuff in destination folders
+    for fn in os.listdir(dstnewdir):
+        if fn in newnames or fn in ("floor.cpo", "name_table.pkl"):
+            continue
+        fp = os.path.join(dstnewdir, fn)
+        print "Removing '%s'..." % fp
+        os.remove(fp)
+    for fn in os.listdir(dstolddir):
+        if fn in all_stim or fn == "name_table.pkl":
+            continue
+        fp = os.path.join(dstolddir, fn)
+        print "Removing '%s'..." % fp
+        os.remove(fp)
+
+    # copy to destination folders
     for name1, name2 in zip(newnames, all_stim):
         srcpathnew = os.path.join(srcnewdir, name1)
         dstpathnew = os.path.join(dstnewdir, name1)
