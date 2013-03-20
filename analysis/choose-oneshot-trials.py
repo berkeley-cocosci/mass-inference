@@ -158,8 +158,9 @@ plt.ylim(0, 0.6)
 # <codecell>
 
 target_gain = f(lhr)
-gaindiff = (gain - target_gain)**2
-good = gaindiff < 0.005
+#gaindiff = (gain - target_gain)**2
+#good = gaindiff < 0.005
+good = np.ones(gain.shape, dtype='bool')
 print np.sum(good & ok)
 plt.plot(lhr[ok & good], gain[ok & good], '.')
 plt.plot(x, f(x), 'r-')
