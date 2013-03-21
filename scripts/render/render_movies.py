@@ -3,7 +3,6 @@ import os
 import subprocess as sp
 import shutil
 import pickle
-import pdb
 
 from optparse import OptionParser
 
