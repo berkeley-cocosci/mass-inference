@@ -2,6 +2,8 @@ import sys
 import os
 import subprocess as sp
 import shutil
+import pickle
+import pdb
 
 from optparse import OptionParser
 
@@ -41,7 +43,7 @@ class RenderMovies(ViewTowers):
             print "Creating movie path because it does not exist"
             os.makedirs(self.moviepath)
         self.logpath = os.path.join(
-            LOGPATH, "%s-rendering-info.csv" % target)
+            LOGPATH, "%s-rendering-info.pkl" % target)
 
         # initialize the viewer app
         RenderMovies.towerscene_type = st
@@ -117,9 +119,7 @@ class RenderMovies(ViewTowers):
             self.scenes = scenes
 
         # load old stimlus info
-        stiminfo, angles = self.loadRenderingInfo()
-
-        self.stiminfo = stiminfo
+        self.stiminfo = self.loadRenderingInfo()
 
     def createOccluder(self):
         """Create the occluder, which drops down after people view the
@@ -138,28 +138,14 @@ class RenderMovies(ViewTowers):
         self.occluder.disableGraphics()
 
     def loadRenderingInfo(self):
-        stiminfo = {}
-        angles = {}
-
         # no previous rendering info exists
         if not os.path.exists(self.logpath):
-            return stiminfo, angles
+            return {}
 
-        # read csv contents
         with open(self.logpath, "r") as fh:
-            lines = [x for x in fh.read().split("\n") if x != '']
-        # figure out the keys and which one corresponds to 'stimulus'
-        keys = lines[0].split(",")
-        sidx = keys.index('stimulus')
-        del keys[sidx]
-        # build a dictionary of stimuli info
-        for line in lines[1:]:
-            parts = line.split(",")
-            stim = parts[sidx]
-            del parts[sidx]
-            stiminfo[stim] = dict(zip(keys, parts))
+            stiminfo = pickle.load(fh)
 
-        return stiminfo, angles
+        return stiminfo
 
     ##################################################################
     # Tasks
@@ -265,11 +251,10 @@ class RenderMovies(ViewTowers):
         self.occluder.disableGraphics()
 
         # set if full recording
-        full = self.stiminfo[self.currscene]['full']
-        self.f_render_full = True if full == "True" else False
+        self.f_render_full = self.stiminfo[self.currscene]['full']
 
         # set the camera angle
-        ang = int(self.stiminfo[self.currscene]['angle'])
+        ang = self.stiminfo[self.currscene]['angle']
         self.rotating.setH(ang)
 
         # remove old files
@@ -288,7 +273,7 @@ class RenderMovies(ViewTowers):
 
         # print stability
         self.stable = self.stiminfo[self.currscene]['stable']
-        if self.stable == "True":
+        if self.stable:
             print "Tower is STABLE"
         else:
             print "Tower is UNSTABLE"
