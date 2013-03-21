@@ -462,100 +462,90 @@ copy_stims(name, "tower_mass_all")
 
 # <codecell>
 
-infofile = os.path.join(confdir, "%s-rendering-info.csv" % exp_ver)
-rikeys = ["stimulus", "angle", "stable", "full", "color0", "color1"]
-    
-with open(infofile, "w") as fh:
-    
-    # column headers
-    fh.write(",".join(rikeys) + "\n")
-    
-    # unstable example
-    fh.write(",".join(
-	[stim_sh[unstable_example],
-	 str(angles[0]),
-	 str(not(bool(fb_sh[0, unstable_example]))),
-	 str(True), '', ''
-	 ]) + "\n")
+infodict = {}
 
-    # stable example
-    fh.write(",".join(
-	[stim_sh[stable_example],
-	 str(angles[1]),
-	 str(not(bool(fb_sh[0, stable_example]))),
-	 str(True), '', ''
-	 ]) + "\n")
+# unstable example 
+infodict[stim_sh[unstable_example]] = {
+    'angle': angles[0],
+    'stable': not(bool(fb_sh[0, unstable_example])),
+    'full': True,
+    'color0': None,
+    'color1': None
+    }
+
+# stable example
+infodict[stim_sh[stable_example]] = {
+    'angle': angles[1],
+    'stable': not(bool(fb_sh[0, stable_example])),
+    'full': True,
+    'color0': None,
+    'color1': None
+    }
+
+# training
+for k, i in enumerate(train):
+    infodict[stim_sh[i]] = {
+	'angle': angles[2+k],
+	'stable': not(bool(fb_sh[0, i])),
+	'full': False,
+	'color0': None,
+	'color1': None
+	}
+
+# mass example
+infodict["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ridx])] = {
+	 'angle': angles[2+ntrain],
+	 'stable': not(bool(feedback[ridx, mass_example])),
+	 'full': True,
+	 'color0': example_color_pair[0],
+	 'color1': example_color_pair[1]
+	 }
+infodict["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ridx])] = {
+	 'angle': angles[2+ntrain],
+	 'stable': not(bool(feedback[ridx, mass_example])),
+	 'full': True,
+	 'color0': example_color_pair[0],
+	 'color1': example_color_pair[1]
+	 }
+
+# experiment
+for k, i in enumerate(exp):
+    infodict["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ridx])] = {
+	'angle': angles[3+ntrain+k],
+	'stable': not(bool(feedback[ridx, i])),
+	'full': False,
+	'color0': color_pairs[k, 0],
+	'color1': color_pairs[k, 1]
+	}
+    infodict["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ridx])] = {
+	'angle': angles[3+ntrain+k],
+	'stable': not(bool(feedback[ridx, i])),
+	'full': False,
+	'color0': color_pairs[k, 0],
+	'color1': color_pairs[k, 1]
+	}
+
+# write to file
+infofile = os.path.join(confdir, "%s-rendering-info.pkl" % exp_ver)
+with open(infofile, 'w') as fh:
+    pickle.dump(infodict, fh)
     
-    # training
-    for k, i in enumerate(train):
-	fh.write(",".join(
-	    [stim_sh[i],
-	     str(angles[2+k]),
-	     str(not(bool(fb_sh[0, i]))),
-	     str(False), '', ''
-	     ]) + "\n")
-
-    # mass example
-    fh.write(",".join(
-	["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ridx]),
-	 str(angles[2+ntrain]),
-	 str(not(bool(feedback[ridx, mass_example]))),
-	 str(True), 
-	 example_color_pair[0],
-	 example_color_pair[1]
-	 ]) + "\n")
-    fh.write(",".join(
-	["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ridx]),
-	 str(angles[2+ntrain]),
-	 str(not(bool(feedback[ridx, mass_example]))),
-	 str(True), 
-	 example_color_pair[0],
-	 example_color_pair[1]
-	 ]) + "\n")
-	
-    # experiment
-    for k, i in enumerate(exp):
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-0" % (stimuli[i], kappas[ridx]),
-	     str(angles[3+ntrain+k]),
-	     str(not(bool(feedback[ridx,i]))),
-	     str(False),
-	     color_pairs[k, 0],
-	     color_pairs[k, 1]
-	     ]) + "\n")
-	fh.write(",".join(
-	    ["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ridx]),
-	     str(angles[3+ntrain+k]),
-	     str(not(bool(feedback[ridx,i]))),
-	     str(False),
-	     color_pairs[k, 0],
-	     color_pairs[k, 1]
-	     ]) + "\n")
-
-fh.close()
 
 # <codecell>
 
-infofile = os.path.join(confdir, "%s-demo-rendering-info.csv" % exp_ver)
-rikeys = ["stimulus", "angle", "stable", "full", "color0", "color1"]
+infodict = {}
     
-with open(infofile, "w") as fh:
-    
-    # column headers
-    fh.write(",".join(rikeys) + "\n")
-    
-    # experiment
-    for k, i in enumerate(exp):
-	fh.write(",".join(
-	    ["%s~kappa-%s" % (stimuli[i], kappas[ridx]),
-	     str(angles[3+ntrain+k]),
-	     str(not(bool(feedback[ridx,i]))),
-	     str(True),
-	     # color_pairs[k, 0],
-	     # color_pairs[k, 1]
-	     colors['red'],
-	     colors['blue'],
-	     ]) + "\n")
+# experiment
+for k, i in enumerate(exp):
+    infodict["%s~kappa-%s" % (stimuli[i], kappas[ridx])] = {
+	'angle': angles[3+ntrain+k],
+	'stable': not(bool(feedback[ridx, i])),
+	'full': False,
+	'color0': colors['red'],
+	'color1': colors['blue']
+	}
 
-fh.close()
+infofile = os.path.join(confdir, "%s-demo-rendering-info.pkl" % exp_ver)
+with open(infofile, 'w') as fh:
+    pickle.dump(infodict, fh)
 
