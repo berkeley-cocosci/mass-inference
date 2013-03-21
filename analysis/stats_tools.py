@@ -1,5 +1,9 @@
 import numpy as np
 import circstats as circ
+import scipy.optimize
+
+from joblib import Memory
+memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
 
 
 def normalize(logarr, axis=-1, max_log_value=709.78271289338397):
@@ -109,3 +113,22 @@ def xcorr(x, y, circular=False, deg=False, nanrobust=False):
     corr = corr.reshape(corrshape, order='F')
 
     return corr
+
+
+def logit(x, alpha, beta, omega):
+    l = (alpha / (1 + np.e ** (-beta * x))) + omega
+    return l
+
+
+@memory.cache
+def fit_logit(x, y, start):
+    params = np.empty((y.shape[0], 3)) * np.nan
+    for i in xrange(params.shape[0]):
+        try:
+            popt, pcov = scipy.optimize.curve_fit(
+                logit, x, y[i], start)
+        except:
+            pass
+        else:
+            params[i] = popt
+    return params
