@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<!-- <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Experiment on intuitive physics</title>
+
+    <link rel="stylesheet" type="text/css" href="resources/flowplayer/skin/minimalist.css" />
+    <link rel="stylesheet" type="text/css" href="resources/css/experiment.css" />
+
+    <script type="text/javascript" src="resources/js/jquery.min.js"></script>
+    <script type="text/javascript" src="resources/flowplayer/flowplayer.min.js"></script>
+    <script type="text/javascript" src="resources/js/experiment.js"></script>
+
+    <script>
+      experiment.condition = "%(condition)s";
+    </script>
+
+  </head>
+  
+  <body>
+    
+    <!-- Index Slide -->
+    <div class="slide" id="index">
+      <img class="logo" src="resources/images/UCSeal122x122.gif" alt="University of California, Berkeley" />
+      <img class="logo" src="resources/images/Bayes-500h.jpg" alt="Computational Cognitive Science Group" />
+      <h1>UC Berkeley Computational Cognitive Science Group</h1>
+      <div class="blue">
+	<div id="consent">
+	  <p>This research is being conducted by Prof. Thomas
+	    Griffiths, a faculty member at the University of
+	    California at Berkeley. Prof. Griffiths' lab investigates
+	    computational models of human cognition. The study
+	    typically takes about 20 minutes.</p>
+
+	  <p>If you agree to take part in the research, you will fill
+	    out a brief on-line questionnaire. The questionnaires will
+	    involve reading information, watching short video clips,
+	    and answering questions. All of the information that we
+	    obtain during the research will be kept confidential, and
+	    not associated with your name in any way.</p>
+
+	  <p>Your participation in this research is voluntary. You are
+	    free to refuse to take part, and you may stop taking part
+	    at any time. You are free to discontinue participation in
+	    this study at any time with no penalty. If there is any
+	    question in the questionnaire that makes you uncomfortable
+	    or that you do not want to answer, it is your right to
+	    refrain from answering that question.</p>
+	  
+	  <p>If you have any questions about the research, do not
+	    hesitate to
+	    contact <a href="mailto:jhamrick@berkeley.edu">Jessica
+	      Hamrick</a>. If you have any questions about your rights
+	    or treatment as a participant in this research project,
+	    please contact UC Berkeley's Committee for Protection of
+	    Human Subjects at (510) 642-7461 or
+	    <a href="mailto:subjects@berkeley.edu">subjects@berkeley.edu</a>.</p>
+	</div>
+
+	<p>By selecting the "Continue" button below, I acknowledge
+	  that I am 18 or older, have read this consent form, and I
+	  agree to take part in the research.</p>
+      </div>
+      
+      <div class="continue">
+	<button type="button" onclick="experiment.initialize();">Continue</button>
+	<button type="button" onclick="experiment.decline();">Decline to Participate</button>
+      </div>
+    </div>
+
+    <!-- Training instructions slides -->
+    <div class="slide" id="instructions1a">
+      <h1>Instructions</h1>
+      <div class="blue">
+	<p>In this experiment, you will make judgments about towers of
+	  building blocks.</p> 
+	<p>As below, the camera rotates around a <i>frozen</i>
+	  snapshot of the tower.</p>
+	<p>Afterwards, the tower is <i>unfrozen</i>, allowing physics
+	  to affect it.</p>
+	<p>This causes some towers to fall down:</p>
+      </div>
+      <div class="example-container">
+	<div id="unstable-example" class="example is-splash">
+	  <video preload="none">
+	    <source type="video/flov" src="stimuli/video/unstable.flv" />
+	    <source type="video/wmv" src="stimuli/video/unstable.wmv" />
+	    <source type="video/ogg" src="stimuli/video/unstable.ogg" />
+	    <source type="video/mp4" src="stimuli/video/unstable.mp4" />
+	  </video>
+	</div>
+      </div>
+      <div class="continue">
+	<button type="button" onclick="slides.show('instructions1b');">Next</button>
+      </div>
+    </div>
+
+    <div class="slide" id="instructions1b">
+      <h1>Instructions (cont.)</h1>
+      <div class="blue">
+	<p>Other towers do <i>not</i> fall when they are unfrozen:</p>
+      </div>
+      <div class="example-container">
+	<div id="stable-example" class="example is-splash">
+	  <video preload="none">
+	    <source type="video/flov" src="stimuli/video/stable.flv" />
+	    <source type="video/wmv" src="stimuli/video/stable.wmv" />
+	    <source type="video/ogg" src="stimuli/video/stable.ogg" />
+	    <source type="video/mp4" src="stimuli/video/stable.mp4" />
+	  </video>
+	</div>
+      </div>
+      <div class="continue">
+	<button type="button" onclick="slides.show('instructions1a');">Back</button>
+	<button type="button" onclick="slides.show('instructions1c');">Next</button>
+      </div>
+    </div>
+
+    <div class="slide" id="instructions1c">
+      <h1>Instructions (cont.)</h1>
+      <div class="blue">
+	<p>We'll start out with a few practice trials in which you will:</p>
+	<ol>
+	  <li><b>Watch</b> the <i>frozen</i> tower</li>
+	  <li><b>Respond</b> whether it will fall or not by clicking a
+	    button</li>
+	  <li><b>Watch</b> what happens when the tower is <i>unfrozen</i></li>
+	</ol>
+	<p>When you click "Start", the practice trials will begin.</p>
+      </div>
+      <div class="continue">
+	<button type="button" onclick="slides.show('instructions1b');">Back</button>
+	<button type="button" onclick="experiment.nextTrial();">Start</button>
+      </div>
+    </div>
+    
+    <!-- Mass instructions slide -->
+    <div class="slide" id="instructions2">
+      <h1>Instructions</h1>
+      <div class="blue">
+	<p>Good! Now, blocks can be either <i>heavy</i>
+	  or <i>light</i> depending on color. We won't tell you which
+	  is the heavier color -- just try your best.</p>
+	<p class="fb vfb">The "heavy color" and the "light color" do
+	  not change during the experiment, so you should try to
+	  figure out which color block is heavier. We will
+	  occasionally ask you which color you think is the "heavy
+	  color".</p>
+	<div id="scales"><img src="resources/images/scales-ry.png" alt="" /></div>
+      </div>
+      <div class="example-container">
+	<div id="mass-example" class="example is-splash">
+	  <video preload="none">
+	    <source type="video/flov" src="stimuli/video/mass.flv" />
+	    <source type="video/wmv" src="stimuli/video/mass.wmv" />
+	    <source type="video/ogg" src="stimuli/video/mass.ogg" />
+	    <source type="video/mp4" src="stimuli/video/mass.mp4" />
+	  </video>
+	</div>
+      </div>
+      <div class="blue">
+	<p class="fb">In the upcoming trials, we will no
+	  longer <i>show</i> you what happens when the tower is
+	  unfrozen, but we will <i>tell</i> you.</p>
+	<p class="nfb">In the upcoming trials, we will no longer show
+	  or tell you what happens when the tower is unfrozen.</p>
+      </div>
+      <div class="continue">
+	<button type="button" onclick="experiment.nextTrial();">Start</button>
+      </div>
+    </div>
+
+    <!-- Posttest instructions slide -->
+    <div class="slide" id="instructions3">
+      <h1>Instructions</h1>
+      <div class="blue">
+	<p>Great, you're almost done! There are just a few more trials
+	  like the ones you did at the beginning.</p>
+
+	<!-- <p>We will not <i>show</i> you what happens when the tower is -->
+	<!--   unfrozen, but we will <i>tell</i> you.</p> -->
+      </div>
+      <div class="continue">
+      	<button type="button" onclick="experiment.nextTrial();">Start</button>
+      </div>
+    </div>
+    
+    <!-- Trial Slide -->
+    <div class="slide" id="trial">
+      <div id="progress">
+	<div id="progress-text">Progress</div>
+	<div id="indicator-container">
+	  <div id="indicator-outer">
+	    <div id="indicator-stage"></div>
+	  </div>
+	</div>
+	<div class="spacer"></div>
+      </div>
+      <div id="question-container" class="blue">
+	<div id="question"><b>Question:</b> Will the tower fall down?</div>
+	<div id="question-image">
+	  <img src="resources/images/scales-ry.png" alt="" />
+	</div>
+	<div class="spacer"></div>
+      </div>
+      <div id="video-container">
+	<div id="player" class="is-splash">
+	  <video preload="none">
+	    <source type="video/flov" src="stimuli/video/stim_1.flv" />
+	    <source type="video/wmv" src="stimuli/video/stim_1.wmv" />
+	    <source type="video/ogg" src="stimuli/video/stim_1.ogg" />
+	    <source type="video/mp4" src="stimuli/video/stim_1.mp4" />
+	  </video>
+	  <!-- Shown before the video -->
+	  <div id="prestim">
+	    <div id="video-instructions">
+	      <p>When you are ready, click the 'Play Video' button.</p>
+	      <p>You may only watch the video once.</p>
+	    </div>
+	    <div id="play-button">
+	      <button type="button" onclick="experiment.showStimulus();">Play Video</button>
+	    </div>
+	  </div>
+	  <!-- The responses people can choose -->
+	  <div id="responses">
+	    <div class="response" id="response-no">
+	      <button type="button" onclick="experiment.submitResponse('no')">No, it will NOT fall</button>
+	    </div>
+ 	    <div class="response" id="response-yes">
+	      <button type="button" onclick="experiment.submitResponse('yes')">Yes, it will fall</button>
+	    </div>
+	  </div>
+	  <!-- Textual feedback -->
+	  <div id="feedback">
+	    <div class="feedback" id="stable-feedback"><p>Tower does not fall</p></div>
+	    <div class="feedback" id="unstable-feedback"><p>Tower falls</p></div>
+	  </div>
+	</div>
+      </div>
+      <div id="reload-container">
+	<p>(Trial not loaded? Click <a href="#"
+	onclick="experiment.reloadTrial()">here</a> to
+	refresh.)</p>
+      </div>
+      <div id="query-ratio-container" class="blue">
+      	<p><b>Which color do you think is the "heavy color"?</b></p>
+	<p>Remember, the "heavy color" is the same throughout the
+	entire experiment.</p>
+	<div id="ratio-query">
+	  <div id="yellow-heavy">
+	    <img src="resources/images/scales-ry-yellow.png" />
+	    <button type="button" onclick="experiment.submitResponse('yellow');">Yellow</button>
+	  </div>
+	  <div id="red-heavy">
+	    <img src="resources/images/scales-ry-red.png" />
+	    <button type="button" onclick="experiment.submitResponse('red');">Red</button>
+	  </div>
+	  <div class="spacer"></div>
+	</div>
+      </div>
+    </div>
+    
+    <!-- Finished Slide -->
+    <div class="slide" id="finished">
+      <h1>Finished!</h1>
+      <div class="blue">
+	<p>Thanks for participating! Your Mechanical Turk code is:</p>
+	<div id="code-container"><div id="code"></div></div>
+      </div>
+    </div>
+
+    <!-- Error Slide -->
+    <div class="slide" id="error">
+      <h1>Something went wrong...</h1>
+      <div class="blue">
+	<p>Oh no, the experiment encountered an error!</p>
+	<p> <b>If you have completed AT LEAST ONE trial</b>, please
+	  copy and paste the following error message into the comment
+	  box on Mechanical Turk and then submit the HIT -- don't
+	  worry, you'll be approved as long as you've completed at
+	  least one trial.
+	</p>
+	<div id="error-message">
+	  <!-- <p></p> -->
+	  <p></p>
+	</div>
+      </div>
+    </div>
+
+    <!-- Decline slide -->
+    <div class="slide" id="declined">
+      <h1>Declined to participate</h1>
+      <div class="blue">
+	<p>You have declined to participate in the experiment. You may
+	  close this window at any time or press the "Back" button
+	  below if you reached this page in error.
+	</p>
+      </div>
+      <div class="continue">
+	<button type="button" onclick="slides.show('index');">Back</button>
+      </div>
+    </div>
+
+  </body>
+</html>
+
