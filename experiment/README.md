@@ -20,11 +20,17 @@
 
 To run the experiment, you'll need to do a few thingsf first.
 
-1. **Create a symlink to `stimuli`.** This requires access to the mass learning stimuli repository. If you have this repository checked out in a folder called `stimuli` at the same level as this repository (i.e., `../stimuli`), then the following command should work:
+1. **Create a symlink to `stimuli`.** This requires access to the mass
+learning stimuli submodule (`git submodule init stimuli`, `git
+submodule update stimuli`). Then:
 
    ```ln -s ../stimuli/www stimuli```
 
-2. **Initialize the database.** The database stores IP addresses, validation codes, completion codes, conditions, and participant ids. It is not included in the repository for privacy reasons and should never be committed; you will need to manually initialize it. To do this:
+2. **Initialize the database.** The database stores IP addresses,
+validation codes, completion codes, conditions, and participant
+ids. It is not included in the repository for privacy reasons and
+should never be committed; you will need to manually initialize it. To
+do this:
 
    ```
    $ python -i db_tools.py  
@@ -40,5 +46,9 @@ To run the experiment, you'll need to do a few thingsf first.
 
 ## Access
 
-To access the experiment, you'll need to set up a webserver and place the repository somewhere that the server has access. Navigate your web browser to `http://path/to/repository/index.py?cond=<condition>`, where `<condition>` refers to the code for the experimental condition, such as `E-fb-10-cb0`.
+To access the experiment, you'll need to set up a webserver and place
+the repository somewhere that the server has access. Navigate your web
+browser to `http://path/to/experiment/index.py?cond=<condition>`,
+where `<condition>` refers to the code for the experimental condition,
+such as `E-fb-10-cb0`.
 
