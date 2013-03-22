@@ -42,7 +42,7 @@ class RenderMovies(ViewTowers):
             print "Creating movie path because it does not exist"
             os.makedirs(self.moviepath)
         self.logpath = os.path.join(
-            LOGPATH, "%s-rendering-info.pkl" % target)
+            LOGPATH, "%s-stimulus-info.pkl" % target)
 
         # initialize the viewer app
         RenderMovies.towerscene_type = st
@@ -118,7 +118,7 @@ class RenderMovies(ViewTowers):
             self.scenes = scenes
 
         # load old stimlus info
-        self.stiminfo = self.loadRenderingInfo()
+        self.stiminfo = self.loadStimulusInfo()
 
     def createOccluder(self):
         """Create the occluder, which drops down after people view the
@@ -136,8 +136,8 @@ class RenderMovies(ViewTowers):
             graphics=Graphics)
         self.occluder.disableGraphics()
 
-    def loadRenderingInfo(self):
-        # no previous rendering info exists
+    def loadStimulusInfo(self):
+        # no previous stimulus info exists
         if not os.path.exists(self.logpath):
             return {}
 

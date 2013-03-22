@@ -1,260 +1,254 @@
 import os
 import subprocess
 import shutil
-import json
+import pickle
+
+from optparse import OptionParser
 
 cmd_template = "ffmpeg -loglevel error -i %s -r 30 -b 2048k -s 640x480 %s"
-outext = ["mp4", "flv", "ogg", "wmv"]
 
-video_path = "../stimuli/www/video"
-image_path = "../stimuli/www/images"
-stim_path = "../stimuli/render"
-conf_path = "../stimuli/meta"
-
-exp_ver = "E"
-
-DRYRUN = False
-CONVERT = True
-
-convert_table = os.path.join(stim_path, "conversion.csv")
-if os.path.exists(convert_table):
-    os.remove(convert_table)
+VIDEOPATH = "../../stimuli/www/%s/video"
+IMAGEPATH = "../../stimuli/www/%s/images"
+RENDERPATH = "../../stimuli/render"
+CONFPATH = "../../stimuli/meta"
 
 
-def convert(stim, newstim, path="stimuli"):
-    files = [x for x in os.listdir(path) if x.startswith(stim)]
+def parseStimParams(stim):
+    """Parse the stimulus name into the base name and other parameters
+    (e.g., kappa, counterbalance)
 
-    invid = None
-    inimgA = None
-    inimgB = None
-    inimgfloor = None
-    invidfb = None
-    inimgfbA = None
-    inimgfbB = None
+    """
 
-    for f in files:
-        if f.endswith("-feedback.avi"):
-            invidfb = f
-        elif f.endswith("-feedback~A.png"):
-            inimgfbA = f
-        elif f.endswith("-feedback~B.png"):
-            inimgfbB = f
-        elif f.endswith(".avi"):
-            invid = f
-        elif f.endswith("~A.png"):
-            inimgA = f
-        elif f.endswith("~B.png"):
-            inimgB = f
-        elif f.endswith("-floor.png"):
-            inimgfloor = f
-
-    assert invid is not None
-    assert inimgA is not None
-    assert inimgB is not None
-    assert inimgfloor is not None
-
-    if not DRYRUN:
-        with open(convert_table, 'a') as fh:
-            fh.write("%s,%s\n" % (newstim, os.path.splitext(invid)[0]))
-
-    invid = os.path.join(path, invid)
-    inimgA = os.path.join(path, inimgA)
-    inimgB = os.path.join(path, inimgB)
-    inimgfloor = os.path.join(path, inimgfloor)
-
-    if invidfb:
-        invidfb = os.path.join(path, invidfb)
-        inimgfbA = os.path.join(path, inimgfbA)
-        inimgfbB = os.path.join(path, inimgfbB)
-
-    for ext in outext:
-        outvid = "%s.%s" % (newstim, ext)
-        outimgA = "%sA.png" % newstim
-        outimgB = "%sB.png" % newstim
-        outimgfloor = "%s-floor.png" % newstim
-
-        outvid = os.path.join(video_path, outvid)
-        outimgA = os.path.join(image_path, outimgA)
-        outimgB = os.path.join(image_path, outimgB)
-        outimgfloor = os.path.join(image_path, outimgfloor)
-
-        if invidfb:
-            outvidfb = "%s-fb.%s" % (newstim, ext)
-            outimgfbA = "%s-fbA.png" % newstim
-            outimgfbB = "%s-fbB.png" % newstim
-
-            outvidfb = os.path.join(video_path, outvidfb)
-            outimgfbA = os.path.join(image_path, outimgfbA)
-            outimgfbB = os.path.join(image_path, outimgfbB)
-
-        # if not DRYRUN:
-        #     if os.path.exists(outvid):
-        #         os.remove(outvid)
-        #     if invidfb and os.path.exists(outvidfb):
-        #         os.remove(outvidfb)
-
-        if not DRYRUN:
-            if not os.path.exists(outvid):
-                cmd = cmd_template % (invid, outvid)
-                print "Running '%s'..." % cmd
-                subprocess.call(cmd, shell=True)
-            if not os.path.exists(outimgA):
-                shutil.copy(inimgA, outimgA)
-            if not os.path.exists(outimgB):
-                shutil.copy(inimgB, outimgB)
-            if not os.path.exists(outimgfloor):
-                shutil.copy(inimgfloor, outimgfloor)
-
-        if invidfb and not DRYRUN:
-            if not os.path.exists(outvidfb):
-                cmd = cmd_template % (invidfb, outvidfb)
-                print "Running '%s'..." % cmd
-                subprocess.call(cmd, shell=True)
-            if not os.path.exists(outimgfbA):
-                shutil.copy(inimgfbA, outimgfbA)
-            if not os.path.exists(outimgfbB):
-                shutil.copy(inimgfbB, outimgfbB)
+    parts = stim.split("~")
+    basename = parts[0]
+    if len(parts) == 2:
+        strparams = parts[1]
+        params = tuple([tuple(x.split("-", 1)) for x in strparams.split("_")])
+    elif len(parts) > 2:
+        raise ValueError("malformed stimulus name: %s" % stim)
+    else:
+        params = ()
+    return basename, set(params)
 
 
-def parse_info(file):
-    info = {}
-    with open(file, "r") as fh:
-        fields = fh.readline().strip().split(",")
-        data = [x.split(",") for x in fh.read().strip().split("\n") if x != ""]
-        for line in data:
-            stim = line[0]
-            info[stim] = dict(zip(fields[1:], line[1:]))
-    return info
+def getCondition(stim):
+    """Condense the parameters down into a shorter, standardized
+    condition name.
 
+    """
 
-def merge_info_dicts(dicts):
-    D = {}
-    for d in dicts:
-        for key in d:
-            if key not in D:
-                D[key] = d[key].copy()
-            else:
-                common = set(D[key].keys()) & set(d[key].keys())
-                if not all([D[key][c] == d[key][c] for c in common]):
-                    print "key:", key
-                    print "common:", common
-                    print "old:", D[key]
-                    print "new:", d[key]
-                    assert False
-                D[key].update(d[key])
-    return D
-
-
-def get_condition(stim):
-    if len(stim.split("~")) == 2:
+    basename, params = parseStimParams(stim)
+    if len(params) > 0:
         condition = []
-        cpo, strparams = stim.split("~")
-        params = dict([x.split("-", 1) for x in strparams.split("_")])
-        if 'kappa' in params:
-            num = 10**float(params['kappa'])
+        dparams = dict(params)
+        if 'kappa' in dparams:
+            num = 10 ** float(dparams['kappa'])
             if num == int(num):
                 num = int(num)
             condition.append("%s" % num)
-        if 'cb' in params:
-            condition.append("cb%s" % params['cb'])
+        if 'cb' in dparams:
+            condition.append("cb%s" % dparams['cb'])
         condition = "-".join(condition)
     else:
         condition = None
     return condition
 
+
+def parseFiles(path):
+    """Group all files in 'path' by base stimulus. Returns a
+    dictionary indexed by the base stimulus, where the values are
+    a list of tuples consisting of:
+
+        suffix: e.g. feedback, floor
+        imgid: e.g. A, B (first frame/last frame)
+        ext: extension
+        f: full original file name
+
+    For each file matching the base stimulus.
+
+    """
+
+    files = [x for x in os.listdir(path)]
+    suffixes = ['feedback', 'floor']
+    stims = {}
+
+    for f in files:
+        # get rid of the extension
+        sf, ext = os.path.splitext(f)
+        # parse the filename into parts
+        parts = sf.split("~")
+        if len(parts[-1]) == 1:
+            imgid = parts[-1]
+            parts = parts[:-1]
+        else:
+            imgid = None
+        key = "~".join(parts)
+
+        # remove the suffix, if any
+        suffix = None
+        last = key.split("-")[-1]
+        if last in suffixes:
+            suffix = last
+            key = key[:-(len(suffix)+1)]
+
+        # parse the parameters
+        if key not in stims:
+            stims[key] = []
+        stims[key].append((suffix, imgid, ext, f))
+
+    return stims
+
+
+def convertFiles(newname, matchinfo, target, formats, dryrun=False):
+    """Convert media files specified in `matchinfo` that correspond to
+    the base stimulus given by `newname`. Files are saved into a
+    folder denoted by a combination of `VIDEOPATH` or `IMAGEPATH` and
+    `target`. Image files are merely copied, while video files are
+    converted to the formats given in `formats`.
+
+    """
+
+    # paths
+    render_path = os.path.join(RENDERPATH, target)
+    video_path = VIDEOPATH % target
+    image_path = IMAGEPATH % target
+
+    # create the folders if they don't exist
+    if not os.path.exists(video_path):
+        os.makedirs(video_path)
+    if not os.path.exists(image_path):
+        os.makedirs(image_path)
+
+    # for each of the files we need to convert...
+    for fileinfo in matchinfo:
+        # figure out the new file name
+        suffix, imgid, ext, filename = fileinfo
+        inpath = os.path.join(render_path, filename)
+        if suffix == "feedback":
+            suffix = "fb"
+        newsuffix = (suffix if suffix else "") + (imgid if imgid else "")
+        if newsuffix != "":
+            newsuffix = "~" + newsuffix
+
+        if ext == ".png":
+            # copy if the file is an image
+            outname = newname + newsuffix + ext
+            outpath = os.path.join(image_path, outname)
+            if os.path.exists(outpath):
+                print "    %s exists" % outname
+                continue
+            else:
+                print "    %s --> %s" % (filename, outname)
+
+            if not dryrun:
+                shutil.copy(inpath, outpath)
+
+        elif ext == ".avi":
+            # convert if the file is a video
+            outnamebase = newname + newsuffix
+            for fmt in formats:
+                outname = outnamebase + "." + fmt
+                outpath = os.path.join(video_path, outname)
+                if os.path.exists(outpath):
+                    print "    %s exists" % outname
+                    continue
+                else:
+                    print "    %s --> %s" % (filename, outname)
+
+                if not dryrun:
+                    cmd = cmd_template % (inpath, outpath)
+                    subprocess.call(cmd, shell=True)
+
+
+def convert(target, formats, dryrun):
+    if dryrun:
+        print "DRYRUN -- not actually making changes"
+
+    # load stimulus info
+    conf_path = os.path.join(CONFPATH, "%s-stimulus-info.pkl" % target)
+    with open(conf_path, "r") as fh:
+        stiminfo = pickle.load(fh)
+
+    scenes = sorted(stiminfo.keys())
+    convinfo = {}
+    convinfo_inv = {}
+
+    # convert scene names
+    for scene in scenes:
+        info = stiminfo[scene]
+        if info['newname'] is not None:
+            newname = info['newname']
+        else:
+            newname, params = parseStimParams(scene)
+        condition = getCondition(scene)
+        suffix = ("~%s" % condition) if condition else ""
+        newscene = newname + suffix
+        convinfo[newscene] = scene
+        convinfo_inv[scene] = newscene
+
+    # save conversions to file
+    if not dryrun:
+        conv_table = os.path.join(CONFPATH, '%s-conversion.pkl' % target)
+        with open(conv_table, 'w') as fh:
+            pickle.dump(convinfo, fh)
+        print "Saved conversion information to '%s'." % conv_table
+
+    # parse the existing filenames, to figure out which files we need
+    # to convert
+    render_path = os.path.join(RENDERPATH, target)
+    fp = parseFiles(render_path)
+
+    # convert the actual files
+    for sidx, scene in enumerate(scenes):
+        files = fp[scene]
+        newscene = convinfo_inv[scene]
+
+        print "="*70
+        print "[%d/%d] %s --> %s" % (sidx+1, len(scenes), scene, newscene)
+        print "-"*70
+
+        convertFiles(newscene, files, target, formats, dryrun=dryrun)
+
 ###############
 
-if DRYRUN:
-    print "DRYRUN -- not actually making changes"
+if __name__ == "__main__":
+    usage = "usage: %prog [options] target"
+    parser = OptionParser(usage=usage)
+    parser.add_option(
+        "--mp4", dest="use_mp4", action="store_true",
+        default=False, help="convert to mp4 format")
+    parser.add_option(
+        "--ogg", dest="use_ogg", action="store_true",
+        default=False, help="convert to ogg format")
+    parser.add_option(
+        "--flv", dest="use_flv", action="store_true",
+        default=False, help="convert to flv format")
+    parser.add_option(
+        "--wmv", dest="use_wmv", action="store_true",
+        default=False, help="convert to wmv format")
+    parser.add_option(
+        "--dry-run",
+        action="store_true", dest="dryrun", default=False,
+        help="do not actually do anything")
 
-stims = sorted(set([
-    os.path.splitext(x)[0]
-    for x in os.listdir(stim_path)
-    if (x.endswith(".avi") and not
-        x.endswith("-feedback.avi"))]))
+    (options, args) = parser.parse_args()
+    if len(args) == 0:
+        raise ValueError("no target directory name specified")
+    else:
+        target = args[0]
 
-# examples
-for ex, base_label in [
-        ("stable-example~recording-info.csv", "stable"),
-        ("unstable-example~recording-info.csv", "unstable"),
-        ("mass-example~kappa-1.0~recording-info.csv", "mass"),
-        ("mass-example~kappa--1.0~recording-info.csv", "mass")
-        ]:
-    info = parse_info(os.path.join(stim_path, ex))
-    for key in info.keys():
-        if CONVERT:
-            condition = get_condition(key)
-            suffix = "-%s" % condition if condition else ""
-            convert(key, base_label + suffix)
-        stims.remove(key)
+    outext = []
+    if options.use_mp4:
+        outext.append("mp4")
+    if options.use_ogg:
+        outext.append("ogg")
+    if options.use_flv:
+        outext.append("flv")
+    if options.use_wmv:
+        outext.append("wmv")
+    if len(outext) == 0:
+        print "** WARNING: No conversion formats specified! **"
 
-# stable_example = parse_info(
-#     os.path.join(stim_path, "stable-example~recording-info.csv"))
-# unstable_example = parse_info(
-#     os.path.join(stim_path, "unstable-example~recording-info.csv"))
-# mass_example = parse_info(
-#     os.path.join(stim_path, "mass-example~kappa-1.0~recording-info.csv"))
+    dryrun = options.dryrun
 
-# convert(stable_example.keys()[0], "stable")
-# convert(unstable_example.keys()[0], "unstable")
-# convert(mass_example.keys()[0], "mass")
-
-###############
-
-#newstims = ["stim_%03d" % (i+1) for i in xrange(len(stims))]
-newstims = stims[:]
-
-for i in xrange(len(stims)):
-    stim = stims[i]
-    newstim = newstims[i]
-    if CONVERT:
-        convert(stim, newstim, path="stimuli")
-
-###############
-
-print "Loading info about experiment stimuli..."
-info_dicts = [
-    parse_info(os.path.join(
-        stim_path,
-        "mass-towers-stability-learning~kappa-1.0~recording-info.csv")),
-    parse_info(os.path.join(
-        stim_path,
-        "mass-towers-stability-learning~kappa--1.0~recording-info.csv")),
-    ]
-info = merge_info_dicts(info_dicts)
-for stim in info:
-    info[stim]['training'] = False
-
-print "Loading info about training stimuli..."
-info_training_dicts = [
-    parse_info(os.path.join(
-        stim_path,
-        "mass-towers-stability-learning-training~recording-info.csv")),
-]
-info_training = merge_info_dicts(info_training_dicts)
-for stim in info_training:
-    info_training[stim]['training'] = True
-
-print "Merging info..."
-all_info = merge_info_dicts([
-    parse_info(os.path.join(
-        conf_path, "mass-learning-%s-stiminfo.csv" % exp_ver)),
-    info,
-    info_training])
-
-converted_info = {}
-for i in xrange(len(stims)):
-    stim = stims[i]
-    all_info[stim]['angle'] = int(all_info[stim]['angle'])
-    all_info[stim]['catch'] = all_info[stim]['catch'] == 'True'
-    all_info[stim]['stable'] = all_info[stim]['stable'] == 'True'
-    all_info[stim]['condition'] = get_condition(stim)
-    converted_info[newstims[i]] = all_info[stim]
-
-if not DRYRUN:
-    filename = "mass-learning-%s-stimuli.json" % exp_ver
-    with open(os.path.join(conf_path, filename), "w") as fh:
-        json.dump(all_info, fh)
-    filename = "mass-learning-%s-stimuli-converted.json" % exp_ver
-    with open(os.path.join(conf_path, filename), "w") as fh:
-        json.dump(converted_info, fh)
+    convert(target, outext, dryrun)
