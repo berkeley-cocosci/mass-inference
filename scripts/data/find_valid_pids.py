@@ -4,19 +4,20 @@ import os
 import csv
 from time import strptime
 
+
 def get_completed(data_db):
     conn = sql.connect(data_db)
     with conn:
         cur = conn.cursor()
         cur.execute("SELECT pid,condition,completion_code FROM Participants")
         vals = cur.fetchall()
-    good = [(x[0], str(x[1]), str(x[2])) for x in vals if x[2] != None]
+    good = [(x[0], str(x[1]), str(x[2])) for x in vals if x[2] is not None]
     return good
 
-base = '../data/human'
+base = '../../data/human'
 
 data_dirs = [
-    os.path.join(base, x) for x in os.listdir(base) 
+    os.path.join(base, x) for x in os.listdir(base)
     if x.startswith("raw_data")]
 batch_dir = os.path.join(base, "batch_results")
 turkid_field = "WorkerId"
@@ -33,7 +34,7 @@ print "Parsing batch files..."
 batch_files = os.listdir(batch_dir)
 for bf in batch_files:
     with open(os.path.join(batch_dir, bf), "r") as fh:
-        dr = csv.DictReader(fh)#, delimeter=",", quotechar="\"")
+        dr = csv.DictReader(fh)
         for row in dr:
             turkid = row[turkid_field]
             code = row[code_field]
