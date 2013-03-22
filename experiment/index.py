@@ -3,6 +3,7 @@
 import cgi
 import cgitb
 import json
+import pickle
 import logging
 import os
 import httplib
@@ -12,6 +13,9 @@ from os import environ
 from hashlib import sha1
 
 import db_tools as dbt
+
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 
 # configure logging
 logging.basicConfig(
@@ -101,8 +105,8 @@ def create_datafile(ip_address, condition):
     pid, validation_code = p
     logging.info("(%s) In condition %s" % ((PFORMAT % pid), condition))
 
-    clist = os.path.join(CONF_DIR, "%s_trials.json" % condition)
-    plist = os.path.join(DATA_DIR, "%s_trials.json" % (PFORMAT % pid))
+    clist = os.path.join(CONF_DIR, "%s_trials.pkl" % condition)
+    plist = os.path.join(DATA_DIR, "%s_trials.pkl" % (PFORMAT % pid))
     logging.info("(%s) Copying trial list to '%s'" % ((PFORMAT % pid), plist))
     shutil.copy(clist, plist)
 
@@ -130,9 +134,9 @@ def write_data(pid, data):
 
 
 def get_all_trialinfo(pid):
-    triallist = os.path.join(DATA_DIR, "%s_trials.json" % (PFORMAT % pid))
+    triallist = os.path.join(DATA_DIR, "%s_trials.pkl" % (PFORMAT % pid))
     with open(triallist, "r") as fh:
-        trialinfo = json.load(fh)
+        trialinfo = pickle.load(fh)
     return trialinfo
 
 
@@ -339,7 +343,7 @@ def submit(form):
         # now get the feedback
         response = {
             'feedback': None,
-            'visual': None,
+            'video': None,
             'text': None,
             'index': index,
             'trial': trialinfo,
@@ -350,10 +354,10 @@ def submit(form):
         # write the data to file
         write_data(pid, data)
 
-        visual_fb = trialinfo['visual_fb']
+        video_fb = trialinfo['video_fb']
         text_fb = trialinfo['text_fb']
 
-        if (not visual_fb) and (not text_fb):
+        if (not video_fb) and (not text_fb):
             feedback = None
         else:
             feedback = 'stable' if trialinfo['stable'] else 'unstable'
@@ -361,7 +365,7 @@ def submit(form):
         # now get the feedback
         response = {
             'feedback': feedback,
-            'visual': visual_fb,
+            'video': video_fb,
             'text': text_fb,
             'index': index,
             'trial': trialinfo['trial'],
