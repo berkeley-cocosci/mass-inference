@@ -1,5 +1,7 @@
 # Viewing and Rendering Stimuli
 
+Scripts to view stimuli and render videos of them.
+
 ## Scripts
 
 ### Viewing stimuli
