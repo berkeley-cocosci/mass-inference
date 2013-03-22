@@ -142,7 +142,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("unstable"));
+                }).load(getVideoFormats("unstable-example"));
         },
 
         teardown : function () {
@@ -159,7 +159,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("stable"));
+                }).load(getVideoFormats("stable-example"));
         },
 
         teardown : function () {
@@ -184,7 +184,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("mass-" + suffix));
+                }).load(getVideoFormats("mass-example~" + suffix));
         },
 
         teardown : function () {
@@ -216,7 +216,7 @@ var slides = {
             }
             
             debug("showing trial");
-            setBgImage("prestim", experiment.stimulus + "-floor");
+            setBgImage("prestim", experiment.stimulus + "~floor");
             $("#prestim").fadeIn(fade);
             $(".feedback").hide();
         },
@@ -250,7 +250,7 @@ var slides = {
                 }).load(
                     getVideoFormats(experiment.stimulus),
                     function (e, api) {
-                        setBgImage("player", experiment.stimulus + "B");
+                        setBgImage("player", experiment.stimulus + "~B");
                         $("#prestim").hide();
                     });
         },
@@ -259,7 +259,7 @@ var slides = {
         showQuery : function () {
 	    slides.trial.phase = "showQuery";
             debug("showing responses");
-            setBgImage("responses", experiment.stimulus + "B");
+            setBgImage("responses", experiment.stimulus + "~B");
             $("#responses").fadeIn(fade);
         },
 
@@ -302,7 +302,7 @@ var slides = {
                             debug("done showing feedback");
                             experiment.nextTrial();
                         }
-                    }).load(getVideoFormats(experiment.stimulus + "-fb"));
+                    }).load(getVideoFormats(experiment.stimulus + "~fb"));
             }
             
             // otherwise just show text
@@ -483,7 +483,7 @@ var experiment = {
 	}
 
         experiment.textFeedback = msg.feedback;
-        experiment.showVideoFeedback = msg.visual;
+        experiment.showVideoFeedback = msg.video;
 	experiment.showTextFeedback = msg.text;
         slides.trial.showFeedback();
     },
