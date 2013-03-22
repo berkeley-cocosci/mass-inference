@@ -470,7 +470,10 @@ infodict[stim_sh[unstable_example]] = {
     'stable': not(bool(fb_sh[0, unstable_example])),
     'full': True,
     'color0': None,
-    'color1': None
+    'color1': None,
+    'newname': 'unstable-example',
+    'example': True,
+    'training': False,
     }
 
 # stable example
@@ -479,7 +482,10 @@ infodict[stim_sh[stable_example]] = {
     'stable': not(bool(fb_sh[0, stable_example])),
     'full': True,
     'color0': None,
-    'color1': None
+    'color1': None,
+    'newname': 'stable-example',
+    'example': True,
+    'training': False,
     }
 
 # training
@@ -489,7 +495,10 @@ for k, i in enumerate(train):
 	'stable': not(bool(fb_sh[0, i])),
 	'full': False,
 	'color0': None,
-	'color1': None
+	'color1': None,
+	'newname': None,
+	'example': False,
+	'training': True,
 	}
 
 # mass example
@@ -498,14 +507,20 @@ infodict["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ridx])] = {
 	 'stable': not(bool(feedback[ridx, mass_example])),
 	 'full': True,
 	 'color0': example_color_pair[0],
-	 'color1': example_color_pair[1]
+	 'color1': example_color_pair[1],
+	 'newname': 'mass-example',
+	 'example': True,
+	 'training': False,
 	 }
 infodict["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ridx])] = {
 	 'angle': angles[2+ntrain],
 	 'stable': not(bool(feedback[ridx, mass_example])),
 	 'full': True,
 	 'color0': example_color_pair[0],
-	 'color1': example_color_pair[1]
+	 'color1': example_color_pair[1],
+	 'newname': 'mass-example',
+	 'example': True,
+	 'training': False,
 	 }
 
 # experiment
@@ -515,18 +530,24 @@ for k, i in enumerate(exp):
 	'stable': not(bool(feedback[ridx, i])),
 	'full': False,
 	'color0': color_pairs[k, 0],
-	'color1': color_pairs[k, 1]
+	'color1': color_pairs[k, 1],
+	'newname': None,
+	'example': False,
+	'training': False,
 	}
     infodict["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ridx])] = {
 	'angle': angles[3+ntrain+k],
 	'stable': not(bool(feedback[ridx, i])),
 	'full': False,
 	'color0': color_pairs[k, 0],
-	'color1': color_pairs[k, 1]
+	'color1': color_pairs[k, 1],
+	'newname': None,
+	'example': False,
+	'training': False,
 	}
 
 # write to file
-infofile = os.path.join(confdir, "%s-rendering-info.pkl" % exp_ver)
+infofile = os.path.join(confdir, "%s-stimulus-info.pkl" % exp_ver)
 with open(infofile, 'w') as fh:
     pickle.dump(infodict, fh)
     
@@ -542,10 +563,13 @@ for k, i in enumerate(exp):
 	'stable': not(bool(feedback[ridx, i])),
 	'full': False,
 	'color0': colors['red'],
-	'color1': colors['blue']
+	'color1': colors['blue'],
+	'newname': None,
+	'example': False,
+	'training': False,
 	}
 
-infofile = os.path.join(confdir, "%s-demo-rendering-info.pkl" % exp_ver)
+infofile = os.path.join(confdir, "%s-demo-stimulus-info.pkl" % exp_ver)
 with open(infofile, 'w') as fh:
     pickle.dump(infodict, fh)
 
