@@ -5,9 +5,10 @@ import numpy as np
 import sqlite3 as sql
 import os
 
-render_path = "../stimuli/render"
-data_dir = "../data/human/raw_data"
-data_out_dir = "../data/human/processed_data"
+render_path = "../../stimuli/render"
+data_dir = "../../data/human/raw_data"
+data_out_dir = "../../data/human/processed_data"
+
 
 def convert_stim_name(name):
     with open(os.path.join(render_path, "conversion.csv"), "r") as fh:
@@ -18,13 +19,14 @@ def convert_stim_name(name):
     oldname = oldnames[idx]
     return oldname
 
+
 def get_completed(data_db):
     conn = sql.connect(data_db)
     with conn:
         cur = conn.cursor()
         cur.execute("SELECT pid,condition,completion_code FROM Participants")
         vals = cur.fetchall()
-    good = [(x[0], str(x[1])) for x in vals if x[2] != None]
+    good = [(x[0], str(x[1])) for x in vals if x[2] is not None]
     return good
 
 data = get_completed(os.path.join(data_dir, "data.db"))
@@ -49,7 +51,7 @@ for idx in xrange(len(pids)):
 
     if not os.path.exists(os.path.join(data_dir, datafile)):
         continue
-    
+
     print "Processing '%s'..." % pid
     with open(os.path.join(data_dir, datafile), "r") as fh:
         lines = [x for x in fh.read().strip().split("\n") if x != ""]
@@ -87,7 +89,7 @@ for idx in xrange(len(pids)):
                 else:
                     newvals.append(val)
             queries.append(tuple(newvals))
-        
+
         else:
             newvals = []
             for vidx, val in enumerate(vals):
@@ -109,10 +111,8 @@ for idx in xrange(len(pids)):
 
     if not os.path.exists(data_out_dir):
         os.mkdir(data_out_dir)
-    
+
     datapath = os.path.join(data_out_dir, "%s~%s.npz" % (pid, cond))
     np.savez(datapath, **arrs)
 
     print "Saved to '%s'." % datapath
-
-

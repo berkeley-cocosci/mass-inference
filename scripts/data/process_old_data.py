@@ -12,12 +12,12 @@ import pickle
 import cogphysics.tower.analysis_tools as tat
 from cogphysics import RESOURCE_PATH
 
-from util.summarize import compute_nfell
+from summarize import compute_nfell
 
 ## Configuration
 
-model_datadir = "../data/model/"
-human_datadir = "../data/old-human/"
+model_datadir = "../../data/model/"
+human_datadir = "../../data/old-human/"
 
 # dataname = [
 #     "stability-original",
