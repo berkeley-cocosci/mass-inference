@@ -328,8 +328,9 @@ fig.set_figheight(4)
 # choose a (stable) mass example
 goodex = np.nonzero((lh[:, [0]] == lh).all(axis=1) & (fb == 0))[0]
 goodex = [x for x in goodex if nums[x] not in list(nums[exp])]
-mass_example = goodex[np.argmin(lh[goodex, 0])]
-print stimuli[mass_example], lh[mass_example]
+#mass_example = goodex[np.argmin(lh[goodex, 0])]
+mass_example = goodex[np.argmin(guess_err[goodex])]
+print stimuli[mass_example], lhr[mass_example], guess_err[mass_example]
 
 # <markdowncell>
 
