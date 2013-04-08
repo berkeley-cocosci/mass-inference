@@ -88,7 +88,9 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'video_fb': True,
                 'stable': si['stable'],
                 'color0': si['color0'],
-                'color1': si['color1']
+                'color1': si['color1'],
+                'color0_name': si['color0_name'],
+                'color1_name': si['color1_name']
                 }
             todump.append(info)
             t += 1
@@ -116,7 +118,9 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'video_fb': video_fb,
                 'stable': si['stable'],
                 'color0': si['color0'],
-                'color1': si['color1']
+                'color1': si['color1'],
+                'color0_name': si['color0_name'],
+                'color1_name': si['color1_name']
                 }
             todump.append(info)
             t += 1
@@ -148,7 +152,9 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'video_fb': True,
                 'stable': si['stable'],
                 'color0': si['color0'],
-                'color1': si['color1']
+                'color1': si['color1'],
+                'color0_name': si['color0_name'],
+                'color1_name': si['color1_name']
                 }
             todump.append(info)
             t += 1
