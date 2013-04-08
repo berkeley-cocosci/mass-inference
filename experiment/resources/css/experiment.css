@@ -338,12 +338,16 @@ div.scalepart img {
 .response button:active { box-shadow: 0px 0px 3px; }
 
 #response-yes { bottom: 5%; }
-#response-yes button { background-color: #6666FF; }
-#response-yes button:active { background-color: #CCCCFF; }
+/* #response-yes button { background-color: #6666FF; } */
+/* #response-yes button:active { background-color: #CCCCFF; } */
+#response-yes button { background-color: #FFFFFF; }
+#response-yes button:active { background-color: #AAAAAA; }
 
 #response-no { top: 5%; }
-#response-no button { background-color: #66FF66; }
-#response-no button:active { background-color: #CCFFCC; }
+/* #response-no button { background-color: #66FF66; } */
+/* #response-no button:active { background-color: #CCFFCC; } */
+#response-no button { background-color: #FFFFFF; }
+#response-no button:active { background-color: #AAAAAA; }
 
 /* Feedback */
 
@@ -366,12 +370,14 @@ div.scalepart img {
 .feedback p { margin-top: 2%; }
 
 #stable-feedback {
-    background-color: #66FF66;
+    /* background-color: #66FF66; */
+    background-color: #FFFFFF;
     top: 0%;
 }
 
 #unstable-feedback {
-    background-color: #6666FF;
+    /* background-color: #6666FF; */
+    background-color: #FFFFFF;
     bottom: 0%;
 }
 
