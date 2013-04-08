@@ -85,6 +85,12 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
     stim_colors = np.array([
         (stiminfo[stim]['color0'], stiminfo[stim]['color1'])
         for stim in stims0])
+    train_flip = np.array(
+        [False]*np.floor(len(train0)/2.) +
+        [True]*np.ceil(len(train0)/2.))
+    stim_flip = np.array(
+        [False]*np.floor(len(stims0)/2.) +
+        [True]*np.ceil(len(stims0)/2.))
 
     # set up the random number generator
     if seed is not None:
@@ -99,6 +105,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
         # random ordering for training
         tidx = shuffleColors(rso, train_colors)
         train = np.array(train0)[tidx]
+        rso.shuffle(train_flip)
 
         # training
         t = 0
@@ -116,7 +123,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
                 'color1_name': si['color1_name'],
-                'flip_colors': bool(rso.randint(2))
+                'flip_colors': train_flip[t]
                 }
             todump.append(info)
             t += 1
@@ -129,6 +136,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
         # random ordering for experiment
         sidx = shuffleColors(rso, stim_colors)
         stims = np.array(stims0)[sidx]
+        rso.shuffle(stim_flip)
 
         # experiment
         t = 0
@@ -146,7 +154,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
                 'color1_name': si['color1_name'],
-                'flip_colors': bool(rso.randint(2))
+                'flip_colors': stim_flip[t]
                 }
             todump.append(info)
             t += 1
@@ -163,6 +171,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
         # random ordering for posttest
         pidx = shuffleColors(rso, train_colors)
         post = np.array(train0)[pidx]
+        rso.shuffle(train_flip)
 
         # posttest
         t = 0
@@ -180,7 +189,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
                 'color1_name': si['color1_name'],
-                'flip_colors': bool(rso.randint(2))
+                'flip_colors': train_flip[t]
                 }
             todump.append(info)
             t += 1
