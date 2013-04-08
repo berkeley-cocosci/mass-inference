@@ -31,7 +31,7 @@ nexp = 20
 ntrain = 6
 
 cmap = at.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
-rso = np.random.RandomState(23)
+rso = np.random.RandomState(230)
 
 # <markdowncell>
 
@@ -40,14 +40,14 @@ rso = np.random.RandomState(23)
 # <codecell>
 
 colors = {
-    'red': '#FF0033',
+    'red': '#FF3333',
     'orange': '#FF7000',
     'yellow': '#FFFF00',
     'green': '#00FF00',
     'cyan': '#00FFFF',
-    'blue': '#0033FF',
-    'magenta': '#FF00FF'
-    'gray': '#707070'
+    'blue': '#3366FF',
+    'magenta': '#FF00FF',
+    'gray': '#808080'
     }
 
 blacklist = [
@@ -59,8 +59,10 @@ blacklist = [
     ('orange', 'magenta'),
     ('blue', 'magenta'),
     ('blue', 'cyan'),
-    ('cyan', 'green')
-    # ('orange', 'green'),
+    ('cyan', 'green'),
+    ('yellow', 'gray'),
+    ('orange', 'gray'),
+    ('blue', 'gray'),
     ]
 blacklist = [tuple(sorted(b)) for b in blacklist]
 
@@ -232,6 +234,7 @@ cnames = sorted(colors.keys())
 pairs = [tuple(sorted((ci, cj))) for ci in cnames for cj in cnames if ci != cj]
 pairs = sorted(set(pairs))
 pairs = np.array([p for p in pairs if p not in blacklist])
+rso.shuffle(pairs)
 color_pairs = []
 for i in xrange(nexp+1):
     pair = pairs[i % len(pairs)]
