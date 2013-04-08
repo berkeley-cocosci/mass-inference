@@ -135,10 +135,10 @@ div.scalepart img {
 }
 
 .left-color {
-    background-color: #ff00ff;
+    background-color: #ff3333;
 }
 .right-color {
-    background-color: #0033ff;
+    background-color: #00ffff;
 }
 
 #query-ratio-container { display: none; }
