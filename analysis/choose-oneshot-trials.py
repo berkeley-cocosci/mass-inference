@@ -44,8 +44,10 @@ colors = {
     'orange': '#FF7000',
     'yellow': '#FFFF00',
     'green': '#00FF00',
+    'cyan': '#00FFFF',
     'blue': '#0033FF',
     'magenta': '#FF00FF'
+    'gray': '#707070'
     }
 
 blacklist = [
@@ -55,7 +57,10 @@ blacklist = [
     ('orange', 'yellow'),
     ('yellow', 'green'),
     ('orange', 'magenta'),
-    ('orange', 'green'),
+    ('blue', 'magenta'),
+    ('blue', 'cyan'),
+    ('cyan', 'green')
+    # ('orange', 'green'),
     ]
 blacklist = [tuple(sorted(b)) for b in blacklist]
 
