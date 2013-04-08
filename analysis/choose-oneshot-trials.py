@@ -31,7 +31,7 @@ nexp = 20
 ntrain = 6
 
 cmap = at.make_cmap("lh", (0, 0, 0), (.5, .5, .5), (1, 0, 0))
-rso = np.random.RandomState(23)
+rso = np.random.RandomState(230)
 
 # <markdowncell>
 
@@ -40,12 +40,14 @@ rso = np.random.RandomState(23)
 # <codecell>
 
 colors = {
-    'red': '#FF0033',
+    'red': '#FF3333',
     'orange': '#FF7000',
     'yellow': '#FFFF00',
     'green': '#00FF00',
-    'blue': '#0033FF',
-    'magenta': '#FF00FF'
+    'cyan': '#00FFFF',
+    'blue': '#3366FF',
+    'magenta': '#FF00FF',
+    'gray': '#808080'
     }
 
 blacklist = [
@@ -55,7 +57,12 @@ blacklist = [
     ('orange', 'yellow'),
     ('yellow', 'green'),
     ('orange', 'magenta'),
-    ('orange', 'green'),
+    ('blue', 'magenta'),
+    ('blue', 'cyan'),
+    ('cyan', 'green'),
+    ('yellow', 'gray'),
+    ('orange', 'gray'),
+    ('blue', 'gray'),
     ]
 blacklist = [tuple(sorted(b)) for b in blacklist]
 
@@ -227,6 +234,7 @@ cnames = sorted(colors.keys())
 pairs = [tuple(sorted((ci, cj))) for ci in cnames for cj in cnames if ci != cj]
 pairs = sorted(set(pairs))
 pairs = np.array([p for p in pairs if p not in blacklist])
+rso.shuffle(pairs)
 color_pairs = []
 for i in xrange(nexp+1):
     pair = pairs[i % len(pairs)]
@@ -472,6 +480,8 @@ infodict[stim_sh[unstable_example]] = {
     'full': True,
     'color0': None,
     'color1': None,
+    'color0_name': None,
+    'color1_name': None,
     'newname': 'unstable-example',
     'example': True,
     'training': False,
@@ -484,6 +494,8 @@ infodict[stim_sh[stable_example]] = {
     'full': True,
     'color0': None,
     'color1': None,
+    'color0_name': None,
+    'color1_name': None,
     'newname': 'stable-example',
     'example': True,
     'training': False,
@@ -497,6 +509,8 @@ for k, i in enumerate(train):
 	'full': False,
 	'color0': None,
 	'color1': None,
+	'color0_name': None,
+	'color1_name': None,
 	'newname': None,
 	'example': False,
 	'training': True,
@@ -504,25 +518,29 @@ for k, i in enumerate(train):
 
 # mass example
 infodict["%s~kappa-%s_cb-0" % (stimuli[mass_example], kappas[ridx])] = {
-	 'angle': angles[2+ntrain],
-	 'stable': not(bool(feedback[ridx, mass_example])),
-	 'full': True,
-	 'color0': example_color_pair[0],
-	 'color1': example_color_pair[1],
-	 'newname': 'mass-example',
-	 'example': True,
-	 'training': False,
-	 }
+    'angle': angles[2+ntrain],
+    'stable': not(bool(feedback[ridx, mass_example])),
+    'full': True,
+    'color0': example_color_pair[0],
+    'color1': example_color_pair[1],
+    'color0_name': example_color_pair_hr[0],
+    'color1_name': example_color_pair_hr[1],
+    'newname': 'mass-example',
+    'example': True,
+    'training': False,
+}
 infodict["%s~kappa-%s_cb-1" % (stimuli[mass_example], kappas[ridx])] = {
-	 'angle': angles[2+ntrain],
-	 'stable': not(bool(feedback[ridx, mass_example])),
-	 'full': True,
-	 'color0': example_color_pair[0],
-	 'color1': example_color_pair[1],
-	 'newname': 'mass-example',
-	 'example': True,
-	 'training': False,
-	 }
+    'angle': angles[2+ntrain],
+    'stable': not(bool(feedback[ridx, mass_example])),
+    'full': True,
+    'color0': example_color_pair[0],
+    'color1': example_color_pair[1],
+    'color0_name': example_color_pair_hr[0],
+    'color1_name': example_color_pair_hr[1],
+    'newname': 'mass-example',
+    'example': True,
+    'training': False,
+}
 
 # experiment
 for k, i in enumerate(exp):
@@ -532,16 +550,20 @@ for k, i in enumerate(exp):
 	'full': False,
 	'color0': color_pairs[k, 0],
 	'color1': color_pairs[k, 1],
+	'color0_name': color_pairs_hr[k, 0],
+	'color1_name': color_pairs_hr[k, 1],
 	'newname': None,
 	'example': False,
 	'training': False,
-	}
+	    }
     infodict["%s~kappa-%s_cb-1" % (stimuli[i], kappas[ridx])] = {
 	'angle': angles[3+ntrain+k],
 	'stable': not(bool(feedback[ridx, i])),
 	'full': False,
 	'color0': color_pairs[k, 0],
 	'color1': color_pairs[k, 1],
+	'color0_name': color_pairs_hr[k, 0],
+	'color1_name': color_pairs_hr[k, 1],
 	'newname': None,
 	'example': False,
 	'training': False,
@@ -565,6 +587,8 @@ for k, i in enumerate(exp):
 	'full': False,
 	'color0': colors['red'],
 	'color1': colors['blue'],
+	'color0_name': 'red',
+	'color1_name': 'blue',
 	'newname': None,
 	'example': False,
 	'training': False,

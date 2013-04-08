@@ -303,6 +303,20 @@ def getTrialInfo(form):
             'stimulus': trialinfo['stimulus'],
             }
 
+        logging.info("(%s) Flipping colors: %s" % (
+            (PFORMAT % pid), trialinfo['flip_colors']))
+        
+        if trialinfo['flip_colors']:
+            info['left_color'] = trialinfo['color0']
+            info['right_color'] = trialinfo['color1']
+            info['left_color_name'] = trialinfo['color0_name']
+            info['right_color_name'] = trialinfo['color1_name']
+        else:
+            info['left_color'] = trialinfo['color1']
+            info['right_color'] = trialinfo['color0']
+            info['left_color_name'] = trialinfo['color1_name']
+            info['right_color_name'] = trialinfo['color0_name']
+
     json_info = json.dumps(info)
     logging.info("(%s) Sending trial info: %s" % (
         (PFORMAT % pid), json_info))
