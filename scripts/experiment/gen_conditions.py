@@ -38,6 +38,26 @@ def isExperiment(stiminfo):
     return val
 
 
+def shuffleColors(rso, colors):
+    idx = range(len(colors))
+    sidx = np.array(idx)
+    rso.shuffle(sidx)
+    nloop = 0
+    while True:
+        for i in idx[:-1]:
+            c0 = set([x for x in colors[sidx[i]] if x is not None])
+            c1 = set([x for x in colors[sidx[i+1]] if x is not None])
+            if len(c0 | c1) < len(c0) + len(c1):
+                break
+        if len(c0 | c1) == len(c0) + len(c1):
+            break
+        rso.shuffle(sidx)
+        nloop += 1
+        if nloop == 100000:
+            raise RuntimeError("could not find a valid color ordering")
+    return sidx
+
+
 def createCondition(condition, text_fb, video_fb, qidx, seed,
                     f_training, f_experiment, f_posttest):
 
@@ -59,6 +79,12 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
     stims0 = sorted([
         stim for stim in stiminfo.keys()
         if isExperiment(stiminfo[stim])])
+    train_colors = np.array([
+        (stiminfo[stim]['color0'], stiminfo[stim]['color1'])
+        for stim in train0])
+    stim_colors = np.array([
+        (stiminfo[stim]['color0'], stiminfo[stim]['color1'])
+        for stim in stims0])
 
     # set up the random number generator
     if seed is not None:
@@ -71,8 +97,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
 
     if f_training:
         # random ordering for training
-        tidx = np.arange(len(train0))
-        rso.shuffle(tidx)
+        tidx = shuffleColors(rso, train_colors)
         train = np.array(train0)[tidx]
 
         # training
@@ -102,8 +127,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
 
     if f_experiment:
         # random ordering for experiment
-        sidx = np.arange(len(stims0))
-        rso.shuffle(sidx)
+        sidx = shuffleColors(rso, stim_colors)
         stims = np.array(stims0)[sidx]
 
         # experiment
@@ -137,8 +161,7 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
 
     if f_posttest:
         # random ordering for posttest
-        pidx = np.arange(len(train0))
-        rso.shuffle(pidx)
+        pidx = shuffleColors(rso, train_colors)
         post = np.array(train0)[pidx]
 
         # posttest
