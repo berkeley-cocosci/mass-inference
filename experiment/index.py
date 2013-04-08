@@ -32,7 +32,7 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = False
+F_CHECK_IP = True
 
 DATA_DIR = "data"
 CONF_DIR = "config"
