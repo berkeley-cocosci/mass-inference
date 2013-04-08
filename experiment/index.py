@@ -301,6 +301,10 @@ def getTrialInfo(form):
             'index': trialinfo['index'],
             'trial': trialinfo['trial'],
             'stimulus': trialinfo['stimulus'],
+            'color0': trialinfo['color0'],
+            'color1': trialinfo['color1'],
+            'color0_name': trialinfo['color0_name'],
+            'color1_name': trialinfo['color1_name'],
             }
 
     json_info = json.dumps(info)
