@@ -149,7 +149,7 @@
 	  figure out which color block is heavier. We will
 	  occasionally ask you which color you think is the "heavy
 	  color".</p>
-	<div id="scales"><div class="scalepart"><img src="resources/images/scales-both_0000_left1.png" class="color1" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0001_right0.png" class="color0" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0002_left0.png" class="color1" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0003_right1.png" class="color0" alt="" /></div></div>
+	<div id="scales"><div class="scalepart"><img src="resources/images/scales-both_0000_left1.png" class="left-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0001_right0.png" class="right-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0002_left0.png" class="left-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0003_right1.png" class="right-color" alt="" /></div></div>
       </div>
       <div class="example-container">
 	<div id="mass-example" class="example is-splash">
@@ -201,7 +201,7 @@
       </div>
       <div id="question-container" class="blue">
 	<div id="question"><b>Question:</b> Will the tower fall down?</div>
-	<div id="question-image"><div class="scalepart"><img src="resources/images/scales-both_0000_left1.png" class="color1" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0001_right0.png" class="color0" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0002_left0.png" class="color1" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0003_right1.png" class="color0" alt="" /></div></div>
+	<div id="question-image"><div class="scalepart"><img src="resources/images/scales-both_0000_left1.png" class="left-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0001_right0.png" class="right-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0002_left0.png" class="left-color" alt="" /></div><div class="scalepart"><img src="resources/images/scales-both_0003_right1.png" class="right-color" alt="" /></div></div>
 	<div class="spacer"></div>
       </div>
       <div id="video-container">
@@ -248,14 +248,14 @@
 	<p>Remember, the "heavy color" is the same throughout the
 	entire experiment.</p>
 	<div id="ratio-query">
-	  <div id="color0-heavy">
-	    <div class="scalepart"><img class="color1" src="resources/images/scales-10_0000_left.png" /></div><div class="scalepart"><img class="color0" src="resources/images/scales-10_0001_right.png" /></div>
-	    <button type="button" class="color0" onclick="experiment.submitResponse('color0');"></button>
+	  <div id="right-color-heavy">
+	    <div class="scalepart"><img class="left-color" src="resources/images/scales-10_0000_left.png" /></div><div class="scalepart"><img class="right-color" src="resources/images/scales-10_0001_right.png" /></div>
+	    <button type="button" class="right-color" onclick="experiment.submitResponse(experiment.right_color);"></button>
  	    <div class="spacer"></div>
 	  </div>
-	  <div id="color1-heavy">
-	    <div class="scalepart"><img class="color1" src="resources/images/scales-01_0000_left.png" /></div><div class="scalepart"><img class="color0" src="resources/images/scales-01_0001_right.png" /></div>
-	    <button type="button" class="color1" onclick="experiment.submitResponse('color1');"></button>
+	  <div id="left-color-heavy">
+	    <div class="scalepart"><img class="left-color" src="resources/images/scales-01_0000_left.png" /></div><div class="scalepart"><img class="right-color" src="resources/images/scales-01_0001_right.png" /></div>
+	    <button type="button" class="left-color" onclick="experiment.submitResponse(experiment.left_color);"></button>
 	    <div class="spacer"></div>
 	  </div>
 	  <div class="spacer"></div>

@@ -134,16 +134,16 @@ div.scalepart img {
     border-bottom: 2px solid black;
 }
 
-.color0 {
+.left-color {
     background-color: #ff00ff;
 }
-.color1 {
+.right-color {
     background-color: #0033ff;
 }
 
 #query-ratio-container { display: none; }
 
-#color0-heavy, #color1-heavy {
+#left-color-heavy, #right-color-heavy {
     text-align: center;
     /* float: left; */
     /* position: relative; */
@@ -168,10 +168,11 @@ div.scalepart img {
     width: 40%;
     padding: .5em 1em;
     margin-top: .625em;
+    text-transform: capitalize;
 }
 
-#color0-heavy { float: left; }
-#color1-heavy { float: right; }
+#left-color-heavy { float: right; }
+#right-color-heavy { float: left; }
 
 /********************************************************************/
 /* Trial slide components                                           */

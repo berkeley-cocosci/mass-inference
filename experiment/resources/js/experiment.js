@@ -435,11 +435,13 @@ var experiment = {
                 else {
                     experiment.trial = info.trial;
                     experiment.stimulus = info.stimulus;
+		    experiment.right_color = info.right_color_name;
+		    experiment.left_color = info.left_color_name;
 
-		    $(".color0").css("background-color", info.color0);
-		    $(".color1").css("background-color", info.color1);
-		    $("button.color0").html(info.color0_name);
-		    $("button.color1").html(info.color1_name);
+		    $(".left-color").css("background-color", info.left_color);
+		    $(".right-color").css("background-color", info.right_color);
+		    $("button.left-color").html(info.left_color_name);
+		    $("button.right-color").html(info.right_color_name);
 
 		    $("#question-container").show();
 		    $("#video-container").show();
