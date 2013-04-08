@@ -134,22 +134,16 @@ div.scalepart img {
     border-bottom: 2px solid black;
 }
 
-.color0 {
-    background-color: red;
-}
-.color1 {
-    background-color: yellow;
-}
-
 #query-ratio-container { display: none; }
 
-#ratio-query div {
+#color0-heavy, #color1-heavy {
     text-align: center;
     /* float: left; */
     /* position: relative; */
     /* width: 50%; */
-    height: 3em;
+    /* height: 3em; */
     margin: .625em 0;
+    width: 50%;
 }
 
 /* #ratio-query img { */
@@ -159,15 +153,18 @@ div.scalepart img {
 /*     border-bottom: 2px solid black; */
 /* } */
 
-#ratio-query button {
-    width: 30%;
-    padding: .5em 1em;
+#ratio-query .scalepart {
+    height: 3.5em;
 }
 
-#yellow-heavy { float: left; }
-#yellow-heavy button { background-color: #FFFF66; }
-#red-heavy { float: right; }
-#red-heavy button { background-color: #FF6666; }
+#ratio-query button {
+    width: 40%;
+    padding: .5em 1em;
+    margin-top: .625em;
+}
+
+#color0-heavy { float: left; }
+#color1-heavy { float: right; }
 
 /********************************************************************/
 /* Trial slide components                                           */

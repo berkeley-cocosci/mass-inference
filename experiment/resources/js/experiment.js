@@ -435,6 +435,12 @@ var experiment = {
                 else {
                     experiment.trial = info.trial;
                     experiment.stimulus = info.stimulus;
+
+		    $(".color0").css("background-color", info.color0);
+		    $(".color1").css("background-color", info.color1);
+		    $("button.color0").html(info.color0_name);
+		    $("button.color1").html(info.color1_name);
+
 		    $("#question-container").show();
 		    $("#video-container").show();
 		    $("#reload-container").show();
@@ -561,8 +567,14 @@ $(document).ready(function () {
     //     function () {
             slides.show("index");
 	    // $(".slide").show();
-	    // $("#instructions3").show();
+	    // $("#instructions2").show();
+            // $("#trial").show();
         // });
+		    // $("#question-container").hide();
+		    // $("#video-container").hide();
+		    // $("#reload-container").hide();
+		    // $("#query-ratio-container").show();
+                    // slides.show("trial");
 });
 
 
