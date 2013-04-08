@@ -134,6 +134,13 @@ div.scalepart img {
     border-bottom: 2px solid black;
 }
 
+.color0 {
+    background-color: #ff00ff;
+}
+.color1 {
+    background-color: #0033ff;
+}
+
 #query-ratio-container { display: none; }
 
 #color0-heavy, #color1-heavy {
