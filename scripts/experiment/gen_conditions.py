@@ -90,7 +90,8 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color0': si['color0'],
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
-                'color1_name': si['color1_name']
+                'color1_name': si['color1_name'],
+                'flip_colors': bool(rso.randint(2))
                 }
             todump.append(info)
             t += 1
@@ -120,7 +121,8 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color0': si['color0'],
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
-                'color1_name': si['color1_name']
+                'color1_name': si['color1_name'],
+                'flip_colors': bool(rso.randint(2))
                 }
             todump.append(info)
             t += 1
@@ -154,7 +156,8 @@ def createCondition(condition, text_fb, video_fb, qidx, seed,
                 'color0': si['color0'],
                 'color1': si['color1'],
                 'color0_name': si['color0_name'],
-                'color1_name': si['color1_name']
+                'color1_name': si['color1_name'],
+                'flip_colors': bool(rso.randint(2))
                 }
             todump.append(info)
             t += 1
