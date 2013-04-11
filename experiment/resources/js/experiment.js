@@ -427,6 +427,7 @@ var experiment = {
 		    // $("#video-container").hide();
 		    // $("#reload-container").hide();
 		    // $("#query-ratio-container").show();
+		    $(".feedback").fadeOut(fade);
 		    $("#question").fadeOut(fade, function () {
 			$("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
 			$("#question").fadeIn(fade);
