@@ -141,39 +141,6 @@ div.scalepart img {
     background-color: #00ffff;
 }
 
-/* #query-ratio-container { display: none; } */
-
-/* #left-color-heavy, #right-color-heavy { */
-/*     text-align: center; */
-/*     /\* float: left; *\/ */
-/*     /\* position: relative; *\/ */
-/*     /\* width: 50%; *\/ */
-/*     /\* height: 3em; *\/ */
-/*     margin: .625em 0; */
-/*     width: 50%; */
-/* } */
-
-/* #ratio-query img { */
-/*     width: 90%; */
-/*     display: block; */
-/*     margin: .625em auto; */
-/*     border-bottom: 2px solid black; */
-/* } */
-
-/* #ratio-query .scalepart { */
-/*     height: 3.5em; */
-/* } */
-
-/* #ratio-query button { */
-/*     width: 40%; */
-/*     padding: .5em 1em; */
-/*     margin-top: .625em; */
-/*     text-transform: capitalize; */
-/* } */
-
-/* #left-color-heavy { float: right; } */
-/* #right-color-heavy { float: left; } */
-
 /********************************************************************/
 /* Trial slide components                                           */
 /********************************************************************/
@@ -216,7 +183,6 @@ div.scalepart img {
 }
 
 #question {
-    /* position: absolute; */
     font-size: 1.25em;
     float: left;
 }
@@ -228,14 +194,6 @@ div.scalepart img {
     text-align: center;
     margin-top: 0.5em;
 }
-
-/* #question-image img {  */
-/*     /\* height: 2em; *\/ */
-/*     /\* padding: 0 35px; *\/ */
-/*     /\* display: none; *\/ */
-/*     /\* margin: .5em auto; *\/ */
-/*     height: 100%; */
-/* } */
 
 /* Video player */
 
@@ -351,8 +309,6 @@ div.scalepart img {
     height: 100%;
     border-radius: 0 4em 4em 0;
     text-transform: capitalize;
-    /* padding-right: 1%; */
-    /* text-align: left; */
 }
 
 .response button:active { 
@@ -387,13 +343,11 @@ div.scalepart img {
 .feedback p { margin-top: 2%; }
 
 #stable-feedback {
-    /* background-color: #66FF66; */
     background-color: #FFFFFF;
     top: 0%;
 }
 
 #unstable-feedback {
-    /* background-color: #6666FF; */
     background-color: #FFFFFF;
     bottom: 0%;
 }

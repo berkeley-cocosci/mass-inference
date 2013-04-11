@@ -45,19 +45,6 @@ function post(action, data, handler) {
 var $f = flowplayer;
 $f.conf.embed = false;
 
-// $f(function(api, root) {
-//     // when a new video is about to be loaded
-//     api.bind("load", function() {
-//         debug("flowplayer '" + this.id + "' loaded");
-//         api.conf.loop = false;
-//         api.conf.embed = false;
-        
-//     // when a video is loaded and ready to play
-//     }).bind("ready", function() {
-//         debug("flowplayer '" + this.id + "' ready");
-//     });
-// });
-
 // --------------------------------------------------------------------
 // Media
 
@@ -328,7 +315,6 @@ var slides = {
     // ----------------------------------------------------------------
     error : {
         setup : function () {
-            // $($("#error-message").find("p")[0]).html(experiment.errorStatus);
             $($("#error-message").find("p")[0]).html("<p>" + experiment.errorMessage + "</p>");
         },
 
@@ -374,11 +360,9 @@ var experiment = {
 	    // different instructions depending on feedback condition
 	    var fbtype = experiment.condition.split("-")[1];
 	    if (fbtype == "fb") {
-		// $($("#feedback-info").find("p")[1]).hide();
 		$(".fb").show();
 		$(".nfb").hide();
 	    } else if (fbtype == "nfb") {
-		// $($("#feedback-info").find("p")[0]).hide();
 		$(".fb").hide();
 		$(".nfb").show();
 	    } else if (fbtype == "vfb") {
@@ -423,14 +407,9 @@ var experiment = {
 
 		// Querying the ratio
 		else if (info.trial == 'query ratio') {
-		    // $("#question-container").hide();
-		    // $("#video-container").hide();
-		    // $("#reload-container").hide();
-		    // $("#query-ratio-container").show();
 		    $(".feedback").fadeOut(fade);
 		    $("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
 		    $("#explicit-responses").fadeIn(fade)
-                    // slides.show("trial");
 		    experiment.starttime = new Date().getTime();
 		}		    
 
@@ -447,10 +426,6 @@ var experiment = {
 		    $("button.right-color").html(info.right_color_name);
 
 		    $("#explicit-responses").hide();
-		    // $("#question-container").show();
-		    // $("#video-container").show();
-		    // $("#reload-container").show();
-		    // $("#query-ratio-container").hide();
 		    $("#question").html("<b>Question:</b> Will the tower fall down?");
                     slides.show("trial");
                 }
@@ -500,17 +475,6 @@ var experiment = {
 	experiment.showTextFeedback = msg.text;
         slides.trial.showFeedback();
     },
-
-    // // Get the ratio from the user and submit it to the server
-    // submitRatio : function(color) {
-    //     var data = {
-    //         pid : experiment.pid,
-    //         validationCode : experiment.validationCode,
-    //         "color" : color,
-    //     };
-
-    //     post("submitRatio", data, experiment.nextTrial);
-    // },
 
     decline : function() {
         slides.show("declined");
@@ -569,19 +533,8 @@ $(document).ready(function () {
                 splash: true,
                 tooltip: false });
         });
-    // preloadImages(
-    //     ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
-    //     function () {
-            slides.show("index");
-	    // $(".slide").show();
-	    // $("#instructions2").show();
-            // $("#trial").show();
-        // });
-		    // $("#question-container").hide();
-		    // $("#video-container").hide();
-		    // $("#reload-container").hide();
-		    // $("#query-ratio-container").show();
-                    // slides.show("trial");
+
+    slides.show("index");
 });
 
 
