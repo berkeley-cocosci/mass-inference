@@ -423,11 +423,15 @@ var experiment = {
 
 		// Querying the ratio
 		else if (info.trial == 'query ratio') {
-		    $("#question-container").hide();
-		    $("#video-container").hide();
-		    $("#reload-container").hide();
-		    $("#query-ratio-container").show();
-                    slides.show("trial");
+		    // $("#question-container").hide();
+		    // $("#video-container").hide();
+		    // $("#reload-container").hide();
+		    // $("#query-ratio-container").show();
+		    $("#question").fadeOut(fade, function () {
+			$("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
+			$("#question").fadeIn(fade);
+		    });
+                    // slides.show("trial");
 		    experiment.starttime = new Date().getTime();
 		}		    
 
