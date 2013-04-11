@@ -428,10 +428,8 @@ var experiment = {
 		    // $("#reload-container").hide();
 		    // $("#query-ratio-container").show();
 		    $(".feedback").fadeOut(fade);
-		    $("#question").fadeOut(fade, function () {
-			$("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
-			$("#question").fadeIn(fade);
-		    });
+		    $("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
+		    $("#explicit-responses").fadeIn(fade)
                     // slides.show("trial");
 		    experiment.starttime = new Date().getTime();
 		}		    
@@ -448,10 +446,12 @@ var experiment = {
 		    $("button.left-color").html(info.left_color_name);
 		    $("button.right-color").html(info.right_color_name);
 
-		    $("#question-container").show();
-		    $("#video-container").show();
-		    $("#reload-container").show();
-		    $("#query-ratio-container").hide();
+		    $("#explicit-responses").hide();
+		    // $("#question-container").show();
+		    // $("#video-container").show();
+		    // $("#reload-container").show();
+		    // $("#query-ratio-container").hide();
+		    $("#question").html("<b>Question:</b> Will the tower fall down?");
                     slides.show("trial");
                 }
             });
