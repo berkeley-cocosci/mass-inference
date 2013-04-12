@@ -9,6 +9,8 @@ ttypes = ["training", "experiment", "queries", "posttest"]
 data_path = "../../data/human/processed_data"
 data_out_path = "../../data/human/consolidated_data/%s_data~%s.npz"
 
+exp_vers = ["F"]
+
 for ttype in ttypes:
 
     # list of data files to consolidate
@@ -39,6 +41,9 @@ for ttype in ttypes:
     ndata = len(dtype)
 
     for cond in allconds:
+
+        if cond.split("-")[0] not in exp_vers:
+            continue
 
         if cond.endswith("-cb0"):
             counterbalance = False
