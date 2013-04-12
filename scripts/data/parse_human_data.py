@@ -53,7 +53,7 @@ for idx in xrange(len(pids)):
     cond = conds[idx]
 
     datafile = "%s.csv" % pid
-    triallist = "%s_trials.json" % pid
+    triallist = "%s_trials.pkl" % pid
 
     if not os.path.exists(os.path.join(data_dir, datafile)):
         continue
@@ -61,6 +61,8 @@ for idx in xrange(len(pids)):
     print "Processing '%s'..." % pid
     with open(os.path.join(data_dir, datafile), "r") as fh:
         lines = [x for x in fh.read().strip().split("\n") if x != ""]
+    with open(os.path.join(data_dir, triallist), "r") as fh:
+        trials = pickle.load(fh)
 
     fields = lines.pop(0).split(",")
     assert fields == list(DTYPE.names)
@@ -71,7 +73,7 @@ for idx in xrange(len(pids)):
     queries = []
     curr = training
 
-    for line in lines:
+    for lidx, line in enumerate(lines):
         vals = line.split(",")
 
         if vals[1] == "finished training":
@@ -83,6 +85,9 @@ for idx in xrange(len(pids)):
         elif vals[1] == "query ratio":
             index = vals[0]
             newvals = []
+            info = trials[lidx-1]
+            color0 = info['color0_name']
+            color1 = info['color1_name']
             for vidx, val in enumerate(vals):
                 if DTYPE.names[vidx] == "trial":
                     newvals.append(index)
@@ -92,6 +97,13 @@ for idx in xrange(len(pids)):
                     newvals.append(0)
                 elif DTYPE.names[vidx] == "ttype":
                     newvals.append("query")
+                elif DTYPE.names[vidx] == "response":
+                    if val == color0:
+                        newvals.append("color0")
+                    elif val == color1:
+                        newvals.append("color1")
+                    else:
+                        raise ValueError("unexpected response: %s" % val)
                 else:
                     newvals.append(val)
             queries.append(tuple(newvals))
