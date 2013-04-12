@@ -77,27 +77,27 @@ for ttype in ttypes:
                         ratio = float(cond.split("-")[2])
                         newdata = np.zeros(data.shape, dtype="f8")
                         if not counterbalance:
-                            # counterbalance = 0 --> r=yellow:red
+                            # counterbalance = 0 --> r=color1:color0
 
-                            # if they say yellow is heavier, then they
+                            # if they say color1 is heavier, then they
                             # think the ratio is 10:1
 
-                            # if they say red is heavier, then they
+                            # if they say color0 is heavier, then they
                             # think the ratios is 1:10
 
-                            newdata[data == "red"] = 0.1
-                            newdata[data == "yellow"] = 10.0
+                            newdata[data == "color0"] = 0.1
+                            newdata[data == "color1"] = 10.0
                         else:
-                            # counterbalance = 1 --> r=red:yellow
+                            # counterbalance = 1 --> r=color0:color1
 
-                            # if they say yellow is heavier, then they
+                            # if they say color1 is heavier, then they
                             # think the ratio is 1:10
 
-                            # if they say red is heavier, then they
+                            # if they say color0 is heavier, then they
                             # think the ratios is 10:1
 
-                            newdata[data == "red"] = 10.0
-                            newdata[data == "yellow"] = 0.1
+                            newdata[data == "color0"] = 10.0
+                            newdata[data == "color1"] = 0.1
                         assert (newdata != 0).all()
                         data = newdata
 
