@@ -12,10 +12,10 @@ import string
 
 from optparse import OptionParser
 
-import util.summarize as summarize
+import summarize
 
-SIMPATH = "../data/sims/compressed"
-DATAPATH = "../data/model/"
+SIMPATH = "../../data/sims/compressed"
+DATAPATH = "../../data/model/"
 
 
 def load(sim_ver):

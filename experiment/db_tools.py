@@ -3,12 +3,15 @@ import time
 import sqlite3 as sql
 from hashlib import sha1
 
-DATA_DB = "data/data.db"
-BACKUP_DB = "data/data.db.bak"
+DATAPATH = "data"
+DATA_DB = os.path.join(DATAPATH, "data.db")
+BACKUP_DB = os.path.join(DATAPATH, "data.db.bak")
 CONF_DIR = "config"
 
 
 def create():
+    if not os.path.exists(DATAPATH):
+        os.makedirs(DATAPATH)
     # back up any existing database
     if os.path.exists(DATA_DB):
         # remove old backup if it exists

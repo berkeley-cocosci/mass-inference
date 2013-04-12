@@ -24,16 +24,6 @@ objects.
   Code to run the experiments.
 
 * [`scripts`](https://github.com/jhamrick/mass-inference/tree/master/scripts):
-  Various utility scripts to help generate and manage stimuli and
+  Various utility scripts to help generate, view, and manage stimuli and
   data.
-
-* [`scripts/render`](https://github.com/jhamrick/mass-inference/tree/master/scripts/render):
-  Scripts to view stimuli and render videos of them.
-
-* [`scripts/simulate`](https://github.com/jhamrick/mass-inference/tree/master/scripts/simulate):
-  Scripts to generate raw IPE ("Intuitive Physics Engine")
-  simulations.
-
-* [`scripts/util`](https://github.com/jhamrick/mass-inference/tree/master/scripts/util):
-  Module containing helper functions for programs in `scripts`.
 

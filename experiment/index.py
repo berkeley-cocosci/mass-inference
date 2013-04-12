@@ -3,6 +3,7 @@
 import cgi
 import cgitb
 import json
+import pickle
 import logging
 import os
 import httplib
@@ -12,6 +13,9 @@ from os import environ
 from hashlib import sha1
 
 import db_tools as dbt
+
+if not os.path.exists("logs"):
+    os.makedirs("logs")
 
 # configure logging
 logging.basicConfig(
@@ -28,7 +32,7 @@ cgitb.enable(display=0, logdir="logs/", format='plain')
 #################
 # Configuration
 
-F_CHECK_IP = False
+F_CHECK_IP = True
 
 DATA_DIR = "data"
 CONF_DIR = "config"
@@ -101,8 +105,8 @@ def create_datafile(ip_address, condition):
     pid, validation_code = p
     logging.info("(%s) In condition %s" % ((PFORMAT % pid), condition))
 
-    clist = os.path.join(CONF_DIR, "%s_trials.json" % condition)
-    plist = os.path.join(DATA_DIR, "%s_trials.json" % (PFORMAT % pid))
+    clist = os.path.join(CONF_DIR, "%s_trials.pkl" % condition)
+    plist = os.path.join(DATA_DIR, "%s_trials.pkl" % (PFORMAT % pid))
     logging.info("(%s) Copying trial list to '%s'" % ((PFORMAT % pid), plist))
     shutil.copy(clist, plist)
 
@@ -130,9 +134,9 @@ def write_data(pid, data):
 
 
 def get_all_trialinfo(pid):
-    triallist = os.path.join(DATA_DIR, "%s_trials.json" % (PFORMAT % pid))
+    triallist = os.path.join(DATA_DIR, "%s_trials.pkl" % (PFORMAT % pid))
     with open(triallist, "r") as fh:
-        trialinfo = json.load(fh)
+        trialinfo = pickle.load(fh)
     return trialinfo
 
 
@@ -299,6 +303,20 @@ def getTrialInfo(form):
             'stimulus': trialinfo['stimulus'],
             }
 
+        logging.info("(%s) Flipping colors: %s" % (
+            (PFORMAT % pid), trialinfo['flip_colors']))
+        
+        if trialinfo['flip_colors']:
+            info['left_color'] = trialinfo['color0']
+            info['right_color'] = trialinfo['color1']
+            info['left_color_name'] = trialinfo['color0_name']
+            info['right_color_name'] = trialinfo['color1_name']
+        else:
+            info['left_color'] = trialinfo['color1']
+            info['right_color'] = trialinfo['color0']
+            info['left_color_name'] = trialinfo['color1_name']
+            info['right_color_name'] = trialinfo['color0_name']
+
     json_info = json.dumps(info)
     logging.info("(%s) Sending trial info: %s" % (
         (PFORMAT % pid), json_info))
@@ -339,7 +357,7 @@ def submit(form):
         # now get the feedback
         response = {
             'feedback': None,
-            'visual': None,
+            'video': None,
             'text': None,
             'index': index,
             'trial': trialinfo,
@@ -350,10 +368,10 @@ def submit(form):
         # write the data to file
         write_data(pid, data)
 
-        visual_fb = trialinfo['visual_fb']
+        video_fb = trialinfo['video_fb']
         text_fb = trialinfo['text_fb']
 
-        if (not visual_fb) and (not text_fb):
+        if (not video_fb) and (not text_fb):
             feedback = None
         else:
             feedback = 'stable' if trialinfo['stable'] else 'unstable'
@@ -361,7 +379,7 @@ def submit(form):
         # now get the feedback
         response = {
             'feedback': feedback,
-            'visual': visual_fb,
+            'video': video_fb,
             'text': text_fb,
             'index': index,
             'trial': trialinfo['trial'],

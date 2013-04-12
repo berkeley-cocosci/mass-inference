@@ -45,19 +45,6 @@ function post(action, data, handler) {
 var $f = flowplayer;
 $f.conf.embed = false;
 
-// $f(function(api, root) {
-//     // when a new video is about to be loaded
-//     api.bind("load", function() {
-//         debug("flowplayer '" + this.id + "' loaded");
-//         api.conf.loop = false;
-//         api.conf.embed = false;
-        
-//     // when a video is loaded and ready to play
-//     }).bind("ready", function() {
-//         debug("flowplayer '" + this.id + "' ready");
-//     });
-// });
-
 // --------------------------------------------------------------------
 // Media
 
@@ -142,7 +129,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("unstable"));
+                }).load(getVideoFormats("unstable-example"));
         },
 
         teardown : function () {
@@ -159,7 +146,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("stable"));
+                }).load(getVideoFormats("stable-example"));
         },
 
         teardown : function () {
@@ -184,7 +171,7 @@ var slides = {
                         debug("looping");
                         api.play();
                     }
-                }).load(getVideoFormats("mass-" + suffix));
+                }).load(getVideoFormats("mass-example~" + suffix));
         },
 
         teardown : function () {
@@ -216,7 +203,7 @@ var slides = {
             }
             
             debug("showing trial");
-            setBgImage("prestim", experiment.stimulus + "-floor");
+            setBgImage("prestim", experiment.stimulus + "~floor");
             $("#prestim").fadeIn(fade);
             $(".feedback").hide();
         },
@@ -250,7 +237,7 @@ var slides = {
                 }).load(
                     getVideoFormats(experiment.stimulus),
                     function (e, api) {
-                        setBgImage("player", experiment.stimulus + "B");
+                        setBgImage("player", experiment.stimulus + "~B");
                         $("#prestim").hide();
                     });
         },
@@ -259,7 +246,7 @@ var slides = {
         showQuery : function () {
 	    slides.trial.phase = "showQuery";
             debug("showing responses");
-            setBgImage("responses", experiment.stimulus + "B");
+            setBgImage("responses", experiment.stimulus + "~B");
             $("#responses").fadeIn(fade);
         },
 
@@ -302,7 +289,7 @@ var slides = {
                             debug("done showing feedback");
                             experiment.nextTrial();
                         }
-                    }).load(getVideoFormats(experiment.stimulus + "-fb"));
+                    }).load(getVideoFormats(experiment.stimulus + "~fb"));
             }
             
             // otherwise just show text
@@ -328,7 +315,6 @@ var slides = {
     // ----------------------------------------------------------------
     error : {
         setup : function () {
-            // $($("#error-message").find("p")[0]).html(experiment.errorStatus);
             $($("#error-message").find("p")[0]).html("<p>" + experiment.errorMessage + "</p>");
         },
 
@@ -374,11 +360,9 @@ var experiment = {
 	    // different instructions depending on feedback condition
 	    var fbtype = experiment.condition.split("-")[1];
 	    if (fbtype == "fb") {
-		// $($("#feedback-info").find("p")[1]).hide();
 		$(".fb").show();
 		$(".nfb").hide();
 	    } else if (fbtype == "nfb") {
-		// $($("#feedback-info").find("p")[0]).hide();
 		$(".fb").hide();
 		$(".nfb").show();
 	    } else if (fbtype == "vfb") {
@@ -423,11 +407,9 @@ var experiment = {
 
 		// Querying the ratio
 		else if (info.trial == 'query ratio') {
-		    $("#question-container").hide();
-		    $("#video-container").hide();
-		    $("#reload-container").hide();
-		    $("#query-ratio-container").show();
-                    slides.show("trial");
+		    $(".feedback").fadeOut(fade);
+		    $("#question").html("<b>Question:</b> Which is the <b>heavy</b> color?");
+		    $("#explicit-responses").fadeIn(fade)
 		    experiment.starttime = new Date().getTime();
 		}		    
 
@@ -435,10 +417,16 @@ var experiment = {
                 else {
                     experiment.trial = info.trial;
                     experiment.stimulus = info.stimulus;
-		    $("#question-container").show();
-		    $("#video-container").show();
-		    $("#reload-container").show();
-		    $("#query-ratio-container").hide();
+		    experiment.right_color = info.right_color_name;
+		    experiment.left_color = info.left_color_name;
+
+		    $(".left-color").css("background-color", info.left_color);
+		    $(".right-color").css("background-color", info.right_color);
+		    $("button.left-color").html(info.left_color_name);
+		    $("button.right-color").html(info.right_color_name);
+
+		    $("#explicit-responses").hide();
+		    $("#question").html("<b>Question:</b> Will the tower fall down?");
                     slides.show("trial");
                 }
             });
@@ -483,21 +471,10 @@ var experiment = {
 	}
 
         experiment.textFeedback = msg.feedback;
-        experiment.showVideoFeedback = msg.visual;
+        experiment.showVideoFeedback = msg.video;
 	experiment.showTextFeedback = msg.text;
         slides.trial.showFeedback();
     },
-
-    // // Get the ratio from the user and submit it to the server
-    // submitRatio : function(color) {
-    //     var data = {
-    //         pid : experiment.pid,
-    //         validationCode : experiment.validationCode,
-    //         "color" : color,
-    //     };
-
-    //     post("submitRatio", data, experiment.nextTrial);
-    // },
 
     decline : function() {
         slides.show("declined");
@@ -556,13 +533,8 @@ $(document).ready(function () {
                 splash: true,
                 tooltip: false });
         });
-    // preloadImages(
-    //     ["UCSeal122x122.gif", "Bayes-500h.jpg", "scales.png"],
-    //     function () {
-            slides.show("index");
-	    // $(".slide").show();
-	    // $("#instructions3").show();
-        // });
+
+    slides.show("index");
 });
 
 
