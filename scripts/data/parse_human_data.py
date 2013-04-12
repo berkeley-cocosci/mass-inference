@@ -4,19 +4,25 @@
 import numpy as np
 import sqlite3 as sql
 import os
+import pickle
 
-render_path = "../../stimuli/render"
-data_dir = "../../data/human/raw_data"
+exp_ver = "F"
+
+# render_path = "../../stimuli/render"
+meta_dir = "../../stimuli/meta"
+data_dir = "../../data/human/raw_data-%s" % exp_ver
 data_out_dir = "../../data/human/processed_data"
 
 
 def convert_stim_name(name):
-    with open(os.path.join(render_path, "conversion.csv"), "r") as fh:
-        lines = [x for x in fh.read().strip().split("\n") if x != ""]
-    newnames = [x.split(",")[0] for x in lines]
-    oldnames = [x.split(",")[1] for x in lines]
-    idx = newnames.index(name)
-    oldname = oldnames[idx]
+    infopath = os.path.join(meta_dir, "%s-conversion.pkl" % exp_ver)
+    with open(infopath, "r") as fh:
+        # lines = [x for x in fh.read().strip().split("\n") if x != ""]
+        conv = pickle.load(fh)
+    # newnames = [x.split(",")[0] for x in lines]
+    # oldnames = [x.split(",")[1] for x in lines]
+    # idx = newnames.index(name)
+    oldname = conv[name]
     return oldname
 
 
