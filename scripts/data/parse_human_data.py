@@ -101,6 +101,8 @@ for idx in xrange(len(pids)):
             for vidx, val in enumerate(vals):
                 if DTYPE.names[vidx] == "stimulus":
                     newval = convert_stim_name(val)
+                elif DTYPE.names[vidx] == "angle" and val == 'None':
+                    newval = 0
                 else:
                     newval = val
                 newvals.append(newval)
