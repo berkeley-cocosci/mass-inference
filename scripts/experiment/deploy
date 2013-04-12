@@ -35,7 +35,7 @@ echo $color$(grep "F_CHECK_IP =" $exppath/index.py)"\033[0m"
 echo "Synchronizing files"
 $cmd "$exppath/" cocosci:"$basepath"
 
-hasdb=$(ssh cocosci "cd $basepath/data; if [ -e data.db ]; then echo 1; fi")
+hasdb=$(ssh cocosci "cd $basepath; if [ -e data/data.db ]; then echo 1; fi")
 if [ -z $hasdb ]; then
     ssh cocosci "cd $basepath; python -c \"import db_tools; db_tools.create()\""
 else
