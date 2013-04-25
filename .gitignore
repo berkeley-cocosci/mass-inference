@@ -3,3 +3,5 @@ analysis/images
 experiment/data
 experiment/logs
 experiment/stimuli
+figures/*.png
+
