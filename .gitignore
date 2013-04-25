@@ -5,3 +5,4 @@ experiment/logs
 experiment/stimuli
 figures/*.png
 .DS_Store
+figures/old
