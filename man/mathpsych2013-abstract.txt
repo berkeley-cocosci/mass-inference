@@ -1,15 +1,17 @@
-How do people infer the relative masses of objects in highly complex
-scenes, such as a tower of building blocks? We propose that people's
-judgments can be explained by Bayesian inferences over a model of
-approximate Newtonian mechanics. We built a quantitative model
-observer which uses stochastic physical simulations to predict future
-dynamics, and which updates its beliefs about the underlying
-parameters by comparing its predictions to observed feedback. Our
-results show that people can learn the relative masses of objects by
-observing their interactions across multiple trial presentations, and
-that their judgments are consistent with the patterns of responses
-exhibited by the model as it learns. Moreover, participants were able
-to learn both from rich visual feedback as well as minimal, binary
-feedback. We suggest that to infer unobservable properties like mass,
-people integrate an ideal learning stragety with approximate knowledge
-of physical dynamics in a near-optimal manner.
+How do people infer intrinsic attributes of objects, such as mass or
+friction, from limited exposure to the complex scenes in which those
+objects interact? Previous work has shown that when properties like
+mass are known, people can make sophisticated physical predictions,
+such as whether a tower of building blocks will fall. We hypothesize
+that people leverage this physical knowledge to infer properties like
+mass by anticipating what will happen and then updating their beliefs
+based on their predictions' divergence from reality. To formalize this
+notion, we built a model observer that learns about objects' masses
+over time by recruiting approximate physics knowledge into an optimal
+learning framework. We showed people towers of heavy and light
+building blocks and asked them to predict whether each tower would
+fall. After demonstrating whether the tower fell, we asked people to
+infer which type of block was heavier. Our results indicate that
+people learn the relative masses of the blocks over time, and that
+their predictions and inferences are similar to those exhibited by the
+model as it learns.
