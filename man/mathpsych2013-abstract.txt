@@ -1,20 +1,15 @@
-How do people infer unobserved physical properties of objects from
-very complex scenes, such as the masses of many objects involved in a
-cascade of collisions? We propose that these judgments can be
-explained as Bayesian inferences informed by approximate Newtonian
-mechanics. We built a quantitative model observer that uses
-probabilistic simulations to predict the effects of physics on complex
-scenes, and which updates its beliefs about the underlying physical
-parameters by comparing these predictions to the observed physical
-dynamics. Our results show that people can learn the relative masses
-among objects in a scene by observing their interactions across
-multiple trial presentations, and that their judgments well-match the
-patterns of responses exhibited by the model as it learns. People were
-generally accurate at both explicitly reporting what they have
-learned, as well as implicitly demonstrating their learning through
-their predictions about object dynamics. We also found that they can
-learn both from rich visual feedback about the dynamics as well as
-minimal, binary feedback. We conclude that people's judgments are
-consistent with Bayesian inferences under an approximate Newtonian
-generative model and that probabilistic simulation is a strong
-candidate for the mechanism of these inferences.
+How do people infer the relative masses of objects in highly complex
+scenes, such as a tower of building blocks? We propose that people's
+judgments can be explained by Bayesian inferences over a model of
+approximate Newtonian mechanics. We built a quantitative model
+observer which uses stochastic physical simulations to predict future
+dynamics, and which updates its beliefs about the underlying
+parameters by comparing its predictions to observed feedback. Our
+results show that people can learn the relative masses of objects by
+observing their interactions across multiple trial presentations, and
+that their judgments are consistent with the patterns of responses
+exhibited by the model as it learns. Moreover, participants were able
+to learn both from rich visual feedback as well as minimal, binary
+feedback. We suggest that to infer unobservable properties like mass,
+people integrate an ideal learning stragety with approximate knowledge
+of physical dynamics in a near-optimal manner.
