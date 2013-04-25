@@ -1,0 +1,892 @@
+% 
+% Annual Cognitive Science Conference
+% Sample LaTeX Paper -- Proceedings Format
+% 
+
+% Original : Ashwin Ram (ashwin@cc.gatech.edu)       04/01/1994
+% Modified : Johanna Moore (jmoore@cs.pitt.edu)      03/17/1995
+% Modified : David Noelle (noelle@ucsd.edu)          03/15/1996
+% Modified : Pat Langley (langley@cs.stanford.edu)   01/26/1997
+% Latex2e corrections by Ramin Charles Nakisa        01/28/1997 
+% Modified : Tina Eliassi-Rad (eliassi@cs.wisc.edu)  01/31/1998
+% Modified : Trisha Yannuzzi (trisha@ircs.upenn.edu) 12/28/1999 (in process)
+% Modified : Mary Ellen Foster (M.E.Foster@ed.ac.uk) 12/11/2000
+% Modified : Ken Forbus                              01/23/2004
+% Modified : Eli M. Silk (esilk@pitt.edu)            05/24/2005
+% Modified: Niels Taatgen (taatgen@cmu.edu) 10/24/2006
+
+%% Change ``a4paper'' in the following line to ``letterpaper'' if you are
+%% producing a letter-format document.
+
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage{cogsci}
+\usepackage{pslatex}
+\usepackage{apacite}
+
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{subfig}
+
+\renewcommand{\Pr}[0]{\mathrm{P}}
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\TODOp}[1]{\textcolor{blue}{[TODO: #1]}}
+
+\newcommand{\rlow}[0]{$r_0=0.1$}
+\newcommand{\rhigh}[0]{$r_0=10$}
+% \newcommand{\vfblow}[0]{\textit{video \rlow{} feedback}}
+% \newcommand{\vfbhigh}[0]{\textit{video \rhigh{} feedback}}
+% \newcommand{\vfb}[0]{\textit{video feedback}}
+% \newcommand{\fblow}[0]{\textit{text \rlow{} feedback}}
+% \newcommand{\fbhigh}[0]{\textit{text \rhigh{} feedback}}
+% \newcommand{\fb}[0]{\textit{text feedback}}
+% \newcommand{\nfb}[0]{\textit{no feedback}}
+\newcommand{\vfblow}[0]{V(0.1)}
+\newcommand{\vfbhigh}[0]{V(10)}
+\newcommand{\vfb}[0]{video feedback}
+\newcommand{\fblow}[0]{B(0.1)}
+\newcommand{\fbhigh}[0]{B(10)}
+\newcommand{\fb}[0]{binary text feedback}
+\newcommand{\nfb}[0]{NFB}
+\newcommand{\rand}[1]{random-order #1}
+\newcommand{\diag}[1]{diagnostic-order #1}
+
+\addtolength{\abovecaptionskip}{-0.25cm}
+\addtolength{\belowcaptionskip}{-0.2cm}
+\addtolength{\textfloatsep}{-2mm}	% space below "Figure 1: ..."
+
+\newcounter{subeqn} \renewcommand{\thesubeqn}{\theequation\alph{subeqn}}%
+\makeatletter
+\@addtoreset{subeqn}{equation}
+\makeatother
+\newcommand{\subeqn}{%
+  \refstepcounter{subeqn}% Step subequation number
+  \tag{\thesubeqn}% Label equation
+}
+
+\newenvironment{pitemize}{
+\begin{itemize}
+  \setlength{\itemsep}{1pt}
+  \setlength{\parskip}{0pt}
+  \setlength{\parsep}{0pt}
+}{\end{itemize}}
+
+%\title{Inferring mass from complex and realistic physical events}
+\title{Inferring mass in complex physical scenes via probabilistic
+  simulation}
+
+\author{{\large \bf Jessica B. ~Hamrick$^1$ (jhamrick@berkeley.edu),
+    Peter W. ~Battaglia$^2$ (pbatt@mit.edu),}\\
+    {\large \bf Thomas L. ~Griffiths$^1$ (tom\_griffiths@berkeley.edu),
+      \& Joshua B. ~Tenenbaum$^2$ (jbt@mit.edu)}\\
+    $^1$Department of Psychology, UC Berkeley, Berkeley CA 94720\\
+    $^2$Department of Brain and Cognitive Sciences, MIT, Cambridge MA 02139}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  How do people infer unobserved physical properties of objects from
+  very complex scenes, such as the masses of many objects involved in
+  a cascade of collisions? We propose that these judgments can be
+  explained as Bayesian inferences informed by approximate Newtonian
+  mechanics. We built a quantitative model observer that uses
+  probabilistic simulations to predict the effects of physics on
+  complex scenes, and which updates its beliefs about the underlying
+  physical parameters by comparing these predictions to the observed
+  physical dynamics. Our results show that people can learn the
+  relative masses among objects in a scene by observing their
+  interactions across multiple trial presentations, and that their
+  judgments well-match the patterns of responses exhibited by the
+  model as it learns. People were generally accurate at both
+  explicitly reporting what they have learned, as well as implicitly
+  demonstrating their learning through their predictions about object
+  dynamics. We also found that they can learn both from rich visual
+  feedback about the dynamics as well as minimal, binary feedback. We
+  conclude that people's judgments are consistent with Bayesian
+  inferences under an approximate Newtonian generative model and that
+  probabilistic simulation is a strong candidate for the mechanism of
+  these inferences.
+
+  % How do people infer intrinsic attributes of objects, such as mass or
+  % friction, from limited exposure to the highly complex scenes in
+  % which those objects interact?  We combine two recent approaches
+  % characterizing how people make inferences about the everyday
+  % physical world. The ``noisy Newton'' hypothesis states that people
+  % make inferences about physical scenes with a model of approximate
+  % Newtonian mechanics which reconciles accurate knowledge of Newtonian
+  % principles with the limitations of perceptual
+  % uncertainty. Complementary to this approach is the idea of
+  % probabilistic simulation, a stochastic, iterative process governed
+  % by laws which efficiently, but only approximately, implement a
+  % comprehensive set of physical principles. We formalized how
+  % inferences about the relative mass of objects in complex scenes can
+  % be made in a Bayesian framework informed by Newtonian principles and
+  % implemented as probabilistic physical simulation. We developed an
+  % ideal observer model which used such physical simulation to make
+  % inferences about the relative mass of objects, and compared this
+  % model to behavioral data collected from human participants. In our
+  % task, we asked people to make physical judgments about towers of
+  % building blocks, where accuracy depended on having knowledge of the
+  % blocks' relative masses. Participants were also asked to make
+  % explicit judgments about which type of object they thought was
+  % heavier. With both types of responses, we found both a strong effect
+  % of learning, illustrating peoples' powerful capacity for inferring
+  % properties of the physical world. Moreover, we found people to be
+  % consistent with the ideal observer model, providing further evidence
+  % for the hypothesis that people have accurate physical knowledge
+  % instantiated as probabilistic simulation.
+
+  \textbf{Keywords:} intuitive physics; mass; learning; simulation
+\end{abstract}
+\subsection{Introduction}
+Consider the scene in Fig. \ref{fig:1}A. Your intuition about what
+should happen causes you to reconsider your assumption about the mass
+of either the forklift, the storage container, or both, in order to
+make sense of the scene. Inferences about the physical properties of
+objects, such as mass, friction, or rigidity, are critical to how we
+understand and interact with our surroundings, but while they are
+sometimes unambiguously specified by perceptible features such as
+size, material, familiarity, or tactile sensations, often we have only
+indirect access to them through their physical influence on observable
+objects. How do people infer unobservable physical attributes of
+objects from complex scenes and events?
+
+In this paper, we show that people are able to make inferences about
+the masses of objects from complex scenes in a way that is consistent
+with Bayesian inference informed by approximate Newtonian mechanics.
+We demonstrate how such inferences can be implemented as probabilistic
+simulation, as might be executed by an internal ``intuitive physics
+engine'' (IPE) \cite{Hamrick2011,Battaglia2013}. Our work draws
+together two approaches to the formal modeling of intuitive physics.
+\citeA{Sanborn2013} examined how people infer the underlying physical
+parameters and causal interactions in simple, idealized scenes, and
+demonstrated that a number of previous findings
+\cite{Todd1982,Gilden1994} were consistent with Bayesian inference
+within a generative model that reflected Newtonian mechanics (i.e.,
+the ``noisy Newton'' hypothesis).  \citeA{Battaglia2013} studied how
+people predict future physical states in complex, naturalistic scenes,
+and found that numerous different judgments could be explained as the
+results of running probabilistic simulations, based on their proposed
+IPE.
+
+
+\begin{figure}[t]
+  \begin{center}
+    % \includegraphics[width=0.25\textwidth]{../figures/forklift_1.jpg}%
+    % \includegraphics[width=0.25\textwidth]{../figures/heavy-load.jpg}
+    \includegraphics[width=0.3\textwidth]{../figures/fig1-towers.png}
+    \caption{\small (A) A scene that defies your intuitions about the
+      objects' masses. (B-C) Two experimental stimuli.}
+    \label{fig:1}
+  \end{center}
+\end{figure}
+
+We tested people's inferences about which of two types of objects was
+more massive, after they observed a series of scenes and received
+feedback about the effects of physics on the scenes' future states.
+The scenes were selected such that the relative masses strongly
+influenced the future states, ensuring that the feedback contained
+valuable information about their masses. Fig. \ref{fig:1}B-C shows two
+experimental scenes, which each contained rectangular blocks arranged
+in a tower, akin to \citeA{Battaglia2013}'s stimulus. If Fig.
+\ref{fig:1}B's red blocks were heavier, the tower would be likely to
+fall; if the yellow blocks were heavier, it would likely remain
+standing in a precarious static equilibrium. Thus if the tower were
+observed to fall, the appropriate inference would be that red objects
+are heavier; if it were observed to remain standing, however, the
+yellow objects should be judged as heavier. Previous work has shown
+that when people know the relative masses of objects in complex scenes
+like these, their expectations about what will happen are sensitive to
+this mass information, and consistent with the probabilistic
+inferences of a model IPE. Here we predicted that people are able to
+use their approximate mechanics knowledge to infer the relative masses
+of objects when this information was not directly observable, but only
+indirectly observed through the feedback described above.
+
+
+
+
+\subsection{Background: Modeling intuitive physics}
+
+\begin{figure*}[t]
+  \begin{center}
+    % \includegraphics[width=0.5\textwidth]{../figures/ideal_observer_beliefs.pdf}
+    \includegraphics[width=0.89\textwidth]{../figures/model.png}
+    \caption{\small (A) An example of how different values of $r_0$
+      can affect the outcome, $q(G^\prime, G)$. In this case, if
+      $r_0=10$, then the yellow blocks counterbalance the red ones and
+      the tower is precariously stable. If $r_0=0.1$, then the red
+      blocks cause the tower to topple over. (B) The ideal observer
+      model's posterior distribution over mass ratio, $P(r|K_t)$ for
+      each text feedback condition and trial ordering used in the
+      experiment. As expected, the ideal observer converges on the
+      correct end of the spectrum. Note that trial ordering can
+      significantly delay learning, however, as is the case for the
+      \rand{} with $r_0=0.1$ feedback.}
+    \label{fig:model}
+  \end{center}
+\end{figure*}
+
+Previous studies of human inferences about mass given observed
+collision dynamics have focused on the relative roles of image
+invariants and heuristics in simple mass inference tasks. The
+invariants theory, or ``kinematic specification of dynamics'' (KSD),
+argued that people directly perceive object dynamics -- including mass
+-- because there is a one-to-one correspondence between the objects'
+kinematic motion and the underlying properties \cite{Runeson2000}. In
+contrast, the heuristics theory argued that people use simple
+perceptual cues, such as object velocity or amount of ricochet
+following a collision, to guide their judgments of mass
+\cite{Todd1982,Gilden1994}.
+
+Recently however, \citeA{Sanborn2013} demonstrated that performance in
+these scenarios could be reconciled with the ``noisy Newton''
+hypothesis, which states that people reason about the physical world
+not with simple heuristics or biases, but with a model of Newtonian
+mechanics which takes into account uncertainty in perception. By
+making probabilistic inferences, people can form judgments that are
+robust to uncertainty caused by impoverished sensations and incomplete
+background knowledge. By making inferences that are informed by
+Newtonian mechanics, people can tease apart the numerous geometric,
+kinematic, and physical variables that often simultaneously influence
+the outcome of events in real environments, such as in collisions
+among many objects. Our results join a growing body of evidence for
+this hypothesis, including explanations of human judgments of physical
+causality and prediction in a wide range of scenarios
+\cite{Sanborn2013,Hamrick2011,Smith2012,Gerstenberg2012}.
+
+Other research has focused on the contribution of \textit{simulation}
+in physical reasoning. While some simple scenarios such as two-body
+collisions require only a single computation to determine the outcome,
+most physical scenes are complex dynamical systems whose equations are
+computationally intractable \cite{Cubitt2010}. However, simulation
+under approximate mechanics offers an efficient means making robust
+predictions in these contexts. \citeA{Battaglia2013} argued that human
+physical reasoning uses probabilistic simulation based on an IPE to
+solve this computational problem and demonstrated that, combined with
+noisy perceptual input, simulation as a general mechanism of physical
+reasoning can explain a wide range of human behavior.
+
+The IPE is a cognitive mechanism similar to the physics simulators
+used in computer animation and video games. Its simulations are
+governed by a system of mechanics that approximate Newton's laws, but
+also deviate in several important ways. Probabilistic simulation
+exploits a comprehensive internalization of physical principles that
+can scale up efficiently to the complexity and diversity of natural
+scenes, thus offers a plausible account for how people make such
+sophisticated inferences across a wide range of settings. The IPE
+model can easily extend to explain judgments that implicitly require
+accounting for the relative mass of objects.  Although it has not yet
+been shown whether the IPE model can be applied in more explicit
+inference tasks, there are various reports of mental simulation in
+physical problem-solving \cite{Hegarty2004,Schwartz1999}.
+
+\subsection{Ideal observer model}
+Our exploration of whether people can learn mass ratios from complex
+scenes begins by determining whether it is possible to do so for an
+ideal observer model. Assuming it is, we can measure people's
+inferences against this objective upper bound to quantify the degree
+to which the cognitive computations responsible for their judgments
+are consistent with the optimal computations specified by the model.
+
+\paragraph{Inference of underlying physical parameters}
+When presented with a scene, the model infers its initial and future
+states, $S$ and $S'$, respectively, given an observation of the scene,
+$I$. The future $S'$ is dependent on $S$ as well as the scene's
+physical attributes, $A$, and the effects of deterministic physical
+dynamics over time, $S'=\phi(S,A)$. Its belief about $(S,S')$ is
+represented by the density,
+\begin{align}
+  \Pr(S,S'|I)&=\int_A\Pr(S'|S,A)\Pr(S|I)\Pr(A)\
+  \mathrm{d}S\mathrm{d}A \refstepcounter{equation} \subeqn \label{eq:C-inf-0} \\
+  &=\int_A\delta(S'-\phi(S,A))\Pr(S|I)\Pr(A)\ \mathrm{d}S\mathrm{d}A
+  \subeqn \label{eq:C-inf-1}
+\end{align}
+where $\Pr(A)$ is the prior over $A$, and $\Pr(S|I)$ is the posterior
+over $S$ given $I$; \cite<for details see>{Battaglia2013}.
+
+Once the model receives feedback about the future state of the scene,
+$I'$, it updates its belief about $A$,
+\begin{align}
+  \Pr(A|I,I') &= \frac{\Pr(A) P(I^{}_t,I'_t|A)}{P(I^{}_t,I'_t)} \refstepcounter{equation} \subeqn \label{eq:C-update-0}\\
+  % &= \frac{\Pr(A)}{\Pr(I,I')} \int_S\Pr(S)\Pr(I|S)  \int_{S'}\Pr(S'|S,A)\Pr(I'|S')  \ \mathrm{d}S'\mathrm{d}S \nonumber\\
+  % &= \frac{\Pr(A)}{\Pr(I,I')} \int_S\Pr(S)\Pr(I|S)
+  % \int_{S'}\delta(S'-\phi(S,A))\Pr(I'|\phi(S,A))  \ \mathrm{d}S'\mathrm{d}S
+  &= \frac{\Pr(A)}{\Pr(I,I')} \int_S\Pr(S)\Pr(I|S)
+  \Pr(I'|\phi(S,A))  \ \mathrm{d}S \subeqn \label{eq:C-update-1}
+\end{align}
+
+Over a sequence of trials, $(0\dots t)$, Eq. \ref{eq:C-update-0} can
+be applied recursively,
+\begin{align}
+  \Pr(A|I^{}_{0:t},I'_{0:t}) &=  \frac{\Pr(A|I^{}_{0:t-1},I'_{0:t-1}) P(I^{}_t,I'_t|A)}{P(I^{}_t,I'_t)} \label{eq:C-update-all}
+\end{align}
+
+\paragraph{Tower scene judgments}
+Our experimental tests asked people to judge whether a scene that
+contained a tower of blocks would remain standing under physics, or
+fall down. Each tower was composed of blocks of two different types
+(indicated by color), one heavier than the other. Whether the tower
+would fall or not was influenced by the ratio between the blocks'
+masses. The tower's initial state corresponded to $S$, and its final
+state after physics was applied was $S'$. The geometric arrangement of
+the blocks, including their locations and orientations, was
+represented by $G$ and the blocks' colors were represented by $C$, so
+$S=(G,C)$. The block colors, $C$, were assumed to be observed, and so
+$I$ was an observation that was conditionally dependent on $G$ and
+conditionally independent of $C$. The mass ratio between blocks in
+each of the groups was represented by $r_0$, thus $A=r_0$ using the
+notation above. The future geometric state of the tower under physics
+was $G'$. Feedback about $G'$ was, $I'$, which was a binary text
+label, `fall or `not fall'\footnote{The `fall' label indicated that
+  more than 40\% of the blocks moved from their original
+  positions.}. % In
+% some experimental conditions, participants were given feedback that
+% consisted of a video clip that depicted the sequence of intermediate
+% states over time from $G \rightarrow G'$, but the model always was
+% given the binary text feedback.
+              
+
+\paragraph{Algorithmic implementation}
+The integral in Eq. \ref{eq:C-inf-1} is intractable so we used a Monte
+Carlo approximation and a discrete set of $d$ logarithmically spaced
+possible mass ratios, $\{r \in R$; $|R| = d\}$. We summarized
+$(I^{}_{0:t},I'_{0:t})$ by introducing, $K^{}_t$, to represent
+knowledge absorbed about $r_0$ from past observations. The most
+straight-forward formulation of $K^{}_t$ would be, $K^{}_t \equiv
+(I^{}_{0:t},I'_{0:t})$, but because $R$ was a discrete set, we instead
+simply assumed $K^{}_t$ to be a probability vector ($K_t \in [0,1]^d;
+\|K_t\|_1=1$) that parameterized a categorical distribution over $r$
+up to, and including, trial, $t$, fully capturing the relevant
+information in $(I^{}_{0:t},I'_{0:t})$: $\Pr(r|K^{}_t) =
+\Pr(r|I^{}_{0:t},I'_{0:t}); K^{}_t \not\equiv (I^{}_{0:t},I'_{0:t})$.
+The model's approximation to the posterior over $(G^{}_t,G'_t$, based
+on Eq. \ref{eq:C-inf-0}, was,
+\begin{align}
+  \Pr(G^{}_t,G'_t|I^{}_t,C^{}_t,K^{}_{t-1}) &\approx \frac{1}{n} \sum_{i=1\dots n}
+  \Pr(G'_t|G^{}_t,C^{}_t,r^{(i)})\Pr(G^{}_t|I^{}_t) \label{eq:A-inf-0}
+\end{align}
+where each $r^{(i)}$ was as i.i.d. sample under the probability mass
+function, $\Pr(r^{(i)}|K^{}_{t-1})$, and $n$ was the number of
+samples. The $\Pr(G^{}_t|I^{}_t)$ was approximated by the
+distribution, $\pi(G^{}_t;\bar{G}^{}_t,\sigma)$, where $\bar{G}^{}_t$
+is the true initial scene state and $\sigma$ is a spatial uncertainty
+parameter, and $\pi(\cdot)$ was defined by adding i.i.d., horizontal,
+zero-mean Gaussian noise (standard deviation $\sigma$) to the blocks'
+positions represented in $\bar{G}^{}_t$.\footnote{Because the noise
+  could cause inter-block penetrations, the objects’ coordinates were
+  then transformed by a iterative, deterministic
+  constraint-satisfaction procedure that selected the nearest
+  configuration for which no objects violated each others’ volumes,
+  \cite<see>{Hamrick2011}} The physical forward model
+$\Pr(G'_t|G^{}_t,C^{}_t,r) = \delta(G'_t-\phi(G^{}_t,C^{}_t,r))$ in
+Eq. \ref{eq:C-inf-1}, used a computer physics simulator to approximate
+$\phi(\cdot)$.%; \cite<see>{Hamrick2011,Battaglia2013}.
+
+The model's task was to report a binary indicator of `fall' ($1$) or
+`not fall' ($0$), corresponding to whether any blocks fell or not,
+which we defined as the query, $q(\cdot)$. The model's judgment,
+$J^{}_t$, was the expected value of $q(G^{}_t,G'_t)$, which, because
+$q(\cdot)$ returned binary outputs, was also the Bernoulli
+probability, $\Pr(q(G^{}_t,G'_t)=1|I^{}_t,C^{}_t,K^{}_{t-1})$. The
+likelihood of making a judgment was,
+\begin{align}
+  \Pr(J^{}_t=1|I^{}_t,C^{}_t,K^{}_{t-1}) &=
+  \mathrm{E}[\Pr(q(G^{}_t,G'_t)|I^{}_t,C^{}_t,K^{}_{t-1})] \nonumber \\
+  &\approx \frac{1}{N} \sum_{i=1\dots N} q((G^{}_t,G'_t)^{(i)})
+\label{eq:A-resp}
+\end{align}
+where each $(G^{}_t,G'_t)^{(i)}$ was an i.i.d. sample under the
+density $\Pr(q(G^{}_t,G'_t)=1|I^{}_t,C^{}_t,K^{}_{t-1})$, and $N$ was
+the number of samples.\footnote{To eliminate the effect of noise in
+  estimating the models' likelihood for judgments, we used a Gaussian
+  kernel to smooth the approximation in Eq. \ref{eq:A-update-1}, where
+  $\lambda=0.2$:
+\begin{equation}
+  P(J_t=1|G_t,r) \approx \frac{\sum_{r^\prime}
+    \kappa_\lambda(\log_{10}{r}, \log_{10}{r^\prime})\sum_{i=1}^N
+    J_t^{(i,r^\prime)}}{\sum_{r^\prime} \kappa_\lambda(\log_{10}{r},
+    \log_{10}{r^\prime})} 
+\label{eq:A-resp-smooth}
+\end{equation}}
+% where $\kappa_\lambda$ is a Gaussian kernel function with radius
+% $\lambda=0.2$.}
+
+The model's individual update rule used a Monte Carlo approximation of
+Eq. \ref{eq:C-update-1}. $I'$ was assumed a deterministic
+function of $G'$, i.e.: $I' = f(G')$ such that $f(G') = 0$ if $G'$ has
+fallen, and $f(G') = 1$ if it remained standing. Thus,
+$\Pr(I'|\phi(G,C,r)) = \delta(I'-f(\phi(G,C,r)))$, and,
+\begin{align}
+  \Pr(r|I,I') &\approx \frac{1}{Z}  \Pr(r) \sum_{i=1\dots N}
+  \Pr(I'|\phi(G^{(i)},C,r)
+\label{eq:A-update-1}
+\end{align}
+where $Z$ was a normalizing constant, and $G^{(i)}$ was an
+i.i.d. sample under the density $\pi(G^{};\bar{G}^{},\sigma)$. From
+Eq.  \ref{eq:C-update-all}, the full update expression at trial $t$
+was,
+\begin{align}
+  \Pr(r|K^{}_t) &= \frac{1}{Z} \Pr(r|K^{}_{t-1}) \sum_{i=1\dots N}
+    \Pr(I'_t|\phi(G^{(i)}_t,C^{}_t,r)
+%\frac{\Pr(r|I^{}_t,I'_t)}{\Pr(r)}
+\label{eq:A-update-1}
+\end{align}
+where $Z$ was a normalizing constant, and $G^{(i)}_t$ was an i.i.d.
+sample under the density $\pi(G^{}_t;\bar{G}^{}_t,\sigma)$.
+
+
+\subsection{Human inferences from complex scenes}
+
+\begin{figure*}[t]
+  \begin{center}
+    \includegraphics[width=\textwidth]{../figures/explicit_mass_judgments.pdf}
+    \caption{\small Proportion of correct judgments when asked ``Which
+      color is heavier?'' for each condition as a function of
+      time. Each subplot shows a different combination of $r_0$ and
+      trial order. Solid lines show $\Pr(r>1|K_t)$ (left) or
+      $\Pr(r<1|K_t)$ (right) as computed by the ideal observer
+      model. In all cases, the proportion of correct responses
+      increases over time, reflecting that people learned the
+      appropriate relative mass over time.  }
+    \label{fig:explicit-mass-judgments}
+  \end{center}
+\end{figure*}
+
+To test whether people can infer the relative mass of objects from
+complex scenes in realistic scenarios, we conducted a modified version
+of an experiment from \citeA{Battaglia2013} in which people judged the
+stability of towers of building blocks. These towers consisted of two
+types of blocks of different masses (indicated by color) and arranged
+in a way that required participants to reason about the mass in order
+to correctly determine the stability.
+
+The experiment was divided into three phases. In the \textit{training}
+phase, participants were familiarized to the general task demands. In
+the \textit{experiment} phase, we tested participants' ability to
+learn the relative masses. In the \textit{posttest} phase, we gave
+participants a comprehension test to ensure they followed
+instructions.
+
+% \begin{figure*}[t]
+%   \begin{center}
+%     \includegraphics[width=\textwidth]{../figures/fixed_model_performance_all.pdf}
+%     \caption{The log likelihoods of stability (``Will it fall?'')
+%       judgments by human participants and the ideal observer under
+%       different possible beliefs. Each belief reflects absolute
+%       certainty that a single mass ratio (denoted by $r$ on the
+%       x-axis) is the true ratio $r_0$. The left plot shows conditions
+%       that recieved \rlow{} feedback; the middle shows conditions that
+%       received \rhigh{} feedback; and the right shows conditions that
+%       received no feedback. The \vfb{} and \fb{} conditions with the
+%       same $r_0$ have very similar shapes, however ratios closer to 1
+%       have a higher likelihood in the \fb{} conditions relative to
+%       ratios further from 1. Despite this, all conditions show the
+%       same general trend as the ideal observer: the likelihood is
+%       higher when $r\approx r_0$ and lower when $r\not\approx r_0$.}
+%     \label{fig:fixed-model-performance}
+%   \end{center}
+% \end{figure*}
+
+\paragraph{Participants}
+
+We recruited $n=359$ participants on Amazon's Mechanical Turk and
+assigned each of them randomly to one of 5 conditions and one of 2
+trial orderings. Of these participants, 62 were excluded from analysis
+either because they had previously completed this experiment or a
+pilot experiment ($n=29$), or because they failed the comprehension
+check ($n=33$). Participants were treated in accordance with UC
+Berkeley's IRB protocols and paid \$1.00 for 10-15 minutes of
+work. All participants were 18 years or older and completed the
+experiment from within the United States.
+
+\paragraph{Materials}
+
+% Each tower was constructed by a stochastic process
+% in which 10 blocks were sequentially given positions and orientations
+% that resulted in a stable or unstable stack of blocks. Specifically,
+% each block's placement satisfied two constraints: 1) its center must
+% reside within the $60\times 60$ cm length and width of the tower, and
+% 2) it must be ``locally stable'', meaning that the block is supported
+% by the blocks beneath it (however adding more blocks on top could
+% cause it to fall). We then scored each tower's ``true stability'' by
+% simulating physics (i.e. gravity) and measuring whether any blocks in
+% the tower fell within 2000ms--those that had blocks fall were deemed
+% unstable, and those from which no blocks fell deemed stable.
+
+We used six tower stimuli in the training and posttest stimuli. Of
+these, we chose three stable towers and three unstable towers which
+were judged to be obviously stable or unstable in an independent
+experiment \citeA<See>{Hamrick2011}. These trials were used to verify
+that the participants understood the instructions; those who failed to
+correctly judge them ($n=33$) were excused with pay. The blocks in
+these towers all had densities of $170\ kg/m^3$ and were assigned
+random colors.
+
+In the experiment phase, participants were presented with 40 stimuli
+chosen to provide maximally different feedback under \rlow{}
+vs. \rhigh{} mass ratios, e.g. towers which fell under \rlow{} and did
+not fall under \rhigh{}, or vice versa. In each of these stimuli, five
+blocks were colored red and the other five yellow (e.g., Fig
+\ref{fig:1}C) -- blocks of the same color had the same mass, blocks of
+different colors did not. The heavier blocks were of density, $1700\
+kg/m^3$, and the others were of, $170\ kg/m^3$. The assignments of
+which color was heavier were counterbalanced across participants.
+
+\paragraph{Design}
+
+Participants completed trials in one of two possible orderings: a
+\textit{diagnostic} ordering, in which the first several trials
+provided evidence in favor of the correct $r_0$; and a \textit{random}
+ordering, in which the order of trials was chosen at random. There
+were three different types of feedback that participants could
+receive: \textit{video feedback}, in which they watched a 3s video of
+the stimulus falling or not falling; \textit{binary text feedback}, in
+which participants were told explicitly whether the tower was stable
+(``Tower does not fall'') or unstable (``Tower falls'') over 2s; and
+\textit{no feedback}, in which participants received no feedback about
+the stability of the tower. Video and binary feedback were generated
+under one of two mass ratios, \rlow{} or \rhigh{}, thus yielding five
+different conditions:
+% video and binary text feedback with \rlow{}
+% (\vfblow{}), video and binary text feedback with \rhigh{}
+% (\vfbhigh{}), binary text feedback with \rlow{} (\fblow{}), binary
+% text feedback with \rhigh{} (\fbhigh{}), and no feedback (\nfb{}).
+
+% In the posttest, we checked that participants were paying attention by
+% asking them to perform more stability judgments. This design was
+% motivated by two factors. By the end of the experiment, participants
+% have had plenty of practice and should be familiar with the task of
+% judging stability; they should be able to judge the easier training
+% towers with high accuracy. Thus, we excluded participants from
+% analysis if they incorrectly judged the stability of more than one
+% tower in the posttest.
+
+
+\begin{table}[h]
+  \begin{center}
+    \begin{tabular}{|l||cccc|}\hline
+      Abbrv. & Feedback & $r_0$ & Diagnostic & Random\\\hline
+      \vfblow{} & video+text & 0.1 & $n=37$ & $n=23$\\
+      \vfbhigh{} & video+text & 10 & 35 & 23\\
+      \fblow{} & text & 0.1 & 36 & 25\\
+      \fbhigh{} & text & 10 & 39 & 21\\
+      \nfb{} & none & n/a & 36 & 21\\
+      \hline 
+    \end{tabular}
+  \end{center}
+\end{table}
+
+
+% \begin{pitemize}
+% \item video+text feedback with \rlow{} (henceforth \vfblow{}), $n=23$
+% \item video+text feedback with \rhigh{} (henceforth \vfbhigh{})
+% \item text feedback with \rlow{} (henceforth \fblow{})
+% \item text feedback with \rhigh{} (henceforth \fbhigh{})
+% \item no feedback (henceforth \nfb{})
+% \end{pitemize}
+
+\paragraph{Procedure}
+
+Participants initiated each trial by clicking an on-screen button with
+the mouse. The stimulus presentation began immediately, and depicted a
+video of the tower while the camera panned $180^\circ$ around it for
+3s, then stopped. Participants were then asked, ``Will the tower fall
+down?'', and chose either ``No, it will NOT fall'' or ``Yes, it will
+fall'' by clicking a button. For the feedback groups, the
+corresponding feedback type began immediately after participants
+responded. After feedback, the next trial began.
+
+Before the experiment, participants were given instructions and shown
+two example stimuli (one unstable and one stable). After clicking a
+button to proceed, participants began the training phase. All
+participants received video and binary feedback in the training phase
+in order to familiarize them to the task.  When the training phase
+concluded, participants were shown another screen with instructions
+regarding the towers with red and yellow blocks. Participants were
+shown an example tower (which provided no information about the
+relative mass) and told that one color was heavier than the other, but
+that they would not be told which one was which. We encouraged people
+in the \fb{} and \vfb{} conditions to try to determine which was the
+heavier color, and told them that they would occasionally be asked
+what they thought. Specifically, we asked participants in the \vfb{}
+and \fb{} conditions after trials 1, 2, 3, 5, 8, 14, 24, and 40 to
+answer ``Which color do you think is the heavy color?''. Participants
+responded either ``red'' or ``yellow'' by clicking corresponding red
+or yellow buttons. After the experiment phase, participants saw a
+final instructions screen which informed them they would perform
+several trials like the six at the beginning. Participants completed
+the same six trials as in the training phase, in a different
+order. When participants finished the posttest, they were given a
+``validation code'' which they were to submit on Mechanical Turk to
+indicate they had finished the experiment.
+
+% \begin{figure}
+%   \begin{center}
+%     \caption{\TODO{Which is better, this or the table? (or both?)}}
+%   \end{center}
+% \end{figure}
+
+
+
+\subsubsection{Results}
+
+We predicted that people in the feedback groups would learn the mass
+ratio that corresponded to their feedback, and that people in the
+no-feedback groups would not. We assessed each group's learning both
+by their explicit mass judgments increased in accuracy over time, and
+by comparing their stability prediction judgments to several ideal and
+suboptimal models.
+
+\textit{``Which color is heavier?'' mass judgments.} After the first
+trial, the proportions of correct responses to the explicitly mass
+judgment question, ``Which color is heavier?'', ranged from 61\% to
+91\% (diagnostic order) and 44\% to 78\% (random order) and were
+significantly above chance in every \vfb{} condition, as well as in
+the \diag{\fbhigh{}} condition ($p<0.02$ for each condition,
+one-tailed binomial tests).
+
+Over all conditions for each order, the proportion of correct
+responses increased over the course of the experiment ($\chi^2(7,\
+n=147)=20.15$, $p<0.01$ for the diagnostic ordering; $\chi^2(7,\
+n=92)=39.96$, $p<0.00001$ for the random ordering). In the diagnostic
+ordering, the proportion of correct responses was significantly above
+chance on all queries after the 3rd trial ($p<0.005$, one-tailed
+binomial). In the random ordering, the proportion correct was
+significantly above chance from the eighth trial onwards ($p<0.01$,
+one-tailed binomial) except in the \fblow{} condition, in which
+participants were at chance on every trial ($p>0.22$, two-tailed
+binomial). Fig. \ref{fig:explicit-mass-judgments} shows these
+proportions for each condition, as well as the ideal observer.
+
+These results clearly show that people learned the mass ratios in
+these complex scenes. In all but one condition, participants were able
+to determine which color block was heavier after only eight trials.
+Furthermore, participants in several conditions demonstrated one-shot
+learning, indicating they had determined the heavier color after only
+a single trial.
+
+\begin{figure*}[t]
+  \centering
+  % \begin{tabular}[t]{cc}
+      \subfloat{\includegraphics[width=0.4\textwidth]{../figures/model_performance_E.pdf}}%
+      \subfloat{\includegraphics[width=0.4\textwidth]{../figures/model_performance_C.pdf}}
+% \\
+% \small
+% \subfloat{\begin{tabular}[t]{|c|c||cc|} \hline
+% \textbf{Diagnostic} & $n$ & Uniform & Learning\\\hline
+% \fblow{} & 36 & -26.57 & \textbf{-26.07}\\
+% \vfblow{} & 37 & -27.19 & \textbf{-26.72}\\
+% \fbhigh{} & 39 & \textbf{-26.41} & -26.42\\
+% \vfbhigh{} & 35 & -26.96 & \textbf{-25.41}\\
+% \nfb{} & 36 & \textbf{-26.56} & -28.82\\
+% \hline
+% \end{tabular}} &
+% \small
+% \subfloat{\begin{tabular}[t]{|c|c||cc|}\hline
+% \textbf{Random} & $n$ & Uniform & Learning\\\hline
+% \fblow{} & 25 & \textbf{-27.88} & -29.43\\
+% \vfblow{} & 23 & -28.10 & \textbf{-26.97}\\
+% \fbhigh{} & 21 & -27.29 & \textbf{-26.53}\\
+% \vfbhigh{} & 23 & -26.26 & \textbf{-25.91}\\
+% \nfb{} & 21 & \textbf{-27.40} & -29.46\\
+% \hline
+% \end{tabular}}
+  % \end{tabular}
+      \caption{\small Average log likelihoods of human judgments under
+        different models. The left subplot shows likelihoods for
+        participants with the \diag{}, while the right shows them for
+        the \rand{}.  In both cases, blue bars show likelihoods of the
+        uniform model, green bars show likelihoods of the learning
+        model, and the black dotted line indicates chance performance
+        (i.e., guessing randomly with $p=0.5$). All likelihoods are
+        averaged over the number of participants in each condition
+        (see text). White asterisks indicate the highest likelihood.}
+    \label{fig:model-performance}
+\end{figure*}
+
+\textit{``Will it fall?'' stability judgments.} We compared
+participants' stability prediction judgments, ``Will it fall?'', to
+three models: \textit{random}, which assumed people guessed randomly
+with equal probability; \textit{uniform}, which assumed people had a
+fixed uniform distribution of belief over mass ratios; and
+\textit{learning}, which assumed people began with a uniform prior
+over mass ratios and updated their beliefs in response to feedback in
+the same manner as the ideal observer model. Formally, these models
+define the likelihood for producing a judgment $J_t$ as:
+\begin{pitemize}
+\item \textbf{Random}: $\Pr(J_t)=\textrm{Bernoulli}(p=0.5)$
+% \item \textbf{Equal}: Eq. \ref{eq:A-resp}, where $K_{t,r}=1$ if
+%   $r=1.0$ and $K_{t,r}=0$ otherwise, for all $t,r$.
+\item \textbf{Uniform}: Eq. \ref{eq:A-resp}, where
+  $K_{t,r}\propto 1$ for all $t,r$.
+\item \textbf{Learning}: Eq. \ref{eq:A-resp},
+  where $K_{0,r}\propto 1$ for all $r$, and $K_t$ is updated according
+  to Eq. \ref{eq:A-update-1} for all $t>0$.
+\end{pitemize}
+
+Fig. \ref{fig:model-performance} shows the models' average log
+likelihoods for peoples' stability judgments in each condition. In all
+feedback conditions except \rand{\fblow{}} and \diag{\fbhigh{}}, the
+ideal observer model had the highest likelihood for the data. In the
+\diag{\fbhigh{}} and both \nfb{} conditions, the uniform model
+performed best. The \rand{\fblow{}} condition was best explained by a
+model that makes judgments at random.
+
+
+\subsection{General discussion}
+
+
+The judgments given by participants in the majority of feedback
+conditions were most likely under the ideal observer model (Fig.
+\ref{fig:model-performance}). There were two conditions for which this
+was not the case: \diag{\fbhigh{}} and \rand{\fblow{}}. In the
+\diag{\fbhigh{}} condition, the uniform model had the highest
+likelihood for participants' responses. Participants in the
+\rand{\fblow{}} condition were at chance when judging which color
+block was heavier; it is therefore not surprising their stability
+judgments were also best explained by the random model. In the
+\diag{\fbhigh{}} condition, participants' judgments were more likely
+under the uniform model than under the ideal observer. Closer
+inspection revealed that this was because the ideal observer had a
+strong belief about very high mass ratios ($r\approx 10$) while
+people's judgments were better explained by ratios close to $r=1$,
+e.g. $r\approx 2$.
+
+% \paragraph{Effect of trial order}
+
+A closer inspection of the first few trials of the random ordering
+reveals that those stimuli actually produce \rlow{} feedback which is
+in favor of $r=10$. This effect can be seen in the \rand{\rlow{}}
+ideal observer curve in Fig. \ref{fig:explicit-mass-judgments}:
+initially, the probability of the correct mass ratio goes down. This
+has a significant impact on the strength of the models' beliefs over
+time as well, as is evident in \rand{\rlow{}} subplot of Fig.
+\ref{fig:model}B. The ideal observer does eventually recover the
+correct mass ratio, but the ideal observer also learns at a maximally
+efficient rate; this does not seem to be the case for people.
+
+% \paragraph{Effect of feedback}
+
+The initial negative evidence in the \rand{\rlow{}} conditions prompts
+the question: why were participants in the \rand{\vfblow{}} able to
+successfully perform the task? It is likely that these participants
+took advantage of additional information provided by the video
+feedback, such as what direction stimuli fell in or which blocks fell,
+whereas participants in the text feedback conditions received only
+binary outcomes. Thus, while the binary feedback may have been
+evidence against the correct mass ratio, there was likely other
+evidence in the video feedback that outweighed it.
+
+% Additionally, the proportion of correct responses on the first trial
+% in the \rand{\vfb{}} conditions was significantly higher than that of
+% the ideal observer ($p<0.002$, \rlow{}; $p<0.025$, \rhigh{},
+% one-tailed binomial). The proportion of initial correct responses
+% was marginally higher than the ideal observer in the \diag{\vfb{}} and
+% \rand{\fbhigh{}} conditions ($0.085<p<0.12$, one-tailed binomial). In
+% all other cases, the proportion was not significantly higher than the
+% ideal observer ($p>0.57$, one-tailed binomial). The hypothesis
+% that participants in the \vfb{} conditions used the extra information
+% available to them can explain these results. The model does not have
+% access to the same information as people receiving video feedback; it
+% is therefore not an accurate upper bound on performance for them. But
+% there are clear cases where this extra information is crucial: for
+% example, observing that a scale does not balance only rules out the
+% hypothesis that two objects have equal mass. Observing the side
+% towards \textit{which} it tips communicates which object is heavier.
+% And observing the speed that it tips offers information about the mass
+% ratio itself. Examining how extra information provided by the video
+% feedback improves people's inferences is an important topic for future
+% research.
+
+% \paragraph{Comparison with the ideal model}
+
+% The fact that people's inferences in the majority of cases matched the
+% model predictions despite the complexity of the experimental scenes
+% supports probabilistic simulation as a mechanism of these inferences
+% because it can efficiently handle a wider range of complex and novel
+% settings than conceivable alternatives. However, there were conditions
+% in which the ideal observer model was insufficent to explain peoples'
+% judgments.  With the exception of the first trial, participants'
+% explicit mass judgments reflected a slower learning rate than the
+% ideal observer. This may suggest resource limits on the simulation's
+% algorithmic implementation, or deviations between our model's
+% approximate physics knowledge and people's.
+
+% \paragraph{Feature-based alternatives}
+% Could people estimate the mass ratios by some strategy apart from
+% probabilistic inference? Perhaps they are able to draw conclusions
+% based on associations between geometric features (e.g., height, points
+% of contact) and available feedback. However, it is not clear whether
+% or how these feature-based associations could be reliably mapped onto
+% an unobserved variable such as mass. Even if they were, they are
+% likely to be isolated to special-case scenarios: features that apply
+% to a tower of building blocks would not apply to a stack of papers. It
+% is also not clear how such a strategy could flexibly exploit the
+% different types of feedback, video and binary. How would information
+% such as whether the tower fell or not, the direction in which it fell,
+% which blocks fell initially, which blocks caused other blocks to fall,
+% and so on, be fluidly integrated after only a handful of trials? 
+
+% To assess whether peoples' stability judgments also reflected
+% knowledge of the true mass ratio, we computed model likelihoods for
+% their judgments; these models were different possible ``fixed
+% beliefs'' about the mass ratio such that $\Pr(F_t|S_t,r)=1$ for a
+% single $r$ and zero everywhere else for all $t$--in other words, these
+% likelihoods reflect absolute certainty about a single mass
+% ratio. Fig. \ref{fig:fixed-model-performance} shows these log
+% likelihoods for each condition, summed across participants in both
+% trial orderings, as well as the likelihood for judgments generated by
+% an ideal observer. When \rhigh{}, the data is most likely under
+% beliefs that $r>1$. When \rlow{}, the opposite is true. When no
+% feedback is given, the data is most likely under a belief that the
+% masses are approximately equal. Qualitatively, these results indicate
+% that peoples' judgments do reflect an approximately accurate belief
+% about the relative mass.
+
+
+
+\subsection{Conclusion}
+
+We found that people can learn the relative masses between objects in
+complex, realistic scenes given observations of the effects of
+physics, which can be explained as Bayesian inference over approximate
+Newtonian mechanics and implemented through probabilistic simulation.
+Our model predicted how people's beliefs about the mass evolved over
+the course of learning, which we measured both explicitly by a direct
+query, and implicitly by analyzing how their stability predictions
+changed across trials. We also found that people could learn these
+mass parameters through both rich visual feedback as well as sparse
+binary feedback. By demonstrating its validity in complex naturalistic
+scenes, we extend recent reports that people's physical judgments are
+consistent with approximate Bayesian inference over Newtonian
+mechanics \cite{Sanborn2013}. Our results also extend the view that
+people's physical scene understanding is driven by probabilistic
+simulations of mental models of the world \cite{Battaglia2013} by
+showing that this mechanism can support inference and learning of
+underlying physical parameters. This work thus opens many
+opportunities for understanding the computations and processes
+responsible for other sophisticated planning and inference behaviors
+in physical contexts, such as constructing improvised tools and
+contraptions, as well as organizing the layout of items on a desk, or
+furniture in a living room, to optimize access and navigability.
+
+
+\subsection{Acknowledgments}
+
+{\small This research was supported by a Berkeley Fellowship.}
+
+% \section{References}
+
+\bibliographystyle{apacite}
+\renewcommand{\bibliographytypesize}{\small}
+\setlength{\bibleftmargin}{.125in}
+\setlength{\bibindent}{-\bibleftmargin}
+
+\bibliography{references}
+
+
+\end{document}
