@@ -3,3 +3,4 @@ analysis/images
 experiment/data
 experiment/logs
 experiment/stimuli
+.DS_Store
