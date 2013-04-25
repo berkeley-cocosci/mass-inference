@@ -1,17 +1,45 @@
-How do people infer intrinsic attributes of objects, such as mass or
-friction, from limited exposure to the complex scenes in which those
-objects interact? Previous work has shown that when properties like
-mass are known, people can make sophisticated physical predictions,
-such as whether a tower of building blocks will fall. We hypothesize
-that people leverage this physical knowledge to infer properties like
-mass by anticipating what will happen and then updating their beliefs
-based on their predictions' divergence from reality. To formalize this
-notion, we built a model observer that learns about objects' masses
-over time by recruiting approximate physics knowledge into an optimal
-learning framework. We showed people towers of heavy and light
-building blocks and asked them to predict whether each tower would
-fall. After demonstrating whether the tower fell, we asked people to
-infer which type of block was heavier. Our results indicate that
-people learn the relative masses of the blocks over time, and that
-their predictions and inferences are similar to those exhibited by the
-model as it learns.
+The abstract is coming along, but I don't completely feel that it
+makes clear what the experimental question and conclusion are. Here is
+my understanding about what you showed:
+
+1. People can infer underlying parameters in complex dynamical scenes.
+
+2. Their behavior is qualitatively consistent with that of an ideal
+   observer that performs probabilistic inference in a generative
+   model that approximates Newtonian mechanics.
+
+3. This type of inference is non-trivial, but a simulation-based
+   representation of the generative model applied within a Monte Carlo
+   sampling regime can make the inferences and (perhaps) offers
+   plausible means for explaining people's deviations from optimal
+   performance.
+
+You should say each of these things in the abstract, or whatever
+subset you feel are the main points. Also because this would be a
+poster I think you can be a little more speculative because you have
+time to nail things down, plus it's only a poster.
+
+Here is a rough outline: 
+**
+
+We ask: How do people learn about the underlying physical parameters
+of objects, such as mass and friction, from their interactions in
+complex, dynamical scenes? These parameters cannot be observed
+directly and their influence on the sequence of dynamics is often
+complicated and difficult to resolve unambiguously, yet people can
+still do it. We propose that this learning can be viewed as
+probabilistic inference in a generative model that approximates
+Newtonian mechanics/rigid-body dynamics. We expressed this hypothesis
+within a model whose central mechanism is a "predict,
+compare-with-observation, update" procedure based on physical
+simulation and Monte Carlo sampling. We examined how people judge the
+relative masses of objects that are stacked in complex configurations
+and that are subjected to the effects of gravity, collisions,
+dynamics. Our results show that people can rapidly learn the relative
+masses, and that their judgments are qualitatively consistent with
+those of the physics-aware model observer, but also deviate in key
+ways that may be explained by information and resource
+limitations. This is an important step in understanding how people
+perceive and reason about the physical nature of their environment,
+and provides a working framework for modeling and testing people's
+inferences about unobserved properties in complex, real-world scenes.
