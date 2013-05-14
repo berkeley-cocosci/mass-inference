@@ -9,8 +9,8 @@ learning of the blocks' relative masses. We view such learning as
 probabilistic inference in a generative model of Newtonian rigid-body
 dynamics, and express this hypothesis in a model observer that infers
 parameters using a procedure of approximate physical simulation. While
-participants' judgments qualitatively matched the model observer's,
-they also deviated in key ways that may be explained by resource
+participants' judgments qualitatively matched the model's, they also
+deviated in key ways that may be explained by resource
 limitations. This work advances our understanding of how people infer
 unobserved physical properties, and offers a framework for modeling
 such behavior in complex, real-world scenes.
