@@ -909,3 +909,110 @@ def print_performance_table(performance_table, table_conds,
             print " & ".join(entries) + r"\\"
         print r"\hline"
         print r"\end{tabular}} &"
+
+
+def plot_model_comparison(info, chance=True, static=True, learning=True):
+    basekwargs = {
+        'align': 'center',
+        'width': 1,
+    }
+
+    colors = {
+        'Static': 'b',
+        'Learning': 'g'
+    }
+
+    table_models = info['table_models']
+    heights = info['heights']
+    chance_val = info['chance']
+    orders = info['orders']
+    fbratios = info['fbratios']
+    fbtypes = info['fbtypes']
+
+    best = np.nanargmax(heights, axis=-1)
+    best[0, 0, 0] = 2
+    x = [0, 1, 2.5, 3.5, 5, 6, 7.5, 8.5]*2
+
+    fig, axes = plt.subplots(1, 2)
+
+    if static or learning:
+        for i in xrange(heights.size):
+            oidx, ridx, fidx, midx = np.unravel_index(i, heights.shape)
+
+            if not static and midx == 0:
+                continue
+            if not learning and midx == 1:
+                continue
+
+            order = orders[oidx]
+            ratio = fbratios[ridx]
+            fbtype = fbtypes[fidx]
+            model = table_models[midx]
+
+            height = heights[oidx, ridx, fidx, midx]
+
+            kwargs = basekwargs.copy()
+            kwargs.update({
+                'color': colors[model]
+            })
+
+            if oidx == 0 and ridx == 0 and fidx == 0:
+                kwargs['label'] = model
+
+            axes[oidx].bar(x[i], height, **kwargs)
+
+            if best[oidx, ridx, fidx] == midx:
+                axes[oidx].text(
+                    x[i], height, '*',
+                    fontweight='bold', fontsize=16,
+                    ha='center', color='w')
+
+    for ax in axes:
+        ax.set_ylim(-30.1, -24.8)
+        xlim = [-1, 9.5]
+        ax.set_xlim(*xlim)
+
+        ax.xaxis.set_ticks_position('none')
+        ax.yaxis.set_ticks_position('none')
+        ax.tick_params(axis='x', labelsize=16)
+        ax.tick_params(axis='y', labelsize=16)
+        ax.xaxis.tick_top()
+
+        ax.set_xticks([0.5, 3, 5.5, 8])
+        ax.set_xticklabels(['Binary', 'Video']*2, fontsize=12)
+
+        rkwargs = {
+            'horizontalalignment': 'center',
+            'fontsize': 22
+        }
+        if not (static or learning):
+            rkwargs['color'] = 'w'
+
+        ax.text(1.75, -24.25, '$r=0.1$', **rkwargs)
+        ax.text(6.75, -24.25, '$r=10$', **rkwargs)
+
+        if chance:
+            ax.plot(xlim, [chance_val]*2, 'k--', linewidth=2, label='Chance')
+
+    ax1, ax2 = axes
+    ax2.set_yticks([])
+    ax2.set_yticklabels([])
+    ax1.set_ylabel("Average log likelihood", fontsize=16)
+    ax1.set_xlabel("Order 1", fontsize=22)
+    ax2.set_xlabel("Order 2", fontsize=22)
+
+    if learning:
+        ax1.legend(loc='lower left', ncol=4, fontsize=12, frameon=False,
+                   bbox_to_anchor=(0, -0.04))
+    elif static or chance:
+        ax1.legend(loc='lower left', ncol=4, fontsize=12, frameon=False,
+                   bbox_to_anchor=(0, -0.03))
+
+    ax2.text(9.25, -30, '* = best model fit',
+             horizontalalignment='right',
+             fontsize=12)
+
+    fig.set_figwidth(12)
+    fig.set_figheight(4)
+
+    plt.subplots_adjust(wspace=0.02, right=0.8)
