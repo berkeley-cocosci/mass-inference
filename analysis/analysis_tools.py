@@ -1012,7 +1012,7 @@ def plot_model_comparison(info, chance=True, static=True, learning=True):
              horizontalalignment='right',
              fontsize=12)
 
-    fig.set_figwidth(12)
+    fig.set_figwidth(11)
     fig.set_figheight(4)
 
-    plt.subplots_adjust(wspace=0.02, right=0.8)
+    plt.subplots_adjust(wspace=0.02, right=0.95, top=0.8)
