@@ -343,6 +343,8 @@ def generate_model_responses(conds, experiment, queries, feedback, ipe_samps,
 
     """
 
+    rso = np.random.RandomState(1)
+
     model_belief = {}
     model_experiment = {}
     model_queries = {}
@@ -370,7 +372,7 @@ def generate_model_responses(conds, experiment, queries, feedback, ipe_samps,
             prior = None
         responses, model_theta = mo.simulateResponses(
             n_fake, fb, ipe_samps[order], kappas,
-            prior=prior, p_ignore=0.0, smooth=True)
+            prior=prior, p_ignore=0.0, smooth=True, rso=rso)
 
         ## Model belief over time
         if fbtype == "nfb":
@@ -399,7 +401,7 @@ def generate_model_responses(conds, experiment, queries, feedback, ipe_samps,
             else:
                 pcorrect = np.sum(theta[:, :r1], axis=1) + (p1 / 2.)
                 other = 10
-            r = np.random.rand(n_fake, 1) < pcorrect[None]
+            r = rso.rand(n_fake, 1) < pcorrect[None]
             responses = np.empty(r.shape)
             responses[r] = float(ratio)
             responses[~r] = other
