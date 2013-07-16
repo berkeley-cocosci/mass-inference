@@ -1,28 +1,40 @@
 #!/usr/bin/env python
 """
-Simple example script for running notebooks and checking for errors
+simple example script for running notebooks and reporting exceptions.
+
+Usage: `checkipnb.py foo.ipynb [bar.ipynb [...]]`
+
+Each cell is submitted to the kernel, and checked for errors.
 
 See https://gist.github.com/minrk/2620876
 
-Usage: `run_nb.py foo.ipynb [bar.ipynb [...]]`
-
 """
 
-import os
-import sys
-from IPython.zmq.blockingkernelmanager import BlockingKernelManager
-from IPython.nbformat.current import reads
+import os,sys,time
 
+from Queue import Empty
+
+try:
+    from IPython.kernel import KernelManager
+except ImportError:
+    from IPython.zmq.blockingkernelmanager import BlockingKernelManager as KernelManager
+
+from IPython.nbformat.current import reads, NotebookNode
 
 def run_notebook(nb):
-    km = BlockingKernelManager()
+    km = KernelManager()
     km.start_kernel(stderr=open(os.devnull, 'w'))
-    km.start_channels()
-    shell = km.shell_channel
+    try:
+        kc = km.client()
+    except AttributeError:
+        # 0.13
+        kc = km
+    kc.start_channels()
+    shell = kc.shell_channel
     # simple ping:
     shell.execute("pass")
     shell.get_msg()
-
+    
     cells = 0
     failures = 0
     for ws in nb.worksheets:
@@ -47,6 +59,7 @@ def run_notebook(nb):
     print "    ran %3i cells" % cells
     if failures:
         print "    %3i cells raised exceptions" % failures
+    kc.stop_channels()
     km.shutdown_kernel()
     del km
 
