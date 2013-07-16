@@ -189,7 +189,7 @@ def EvaluateObserver(responses, feedback, ipe_samps, kappas,
 
 
 def simulateResponses(n, feedback, ipe_samps, kappas,
-                      prior=None, p_ignore=0.0, smooth=True):
+                      prior=None, p_ignore=0.0, smooth=True, rso=None):
 
     # learning model beliefs
     model_joint, model_theta = ModelObserver(
@@ -203,6 +203,8 @@ def simulateResponses(n, feedback, ipe_samps, kappas,
     # sample responses
     n_trial, n_kappas, n_samps = ipe_samps.shape
     shape = (n,) + p_response.shape
-    responses = np.random.rand(*shape) < p_response
+    if rso is None:
+        rso = np.random
+    responses = rso.rand(*shape) < p_response
 
     return responses, model_theta
