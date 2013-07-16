@@ -4,4 +4,4 @@ experiment/data
 experiment/logs
 experiment/stimuli
 figures/*.png
-
+.DS_Store
