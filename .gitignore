@@ -5,3 +5,5 @@ experiment/logs
 experiment/stimuli
 man/cogsci2013-mass-learning_files
 figures/*.png
+.DS_Store
+figures/old
