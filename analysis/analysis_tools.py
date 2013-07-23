@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats
 import os
+import yaml
 
 import model_observer as mo
 from stats_tools import normalize
@@ -997,6 +998,7 @@ def plot_model_comparison(info, chance=True, static=True, learning=True):
     ax1, ax2 = axes
     ax2.set_yticks([])
     ax2.set_yticklabels([])
+    ax1.set_yticklabels([])
     ax1.set_ylabel("Average log likelihood", fontsize=16)
     ax1.set_xlabel("Order 1", fontsize=22)
     ax2.set_xlabel("Order 2", fontsize=22)
@@ -1016,3 +1018,68 @@ def plot_model_comparison(info, chance=True, static=True, learning=True):
     fig.set_figheight(4)
 
     plt.subplots_adjust(wspace=0.02, right=0.95, top=0.8)
+
+
+def wcih(queries, meta):
+    orders = meta['orders']
+    conds = meta['conds']
+
+    emjs = {}
+    for cond in conds:
+        if cond not in queries:
+            continue
+        obstype, group, fbtype, ratio, cb = parse_condition(cond)
+        emjs[cond] = np.asarray(queries[cond]) == float(ratio)
+        index = np.array(queries[cond].columns, dtype='i8')
+        X = np.array(index)-6-np.arange(len(index))-1
+
+    emj_stats = CI(emjs, conds)
+
+    nratio = len(meta['fbratios'])
+    norder = len(meta['orders'])
+    nfb = len(meta['fbtypes'])
+    ntrial = X.size
+    shape = (nratio, norder, nfb, ntrial)
+
+    # which color is heavier
+    wcih = {
+        'mean': np.empty(shape),
+        'upper': np.empty(shape),
+        'lower': np.empty(shape),
+        'sig': np.empty(shape, dtype='bool'),
+        'sum': np.empty(shape),
+        'n': np.empty(shape),
+    }
+
+    for i, group in enumerate(orders):
+        for cidx, cond in enumerate(conds):
+            if cond not in emj_stats:
+                continue
+            obstype, grp, fbtype, ratio, cb = parse_condition(cond)
+            if (grp != group):
+                continue
+            if obstype == "M":
+                fbtype = 'model'
+            mean, lower, upper, sums, n = emj_stats[cond].T
+            f = lambda x: scipy.stats.binom_test(x, n[0], 0.5)
+            binom = [f(x) for x in sums]
+
+            ridx = meta['fbratios'].index(ratio)
+            gidx = meta['orders'].index(grp)
+            fidx = meta['fbtypes'].index(fbtype)
+            idx = (ridx, gidx, fidx)
+
+            wcih['mean'][idx] = mean
+            wcih['lower'][idx] = lower
+            wcih['upper'][idx] = upper
+            wcih['sig'][idx] = np.array(binom) < 0.05
+            wcih['sum'][idx] = sums
+            wcih['n'][idx] = n[0]
+
+    return X, wcih
+
+
+def load_opts(filename):
+    with open(filename) as fh:
+        opts = fh.read()
+    return yaml.load(opts)

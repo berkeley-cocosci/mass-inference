@@ -1,0 +1,93 @@
+orders: [C, E]
+fbratios: ['0.1', '10']
+fbtypes: [fb, vfb, model]
+
+colors: {
+  fb: '#0000DD', 
+  model: k, 
+  vfb: g
+}
+
+lightcolors: {
+  '#0000DD': '#9999FF', 
+  g: '#99CC99'
+}
+
+
+hatches: {
+  C: null, 
+  E: null
+}
+
+linestyles: {
+  C fb: '-', 
+  C vfb: '-',
+  E fb: '-', 
+  E vfb: '-',
+  C model: '-',
+  E model: '-'
+}
+
+conds: [
+  H-C-fb-0.1, 
+  H-C-vfb-0.1, 
+  M-C-fb-0.1, 
+  H-C-fb-10, 
+  H-C-vfb-10, 
+  M-C-fb-10, 
+  H-C-nfb-10,
+  M-C-nfb-10, 
+  H-E-fb-0.1, 
+  H-E-vfb-0.1, 
+  M-E-fb-0.1, 
+  H-E-fb-10, 
+  H-E-vfb-10, 
+  M-E-fb-10,
+  H-E-nfb-10, 
+  M-E-nfb-10, 
+  H-all-fb-0.1, 
+  H-all-vfb-0.1, 
+  M-all-fb-0.1, 
+  H-all-fb-10,
+  H-all-vfb-10, 
+  M-all-fb-10, 
+  H-all-nfb-10, 
+  M-all-nfb-10
+]
+
+cond_labels: {
+  H-C-fb-0.1: Text $r_0=0.1$, 
+  H-C-fb-10: Text $r_0=10$, 
+  H-C-nfb-10: No feedback, 
+  H-C-vfb-0.1: Video $r_0=0.1$, 
+  H-C-vfb-10: Video $r_0=10$, 
+  H-E-fb-0.1: Text $r_0=0.1$, 
+  H-E-fb-10: Text $r_0=10$, 
+  H-E-nfb-10: No feedback, 
+  H-E-vfb-0.1: Video $r_0=0.1$, 
+  H-E-vfb-10: Video $r_0=10$, 
+  H-all-fb-0.1: Text $r_0=0.1$, 
+  H-all-fb-10: Text $r_0=10$, 
+  H-all-nfb-10: No feedback, 
+  H-all-vfb-0.1: Video $r_0=0.1$, 
+  H-all-vfb-10: Video $r_0=10$, 
+  M-C-fb-0.1: Ideal observer w/ text feedback, 
+  M-C-fb-10: Ideal observer w/ text feedback, 
+  M-C-nfb-10: Ideal observer w/ fixed uniform belief, 
+  M-E-fb-0.1: Ideal observer w/ text feedback,
+  M-E-fb-10: Ideal observer w/ text feedback, 
+  M-E-nfb-10: Ideal observer w/ fixed uniform belief, 
+  M-all-fb-0.1: Ideal observer w/ text feedback, 
+  M-all-fb-10: Ideal observer w/ text feedback, 
+  M-all-nfb-10: Ideal observer w/ fixed uniform belief
+}
+
+labels: {
+  C: random, 
+  E: diagnostic, 
+  C fb 0.1: Binary feedback,
+  C vfb 0.1: Visual feedback,
+  fb: Binary feedback, 
+  vfb: Visual feedback,
+  model: Model,
+}
