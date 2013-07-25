@@ -164,8 +164,8 @@ def ModelObserver(feedback, ipe_samps, kappas,
     return joint, posterior
 
 
-def EvaluateObserver(responses, feedback, ipe_samps, kappas,
-                     prior=None, p_ignore=0.0, smooth=True):
+def EvaluateObserverTrials(responses, feedback, ipe_samps, kappas,
+                           prior=None, p_ignore=0.0, smooth=True):
 
     joint, posterior = ModelObserver(
         feedback, ipe_samps, kappas,
@@ -184,8 +184,16 @@ def EvaluateObserver(responses, feedback, ipe_samps, kappas,
     lh = lh0 + lh1
     lh[np.isnan(lh)] = 0.5
     assert (lh <= 1).all()
-    llh = np.sum(np.log(lh), axis=-1)
-    return llh
+    return np.log(lh)
+
+
+def EvaluateObserver(responses, feedback, ipe_samps, kappas,
+                     prior=None, p_ignore=0.0, smooth=True):
+
+    lh = EvaluateObserverTrials(
+        responses, feedback, ipe_samps, kappas,
+        prior=prior, p_ignore=p_ignore, smooth=smooth)
+    return np.sum(lh, axis=-1)
 
 
 def simulateResponses(n, feedback, ipe_samps, kappas,
