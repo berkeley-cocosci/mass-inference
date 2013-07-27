@@ -632,7 +632,7 @@ def random_model_lh(responses, n_trial, t0=None, tn=None):
 
 
 def block_lh(responses, feedback, ipe_samps, prior, kappas,
-             t0=None, tn=None, f_smooth=True, p_ignore=0.0):
+             t0=None, tn=None, f_smooth=True, p_ignore=0.0, trials=False):
 
     n_trial = ipe_samps.shape[0]
     if t0 is None:
@@ -647,9 +647,14 @@ def block_lh(responses, feedback, ipe_samps, prior, kappas,
 
         # trial-by-trial likelihoods of judgments
         resp = np.asarray(responses[cond])[..., order]
-        lh[cond] = mo.EvaluateObserver(
-            resp, feedback[..., order], ipe_samps[order],
-            kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth)
+        if trials:
+            lh[cond] = mo.EvaluateObserverTrials(
+                resp, feedback[..., order], ipe_samps[order],
+                kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth)
+        else:
+            lh[cond] = mo.EvaluateObserver(
+                resp, feedback[..., order], ipe_samps[order],
+                kappas, prior=prior, p_ignore=p_ignore, smooth=f_smooth)
 
     return lh
 
@@ -795,9 +800,24 @@ def model_lhs(data, feedback, nofeedback, ipe_samps,
     #             model_true[cond] = model_fixed[cond][0].copy()
     #             model_wrong[cond] = model_fixed[cond][3].copy()
 
-    model_uniform = CI(block_lh(
+    _model_uniform = CI(block_lh(
         data, nofeedback, ipe_samps, None, kappas,
         f_smooth=f_smooth, p_ignore=p_ignore), conds)
+    uniform_trials = block_lh(
+        data, nofeedback, ipe_samps, None, kappas,
+        f_smooth=f_smooth, p_ignore=p_ignore, trials=True)
+
+    model_uniform = {}
+    for cond in _model_uniform:
+        if cond in uniform_trials:
+            pmax = np.max(np.exp(uniform_trials[cond]), axis=0)
+            pmax[pmax < 0.5] = 1 - pmax[pmax < 0.5]
+            uniform_min = np.sum(np.log(1 - pmax), axis=-1)
+            uniform_max = np.sum(np.log(pmax), axis=-1)
+            model_uniform[cond] = (_model_uniform[cond],
+                                   (uniform_min, uniform_max))
+        else:
+            model_uniform[cond] = _model_uniform[cond]
 
     # learning models
     theta = np.ones((2, n_kappas))
@@ -806,15 +826,25 @@ def model_lhs(data, feedback, nofeedback, ipe_samps,
     model_not_fixed = CI(block_lh(
         data, fb, ipe_samps, theta, kappas,
         f_smooth=f_smooth, p_ignore=p_ignore), conds)
+    model_not_fixed_trials = block_lh(
+        data, fb, ipe_samps, theta, kappas,
+        f_smooth=f_smooth, p_ignore=p_ignore, trials=True)
 
     model_learn = {}
     for cond in model_not_fixed:
         obstype, group, fbtype, ratio, cb = parse_condition(cond)
         if ratio != '0':
-            if float(ratio) > 1:
-                model_learn[cond] = model_not_fixed[cond][1].copy()
+            i = 1 if float(ratio) > 1 else 0
+            ml = model_not_fixed[cond][i].copy()
+
+            if cond in model_not_fixed_trials:
+                pmax = np.max(np.exp(model_not_fixed_trials[cond]), axis=0)[i]
+                pmax[pmax < 0.5] = 1 - pmax[pmax < 0.5]
+                learn_min = np.sum(np.log(1 - pmax), axis=-1)
+                learn_max = np.sum(np.log(pmax), axis=-1)
+                model_learn[cond] = (ml, (learn_min, learn_max))
             else:
-                model_learn[cond] = model_not_fixed[cond][0].copy()
+                model_learn[cond] = (ml, (None, None))
 
     # all the models
     mnames = np.array([
@@ -857,15 +887,14 @@ def make_performance_table(groups, conds, models, mnames):
                 if mnames[x] not in table_models:
                     continue
                 if cond in models[x]:
-                    data.append(models[x][cond].copy())
+                    data.append(models[x][cond][0].copy())
+                    assert len(data[-1]) == 5
             if len(data) == 0:
                 continue
             data = np.array(data)
             table_conds[-1].append(cond)
             performance_table[-1].append(data)
     performance_table = np.array(performance_table)
-    print performance_table.shape
-    #norm = normalize(performance_table[..., 3], axis=-1)[1]
     norm = performance_table[..., 3] / performance_table[..., 4]
     performance_table[..., 3] = norm
     return performance_table, table_conds, table_models
@@ -1046,7 +1075,7 @@ def wcih(queries, meta):
         'mean': np.empty(shape),
         'upper': np.empty(shape),
         'lower': np.empty(shape),
-        'sig': np.empty(shape, dtype='bool'),
+        'sig': np.empty(shape),
         'sum': np.empty(shape),
         'n': np.empty(shape),
     }
@@ -1072,7 +1101,7 @@ def wcih(queries, meta):
             wcih['mean'][idx] = mean
             wcih['lower'][idx] = lower
             wcih['upper'][idx] = upper
-            wcih['sig'][idx] = np.array(binom) < 0.05
+            wcih['sig'][idx] = np.array(binom)
             wcih['sum'][idx] = sums
             wcih['n'][idx] = n[0]
 
