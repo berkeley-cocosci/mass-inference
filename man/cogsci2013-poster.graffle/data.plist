@@ -61,28 +61,168 @@
 	<key>GraphicsList</key>
 	<array>
 		<dict>
+			<key>Bounds</key>
+			<string>{{36.000001230454359, 2163.7646045577567}, {486, 255}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4461</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1104\fi-1105\pardirnatural
+\ls1\ilvl0
+\f0\fs84 \cf0 {\listtext	\'95	}One color was always 10 times heavier\
+{\listtext	\'95	}Heavy color was the same for the entire experiment\
+{\listtext	\'95	}Colors counterbalanced}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{558, 1194.4999868519167}, {918, 114}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4456</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs96 \cf0 Hypothesis: 
+\i probabilistic simulation-based physics knowledge + Bayesian inference of latent parameters}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
 			<key>Class</key>
 			<string>Group</string>
 			<key>Graphics</key>
 			<array>
 				<dict>
+					<key>Class</key>
+					<string>LineGraphic</string>
+					<key>ID</key>
+					<integer>4443</integer>
+					<key>Points</key>
+					<array>
+						<string>{2289.4705364773617, 1137.4640852293805}</string>
+						<string>{2698.2940615889297, 1134.5229087897289}</string>
+					</array>
+					<key>Style</key>
+					<dict>
+						<key>stroke</key>
+						<dict>
+							<key>HeadArrow</key>
+							<string>FilledArrow</string>
+							<key>Legacy</key>
+							<true/>
+							<key>TailArrow</key>
+							<string>FilledArrow</string>
+							<key>Width</key>
+							<real>10</real>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
 					<key>Bounds</key>
-					<string>{{1408.8234863281241, 4111.588191951847}, {1939.176513671875, 72}}</string>
+					<string>{{2331.8822990331455, 1053.4934970095549}, {324, 165}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
-					<string>Vertical</string>
+					<string>YES</string>
 					<key>Flow</key>
 					<string>Resize</string>
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
-						<string>GillSans-Bold</string>
+						<string>GillSans</string>
 						<key>Size</key>
-						<real>24</real>
+						<real>48</real>
 					</dict>
 					<key>ID</key>
-					<integer>4414</integer>
+					<integer>4444</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -105,24 +245,302 @@
 					</dict>
 					<key>Text</key>
 					<dict>
-						<key>Align</key>
-						<integer>0</integer>
 						<key>Pad</key>
 						<integer>0</integer>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GillSans;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
-\f0\fs60 \cf2                                    This work was supported by grant number \cb3 IIS-0845410 from the National Science Foundation, the ONR MURI "Embedded Humans" project, and a Berkeley Fellowship awarded to JBH.}</string>
+\f0\fs96 \cf0 Same geometry\
+\
+Different masses}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
+					</dict>
+					<key>Wrap</key>
+					<string>NO</string>
+				</dict>
+			</array>
+			<key>ID</key>
+			<integer>4442</integer>
+		</dict>
+		<dict>
+			<key>Class</key>
+			<string>Group</string>
+			<key>Graphics</key>
+			<array>
+				<dict>
+					<key>Bounds</key>
+					<string>{{3061.1849104977427, 1045.0196559481747}, {286.81507366601716, 252}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4420</integer>
+					<key>ImageID</key>
+					<integer>76</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
 					</dict>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{1403.9999999999995, 4110.117603732022}, {256.03399464488598, 36}}</string>
+					<string>{{2900.0123163909784, 1009.9935153115048}, {181.31089125481193, 252}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4421</integer>
+					<key>ImageID</key>
+					<integer>77</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{2738.8397575031104, 974.96733807093506}, {181.31089125481193, 252}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4422</integer>
+					<key>ImageID</key>
+					<integer>74</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
+					</dict>
+				</dict>
+			</array>
+			<key>ID</key>
+			<integer>4419</integer>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{558.00000000000091, 901.14705057045296}, {917.99999999999898, 114}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4418</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\deftab720
+\pard\tx560\tx899\pardeftab720
+
+\f0\fs96 \cf0 Inferring and predicting physical attributes from limited observations is challenging.}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{558.00000000000091, 764.47058076759652}, {917.99999999999898, 114}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4417</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\deftab720
+\pard\tx560\tx899\pardeftab720
+
+\f0\fs96 \cf0 But, physical systems often entail very complex dynamics.}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{558.00000000000091, 570.79411096474007}, {917.99999999999898, 171}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4416</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\deftab720
+\pard\tx560\tx899\pardeftab720
+
+\f0\fs96 \cf0 Reasoning about the physical attributes (e.g. mass) of objects and scenes is a central aspect of cognition and crucial for survival.}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Class</key>
+			<string>Group</string>
+			<key>Graphics</key>
+			<array>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1403.9999999999995, 4141.9412476931939}, {256.03399464488598, 36}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -137,7 +555,7 @@
 						<real>24</real>
 					</dict>
 					<key>ID</key>
-					<integer>4415</integer>
+					<integer>4453</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -170,14 +588,69 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\b\fs60 \cf0 Funding Sources}</string>
+\f0\b\fs60 \cf0 Funding}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1408.8234863281241, 4143.4118359130189}, {1939.176513671875, 36}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>GillSans-Bold</string>
+						<key>Size</key>
+						<real>24</real>
+					</dict>
+					<key>ID</key>
+					<integer>4454</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Align</key>
+						<integer>0</integer>
+						<key>Pad</key>
+						<integer>0</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs60 \cf0                  NSF IIS-0845410, ONR MURI "Embedded Humans" project, Berkeley Fellowship awarded to JBH}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
 				</dict>
 			</array>
 			<key>ID</key>
-			<integer>4413</integer>
+			<integer>4452</integer>
 		</dict>
 		<dict>
 			<key>Class</key>
@@ -518,7 +991,7 @@
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{1404, 3917.659091437587}, {1948, 180}}</string>
+					<string>{{1404, 3951.4238834534758}, {1948, 180}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -576,23 +1049,23 @@
 \f0\fs60 \cf0 {\listtext	1.	}Runeson, Juslin, &amp; Olsson (2000). Visual perception of dynamic properties: Cue heuristics versus direct-perceptual competence. 
 \i Psych. Rev.
 \i0 , 107, 525\'96555.\
-\ls1\ilvl0{\listtext	2.	}Gilden &amp; Proffitt (1989). Understanding collision dynamics. 
+{\listtext	2.	}Gilden &amp; Proffitt (1989). Understanding collision dynamics. 
 \i J. of Exp. Psych.
 \i0 , 15(2), 372\'96383.\
-\ls1\ilvl0{\listtext	3.	}Sanborn, Mansinghka, &amp; Griffiths (in press). Reconciling Intuitive Physics and Newtonian Mechanics for Colliding Objects. 
+{\listtext	3.	}Sanborn, Mansinghka, &amp; Griffiths (2013). Reconciling Intuitive Physics and Newtonian Mechanics for Colliding Objects. 
 \i Psych. Rev.
-\i0 \
-\ls1\ilvl0{\listtext	4.	}Hamrick, Battaglia, &amp; Tenenbaum (2011). Internal physics models guide probabilistic judgments about object dynamics. In 
+\i0 , 120(2), 411\'96437.\
+{\listtext	4.	}Hamrick, Battaglia, &amp; Tenenbaum (2011). Internal physics models guide probabilistic judgments about object dynamics. In 
 \i Proc. of 33rd Ann. Conf. of Cog. Sci. Soc.
 \i0 \
-\ls1\ilvl0{\listtext	5.	}Battaglia, Hamrick, &amp; Tenenbaum (under review). Simulation as an engine of physical scene understanding.}</string>
+{\listtext	5.	}Battaglia, Hamrick, &amp; Tenenbaum (under review). Simulation as an engine of physical scene understanding.}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{1404, 3876.1782882171851}, {168, 36}}</string>
+					<string>{{1404, 3909.9430802330739}, {168, 36}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
@@ -652,72 +1125,17 @@
 			<integer>4410</integer>
 		</dict>
 		<dict>
-			<key>Bounds</key>
-			<string>{{558, 979}, {918, 57}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FitText</key>
-			<string>Vertical</string>
-			<key>Flow</key>
-			<string>Resize</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>GillSans-Bold</string>
-				<key>Size</key>
-				<real>48</real>
-			</dict>
-			<key>ID</key>
-			<integer>4315</integer>
-			<key>Shape</key>
-			<string>Rectangle</string>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Align</key>
-				<integer>0</integer>
-				<key>Pad</key>
-				<integer>0</integer>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\fs96 \cf0 How do people reason about the physical world?}</string>
-				<key>VerticalPad</key>
-				<integer>0</integer>
-			</dict>
-		</dict>
-		<dict>
 			<key>Class</key>
 			<string>Group</string>
 			<key>Graphics</key>
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{1404, 3692.7197635132061}, {1452, 171}}</string>
+					<string>{{1403.9999999999995, 3671.4257033333542}, {1937.1763916015632, 228}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
-					<string>YES</string>
+					<string>Vertical</string>
 					<key>Flow</key>
 					<string>Resize</string>
 					<key>FontInfo</key>
@@ -761,24 +1179,22 @@
 {\colortbl;\red255\green255\blue255;}
 {\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
 {\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\pardirnatural
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1145\fi-1146\pardirnatural
 \ls1\ilvl0
-\f0\fs96 \cf0 {\listtext	\'95	}How much information do people get out of a single trial?\
-\ls1\ilvl0{\listtext	\'95	}What extra information in the visual feedback do people pay attention to?\
-\ls1\ilvl0{\listtext	\'95	}Why do there seem to be primacy effects?}</string>
+\f0\fs96 \cf0 {\listtext	\'95	}Can we quantify the amount of information a person can glean from a single trial?\
+{\listtext	\'95	}What additional information contained in the visual feedback is used by people?\
+{\listtext	\'95	}Do the primacy effects have a principled explanation, perhaps as resulting from resource limitations within the simulation mechanism?}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
-					<key>Wrap</key>
-					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{1404, 3634.5467533996957}, {448, 57}}</string>
+					<string>{{1404.0000000000009, 3613.2526932198439}, {1944, 57}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
-					<string>YES</string>
+					<string>Vertical</string>
 					<key>Flow</key>
 					<string>Resize</string>
 					<key>FontInfo</key>
@@ -822,12 +1238,10 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\b\fs96 \cf0 Further Questions}</string>
+\f0\b\fs96 \cf0 Future Questions}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
-					<key>Wrap</key>
-					<string>NO</string>
 				</dict>
 			</array>
 			<key>ID</key>
@@ -835,11 +1249,11 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{1404, 3451.0882286957158}, {1709, 171}}</string>
+			<string>{{1404, 3374.7353163201246}, {1944, 228}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
-			<string>YES</string>
+			<string>Vertical</string>
 			<key>Flow</key>
 			<string>Resize</string>
 			<key>FontInfo</key>
@@ -883,18 +1297,16 @@
 {\colortbl;\red255\green255\blue255;}
 {\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
 {\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\pardirnatural
+\pard\tx220\tx720\tx1079\tx1120\tx1187\tx1243\tx1358\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1059\fi-1060\pardirnatural
 \ls1\ilvl0
-\f0\fs96 \cf0 {\listtext	\'95	}People 
-\b \ul can
-\b0 \ulnone  infer mass, sometimes after only a single trial\
-\ls1\ilvl0{\listtext	\'95	}People bring their inferences to bear on other physical reasoning tasks (e.g. "will it fall?")\
-\ls1\ilvl0{\listtext	\'95	}Simulation-based model is able to qualitatively account for people's behavior}</string>
+\f0\fs96 \cf0 {\listtext	\'95	}People \ul can\ulnone  infer mass, sometimes after only a single trial\
+{\listtext	\'95	}People can use the inferred mass to more accurately predict future dynamics (e.g. "will it fall?")\
+{\listtext	\'95	}Simulation-based IPE model is consistent with people's behavior, though the 
+\i learning
+\i0  model does not fully capture how people's beliefs change over time}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
-			<key>Wrap</key>
-			<string>NO</string>
 		</dict>
 		<dict>
 			<key>Class</key>
@@ -903,11 +1315,11 @@
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{36, 1531.0391524335253}, {411, 204}}</string>
+					<string>{{35.999999999999943, 1528.0979759938721}, {496.35293579101574, 204}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FitText</key>
-					<string>YES</string>
+					<string>Vertical</string>
 					<key>Flow</key>
 					<string>Resize</string>
 					<key>FontInfo</key>
@@ -918,7 +1330,7 @@
 						<real>48</real>
 					</dict>
 					<key>ID</key>
-					<integer>4267</integer>
+					<integer>4465</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -956,16 +1368,14 @@
 \f0\fs84 \cf0 {\listtext	\'95	}Mechanical Turk\
 {\listtext	\'95	}296 total participants\
 {\listtext	\'95	}40 trials\
-{\listtext	\'95	}10 conditions}</string>
+{\listtext	\'95	}8 conditions}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
-					<key>Wrap</key>
-					<string>NO</string>
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{36, 1467.1764706810445}, {486, 56.814494496621307}}</string>
+					<string>{{36.000000000000028, 1467.1764706810445}, {300.78245236213667, 56.814494496621307}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -976,7 +1386,7 @@
 						<real>48</real>
 					</dict>
 					<key>ID</key>
-					<integer>4268</integer>
+					<integer>4466</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -1016,7 +1426,7 @@
 				</dict>
 			</array>
 			<key>ID</key>
-			<integer>4266</integer>
+			<integer>4464</integer>
 		</dict>
 		<dict>
 			<key>Bounds</key>
@@ -1069,9 +1479,7 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
-\f0\fs236 \cf0 Inferring mass in complex physical scenes 
-\i\fs192 via
-\i0\fs236  probabilistic simulation}</string>
+\f0\fs236 \cf0 Inferring mass in complex physical scenes via probabilistic simulation}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
@@ -1083,404 +1491,182 @@
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{2341.3189622014679, 1068.2666863747729}, {53.012719840796734, 75.290696190122816}}</string>
+					<string>{{1865.9838073168132, 1045.0196559481747}, {382.94110156655347, 252}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4431</integer>
+					<key>ImageID</key>
+					<integer>73</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1674.680983513251, 1009.9935153115048}, {210.22684963551609, 252}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4432</integer>
+					<key>ImageID</key>
+					<integer>72</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1512.2941020240421, 974.96733807093506}, {181.31088890498046, 252}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>ID</key>
+					<integer>4433</integer>
+					<key>ImageID</key>
+					<integer>71</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Width</key>
+							<real>3</real>
+						</dict>
+					</dict>
+				</dict>
+			</array>
+			<key>ID</key>
+			<integer>4430</integer>
+		</dict>
+		<dict>
+			<key>Class</key>
+			<string>Group</string>
+			<key>Graphics</key>
+			<array>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1512, 821.2941093869689}, {1836, 143}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
+					<key>FontInfo</key>
+					<dict>
+						<key>Font</key>
+						<string>GillSans-Bold</string>
+						<key>Size</key>
+						<real>48</real>
+					</dict>
+					<key>ID</key>
+					<integer>4435</integer>
+					<key>Shape</key>
+					<string>Rectangle</string>
+					<key>Style</key>
+					<dict>
+						<key>fill</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>shadow</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+						<key>stroke</key>
+						<dict>
+							<key>Draws</key>
+							<string>NO</string>
+						</dict>
+					</dict>
+					<key>Text</key>
+					<dict>
+						<key>Align</key>
+						<integer>0</integer>
+						<key>Pad</key>
+						<integer>0</integer>
+						<key>Text</key>
+						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1166\fi-1166\pardirnatural
+\ls1\ilvl0
+\f0\fs96 \cf0 {\listtext	\'95	}Simulation-based "intuitive physics engine" (IPE) captures behavior across many scenarios 
+\fs48 (Hamrick et al., 2011; Battaglia et al., under review)
+\fs96 \
+{\listtext	\'95	}The IPE makes mass-sensitive predictions, which match people's judgments 
+\fs48 (Battaglia et al., under review)}</string>
+						<key>VerticalPad</key>
+						<integer>0</integer>
+					</dict>
+				</dict>
+				<dict>
+					<key>Bounds</key>
+					<string>{{1512, 767.2941093869689}, {1836, 57}}</string>
+					<key>Class</key>
+					<string>ShapedGraphic</string>
+					<key>FitText</key>
+					<string>Vertical</string>
+					<key>Flow</key>
+					<string>Resize</string>
 					<key>FontInfo</key>
 					<dict>
 						<key>Font</key>
 						<string>GillSans</string>
 						<key>Size</key>
-						<real>64</real>
-					</dict>
-					<key>ID</key>
-					<integer>4010</integer>
-					<key>Shape</key>
-					<string>Rectangle</string>
-					<key>Style</key>
-					<dict>
-						<key>fill</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>shadow</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>stroke</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-					</dict>
-					<key>Text</key>
-					<dict>
-						<key>Pad</key>
-						<integer>0</integer>
-						<key>Text</key>
-						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GillSans;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
-
-\f0\fs128 \cf0 vs}</string>
-						<key>VerticalPad</key>
-						<integer>0</integer>
-					</dict>
-				</dict>
-				<dict>
-					<key>Class</key>
-					<string>Group</string>
-					<key>Graphics</key>
-					<array>
-						<dict>
-							<key>Class</key>
-							<string>LineGraphic</string>
-							<key>ID</key>
-							<integer>4012</integer>
-							<key>Points</key>
-							<array>
-								<string>{2186.658024148086, 1280.0608375606569}</string>
-								<string>{1671.1367138212738, 1280.0608375606569}</string>
-							</array>
-							<key>Style</key>
-							<dict>
-								<key>stroke</key>
-								<dict>
-									<key>HeadArrow</key>
-									<string>FilledArrow</string>
-									<key>Legacy</key>
-									<true/>
-									<key>TailArrow</key>
-									<string>0</string>
-									<key>Width</key>
-									<real>10</real>
-								</dict>
-							</dict>
-						</dict>
-						<dict>
-							<key>Class</key>
-							<string>Group</string>
-							<key>Graphics</key>
-							<array>
-								<dict>
-									<key>Bounds</key>
-									<string>{{1855.5874653083565, 966.44455726338902}, {200.69033969047291, 278.93506701107765}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4014</integer>
-									<key>ImageID</key>
-									<integer>77</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-								<dict>
-									<key>Bounds</key>
-									<string>{{1511.9999999999995, 966.4444446652019}, {317.47135632070501, 278.93506701107765}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4015</integer>
-									<key>ImageID</key>
-									<integer>76</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-								<dict>
-									<key>Bounds</key>
-									<string>{{2082.3939139864815, 966.44450096429546}, {200.69033969047291, 278.93506701107765}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4016</integer>
-									<key>ImageID</key>
-									<integer>74</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-							</array>
-							<key>ID</key>
-							<integer>4013</integer>
-						</dict>
-					</array>
-					<key>ID</key>
-					<integer>4011</integer>
-				</dict>
-				<dict>
-					<key>Class</key>
-					<string>Group</string>
-					<key>Graphics</key>
-					<array>
-						<dict>
-							<key>Class</key>
-							<string>LineGraphic</string>
-							<key>ID</key>
-							<integer>4018</integer>
-							<key>Points</key>
-							<array>
-								<string>{2549.5017643081919, 1280.0608375606562}</string>
-								<string>{3138.4746521143047, 1280.0608375606562}</string>
-							</array>
-							<key>Style</key>
-							<dict>
-								<key>stroke</key>
-								<dict>
-									<key>HeadArrow</key>
-									<string>FilledArrow</string>
-									<key>Legacy</key>
-									<true/>
-									<key>TailArrow</key>
-									<string>0</string>
-									<key>Width</key>
-									<real>10</real>
-								</dict>
-							</dict>
-						</dict>
-						<dict>
-							<key>Class</key>
-							<string>Group</string>
-							<key>Graphics</key>
-							<array>
-								<dict>
-									<key>Bounds</key>
-									<string>{{2924.1279962490644, 966.44444466520281}, {423.87200375093596, 278.93517960926363}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4020</integer>
-									<key>ImageID</key>
-									<integer>73</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-								<dict>
-									<key>Bounds</key>
-									<string>{{2671.8438267510478, 966.44444466520281}, {232.69707961020771, 278.93517960926363}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4021</integer>
-									<key>ImageID</key>
-									<integer>72</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-								<dict>
-									<key>Bounds</key>
-									<string>{{2451.5663187607556, 966.44444466520281}, {200.69041810248402, 278.93517960926363}}</string>
-									<key>Class</key>
-									<string>ShapedGraphic</string>
-									<key>ID</key>
-									<integer>4022</integer>
-									<key>ImageID</key>
-									<integer>71</integer>
-									<key>Shape</key>
-									<string>Rectangle</string>
-									<key>Style</key>
-									<dict>
-										<key>fill</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>shadow</key>
-										<dict>
-											<key>Draws</key>
-											<string>NO</string>
-										</dict>
-										<key>stroke</key>
-										<dict>
-											<key>Width</key>
-											<real>3</real>
-										</dict>
-									</dict>
-								</dict>
-							</array>
-							<key>ID</key>
-							<integer>4019</integer>
-						</dict>
-					</array>
-					<key>ID</key>
-					<integer>4017</integer>
-				</dict>
-			</array>
-			<key>ID</key>
-			<integer>4009</integer>
-		</dict>
-		<dict>
-			<key>Class</key>
-			<string>Group</string>
-			<key>Graphics</key>
-			<array>
-				<dict>
-					<key>Bounds</key>
-					<string>{{1512, 820.81045862238329}, {1836, 114}}</string>
-					<key>Class</key>
-					<string>ShapedGraphic</string>
-					<key>FitText</key>
-					<string>Vertical</string>
-					<key>Flow</key>
-					<string>Resize</string>
-					<key>FontInfo</key>
-					<dict>
-						<key>Font</key>
-						<string>GillSans-Bold</string>
-						<key>Size</key>
 						<real>48</real>
 					</dict>
 					<key>ID</key>
-					<integer>4240</integer>
-					<key>Shape</key>
-					<string>Rectangle</string>
-					<key>Style</key>
-					<dict>
-						<key>fill</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>shadow</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>stroke</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-					</dict>
-					<key>Text</key>
-					<dict>
-						<key>Align</key>
-						<integer>0</integer>
-						<key>Pad</key>
-						<integer>0</integer>
-						<key>Text</key>
-						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;}
-{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
-{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\pardirnatural
-\ls1\ilvl0
-\f0\fs96 \cf0 {\listtext	\'95	}\ul Simulation\ulnone -based "Intuitive Physics Engine" captures behavior across many scenarios [4, 5]\
-{\listtext	\'95	}Take mass into account: predictions are dependent on which blocks are heavy or light [5]}</string>
-						<key>VerticalPad</key>
-						<integer>0</integer>
-					</dict>
-				</dict>
-				<dict>
-					<key>Bounds</key>
-					<string>{{1512, 766.81045862238329}, {1836, 57}}</string>
-					<key>Class</key>
-					<string>ShapedGraphic</string>
-					<key>FitText</key>
-					<string>Vertical</string>
-					<key>Flow</key>
-					<string>Resize</string>
-					<key>FontInfo</key>
-					<dict>
-						<key>Font</key>
-						<string>GillSans-Bold</string>
-						<key>Size</key>
-						<real>48</real>
-					</dict>
-					<key>ID</key>
-					<integer>4241</integer>
+					<integer>4436</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -1510,155 +1696,26 @@
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
 \cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GillSans;}
-{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\b\fs96 \cf0 Can people 
-\i reason with
-\i0  mass in 
-\i \cf2 complex
-\i0 \cf0  scenes?}</string>
-						<key>VerticalPad</key>
-						<integer>0</integer>
-					</dict>
-				</dict>
-			</array>
-			<key>ID</key>
-			<integer>4239</integer>
-		</dict>
-		<dict>
-			<key>Class</key>
-			<string>Group</string>
-			<key>Graphics</key>
-			<array>
-				<dict>
-					<key>Bounds</key>
-					<string>{{1512, 618.23529424139451}, {1836, 114}}</string>
-					<key>Class</key>
-					<string>ShapedGraphic</string>
-					<key>FitText</key>
-					<string>Vertical</string>
-					<key>Flow</key>
-					<string>Resize</string>
-					<key>FontInfo</key>
-					<dict>
-						<key>Font</key>
-						<string>GillSans-Bold</string>
-						<key>Size</key>
-						<real>48</real>
-					</dict>
-					<key>ID</key>
-					<integer>4243</integer>
-					<key>Shape</key>
-					<string>Rectangle</string>
-					<key>Style</key>
-					<dict>
-						<key>fill</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>shadow</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>stroke</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-					</dict>
-					<key>Text</key>
-					<dict>
-						<key>Align</key>
-						<integer>0</integer>
-						<key>Pad</key>
-						<integer>0</integer>
-						<key>Text</key>
-						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
 {\colortbl;\red255\green255\blue255;}
-{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
-{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\pardirnatural
-\ls1\ilvl0
-\f0\fs96 \cf0 {\listtext	\'95	}Previously: "invariants" or "heuristics" [1, 2] 
-\fs84 (e.g., the object moving faster after a collision is lighter)
-\fs96 \
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1180\fi-1181\pardirnatural
-\ls1\ilvl0\cf0 {\listtext	\'95	}But, model with \ul accurate physics knowledge\ulnone  and \ul uncertainty\ulnone  better captures behavior [3]}</string>
-						<key>VerticalPad</key>
-						<integer>0</integer>
-					</dict>
-				</dict>
-				<dict>
-					<key>Bounds</key>
-					<string>{{1512, 564.23529424139451}, {1836, 57}}</string>
-					<key>Class</key>
-					<string>ShapedGraphic</string>
-					<key>FitText</key>
-					<string>Vertical</string>
-					<key>Flow</key>
-					<string>Resize</string>
-					<key>FontInfo</key>
-					<dict>
-						<key>Font</key>
-						<string>GillSans-Bold</string>
-						<key>Size</key>
-						<real>48</real>
-					</dict>
-					<key>ID</key>
-					<integer>4244</integer>
-					<key>Shape</key>
-					<string>Rectangle</string>
-					<key>Style</key>
-					<dict>
-						<key>fill</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>shadow</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-						<key>stroke</key>
-						<dict>
-							<key>Draws</key>
-							<string>NO</string>
-						</dict>
-					</dict>
-					<key>Text</key>
-					<dict>
-						<key>Align</key>
-						<integer>0</integer>
-						<key>Pad</key>
-						<integer>0</integer>
-						<key>Text</key>
-						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GillSans;}
-{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+\deftab720
+\pard\pardeftab720
 
-\f0\b\fs96 \cf0 Can people 
-\i infer
-\i0  mass in 
-\i \cf2 simple
-\i0  \cf0 scenes? 
-\b0 (2D, two-body collisions)}</string>
+\f0\fs96 \cf0 Can people 
+\b predict
+\b0  
+\b complex
+\b0  scene dynamics when object mass plays an influential role?}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
 				</dict>
 			</array>
 			<key>ID</key>
-			<integer>4242</integer>
+			<integer>4434</integer>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{1512, 2304}, {1836, 121}}</string>
+			<string>{{1512, 618.23529424139451}, {1836, 143}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -1669,6 +1726,134 @@
 			<dict>
 				<key>Font</key>
 				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4243</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
+{\colortbl;\red255\green255\blue255;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1204\fi-1205\pardirnatural
+\ls1\ilvl0
+\f0\fs96 \cf0 {\listtext	\'95	}Previously: "invariants" or "heuristics", e.g. the object moving faster after a collision is lighter
+\fs84  
+\fs48 (Runeson et al., 2000;  Gilden &amp; Proffitt, 1989)
+\fs96 \
+{\listtext	\'95	}But, accurate physics knowledge and uncertainty better captures behavior 
+\fs48 (Sanborn et al., 2013)}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{1512, 564.23529424139451}, {1836, 57}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Font</key>
+				<string>GillSans-Bold</string>
+				<key>Size</key>
+				<real>48</real>
+			</dict>
+			<key>ID</key>
+			<integer>4244</integer>
+			<key>Shape</key>
+			<string>Rectangle</string>
+			<key>Style</key>
+			<dict>
+				<key>fill</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>shadow</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+				<key>stroke</key>
+				<dict>
+					<key>Draws</key>
+					<string>NO</string>
+				</dict>
+			</dict>
+			<key>Text</key>
+			<dict>
+				<key>Align</key>
+				<integer>0</integer>
+				<key>Pad</key>
+				<integer>0</integer>
+				<key>Text</key>
+				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
+\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GillSans;}
+{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+
+\f0\fs96 \cf0 Can people 
+\b infer
+\b0  mass in 
+\b simple
+\b0 \cf2  \cf0 scenes?
+\b  
+\b0 (2D, two-body collisions)}</string>
+				<key>VerticalPad</key>
+				<integer>0</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>Bounds</key>
+			<string>{{1493.8529572712705, 2253.6470591638299}, {1836, 171}}</string>
+			<key>Class</key>
+			<string>ShapedGraphic</string>
+			<key>FitText</key>
+			<string>Vertical</string>
+			<key>Flow</key>
+			<string>Resize</string>
+			<key>FontInfo</key>
+			<dict>
+				<key>Color</key>
+				<dict>
+					<key>w</key>
+					<string>0</string>
+				</dict>
+				<key>Font</key>
+				<string>GoudyOldStyleT-Regular</string>
 				<key>Size</key>
 				<real>48</real>
 			</dict>
@@ -1706,21 +1891,18 @@
 {\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
 {\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
 {\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li720\fi-720\slleading200\pardirnatural
+\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1163\fi-1164\pardirnatural
 \ls1\ilvl0
-\f0\fs96 \cf0 {\listtext	\'95	}Most participants' inferences were correct by Trial 8, and many were correct even by Trial 1\
-{\listtext	\'95	}Random order, 
-\i r
-\i0 =0.1: first few trials give evidence for the 
-\i wrong
-\i0  mass ratio (\cf2 see arrow\cf0 )}</string>
+\f0\fs96 \cf0 {\listtext	\'95	}Most conditions inferred the correct mass by Trial 8, and several even by Trial 1\
+{\listtext	\'95	}Interestingly: first few trials of random order, r=0.1 give evidence for the wrong mass \cf2 (arrow)\
+\ls1\ilvl0\cf0 {\listtext	\'95	}Also, primacy effects: binary feedback can't recover from the confusing first few trials}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{1404, 3312}, {1944, 108}}</string>
+			<string>{{1404, 3239.9099121093741}, {1944, 108}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -1775,7 +1957,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 Conclusions}</string>
+\f0\b\fs144 \cf0 7
+\b0   Conclusions}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -2729,7 +2912,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{36, 2581.7058824612218}, {713, 57}}</string>
+			<string>{{36, 2581.7058824612218}, {707, 57}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -2777,70 +2960,12 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\b\fs96 \cf0 Intuitive Physics Engine (IPE)}</string>
+\f0\b\fs96 \cf0 Intuitive physics engine (IPE)}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
 			<key>Wrap</key>
 			<string>NO</string>
-		</dict>
-		<dict>
-			<key>Bounds</key>
-			<string>{{36, 2263.6012185728014}, {475.28657257298704, 158.48253728004892}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>GillSans-Bold</string>
-				<key>Size</key>
-				<real>48</real>
-			</dict>
-			<key>ID</key>
-			<integer>3902</integer>
-			<key>Shape</key>
-			<string>Rectangle</string>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Align</key>
-				<integer>0</integer>
-				<key>Pad</key>
-				<integer>0</integer>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\fs96 \cf0 \ul \ulc0 No-feedback conditions\ulnone \
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\fs84 \cf0   2 orders: \
-     
-\b random
-\b0  or 
-\b diagnostic}</string>
-				<key>VerticalPad</key>
-				<integer>0</integer>
-			</dict>
 		</dict>
 		<dict>
 			<key>Class</key>
@@ -2849,11 +2974,11 @@
 			<array>
 				<dict>
 					<key>Bounds</key>
-					<string>{{292.58116052293622, 2016.5839743503498}, {191.43486950856425, 76.749404846312999}}</string>
+					<string>{{292.58116052293622, 1936.5186042354235}, {191.43486950856425, 76.749404846312999}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>ID</key>
-					<integer>3904</integer>
+					<integer>4458</integer>
 					<key>ImageID</key>
 					<integer>59</integer>
 					<key>Shape</key>
@@ -2879,11 +3004,11 @@
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{64.172358719535566, 2016.5839648410506}, {202.43687350330924, 76.749404846312999}}</string>
+					<string>{{64.172358719535566, 1936.5185947261243}, {202.43687350330924, 76.749404846312999}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>ID</key>
-					<integer>3905</integer>
+					<integer>4459</integer>
 					<key>ImageID</key>
 					<integer>58</integer>
 					<key>Shape</key>
@@ -2909,7 +3034,7 @@
 				</dict>
 				<dict>
 					<key>Bounds</key>
-					<string>{{36.000000000000028, 1818.4108870526659}, {468.68537017614, 361.81862284690413}}</string>
+					<string>{{36.000000000000028, 1767.0219872243408}, {468.68537017614, 361.81862284690413}}</string>
 					<key>Class</key>
 					<string>ShapedGraphic</string>
 					<key>FontInfo</key>
@@ -2920,7 +3045,7 @@
 						<real>64</real>
 					</dict>
 					<key>ID</key>
-					<integer>3906</integer>
+					<integer>4460</integer>
 					<key>Shape</key>
 					<string>Rectangle</string>
 					<key>Style</key>
@@ -2947,35 +3072,77 @@
 						<integer>0</integer>
 						<key>Pad</key>
 						<integer>0</integer>
+						<key>RTFD</key>
+						<data>
+						BAtzdHJlYW10eXBlZIHoA4QBQISE
+						hBJOU0F0dHJpYnV0ZWRTdHJpbmcA
+						hIQITlNPYmplY3QAhZKEhIQITlNT
+						dHJpbmcBlIQBK4GKACAgMiBvcmRl
+						cnM6CiAgICAgcmFuZG9tIG9yIGRp
+						YWdub3N0aWMKICAyIG1hc3MgcmF0
+						aW9zIChyZWQ6eWVsbG93KToKICAg
+						ICAgICAgICAgICAgICAgICAgIG9y
+						CiAgMiBmZWVkYmFjayB0eXBlcwog
+						ICAgIGJpbmFyeSB0ZXh0IG9yIHZp
+						c3VhbIaEAmlJARGShISEDE5TRGlj
+						dGlvbmFyeQCUhAFpApKElpYQTlNQ
+						YXJhZ3JhcGhTdHlsZYaShISEEE5T
+						UGFyYWdyYXBoU3R5bGUAlIQEQ0NA
+						UwAAhISEB05TQXJyYXkAlJkOkoSE
+						hAlOU1RleHRUYWIAlIQCQ2YAHIaS
+						hJ+eADiGkoSfngBUhpKEn54AcIaS
+						hJ+eAIMzswBDhpKEn54AgzMzBEOG
+						koSfngCBjACGkoSfngCBqACGkoSf
+						ngCBxACGkoSfngCB4ACGkoSfngCB
+						/ACGkoSfngCBGAGGkoSfngCBNAGG
+						koSfngCBUAGGhoEACIQEWzFmXYPN
+						zEw9hpKElpYGTlNGb250hpKEhIQG
+						TlNGb250HpSZOIQFWzU2Y10GAAAA
+						LgAAAP/+RwBvAHUAZAB5AE8AbABk
+						AFMAdAB5AGwAZQBUAC0AUgBlAGcA
+						dQBsAGEAcgAAAIQBZiqEAWMAowGj
+						AKMAhoaXAgaShJiZApKZkpqSrZKE
+						r5kwhAVbNDhjXQYAAAAoAAAA//5H
+						AG8AdQBkAHkATwBsAGQAUwB0AHkA
+						bABlAFQALQBCAG8AbABkAKIqowCj
+						AaMAowCGhpcBBJcCCpcBEpcDA5KE
+						mJkDkoSWlgdOU0NvbG9yhpKEhIQH
+						TlNDb2xvcgCUowGEBGZmZmYBAAAB
+						hpKZkpqSrZKuhpcBAZcEBpKEmJkD
+						krOShLWjBYQFZmZmZmYAgzMzsz6D
+						mplZPwABhpKZkpqSrZKuhpcBNJcF
+						BpKEmJkDkrOShLWjAaYAAAEBhpKZ
+						kpqSrZKxhpcBCZcGBpKEmJkDkrOS
+						hLWjAaaDqaioPYOhoCA/g4GAgDwB
+						hpKZkpqSrZKxhoY=
+						</data>
 						<key>Text</key>
 						<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
 \cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red21\green160\blue4;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\fs96 \cf0 \ul \ulc0 Feedback conditions\ulnone \
+{\colortbl;\red255\green255\blue255;\red255\green0\blue0;\red235\green153\blue57;\red0\green0\blue255;
+\red21\green160\blue4;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2574\tx2644\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\fs84 \cf0   2 orders:\
+\f0\fs84 \cf0   2 orders:\
      
 \b random
 \b0  or 
 \b diagnostic
 \b0 \
-  2 mass ratios:\
+  2 mass ratios (\cf2 red\cf0 :\cf3 yellow\cf0 ):\
                       or\
   2 feedback types\
      
-\b \cf2 binary
+\b \cf4 binary
 \b0 \cf0  text or 
-\b \cf3 visual}</string>
+\b \cf5 visual}</string>
 						<key>VerticalPad</key>
 						<integer>0</integer>
 					</dict>
 				</dict>
 			</array>
 			<key>ID</key>
-			<integer>3903</integer>
+			<integer>4457</integer>
 		</dict>
 		<dict>
 			<key>Bounds</key>
@@ -4893,7 +5060,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 \ul \ulc0 Can\ulnone  people infer mass in complex scenes?}</string>
+\f0\b\fs144 \cf0 3
+\b0   \ul Can\ulnone  people infer mass in complex scenes?}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -4957,7 +5125,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 Background}</string>
+\f0\b\fs144 \cf0 2
+\b0   Background}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -5019,7 +5188,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 \ul \ulc0 How\ulnone  do people infer mass?}</string>
+\f0\b\fs144 \cf0 5
+\b0   \ul How\ulnone  do people infer mass?}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -5052,70 +5222,6 @@
 					<key>Draws</key>
 					<string>NO</string>
 				</dict>
-			</dict>
-		</dict>
-		<dict>
-			<key>Bounds</key>
-			<string>{{1404, 3230.4411769363592}, {1944, 57}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FitText</key>
-			<string>Vertical</string>
-			<key>Flow</key>
-			<string>Resize</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>Palatino-Roman</string>
-				<key>Size</key>
-				<real>64</real>
-			</dict>
-			<key>ID</key>
-			<integer>3988</integer>
-			<key>Shape</key>
-			<string>Rectangle</string>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Align</key>
-				<integer>0</integer>
-				<key>Pad</key>
-				<integer>0</integer>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;\red255\green128\blue0;\red255\green0\blue255;}
-{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid1\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listname ;}\listid1}}
-{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}}
-\pard\tx220\tx720\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\li1201\fi-1202\slleading200\pardirnatural
-\ls1\ilvl0
-\f0\i\fs96 \cf0 \ul \ulc0 Fe\ulc0 edback
-\i0 \ulnone : best explained by the 
-\b \cf2 learning
-\b0 \cf0  model                
-\i \ul No feedback
-\i0 \ulnone : best explained by the 
-\b \cf3 fixed
-\b0 \cf0  model}</string>
-				<key>VerticalPad</key>
-				<integer>0</integer>
 			</dict>
 		</dict>
 		<dict>
@@ -5205,7 +5311,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 Results:  Model comparison}</string>
+\f0\b\fs144 \cf0 6
+\b0   Results:  Model comparison}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -5217,8 +5324,8 @@
 			<integer>3991</integer>
 			<key>Points</key>
 			<array>
-				<string>{2457, 1800}</string>
-				<string>{2681.9999945833674, 1835.9999997615814}</string>
+				<string>{2476.470562186621, 1767.6470780970683}</string>
+				<string>{2701.4705567699884, 1803.6470778586497}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -5248,7 +5355,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{1512, 1458.352941362089}, {1836, 828}}</string>
+			<string>{{1512, 1458.4879028287701}, {1836, 795.37713623046875}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>ID</key>
@@ -5322,7 +5429,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 Results:  "Which color is heavier?"}</string>
+\f0\b\fs144 \cf0 4
+\b0   Results:  "Which color is heavier?"}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -5331,7 +5439,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{558, 749}, {918, 171}}</string>
+			<string>{{558, 1037.8235203733093}, {918, 134}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -5340,116 +5448,15 @@
 			<string>Resize</string>
 			<key>FontInfo</key>
 			<dict>
-				<key>Font</key>
-				<string>GoudyOldStyleT-Regular</string>
-				<key>Size</key>
-				<real>48</real>
-			</dict>
-			<key>ID</key>
-			<integer>4031</integer>
-			<key>Shape</key>
-			<string>Rectangle</string>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
+				<key>Color</key>
 				<dict>
-					<key>Draws</key>
-					<string>NO</string>
+					<key>b</key>
+					<string>0</string>
+					<key>g</key>
+					<string>0</string>
+					<key>r</key>
+					<string>0</string>
 				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Align</key>
-				<integer>0</integer>
-				<key>Pad</key>
-				<integer>0</integer>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\fs96 \cf0 But, predicting and inferring nonlinear physical dynamics in a wide range of scenarios and environments is extremely difficult.}</string>
-				<key>VerticalPad</key>
-				<integer>0</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Bounds</key>
-			<string>{{558, 576}, {918, 114}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FitText</key>
-			<string>Vertical</string>
-			<key>Flow</key>
-			<string>Resize</string>
-			<key>FontInfo</key>
-			<dict>
-				<key>Font</key>
-				<string>GoudyOldStyleT-Regular</string>
-				<key>Size</key>
-				<real>48</real>
-			</dict>
-			<key>ID</key>
-			<integer>4032</integer>
-			<key>Shape</key>
-			<string>Rectangle</string>
-			<key>Style</key>
-			<dict>
-				<key>fill</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>shadow</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-				<key>stroke</key>
-				<dict>
-					<key>Draws</key>
-					<string>NO</string>
-				</dict>
-			</dict>
-			<key>Text</key>
-			<dict>
-				<key>Align</key>
-				<integer>0</integer>
-				<key>Pad</key>
-				<integer>0</integer>
-				<key>Text</key>
-				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
-\cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
-
-\f0\fs96 \cf0 People reason about the physical world all the time: doing so is critical to survival.}</string>
-				<key>VerticalPad</key>
-				<integer>0</integer>
-			</dict>
-		</dict>
-		<dict>
-			<key>Bounds</key>
-			<string>{{558, 1095}, {918, 201}}</string>
-			<key>Class</key>
-			<string>ShapedGraphic</string>
-			<key>FitText</key>
-			<string>Vertical</string>
-			<key>Flow</key>
-			<string>Resize</string>
-			<key>FontInfo</key>
-			<dict>
 				<key>Font</key>
 				<string>GoudyOldStyleT-Bold</string>
 				<key>Size</key>
@@ -5486,10 +5493,11 @@
 				<key>Text</key>
 				<string>{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf390
 \cocoascreenfonts1{\fonttbl\f0\fnil\fcharset0 GoudyOldStyleT-Regular;}
-{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
+{\colortbl;\red255\green255\blue255;}
+\deftab720
+\pard\pardeftab720
 
-\f0\b\fs112 \cf0 Specifically: how do people \cf2 infer\cf0  parameters (like \cf2 mass\cf0 ) of objects in complex scenes?}</string>
+\f0\b\fs112 \cf0 How do people infer the physical attributes of objects in complex scenes?}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
@@ -5551,7 +5559,8 @@
 {\colortbl;\red255\green255\blue255;}
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural
 
-\f0\fs144 \cf0 Introduction}</string>
+\f0\b\fs144 \cf0 1
+\b0   Introduction}</string>
 				<key>VerticalPad</key>
 				<integer>12</integer>
 			</dict>
@@ -5892,14 +5901,11 @@
 		</dict>
 	</array>
 	<key>GridInfo</key>
-	<dict>
-		<key>ShowsGrid</key>
-		<string>YES</string>
-	</dict>
+	<dict/>
 	<key>GuidesLocked</key>
 	<string>NO</string>
 	<key>GuidesVisible</key>
-	<string>YES</string>
+	<string>NO</string>
 	<key>HPages</key>
 	<integer>6</integer>
 	<key>HorizontalGuides</key>
@@ -5917,10 +5923,10 @@
 		<real>2447.91650390625</real>
 		<real>2556.25</real>
 		<real>2592.361083984375</real>
-		<real>3275.857666015625</real>
-		<real>3311.96875</real>
-		<real>3420.30224609375</real>
-		<real>3457.189453125</real>
+		<real>3204.5341796875</real>
+		<real>3239.909912109375</real>
+		<real>3348.243408203125</real>
+		<real>3382.9248046875</real>
 		<real>4176.470703125</real>
 	</array>
 	<key>ImageCounter</key>
@@ -21355,7 +21361,7 @@
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2013-07-22 22:42:13 +0000</string>
+	<string>2013-07-27 20:46:20 +0000</string>
 	<key>Modifier</key>
 	<string>Jess Hamrick</string>
 	<key>NotesVisible</key>
@@ -21430,6 +21436,7 @@
 		<real>1368.688720703125</real>
 		<real>1404.4525146484375</real>
 		<real>1476.4705810546875</real>
+		<real>1512.5</real>
 		<real>3347.91650390625</real>
 	</array>
 	<key>WindowInfo</key>
@@ -21444,7 +21451,7 @@
 			</dict>
 		</array>
 		<key>Frame</key>
-		<string>{{-1280, 218}, {1280, 1024}}</string>
+		<string>{{160, 4}, {1280, 874}}</string>
 		<key>ListView</key>
 		<true/>
 		<key>OutlineWidth</key>
@@ -21458,15 +21465,15 @@
 		<key>SidebarWidth</key>
 		<integer>120</integer>
 		<key>VisibleRegion</key>
-		<string>{{11.764705758606276, 1644.1176297652269}, {3367.6470234010462, 2602.9411490916386}}</string>
+		<string>{{-1678, -37}, {6735.2940468020925, 4317.647013408503}}</string>
 		<key>Zoom</key>
-		<real>0.34000000357627869</real>
+		<real>0.17000000178813934</real>
 		<key>ZoomValues</key>
 		<array>
 			<array>
 				<string>cogsci2013-poster</string>
-				<real>0.34000000357627869</real>
 				<real>0.17000000178813934</real>
+				<real>0.34000000357627869</real>
 			</array>
 		</array>
 	</dict>
