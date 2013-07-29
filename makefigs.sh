@@ -10,3 +10,4 @@ done
 # now run analyses and generate figures from them
 cd "analysis"
 python ../run_nb.py analyze-stability-learning.ipynb
+python ../run_nb.py cogsci2013-poster-figures.ipynb
