@@ -11,3 +11,4 @@ done
 cd "analysis"
 python ../run_nb.py analyze-stability-learning.ipynb
 python ../run_nb.py cogsci2013-poster-figures.ipynb
+python ../run_nb.py mathpsych2013-talk-figures.ipynb
