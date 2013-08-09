@@ -13,3 +13,6 @@
 [submodule "analysis/snippets"]
 	path = analysis/snippets
 	url = git@github.com:jhamrick/python-snippets.git
+[submodule "man/mathpsych2013-slides/reveal.js"]
+	path = man/mathpsych2013-slides/reveal.js
+	url = https://github.com/hakimel/reveal.js.git
