@@ -1,4 +1,4 @@
 #!/bin/sh -e
 
 cd man/$1
-ipython nbconvert --to slides $1.ipynb
+ipython nbconvert --RevealHelpTransformer.url_prefix=reveal.js --to slides $1.ipynb
