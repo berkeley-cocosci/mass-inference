@@ -1,9 +1,6 @@
+from __future__ import division
 import numpy as np
-
-from stats_tools import normalize
-
-# from joblib import Memory
-# memory = Memory(cachedir="cache", mmap_mode='c', verbose=0)
+from snippets.safemath import normalize
 
 
 def make_kde_smoother(x, lam):
@@ -15,6 +12,21 @@ def make_kde_smoother(x, lam):
         est = np.sum(pdist * y, axis=-1) / sum_pdist
         return est
     return kde_smoother
+
+
+def binom_mean(samps, axis=None):
+    alpha = np.sum(samps, axis=axis) + 0.5
+    beta = np.sum(1-samps, axis=axis) + 0.5
+    pfell_mean = alpha / (alpha + beta)
+    return pfell_mean
+
+
+def binom_std(samps, axis=None):
+    alpha = np.sum(samps, axis=axis) + 0.5
+    beta = np.sum(1-samps, axis=axis) + 0.5
+    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+    pfell_std = np.sqrt(pfell_var)
+    return pfell_std
 
 
 def IPE(F, samps, kappas, smooth):
@@ -42,12 +54,7 @@ def IPE(F, samps, kappas, smooth):
     x = np.array(kappas)
 
     # shape is (n_trial, n_kappas)
-    alpha = np.sum(samps, axis=-1) + 0.5
-    beta = np.sum(1-samps, axis=-1) + 0.5
-    pfell_mean = alpha / (alpha + beta)
-    # pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
-    # pfell_std = np.sqrt(pfell_var)
-    # shape is (n_trial,)
+    pfell_mean = binom_mean(samps, axis=-1)
     # pfell_meanstd = np.mean(pfell_std, axis=-2)
 
     if not smooth:
@@ -179,8 +186,8 @@ def EvaluateObserverTrials(responses, feedback, ipe_samps, kappas,
     p_response = (p_fall * (1-p_ignore)) + ((1-p_fall) * (p_ignore))
 
     # marginal and responses should be in the shape (..., n_trial)
-    lh0 = responses[:, None] * p_response
-    lh1 = (1-responses)[:, None] * (1-p_response)
+    lh0 = responses * p_response
+    lh1 = (1-responses) * (1-p_response)
     lh = lh0 + lh1
     lh[np.isnan(lh)] = 0.5
     assert (lh <= 1).all()
@@ -213,6 +220,16 @@ def simulateResponses(n, feedback, ipe_samps, kappas,
     shape = (n,) + p_response.shape
     if rso is None:
         rso = np.random
-    responses = rso.rand(*shape) < p_response
+    fall_responses = rso.rand(*shape) < p_response
 
+    # simulate mass? responses
+    belief = np.exp(model_theta[1:])
+    p_eq = belief[:, kappas == 0.0].sum(axis=1)
+    p_heavy = belief[:, kappas > 0.0].sum(axis=1) + 0.5*p_eq
+    respond_heavy = rso.rand(n, n_trial) < p_heavy
+    mass_responses = np.empty((n, n_trial))
+    mass_responses[respond_heavy] = 10.0
+    mass_responses[~respond_heavy] = 0.1
+
+    responses = (fall_responses, mass_responses)
     return responses, model_theta

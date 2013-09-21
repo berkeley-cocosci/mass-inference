@@ -1,11 +1,5 @@
-archive
 analysis/images
-experiment/data
-experiment/logs
-experiment/stimuli
 figures/*.png
 .DS_Store
-figures/old
-man/mathpsych2013-slides/mathpsych2013-slides.slides.html
-
-
+resources/sso/mass-all
+resources/render
