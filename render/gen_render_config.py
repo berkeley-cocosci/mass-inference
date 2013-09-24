@@ -82,7 +82,7 @@ def save_options(options, filename):
     df = pd.DataFrame(options).set_index('stimulus')
     pth = path(filename).splitpath()[0]
     if not pth.exists():
-        pth.mkdir_p()
+        pth.makedirs_p()
     df.to_csv(filename)
 
 
