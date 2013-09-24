@@ -32,6 +32,7 @@ STIMTYPES = {
     'mass-oneshot-F': "mass_colors",
     'mass-oneshot-example-F': "mass_colors",
     'mass-oneshot-training-F': "original",
+    'mass-inference': "mass_colors",
 
     'mass-prediction-stability': "mass_plastic_stone",
     'mass-prediction-direction': "mass_plastic_stone",
