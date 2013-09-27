@@ -1,0 +1,17 @@
+/********************************************************************/
+/* Index slide components                                           */
+/********************************************************************/
+
+img.logo { height: 6.25em; }
+
+#consent {
+    font-size: 0.95em;
+    padding-left: 4%;
+    padding-right: 4%;
+    margin: 1.5em 0;
+    text-align: justify;
+}
+
+span.consent {
+    font-color: red;
+}
