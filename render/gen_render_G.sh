@@ -58,10 +58,12 @@ function convert_videos() {
 	if [ -e $i ]; then
 	    for fmt in ${fmts[*]}; do
 		newfile="${i%.avi}.$fmt"
-		if [ ! -e $i ]; then
+		if [ ! -e $newfile ]; then
 		    cmd="-loglevel error -i $i -r 30 -b 2048k -s 640x480 $newfile"
 		    color_blue "ffmpeg $cmd"
 		    ffmpeg $cmd
+		else
+		    echo "exists: $newfile"
 		fi
 	    done
 	fi
@@ -97,38 +99,38 @@ makedir "$OUTDIR/vfb-0.1-cb1"
 gen_render_config -o "$OUTDIR/shared/stability-examples.csv" --full "$SSODIR/stability-example-stable-F/*" "$SSODIR/stability-example-unstable-F/*"
 render_movies -c "$OUTDIR/shared/stability-examples.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/training.csv" "$SSODIR/mass-oneshot-training-F/*"
-render_movies -c "$OUTDIR/shared/training.csv" -d "$OUTDIR/shared"
+# gen_render_config -o "$OUTDIR/shared/training.csv" "$SSODIR/mass-oneshot-training-F/*"
+# render_movies -c "$OUTDIR/shared/training.csv" -d "$OUTDIR/shared"
 
 
 ###################
 ## Mass examples ##
 ###################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/mass-example.csv" --kappa 1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/mass-example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass-example.csv" --kappa -1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass-example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
+# gen_render_config -o "$OUTDIR/vfb-10-cb0/mass-example.csv" --kappa 1.0 "$SSODIR/mass-oneshot-example-F/*"
+# gen_render_config -o "$OUTDIR/vfb-10-cb1/mass-example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
+# gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass-example.csv" --kappa -1.0 "$SSODIR/mass-oneshot-example-F/*"
+# gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass-example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
 
-render_movies -c "$OUTDIR/vfb-10-cb0/mass-example.csv" -d "$OUTDIR/vfb-10-cb0"
-render_movies -c "$OUTDIR/vfb-10-cb1/mass-example.csv" -d "$OUTDIR/vfb-10-cb1"
-render_movies -c "$OUTDIR/vfb-0.1-cb0/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb0"
-render_movies -c "$OUTDIR/vfb-0.1-cb1/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb1"
+# render_movies -c "$OUTDIR/vfb-10-cb0/mass-example.csv" -d "$OUTDIR/vfb-10-cb0"
+# render_movies -c "$OUTDIR/vfb-10-cb1/mass-example.csv" -d "$OUTDIR/vfb-10-cb1"
+# render_movies -c "$OUTDIR/vfb-0.1-cb0/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb0"
+# render_movies -c "$OUTDIR/vfb-0.1-cb1/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb1"
 
 
 ################
 ## Experiment ##
 ################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --kappa 1.0 "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --kappa -1.0 "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-inference/*"
+# gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --kappa 1.0 "$SSODIR/mass-inference/*"
+# gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-inference/*"
+# gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --kappa -1.0 "$SSODIR/mass-inference/*"
+# gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-inference/*"
 
-render_movies -c "$OUTDIR/vfb-10-cb0/experiment.csv" -d "$OUTDIR/vfb-10-cb0"
-render_movies -c "$OUTDIR/vfb-10-cb1/experiment.csv" -d "$OUTDIR/vfb-10-cb1"
-render_movies -c "$OUTDIR/vfb-0.1-cb0/experiment.csv" -d "$OUTDIR/vfb-0.1-cb0"
-render_movies -c "$OUTDIR/vfb-0.1-cb1/experiment.csv" -d "$OUTDIR/vfb-0.1-cb1"
+# render_movies -c "$OUTDIR/vfb-10-cb0/experiment.csv" -d "$OUTDIR/vfb-10-cb0"
+# render_movies -c "$OUTDIR/vfb-10-cb1/experiment.csv" -d "$OUTDIR/vfb-10-cb1"
+# render_movies -c "$OUTDIR/vfb-0.1-cb0/experiment.csv" -d "$OUTDIR/vfb-0.1-cb0"
+# render_movies -c "$OUTDIR/vfb-0.1-cb1/experiment.csv" -d "$OUTDIR/vfb-0.1-cb1"
 
 
 #####################################################
