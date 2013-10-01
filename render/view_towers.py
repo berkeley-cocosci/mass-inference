@@ -70,44 +70,36 @@ class ViewTowers(Viewer):
         self.cameras.lookAt(self.look_at)
 
     def create_lights(self):
-        angle1 = -155
-        angle2 = 180 + angle1
-        r1 = r2 = 5
-        z = 8
-        at = (1, 0, .02)
-        color = tuple(np.ones(4)*3)
-        slcolor = 1
+        # function for converting cylindrical coordinates to cartesian
+        # coordinates
+        rtz2xyz = lambda r, t, z: (r*np.cos(t), r*np.sin(t), z)
 
-        p1 = (np.cos(np.radians(angle1))*r1, np.sin(np.radians(angle1))*r1, z)
-        p2 = (np.cos(np.radians(angle2))*r2, np.sin(np.radians(angle2))*r2, z)
+        # positions for point lights
+        plight_pos = [
+            rtz2xyz(1.5, 4*np.pi/12., 1.167),
+            rtz2xyz(1.5, 12*np.pi/12., 1.167),
+            rtz2xyz(1.5, 20*np.pi/12., 1.167),
+            (0.067, 0.034, 5)
+        ]
 
-        # Create point lights
-        plight1 = pm.PointLight('plight1')
-        plight1.setColor(color)
-        plight1.setAttenuation(at)
-        plnp1 = self.lights.attachNewNode(plight1)
-        plnp1.setPos(p1)
-        plnp1.lookAt(0, 0, 0)
-        self.render.setLight(plnp1)
+        # create point lights
+        for i, pos in enumerate(plight_pos):
+            plight = pm.PointLight('plight%d' % i)
+            plight.setColor((0.5, 0.5, 0.5, 1.0))
+            plight.setAttenuation((0, 0, 0.5))
+            plnp = self.lights.attachNewNode(plight)
+            plnp.setPos(pos)
+            self.render.setLight(plnp)
 
-        plight2 = pm.PointLight('plight2')
-        plight2.setColor(tuple(np.array(color)-slcolor))
-        plight2.setAttenuation(at)
-        plnp2 = self.lights.attachNewNode(plight2)
-        plnp2.setPos(p2)
-        plnp2.lookAt(0, 0, 0)
-        self.render.setLight(plnp2)
-
-        # Create ambient light
-        alnp = self.lights.find('alight')
-        alnp.node().setColor((0.2, 0.2, 0.2, 1.0))
-
-        # Create spotlight
+        # update the position and color of the spotlight
         slnp = self.lights.find('slight')
-        slnp.node().setColor((slcolor, slcolor, slcolor, 1))
-        slnp.node().setAttenuation(at)
-        slnp.setPos(p2)
-        slnp.lookAt(0, 0, 0)
+        slnp.setPos((8, 6, 20))
+        slnp.lookAt(self.look_at)
+        slnp.node().setColor((1, 1, 1, 1))
+
+        # update the color of the ambient ligh
+        alnp = self.lights.find('alight')
+        alnp.node().setColor((0.2, 0.2, 0.2, 1))
 
     def flip_colors(self, flip=None, update=True):
         if self.stimtype in "original":
@@ -172,19 +164,10 @@ class ViewTowers(Viewer):
 
         # original towers
         if self.stimtype == "original":
-            block.clearMaterial()
-            block.clearTexture()
-            tex = self.loader.loadTexture('noise.rgb')
-            scl = np.max(block.getScale()) / 5
-            offset = (
-                rso.rand()*scl*2 - scl,
-                rso.rand()*scl*2 - scl)
-            scale = (2.0, 2.0)
-
-            ts = TextureStage('ts_%s' % block.getName())
-            block.setTexture(ts, tex, 1)
-            block.setTexOffset(ts, *offset)
-            block.setTexScale(ts, *scale)
+            block.destroy_resources(tags=("model",))
+            block.set_model("wood_block")
+            block.init_resources(tags=("model",))
+            block.setScale(0.5, 1./6., 0.5)
 
         # green plastic/gray stone mass towers
         elif self.stimtype == "mass_plastic_stone":
@@ -200,6 +183,15 @@ class ViewTowers(Viewer):
                 scale = (2.0, 2.0)
 
             elif blocktype == 1:
+                block.destroy_resources(tags=("model",))
+                block.set_model("stone_block")
+                block.init_resources(tags=("model",))
+                block.setScale(0.5, 1./6., 0.5)
+
+                for mat in block.findAllMaterials():
+                    mat.setShininess(0)
+                    mat.setSpecular((0, 0, 0, 0))
+
                 tex = self.loader.loadTexture('granite-grayscale.jpg')
                 scl = np.max(block.getScale()) / 10
                 hpr *= 20
@@ -212,23 +204,18 @@ class ViewTowers(Viewer):
             block.setTexOffset(ts, *offset)
             block.setTexScale(ts, *scale)
 
+            print block.ls()
+
         # red/yellow mass towers
         elif self.stimtype == "mass_red_yellow":
             pass
 
         # arbitrary color mass towers
         elif self.stimtype == "mass_colors":
-            block.clearMaterial()
-            block.clearTexture()
-            tex = self.loader.loadTexture('noisy-grayscale.jpg')
-            scl = np.max(block.getScale()) / 10
-            offset = rso.rand(2)*scl*2 - scl
-            scale = (0.2, 0.2)
-
-            ts = TextureStage('ts_%s' % block.getName())
-            block.setTexture(ts, tex, 1)
-            block.setTexOffset(ts, *offset)
-            block.setTexScale(ts, *scale)
+            block.destroy_resources(tags=("model",))
+            block.set_model("wood_block")
+            block.init_resources(tags=("model",))
+            block.setScale(0.5, 1./6., 0.5)
 
     def _set_block_physics(self, block, blocktype):
         # original towers
@@ -256,8 +243,16 @@ class ViewTowers(Viewer):
             CPO_PATH, "floors", "round-wooden-floor.cpo")
         self.floor = load_ssos([floor_path])[0]
         self.floor.setPos((0, 0, -0.5))
+        gso, = self.floor.descendants(type_=GSO)
+        gso.setColor((0.3, 0.3, 0.3, 1))
         self.floor.reparentTo(self.scene)
         self.floor.init_tree(tags=("model", "shape"))
+
+        # give it a little extra ambient light
+        alight = pm.AmbientLight('alight2')
+        alight.setColor((0.4, 0.4, 0.4, 1.0))
+        alnp = self.lights.attachNewNode(alight)
+        self.floor.setLight(alnp)
 
     def goto_sso(self, i):
         if self._blocktype_cache:
