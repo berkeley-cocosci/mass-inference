@@ -7,7 +7,7 @@ prefer-parasite-buffer #f
 
 # Scenesim settings
 viewer-resize-window #f
-viewer-use-shaders #f
+viewer-use-shaders #t
 
 # Custom settings
 cpo-path /Users/jhamrick/project/mass-inference/resources/sso
