@@ -1,0 +1,58 @@
+<!-- Trial Slide -->
+<div class="slide" id="trial">
+  <div id="progress">
+    <div id="progress-text">Progress</div>
+    <div id="indicator-container">
+      <div id="indicator-outer">
+	<div id="indicator-stage"></div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+  <div id="question-container" class="blue">
+    <div id="question"><b>Question:</b> Will the tower fall down?</div>
+    <div id="question-image"><div class="scalepart"><img src="static/images/scales-both_0000_left1.png" class="left-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0001_right0.png" class="right-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0002_left0.png" class="left-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0003_right1.png" class="right-color" alt="" /></div></div>
+    <div class="spacer"></div>
+  </div>
+  <div id="video-container">
+    <div id="player" class="is-splash fixed-controls no-toggle no-time no-volume no-mute">
+      <!-- Shown before the video -->
+      <div id="prestim">
+	<div id="video-instructions">
+	  <p>When you are ready, click the 'Play Video' button.</p>
+	  <p>You may only watch the video once.</p>
+	</div>
+	<div id="play-button">
+	  <button type="button" value="play">Play Video</button>
+	</div>
+      </div>
+      <!-- The responses people can choose -->
+      <div id="responses">
+	<div class="response" id="response-no">
+	  <button type="button" value="stable">No, it will NOT fall</button>
+	</div>
+ 	<div class="response" id="response-yes">
+	  <button type="button" value="unstable">Yes, it will fall</button>
+	</div>
+      </div>
+      <div id="explicit-responses">
+	<div id="right-color-heavy" class="explicit-response">
+	  <button type="button" class="right-color" value="right"></button>
+	</div>
+ 	<div id="left-color-heavy" class="explicit-response">
+	  <button type="button" class="left-color" value="left"></button>
+	</div>
+      </div>
+      <!-- Textual feedback -->
+      <div id="feedback">
+	<div class="feedback" id="stable-feedback"><p>Tower does not fall</p></div>
+	<div class="feedback" id="unstable-feedback"><p>Tower falls</p></div>
+      </div>
+    </div>
+  </div>
+  <div id="reload-container">
+    <p>(Video not loaded? Click <a href="#"
+    onclick="experiment.reloadTrial()">here</a> to
+    refresh.)</p>
+  </div>
+</div>
