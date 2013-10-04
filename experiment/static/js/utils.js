@@ -58,7 +58,8 @@ var Player = function(stims, loop) {
         tooltip: false,
         playlist: stims.map(get_video_formats),
         advance: false,
-        loop: false
+        loop: false,
+        embed: false
     }));
 
     if (loop) {
