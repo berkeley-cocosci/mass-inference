@@ -93,14 +93,15 @@ span.consent {
 /* Flow player                                                      */
 /********************************************************************/
 
-.fp-controls { display: none; }
-.fp-embed { display: none; }
-.fp-time { display: none; }
-.fp-help { display: none; }
+/* .fp-controls { display: none; } */
+/* .fp-embed { display: none; } */
+/* .fp-time { display: none; } */
+/* .fp-help { display: none; } */
 
-/* don't show the player ui when the player is ready */
-.is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui { display: none; }
-#player.is-finished .fp-ui,#player.is-finished .fp-engine { display: none; }
+/* /\* don't show the player ui when the player is ready *\/ */
+.is-splash.flowplayer .fp-ui, .is-paused.flowplayer .fp-ui { background: none; }
+/* .is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui { display: none; } */
+/* #player.is-finished .fp-ui,#player.is-finished .fp-engine { display: none; } */
 
 
 /********************************************************************/
@@ -198,7 +199,7 @@ div.scalepart img {
 #question-image {
     position: relative;
     float: right;
-    height: 2em;
+    height: 1.8em;
     text-align: center;
     margin-top: 0.5em;
 }
