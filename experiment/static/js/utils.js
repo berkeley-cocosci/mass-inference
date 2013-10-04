@@ -85,3 +85,72 @@ var update_progress = function (num, num_trials) {
     $("#progress-text").html(
         "Progress " + (num+1) + "/" + num_trials);
 }
+
+var State = function (experiment_phase, instructions, index, trial_phase) {
+    var state = new Object();
+
+    if (experiment_phase != undefined) {
+        state.experiment_phase = experiment_phase;
+    } else {
+        state.experiment_phase = EXPERIMENT.pretest;
+    }
+
+    if (instructions != undefined) {
+        state.instructions = instructions;
+    } else {
+        state.instructions = 1;
+    }
+
+    if (index != undefined) {
+        state.index = index;
+    } else {
+        state.index = 0;
+    }
+
+    if (!state.instructions) {
+        if (trial_phase != undefined) {
+            state.trial_phase = trial_phase;
+        } else {
+            state.trial_phase = TRIAL.prestim;
+        }
+    }
+
+    return state
+};
+
+var set_state = function (state) {
+    var parts = [
+        state.experiment_phase,
+        state.instructions,
+        state.index
+    ];
+
+    if (!state.instructions) {
+        parts[parts.length] = state.trial_phase;
+    }
+
+    window.location.hash = parts.join("-");
+};
+
+var get_state = function () {
+    var state;
+    if (window.location.hash == "") {
+        state = new State();
+    } else {
+        var parts = window.location.hash.slice(1).split("-").map(
+            function (item) {
+                return parseInt(item);
+            });
+        state = new State(parts[0], parts[1], parts[2], parts[3]);
+    }
+    return state;
+};
+    
+
+var trials = function (state) {
+    return $c.trials[state.experiment_phase];
+}
+
+var trialinfo = function (state) {
+    return $c.trials[state.experiment_phase][state.index];
+};

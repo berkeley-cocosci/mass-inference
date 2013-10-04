@@ -28,32 +28,31 @@ var currentview;
  * INSTRUCTIONS         
  *************************/
 
-var Instructions = function(phase) {
+var Instructions = function(state) {
     debug("initialize instructions");
 
-    var index = 0;
+    var state = state;
+    var pages = INSTRUCTIONS[state.experiment_phase].pages;
+    var examples = INSTRUCTIONS[state.experiment_phase].examples;
+
     var timestamp;
-    var experiment_phase = phase;
-    var pages = INSTRUCTIONS[phase].pages;
-    var examples = INSTRUCTIONS[phase].examples;
     var player;
     
-    var next = function() {
-        debug("next (index=" + index + ")");
+    var show = function() {
+        debug("next (index=" + state.index + ")");
+        set_state(state);
         
         // show the next page of instructions
-        psiTurk.showPage(pages[index]);
+        psiTurk.showPage(pages[state.index]);
 
         // bind a handler to the "next" button
         $('.next').click(button_press);
         
         // load the player
-        if (examples[index]) {
-            player = Player([examples[index] + "~stimulus"], true);
+        if (examples[state.index]) {
+            player = Player([examples[state.index] + "~stimulus"], true);
             player.play(0);
         }
-
-        index = index + 1;
 
         // Record the time that an instructions page is presented
         timestamp = new Date().getTime();
@@ -64,15 +63,18 @@ var Instructions = function(phase) {
 
         // Record the response time
         var rt = (new Date().getTime()) - timestamp;
-        psiTurk.recordTrialData(["INSTRUCTIONS", index, rt]);
+        psiTurk.recordTrialData(["INSTRUCTIONS", state.index, rt]);
 
          // destroy the video player
-        player.unload();
+        if (player) {
+            player.unload();
+        }
 
-        if (index == pages.length) {
+        state.index = state.index + 1;
+        if (state.index == pages.length) {
             finish();
         } else {
-            next();
+            show();
         }
     };
 
@@ -82,14 +84,17 @@ var Instructions = function(phase) {
         // Record that the user has finished the instructions and 
         // moved on to the experiment. This changes their status code
         // in the database.
-        if (experiment_phase == EXPERIMENT.experiment) {
+        if (state.experiment_phase == EXPERIMENT.experiment) {
             psiTurk.finishInstructions();
         }
 
-        currentview = new TestPhase(experiment_phase);
+        state.instructions = 0;
+        state.index = 0;
+        state.trial_phase = TRIAL.prestim;
+        currentview = new TestPhase(state);
     };
 
-    next();
+    show();
 };
 
 
@@ -98,18 +103,14 @@ var Instructions = function(phase) {
  * STROOP TEST       *
  ********************/
 
-var TestPhase = function(phase) {
+var TestPhase = function(state) {
     debug("initialize test phase");
 
     var starttime; // time response period begins
     var listening = false;
-    var experiment_phase = phase;
-    var trial_phase = null;
 
+    var state = state;
     var player;
-    var trials = $c.trials[phase];
-    var trialinfo;
-    var num_trials = trials.length;
 
     var fall_question = "<b>Question:</b> Will the tower fall down?";
     var mass_question = "<b>Question:</b> Which is the <b>heavy</b> color?";
@@ -120,29 +121,9 @@ var TestPhase = function(phase) {
     phases[TRIAL.prestim] = function() {
         debug("show prestim");
 
-        if (trials.length === 0) return finish();
-        
-        trialinfo = trials.shift();
-        
-        $(".left-color").css("background-color", trialinfo.color0);
-        $(".right-color").css("background-color", trialinfo.color1);
-        $("button.left-color").html(trialinfo.color0);
-        $("button.right-color").html(trialinfo.color1);
-
         $("#explicit-responses").hide();
-        $("#question").html(fall_question);
-
-        // Update progress bar
-        update_progress(trialinfo.trial, num_trials);
-
-        // Possibly show image
-        if (experiment_phase == EXPERIMENT.experiment) {
-            $("#question-image").find("img").show();
-        } else {
-            $("#question-image").find("img").hide();
-        }
         
-        set_bg_image("prestim", trialinfo.stimulus + "~floor");
+        set_bg_image("prestim", trialinfo(state).stimulus + "~floor");
         $("#prestim").fadeIn($c.fade);
         $(".feedback").hide();
 
@@ -155,25 +136,26 @@ var TestPhase = function(phase) {
         
         var onload_stim = function (e, api) {
             debug("stimulus loaded");
-            set_bg_image("player", trialinfo.stimulus + "~stimulus~B");
+            set_bg_image("player", trialinfo(state).stimulus + "~stimulus~B");
             $("#prestim").hide();
         };
 
         var onfinish_stim = function (e, api) {
             debug("stimulus finished");
             player.unbind("finish");
-            next("fall_response");
+            state.trial_phase = state.trial_phase + 1;
+            show();
         };
 
         player.bind("load", onload_stim);
         player.bind("finish", onfinish_stim);
-        player.play(2 * trialinfo.trial);
+        player.play(2 * state.index);
     };
 
     // Phase 3: show the response options for "fall?" question
     phases[TRIAL.fall_response] = function () {
         debug("show fall responses");
-        set_bg_image("responses", trialinfo.stimulus + "~stimulus~B");
+        set_bg_image("responses", trialinfo(state).stimulus + "~stimulus~B");
         $("#responses").fadeIn($c.fade);
         listening = true;
     };
@@ -182,9 +164,9 @@ var TestPhase = function(phase) {
     phases[TRIAL.feedback] = function () {
         debug("show feedback");
 
-        var stable = trialinfo.stable;
-        var videofb = trialinfo.feedback == "vfb";
-        var textfb = (trialinfo.feedback == "vfb" || trialinfo.feedback == "fb");
+        var stable = trialinfo(state).stable;
+        var videofb = trialinfo(state).feedback == "vfb";
+        var textfb = (trialinfo(state).feedback == "vfb" || trialinfo(state).feedback == "fb");
         
         var time;
         $("#responses").hide();
@@ -206,14 +188,15 @@ var TestPhase = function(phase) {
         var onfinish_feedback = function (e, api) {
             debug("done showing feedback");
             player.unbind("finish");
-            next();
+            state.trial_phase = state.trial_phase + 1;
+            show();
         };
 
         // if videofb (video feedback) is true, then show a video
         // and text
         if (videofb && !stable) {
             player.bind("finish", onfinish_feedback);
-            player.play(2 * trialinfo.trial + 1);
+            player.play(2 * state.index + 1);
         }
         
         // otherwise just show text
@@ -224,27 +207,46 @@ var TestPhase = function(phase) {
 
     // Phase 5: show response options for "mass?" question
     phases[TRIAL.mass_response] = function () {
-        if (trialinfo["mass? query"]) {
+        if (trialinfo(state)["mass? query"]) {
             debug("show mass responses");
             $(".feedback").fadeOut($c.fade);
             $("#question").html(mass_question);
             $("#explicit-responses").fadeIn($c.fade)
             listening = true;
         } else {
-            next();
+            state.trial_phase = TRIAL.prestim;
+            state.index = state.index + 1;
+            show();
         }
     };
 
-    var next = function() {
-        if (trial_phase == null) trial_phase = TRIAL.prestim - 1;
-        trial_phase = trial_phase + 1;
-        if (trial_phase >= TRIAL.length) {
-            trial_phase = TRIAL.prestim;
-        }
+    var show = function () {
+        if (state.index >= trials(state).length) {
+            finish();
+        } else {
+            set_state(state);
+            debug("next (trial_phase=" + state.trial_phase + ")");
 
-        debug("next (trial_phase=" + trial_phase + ")");
-        phases[trial_phase]();
-        starttime = new Date().getTime();
+            $(".left-color").css("background-color", trialinfo(state).color0);
+            $(".right-color").css("background-color", trialinfo(state).color1);
+            $("button.left-color").html(trialinfo(state).color0);
+            $("button.right-color").html(trialinfo(state).color1);
+
+            $("#question").html(fall_question);
+
+            // Possibly show image
+            if (state.experiment_phase == EXPERIMENT.experiment) {
+                $("#question-image").find("img").show();
+            } else {
+                $("#question-image").find("img").hide();
+            }
+
+            // Update progress bar
+            update_progress(state.index, trials(state).length);
+
+            phases[state.trial_phase]();
+            starttime = new Date().getTime();
+        }
     };
 
     var response_handler = function(e) {
@@ -286,7 +288,15 @@ var TestPhase = function(phase) {
         
         var response = this.value;
         listening = false;
-        next();
+
+        if (response == "left" || response == "right") {
+            state.trial_phase = TRIAL.prestim;
+            state.index = state.index + 1;
+        } else {
+            state.trial_phase = state.trial_phase + 1;
+        }
+
+        show();
 
         // if (response == "play") {
         //     debug("--> stim");
@@ -305,10 +315,15 @@ var TestPhase = function(phase) {
 
         $("button").click(function() {}); // Unbind buttons
 
-        if ((experiment_phase + 1) < EXPERIMENT.length) {
-            currentview = new Instructions(experiment_phase + 1);
+        state.experiment_phase = state.experiment_phase + 1;
+        state.trial_phase = undefined;
+        state.index = 0;
+        state.instructions = 1;
+
+        if (state.experiment_phase >= EXPERIMENT.length) {
+            currentview = new Questionnaire(state);
         } else {
-            currentview = new Questionnaire();
+            currentview = new Instructions(state);
         }
     };
     
@@ -316,7 +331,7 @@ var TestPhase = function(phase) {
     psiTurk.showPage('test.html');
 
     // Initialize the video player
-    var videos = $.map(trials, function(item) {
+    var videos = $.map(trials(state), function(item) {
         return [item.stimulus + "~stimulus", item.stimulus + "~feedback"];
     });
     player = Player(videos, false);
@@ -327,7 +342,7 @@ var TestPhase = function(phase) {
     $('button').click(response_handler);
 
     // Start the test
-    next();
+    show();
 };
 
 
@@ -405,7 +420,12 @@ $(document).ready(function() {
             psiTurk.preloadPages(["test.html", "postquestionnaire.html"]);
 
             // Start the experiment
-            currentview = new Instructions(EXPERIMENT.pretest);
+            var state = get_state();
+            if (state.instructions) {
+                currentview = new Instructions(state);
+            } else {
+                currentview = new TestPhase(state);
+            }
         }
     );
 });
