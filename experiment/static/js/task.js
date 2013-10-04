@@ -121,11 +121,8 @@ var TestPhase = function(state) {
     phases[TRIAL.prestim] = function() {
         debug("show prestim");
 
-        $("#explicit-responses").hide();
-        
         set_bg_image("prestim", trialinfo(state).stimulus + "~floor");
         $("#prestim").fadeIn($c.fade);
-        $(".feedback").hide();
 
         listening = true;
     };
@@ -136,8 +133,7 @@ var TestPhase = function(state) {
         
         var onload_stim = function (e, api) {
             debug("stimulus loaded");
-            set_bg_image("player", trialinfo(state).stimulus + "~stimulus~B");
-            $("#prestim").hide();
+            // set_bg_image("player", trialinfo(state).stimulus + "~stimulus~B");
         };
 
         var onfinish_stim = function (e, api) {
@@ -147,6 +143,8 @@ var TestPhase = function(state) {
             show();
         };
 
+        $("#stim").show();
+
         player.bind("load", onload_stim);
         player.bind("finish", onfinish_stim);
         player.play(2 * state.index);
@@ -155,8 +153,9 @@ var TestPhase = function(state) {
     // Phase 3: show the response options for "fall?" question
     phases[TRIAL.fall_response] = function () {
         debug("show fall responses");
-        set_bg_image("responses", trialinfo(state).stimulus + "~stimulus~B");
-        $("#responses").fadeIn($c.fade);
+
+        // set_bg_image("responses", trialinfo(state).stimulus + "~stimulus~B");
+        $("#fall_response").fadeIn($c.fade);
         listening = true;
     };
 
@@ -169,7 +168,7 @@ var TestPhase = function(state) {
         var textfb = (trialinfo(state).feedback == "vfb" || trialinfo(state).feedback == "fb");
         
         var time;
-        $("#responses").hide();
+        $("#feedback").show();
         if (textfb) {
             if (videofb && stable) {
                 time = 3000;
@@ -209,9 +208,8 @@ var TestPhase = function(state) {
     phases[TRIAL.mass_response] = function () {
         if (trialinfo(state)["mass? query"]) {
             debug("show mass responses");
-            $(".feedback").fadeOut($c.fade);
             $("#question").html(mass_question);
-            $("#explicit-responses").fadeIn($c.fade)
+            $("#mass_response").fadeIn($c.fade);
             listening = true;
         } else {
             state.trial_phase = TRIAL.prestim;
@@ -244,6 +242,7 @@ var TestPhase = function(state) {
             // Update progress bar
             update_progress(state.index, trials(state).length);
 
+            $(".phase").hide();        
             phases[state.trial_phase]();
             starttime = new Date().getTime();
         }
@@ -336,7 +335,13 @@ var TestPhase = function(state) {
     });
     player = Player(videos, false);
 
-    // Register the response handler that is defined above to handle any
+    // var playlist = $(".fp-playlist");
+    // playlist.attr("id", "stim");
+    // var classes = playlist.attr("class").split(" ");
+    // classes[classes.length] = "phase";
+    // playlist.attr("class", classes.join(" "));
+
+    // register the response handler that is defined above to handle any
     // key down events.
     // $("body").focus().keydown(response_handler); 
     $('button').click(response_handler);

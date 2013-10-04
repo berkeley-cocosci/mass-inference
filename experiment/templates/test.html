@@ -10,14 +10,14 @@
     <div class="spacer"></div>
   </div>
   <div id="question-container" class="blue">
-    <div id="question"><b>Question:</b> Will the tower fall down?</div>
+    <div id="question"></div>
     <div id="question-image"><div class="scalepart"><img src="static/images/scales-both_0000_left1.png" class="left-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0001_right0.png" class="right-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0002_left0.png" class="left-color" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0003_right1.png" class="right-color" alt="" /></div></div>
     <div class="spacer"></div>
   </div>
   <div id="video-container">
     <div id="player" class="is-splash fixed-controls no-toggle no-time no-volume no-mute">
       <!-- Shown before the video -->
-      <div id="prestim">
+      <div id="prestim" class="phase">
 	<div id="video-instructions">
 	  <p>When you are ready, click the 'Play Video' button.</p>
 	  <p>You may only watch the video once.</p>
@@ -27,26 +27,26 @@
 	</div>
       </div>
       <!-- The responses people can choose -->
-      <div id="responses">
-	<div class="response" id="response-no">
+      <div id="fall_response" class="phase">
+	<div class="fall-choice" id="fall-choice-no">
 	  <button type="button" value="stable">No, it will NOT fall</button>
 	</div>
- 	<div class="response" id="response-yes">
+ 	<div class="fall-choice" id="fall-choice-yes">
 	  <button type="button" value="unstable">Yes, it will fall</button>
 	</div>
       </div>
-      <div id="explicit-responses">
-	<div id="right-color-heavy" class="explicit-response">
+      <div id="mass_response" class="phase">
+	<div id="mass-response-right" class="mass-response">
 	  <button type="button" class="right-color" value="right"></button>
 	</div>
- 	<div id="left-color-heavy" class="explicit-response">
+ 	<div id="mass-response-left" class="mass-response">
 	  <button type="button" class="left-color" value="left"></button>
 	</div>
       </div>
       <!-- Textual feedback -->
-      <div id="feedback">
-	<div class="feedback" id="stable-feedback"><p>Tower does not fall</p></div>
-	<div class="feedback" id="unstable-feedback"><p>Tower falls</p></div>
+      <div id="feedback" class="phase">
+	<div class="text-feedback" id="stable-feedback"><p>Tower does not fall</p></div>
+	<div class="text-feedback" id="unstable-feedback"><p>Tower falls</p></div>
       </div>
     </div>
   </div>
