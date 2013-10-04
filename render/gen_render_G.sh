@@ -37,7 +37,7 @@ function hardlink() {
 	cmd="cp -lr $1 $2"
     fi
     color_green "$cmd"
-    `$cmd`
+    `$cmd` || true
 }
 
 function gen_render_config() {
@@ -53,7 +53,7 @@ function render_movies() {
 }
 
 function convert_videos() {
-    fmts=("mp4" "ogg" "flv" "wmv")
+    fmts=("mp4" "ogg" "webm")
     for i in $1/*.avi; do
 	if [ -e $i ]; then
 	    for fmt in ${fmts[*]}; do
@@ -96,26 +96,30 @@ makedir "$OUTDIR/vfb-0.1-cb1"
 ## Shared stimuli ##
 #################### 
 
-gen_render_config -o "$OUTDIR/shared/stability-examples.csv" --full "$SSODIR/stability-example-stable-F/*" "$SSODIR/stability-example-unstable-F/*"
-render_movies -c "$OUTDIR/shared/stability-examples.csv" -d "$OUTDIR/shared"
+gen_render_config -o "$OUTDIR/shared/stable_example.csv" --full "$SSODIR/stability-example-stable-F/*"
+render_movies -c "$OUTDIR/shared/stable_example.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/training.csv" "$SSODIR/mass-oneshot-training-F/*"
-render_movies -c "$OUTDIR/shared/training.csv" -d "$OUTDIR/shared"
+gen_render_config -o "$OUTDIR/shared/unstable_example.csv" --full "$SSODIR/stability-example-unstable-F/*"
+render_movies -c "$OUTDIR/shared/unstable_example.csv" -d "$OUTDIR/shared"
+
+gen_render_config -o "$OUTDIR/shared/pretest.csv" "$SSODIR/mass-oneshot-training-F/*"
+cp "$OUTDIR/shared/pretest.csv" "$OUTDIR/shared/posttest.csv"
+render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 
 
 ###################
 ## Mass examples ##
 ###################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/mass-example.csv" --kappa 1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/mass-example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass-example.csv" --kappa -1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass-example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb0/mass_example.csv" --kappa 1.0 "$SSODIR/mass-oneshot-example-F/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb1/mass_example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass_example.csv" --kappa -1.0 "$SSODIR/mass-oneshot-example-F/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass_example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
 
-render_movies -c "$OUTDIR/vfb-10-cb0/mass-example.csv" -d "$OUTDIR/vfb-10-cb0"
-render_movies -c "$OUTDIR/vfb-10-cb1/mass-example.csv" -d "$OUTDIR/vfb-10-cb1"
-render_movies -c "$OUTDIR/vfb-0.1-cb0/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb0"
-render_movies -c "$OUTDIR/vfb-0.1-cb1/mass-example.csv" -d "$OUTDIR/vfb-0.1-cb1"
+render_movies -c "$OUTDIR/vfb-10-cb0/mass_example.csv" -d "$OUTDIR/vfb-10-cb0"
+render_movies -c "$OUTDIR/vfb-10-cb1/mass_example.csv" -d "$OUTDIR/vfb-10-cb1"
+render_movies -c "$OUTDIR/vfb-0.1-cb0/mass_example.csv" -d "$OUTDIR/vfb-0.1-cb0"
+render_movies -c "$OUTDIR/vfb-0.1-cb1/mass_example.csv" -d "$OUTDIR/vfb-0.1-cb1"
 
 
 ################
