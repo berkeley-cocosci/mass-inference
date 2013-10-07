@@ -1,3 +1,69 @@
+var Player = function(elem, stims, loop) {
+    var get_video_formats = function (stim) {
+        var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
+        var formats = [
+            { webm: prefix + ".webm" },
+            { mp4: prefix + ".mp4" },
+            { ogg: prefix + ".ogg" }
+        ];
+        return formats;
+    };
+
+    var p = $f($("#" + elem).flowplayer({
+        debug: $c.debug,
+        fullscreen: false,
+        keyboard: false,
+        muted: true,
+        ratio: 0.75,
+        splash: false,
+        tooltip: false,
+        playlist: stims.map(get_video_formats),
+        advance: false,
+        loop: false,
+        embed: false
+    }));
+
+    if (loop) {
+        p.bind("finish", function (e, api) {
+            api.prev();
+        });
+    }
+
+    return p;
+}
+
+var State = function (experiment_phase, instructions, index, trial_phase) {
+    var state = new Object();
+
+    if (experiment_phase != undefined) {
+        state.experiment_phase = experiment_phase;
+    } else {
+        state.experiment_phase = EXPERIMENT.pretest;
+    }
+
+    if (instructions != undefined) {
+        state.instructions = instructions;
+    } else {
+        state.instructions = 1;
+    }
+
+    if (index != undefined) {
+        state.index = index;
+    } else {
+        state.index = 0;
+    }
+
+    if (!state.instructions) {
+        if (trial_phase != undefined) {
+            state.trial_phase = trial_phase;
+        } else {
+            state.trial_phase = TRIAL.prestim;
+        }
+    }
+
+    return state
+};
+
 function debug(msg) {
     if ($c.debug) {
         console.log(msg);
@@ -36,90 +102,22 @@ function onexit() {
     self.close()
 }
 
-var Player = function(stims, loop) {
-    var get_video_formats = function (stim) {
-        var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
-        var formats = [
-            { webm: prefix + ".webm" },
-            { mp4: prefix + ".mp4" },
-            { ogg: prefix + ".ogg" }
-        ];
-        return formats;
-    };
-
-    var p = $f($("#player").flowplayer({
-        debug: $c.debug,
-        // swf: '/static/lib/flowplayer/flowplayer.swf',
-        fullscreen: false,
-        keyboard: false,
-        muted: true,
-        ratio: 0.75,
-        splash: false,
-        tooltip: false,
-        playlist: stims.map(get_video_formats),
-        advance: false,
-        loop: false,
-        embed: false
-    }));
-
-    if (loop) {
-        p.bind("finish", function (e, api) {
-            api.prev();
-        });
-    }
-
-    return p;
-}
-
-function set_bg_image(elem, image) {
+function set_poster(elem, image) {
     var path = "/static/stimuli/" + $c.condition + "/" + image + ".png";
-    $("#" + elem).css(
-        "background-image", "url(" + path + ")");
+    $(elem).css("background", "#FFF url(" + path + ") no-repeat");
+    $(elem).css("background-size", "cover");
 }
 
-var update_progress = function (num, num_trials) {
+function update_progress(num, num_trials) {
     debug("update progress");
 
     var width = 2 + 98*(num / (num_trials-1.0));
-    $("#indicator-stage").animate(
-        {"width": width + "%"}, $c.fade);
+    $("#indicator-stage").css({"width": width + "%"});
     $("#progress-text").html(
         "Progress " + (num+1) + "/" + num_trials);
 }
 
-var State = function (experiment_phase, instructions, index, trial_phase) {
-    var state = new Object();
-
-    if (experiment_phase != undefined) {
-        state.experiment_phase = experiment_phase;
-    } else {
-        state.experiment_phase = EXPERIMENT.pretest;
-    }
-
-    if (instructions != undefined) {
-        state.instructions = instructions;
-    } else {
-        state.instructions = 1;
-    }
-
-    if (index != undefined) {
-        state.index = index;
-    } else {
-        state.index = 0;
-    }
-
-    if (!state.instructions) {
-        if (trial_phase != undefined) {
-            state.trial_phase = trial_phase;
-        } else {
-            state.trial_phase = TRIAL.prestim;
-        }
-    }
-
-    return state
-};
-
-var set_state = function (state) {
+function set_state(state) {
     var parts = [
         state.experiment_phase,
         state.instructions,
@@ -131,9 +129,9 @@ var set_state = function (state) {
     }
 
     window.location.hash = parts.join("-");
-};
+}
 
-var get_state = function () {
+function get_state() {
     var state;
     if (window.location.hash == "") {
         state = new State();
@@ -145,13 +143,10 @@ var get_state = function () {
         state = new State(parts[0], parts[1], parts[2], parts[3]);
     }
     return state;
-};
-    
-
-var trials = function (state) {
-    return $c.trials[state.experiment_phase];
 }
 
-var trialinfo = function (state) {
-    return $c.trials[state.experiment_phase][state.index];
-};
+function show_and_hide(elem1, elem2) {
+    $("#" + elem1).fadeIn($c.fade, function () {
+        $("#" + elem2).hide();
+    });
+}

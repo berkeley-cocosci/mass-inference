@@ -6,12 +6,22 @@
 
 // Initialize flowplayer
 var $f = flowplayer;
+$f();
+
+if ($f.support.firstframe) {
+  $f(function (api, root) {
+    // show poster when video ends
+    api.bind("resume finish", function (e) {
+      root.toggleClass("is-poster", /finish/.test(e.type));
+    });
+  });
+}
 
 // Initalize psiturk object
 var psiTurk = PsiTurk();
 
 // Task object to keep track of the current phase
-var currentview;
+var CURRENTVIEW;
 
 /********************
  * HTML manipulation
@@ -29,56 +39,63 @@ var currentview;
  *************************/
 
 var Instructions = function(state) {
-    debug("initialize instructions");
-
-    var state = state;
-    var pages = INSTRUCTIONS[state.experiment_phase].pages;
-    var examples = INSTRUCTIONS[state.experiment_phase].examples;
-
-    var timestamp;
-    var player;
+    self = this;
     
-    var show = function() {
-        debug("next (index=" + state.index + ")");
-        set_state(state);
+    debug("initialize instructions");
+ 
+    self.state = state;
+    self.pages = $c.instructions[state.experiment_phase].pages;
+    self.examples = $c.instructions[state.experiment_phase].examples;
+
+    self.timestamp;
+    self.player;
+    
+    self.show = function() {
+        debug("next (index=" + self.state.index + ")");
+        set_state(self.self.state);
         
         // show the next page of instructions
-        psiTurk.showPage(pages[state.index]);
+        psiTurk.showPage(self.pages[self.state.index]);
 
         // bind a handler to the "next" button
         $('.next').click(button_press);
         
         // load the player
         if (examples[state.index]) {
-            player = Player([examples[state.index] + "~stimulus"], true);
-            player.play(0);
+            var video = self.examples[self.state.index] + "~stimulus";
+            self.player = Player("player", [video], true);
+            set_poster("#player.flowplayer", video + "~A");
+            self.player.bind("ready", function (e, api) {
+                api.play();
+            });
+            self.player.play(0);
         }
 
         // Record the time that an instructions page is presented
-        timestamp = new Date().getTime();
+        self.timestamp = new Date().getTime();
     };
 
-    var button_press = function() {
+    self.button_press = function() {
         debug("button pressed");
 
         // Record the response time
-        var rt = (new Date().getTime()) - timestamp;
-        psiTurk.recordTrialData(["INSTRUCTIONS", state.index, rt]);
+        var rt = (new Date().getTime()) - self.timestamp;
+        psiTurk.recordTrialData(["$c.instructions", self.state.index, rt]);
 
          // destroy the video player
-        if (player) {
-            player.unload();
+        if (self.player) {
+            self.player.unload();
         }
 
-        state.index = state.index + 1;
-        if (state.index == pages.length) {
-            finish();
+        self.state.index = self.state.index + 1;
+        if (self.state.index == self.pages.length) {
+            self.finish();
         } else {
-            show();
+            self.show();
         }
     };
 
-    var finish = function() {
+    self.finish = function() {
         debug("done with instructions")
 
         // Record that the user has finished the instructions and 
@@ -88,13 +105,14 @@ var Instructions = function(state) {
         //     psiTurk.finishInstructions();
         // }
 
-        state.instructions = 0;
-        state.index = 0;
-        state.trial_phase = TRIAL.prestim;
-        currentview = new TestPhase(state);
+        self.state.instructions = 0;
+        self.state.index = 0;
+        self.state.trial_phase = TRIAL.prestim;
+        CURRENTVIEW = new TestPhase(state);
     };
 
-    show();
+    self.show();
+    return self;
 };
 
 
@@ -104,250 +122,246 @@ var Instructions = function(state) {
  ********************/
 
 var TestPhase = function(state) {
+    self = this;
+
     debug("initialize test phase");
 
-    var starttime; // time response period begins
-    var listening = false;
+    self.starttime; // time response period begins
+    self.listening = false;
 
-    var state = state;
-    var player;
+    self.state = state;
+    self.stim_player;
+    self.fb_player;
 
-    var fall_question = "<b>Question:</b> Will the tower fall down?";
-    var mass_question = "<b>Question:</b> Which is the <b>heavy</b> color?";
+    self.trials = $c.trials[state.experiment_phase];
+    self.stimulus;
+    self.trialinfo;
     
-    var phases = new Object();
+    self.phases = new Object();
+
+    self.init_trial = function () {
+        debug("initializing trial");
+        
+        self.trialinfo = self.trials[self.state.index];
+        self.stimulus = self.trialinfo.stimulus;
+
+        // Load the test.html snippet into the body of the page
+        psiTurk.showPage('test.html');
+
+        // register the response handler that is defined above to handle
+        // responses
+        $('button').click(self.response_handler);
+
+        // Initialize the video players
+        self.stim_player = Player("stim", [self.stimulus + "~stimulus"], false);
+        self.fb_player = Player("video_feedback", [self.stimulus + "~feedback"], false);
+
+        // // Hide the overlapping trial components
+        // $(".phase").hide();
+
+        // Set appropriate backgrounds
+        set_poster("#prestim", self.stimulus + "~stimulus~A");
+        set_poster("#stim.flowplayer", self.stimulus + "~stimulus~A");
+        set_poster("#fall_response", self.stimulus + "~stimulus~B");
+        set_poster("#video_feedback.flowplayer", self.stimulus + "~feedback~A");
+        set_poster("#mass_response", self.stimulus + "~feedback~B");
+
+        $("#stim").addClass("is-poster");
+        $("#video_feedback").addClass("is-poster");
+
+        // Set the stimulus colors
+        $(".left-color").css("background-color", self.trialinfo.color0);
+        $(".right-color").css("background-color", self.trialinfo.color1);
+        $("button.left-color").html(self.trialinfo.color0);
+        $("button.right-color").html(self.trialinfo.color1);
+
+        // Possibly show image
+        if (self.state.experiment_phase == EXPERIMENT.experiment) {
+            $("#question-image").find("img").show();
+        } else {
+            $("#question-image").find("img").hide();
+        }
+
+        // Determine which feedback to show
+        if (self.trialinfo.stable) {
+            $("#stable-feedback").show();
+        } else {
+            $("#unstable-feedback").show();
+        }
+
+        // Display the question
+        $("#fall-question").show();
+
+        // Update progress bar
+        update_progress(self.state.index, self.trials.length);
+    };
 
     // Phase 1: show the floor and "start" button
-    phases[TRIAL.prestim] = function() {
+    self.phases[TRIAL.prestim] = function() {
+        // Initialize the trial
+        self.init_trial();
+
+        // XXX this should be the floor
         debug("show prestim");
+        $("#prestim").show();
 
-        set_bg_image("prestim", trialinfo(state).stimulus + "~floor");
-        $("#prestim").fadeIn($c.fade);
-
-        listening = true;
+        self.listening = true;
     };
 
     // Phase 2: show the stimulus
-    phases[TRIAL.stim] = function () {
+    self.phases[TRIAL.stim] = function () {
         debug("show stimulus");
-        
-        var onload_stim = function (e, api) {
-            debug("stimulus loaded");
-            // set_bg_image("player", trialinfo(state).stimulus + "~stimulus~B");
-        };
 
         var onfinish_stim = function (e, api) {
             debug("stimulus finished");
-            player.unbind("finish");
-            state.trial_phase = state.trial_phase + 1;
-            show();
+            api.unbind("finish");
+
+            set_poster("#stim.flowplayer", self.stimulus + "~stimulus~B");
+            $("#stim").addClass("is-poster");
+
+            self.state.trial_phase = self.state.trial_phase + 1;
+            self.show();
         };
 
-        $("#stim").show();
+        self.stim_player
+            .bind("finish", onfinish_stim)
+            .play(0);
 
-        player.bind("load", onload_stim);
-        player.bind("finish", onfinish_stim);
-        player.play(2 * state.index);
+        show_and_hide("stim", "prestim");
     };
 
     // Phase 3: show the response options for "fall?" question
-    phases[TRIAL.fall_response] = function () {
+    self.phases[TRIAL.fall_response] = function () {
         debug("show fall responses");
-
-        // set_bg_image("responses", trialinfo(state).stimulus + "~stimulus~B");
-        $("#fall_response").fadeIn($c.fade);
-        listening = true;
+        show_and_hide("fall_response", "stim");
+        if (self.stim_player) {
+            self.stim_player.unload();
+        }
+        self.listening = true;
     };
 
     // Phase 4: show feedback
-    phases[TRIAL.feedback] = function () {
+    self.phases[TRIAL.feedback] = function () {
         debug("show feedback");
 
-        var stable = trialinfo(state).stable;
-        var videofb = trialinfo(state).feedback == "vfb";
-        var textfb = (trialinfo(state).feedback == "vfb" || trialinfo(state).feedback == "fb");
-        
-        var time;
-        $("#feedback").show();
-        if (textfb) {
-            if (videofb && stable) {
-                time = 3000;
-            } else {
-                time = 2000;
-            }
-            if (stable) {
-                $("#stable-feedback").fadeIn($c.fade);
-            } else {
-                $("#unstable-feedback").fadeIn($c.fade);
-            }
-        } else {
-            time = 200;
-        }
+        var fb = self.trialinfo.feedback;
 
+        var advance = function () {
+            self.state.trial_phase = self.state.trial_phase + 1;
+            self.show();
+        };
+            
         var onfinish_feedback = function (e, api) {
             debug("done showing feedback");
-            player.unbind("finish");
-            state.trial_phase = state.trial_phase + 1;
-            show();
+            api.unbind("finish");
+
+            set_poster("#video_feedback.flowplayer", self.stimulus + "~feedback~B");
+            $("#video_feedback").addClass("is-poster");
+
+            advance();
         };
 
-        // if videofb (video feedback) is true, then show a video
-        // and text
-        if (videofb && !stable) {
-            player.bind("finish", onfinish_feedback);
-            player.play(2 * state.index + 1);
-        }
-        
-        // otherwise just show text
-        else {
-            setTimeout(onfinish_feedback, time);
+        if (fb == "vfb") {
+            $("#text_feedback").hide();
+            $("#video_feedback").show();
+            $("#feedback").show();
+            $("#text_feedback").fadeIn($c.fade);
+            $("#fall_response").hide();
+         
+            self.fb_player
+                .bind("finish", onfinish_feedback)
+                .play(0);
+
+        } else if (fb == "fb") {
+            show_and_hide("feedback", "fall_response");
+            setTimeout(advance, 2500);
+
+        } else {
+            setTimeout(advance, 200);
         }
     };
 
     // Phase 5: show response options for "mass?" question
-    phases[TRIAL.mass_response] = function () {
-        if (trialinfo(state)["mass? query"]) {
+    self.phases[TRIAL.mass_response] = function () {
+        if (self.trialinfo["mass? query"]) {
             debug("show mass responses");
-            $("#question").html(mass_question);
-            $("#mass_response").fadeIn($c.fade);
-            listening = true;
-        } else {
-            state.trial_phase = TRIAL.prestim;
-            state.index = state.index + 1;
-            show();
-        }
-    };
 
-    var show = function () {
-        if (state.index >= trials(state).length) {
-            finish();
-        } else {
-            set_state(state);
-            debug("next (trial_phase=" + state.trial_phase + ")");
+            $("#fall-question").hide();
+            $("#mass-question").show();
 
-            $(".left-color").css("background-color", trialinfo(state).color0);
-            $(".right-color").css("background-color", trialinfo(state).color1);
-            $("button.left-color").html(trialinfo(state).color0);
-            $("button.right-color").html(trialinfo(state).color1);
-
-            $("#question").html(fall_question);
-
-            // Possibly show image
-            if (state.experiment_phase == EXPERIMENT.experiment) {
-                $("#question-image").find("img").show();
-            } else {
-                $("#question-image").find("img").hide();
+            show_and_hide("mass_response", "feedback");
+            if (self.fb_player) {
+                self.fb_player.unload();
             }
 
-            // Update progress bar
-            update_progress(state.index, trials(state).length);
+            self.listening = true;
 
-            $(".phase").hide();        
-            phases[state.trial_phase]();
-            starttime = new Date().getTime();
+        } else {
+            if (self.fb_player) {
+                self.fb_player.unload();
+            }
+
+            self.state.trial_phase = TRIAL.prestim;
+            self.state.index = self.state.index + 1;
+            self.show();
         }
     };
 
-    var response_handler = function(e) {
-        // if (!listening) return;
+    self.show = function () {
+        if (self.state.index >= self.trials.length) {
+            self.finish();
+        } else {
+            set_state(state);
+            debug("next (trial_phase=" + self.state.trial_phase + ")");
 
-        // var keyCode = e.keyCode,
-        // response;
+            self.phases[self.state.trial_phase]();
+            self.starttime = new Date().getTime();
+        }
+    };
 
-        // switch (keyCode) {
-        // case 82:
-        //     // "R"
-        //     response="red";
-        //     break;
-        // case 71:
-        //     // "G"
-        //     response="green";
-        //     break;
-        // case 66:
-        //     // "B"
-        //     response="blue";
-        //     break;
-        // default:
-        //     response = "";
-        //     break;
-        // }
-        // if (response.length>0) {
-        //     listening = false;
-        //     var hit = response == stim[1];
-        //     var rt = new Date().getTime() - wordon;
-
-        //     psiTurk.recordTrialData(["TEST", stim[0], stim[1], stim[2], response, hit, rt]);
-            
-        //     remove_word();
-        //     next();
-        // }
-
+    self.response_handler = function(e) {
         debug("in response handler");
-        if (!listening) return;
+        if (!self.listening) return;
         
         var response = this.value;
-        listening = false;
+        self.listening = false;
 
         if (response == "left" || response == "right") {
-            state.trial_phase = TRIAL.prestim;
-            state.index = state.index + 1;
+            self.state.trial_phase = TRIAL.prestim;
+            self.state.index = self.state.index + 1;
         } else {
-            state.trial_phase = state.trial_phase + 1;
+            self.state.trial_phase = self.state.trial_phase + 1;
         }
 
-        show();
-
-        // if (response == "play") {
-        //     debug("--> stim");
-        //     next(TRIAL.stim);
-        // } else if (response == "stable" || response == "unstable") {
-        //     debug("--> feedback");
-        //     next(feedback);
-        // } else if (response == "left" || response == "right") {
-        //     debug("--> prestim");
-        //     next("prestim");
-        // }
+        self.show();
     };
 
-    var finish = function() {
+    self.finish = function() {
         debug("finish test phase");
 
         $("button").click(function() {}); // Unbind buttons
 
-        state.experiment_phase = state.experiment_phase + 1;
-        state.trial_phase = undefined;
-        state.index = 0;
-        state.instructions = 1;
+        self.state.experiment_phase = self.state.experiment_phase + 1;
+        self.state.trial_phase = undefined;
+        self.state.index = 0;
+        self.state.instructions = 1;
 
-        if (state.experiment_phase >= EXPERIMENT.length) {
-            currentview = new Questionnaire(state);
+        if (self.state.experiment_phase >= EXPERIMENT.length) {
+            CURRENTVIEW = new Questionnaire(state);
         } else {
-            currentview = new Instructions(state);
+            CURRENTVIEW = new Instructions(state);
         }
     };
-    
-    // Load the test.html snippet into the body of the page
-    psiTurk.showPage('test.html');
 
-    // Initialize the video player
-    var videos = $.map(trials(state), function(item) {
-        return [item.stimulus + "~stimulus", item.stimulus + "~feedback"];
-    });
-    player = Player(videos, false);
-
-    // var playlist = $(".fp-playlist");
-    // playlist.attr("id", "stim");
-    // var classes = playlist.attr("class").split(" ");
-    // classes[classes.length] = "phase";
-    // playlist.attr("class", classes.join(" "));
-
-    // register the response handler that is defined above to handle any
-    // key down events.
-    // $("body").focus().keydown(response_handler); 
-    $('button').click(response_handler);
+    // Initialize the current trial -- we need to do this here in
+    // addition to in prestim in case someone refreshes the page in
+    // the middle of a trial
+    self.init_trial();
 
     // Start the test
-    show();
+    self.show();
+
+    return self;
 };
 
 
@@ -421,15 +435,20 @@ $(document).ready(function() {
     load_config(
         function () {
             // All pages to be loaded
-            psiTurk.preloadPages($.map(INSTRUCTIONS, function(item) { return item.pages }));
-            psiTurk.preloadPages(["test.html", "postquestionnaire.html"]);
+            var pages = $.map($c.instructions, 
+                  function(item) { 
+                      return item.pages 
+                  });
+            pages.push("test.html");
+            pages.push("postquestionnaire.html");
+            psiTurk.preloadPages(pages);
 
             // Start the experiment
             var state = get_state();
             if (state.instructions) {
-                currentview = new Instructions(state);
+                CURRENTVIEW = new Instructions(state);
             } else {
-                currentview = new TestPhase(state);
+                CURRENTVIEW = new TestPhase(state);
             }
         }
     );

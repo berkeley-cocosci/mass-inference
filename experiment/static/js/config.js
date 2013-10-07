@@ -14,11 +14,23 @@ var TRIAL = Object.freeze({
     length: 5
 });
 
-var INSTRUCTIONS = new Object();
-// need a function to set the instructions that will be called once $c
-// is fully loaded
-var update_instructions = function () {
-    INSTRUCTIONS[EXPERIMENT.pretest] = {
+// Load experiment configuration
+var $c = {
+    condition: null,
+    debug: true,
+    fade: 200,
+    trials: new Object(),
+    instructions: new Object()
+};
+
+var update_config = function (data, callback) {
+    debug("Got JSON configuration");
+    
+    $c.trials[EXPERIMENT.pretest] = data["pretest"];
+    $c.trials[EXPERIMENT.experiment] = data["experiment"]; 
+    $c.trials[EXPERIMENT.posttest] = data["posttest"];
+
+    $c.instructions[EXPERIMENT.pretest] = {
         pages: [
             "instructions1a.html",
             "instructions1b.html",
@@ -26,48 +38,27 @@ var update_instructions = function () {
         ],
         
         examples: [
-            $c.examples.unstable.stimulus,
-            $c.examples.stable.stimulus,
+            data.unstable_example.stimulus,
+            data.stable_example.stimulus,
             null
         ]
     };
     
-    INSTRUCTIONS[EXPERIMENT.experiment] = {
+    $c.instructions[EXPERIMENT.experiment] = {
         pages: ["instructions2.html"],
-        examples: [$c.examples.mass.stimulus]
+        examples: [data.mass_example.stimulus]
     };
 
-    INSTRUCTIONS[EXPERIMENT.posttest] = {
+    $c.instructions[EXPERIMENT.posttest] = {
         pages: ["instructions3.html"],
         examples: [null]
     };
+
+    callback();
 };
 
-// Load experiment configuration
-var $c = {
-    condition: null,
-    debug: true,
-    fade: 200,
-    trials: new Object(),
-    examples: new Object()
-};
 
 var load_config = function(callback) {
-    var update_config = function (data) {
-        debug("Got JSON configuration");
-        
-        $c.trials[EXPERIMENT.pretest] = data["pretest"];
-        $c.trials[EXPERIMENT.experiment] = data["experiment"]; 
-        $c.trials[EXPERIMENT.posttest] = data["posttest"];
-
-        $c.examples.unstable = data.unstable_example;
-        $c.examples.stable = data.stable_example;
-        $c.examples.mass = data.mass_example;
-        
-        update_instructions();
-        callback();
-    };
-
     var get_condition = function (conditions) {
         debug("Got list of conditions");
         $c.condition = conditions[condition] + "-cb" + counterbalance;
@@ -75,7 +66,7 @@ var load_config = function(callback) {
             dataType: "json",
             url: "/static/json/" + $c.condition + ".json",
             async: false,
-            success: update_config
+            success: function (data) { update_config(data, callback); }
         });
     };
         
