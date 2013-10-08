@@ -11,8 +11,6 @@
 
 // Initialize flowplayer
 var $f = flowplayer;
-$f();
-
 if ($f.support.firstframe) {
   $f(function (api, root) {
     // show poster when video ends
@@ -26,7 +24,7 @@ if ($f.support.firstframe) {
 var psiTurk = new PsiTurk();
 
 // Create and initialize the experiment configuration object
-$c = new Config(condition, counterbalance);
+var $c = new Config(condition, counterbalance);
 
 // Objects to keep track of the current phase and state
 var CURRENTVIEW;

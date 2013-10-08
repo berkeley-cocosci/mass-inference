@@ -1,8 +1,11 @@
-// TODO: document this file
-// TODO: document update_config function
-// TODO: document load_config function
-// TODO: document config object
+/* config.js
+ * 
+ * This file contains the code necessary to load the configuration
+ * for the experiment.
+ */
 
+// Enum-like object mapping experiment phase names to ids, in the
+// order that the phases should be presented.
 var EXPERIMENT = Object.freeze({
     pretest: 0,
     experiment: 1,
@@ -10,6 +13,8 @@ var EXPERIMENT = Object.freeze({
     length: 3
 });
 
+// Enum-like object mapping trial phase names to ids, in the order
+// that the phases should be presented.
 var TRIAL = Object.freeze({
     prestim: 0,
     stim: 1,
@@ -19,11 +24,12 @@ var TRIAL = Object.freeze({
     length: 5
 });
 
-// Experiment configuration object
+// Object to hold the experiment configuration. It takes as parameters
+// the numeric codes representing the experimental condition and
+// whether the trials are counterbalanced.
 var Config = function (condition, counterbalance) {
 
-    // These are numeric codes representing the condition and whether
-    // the trials are counterbalanced
+    // These are the numeric codes for condition and counterbalancing
     this.cond_code = condition;
     this.cb_code = counterbalance;
 
