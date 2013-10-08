@@ -138,7 +138,7 @@ var TestPhase = function() {
     var stim_player;
     var fb_player;
 
-    var trials = []; //$c.trials[STATE.experiment_phase];
+    var trials = $c.trials[STATE.experiment_phase];
     var stimulus;
     var trialinfo;
     
