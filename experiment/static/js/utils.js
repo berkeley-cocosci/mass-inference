@@ -33,35 +33,87 @@ var Player = function(elem, stims, loop) {
 }
 
 var State = function (experiment_phase, instructions, index, trial_phase) {
-    var state = new Object();
 
-    if (experiment_phase != undefined) {
-        state.experiment_phase = experiment_phase;
-    } else {
-        state.experiment_phase = EXPERIMENT.pretest;
-    }
+    this.experiment_phase;
+    this.instructions;
+    this.index;
+    this.trial_phase;
 
-    if (instructions != undefined) {
-        state.instructions = instructions;
-    } else {
-        state.instructions = 1;
-    }
-
-    if (index != undefined) {
-        state.index = index;
-    } else {
-        state.index = 0;
-    }
-
-    if (!state.instructions) {
-        if (trial_phase != undefined) {
-            state.trial_phase = trial_phase;
+    this.set_experiment_phase = function (experiment_phase) {
+        if (experiment_phase != undefined) {
+            this.experiment_phase = experiment_phase;
         } else {
-            state.trial_phase = TRIAL.prestim;
+            this.experiment_phase = EXPERIMENT.pretest;
         }
-    }
+    };
 
-    return state
+    this.set_instructions = function (instructions) {
+        if (instructions != undefined) {
+            this.instructions = instructions;
+        } else {
+            this.instructions = 1;
+        }
+    };
+
+    this.set_index = function (index) {
+        if (index != undefined) {
+            this.index = index;
+        } else {
+            this.index = 0;
+        }
+    };
+
+    this.set_trial_phase = function (trial_phase) {
+        if (!this.instructions) {
+            if (trial_phase != undefined) {
+                this.trial_phase = trial_phase;
+            } else {
+                this.trial_phase = TRIAL.prestim;
+            }
+        } else {
+            this.trial_phase = undefined;
+        }
+    };
+
+    this.set_hash = function () {
+        var parts = [
+            this.experiment_phase,
+            this.instructions,
+            this.index
+        ];
+
+        if (!this.instructions) {
+            parts[parts.length] = this.trial_phase;
+        }
+
+	var hash = parts.join("-");
+        window.location.hash = hash;
+	return hash;
+    };
+
+    this.load_hash = function () {
+        if (window.location.hash == "") {
+            this.set_experiment_phase();
+            this.set_instructions();
+            this.set_index();
+            this.set_trial_phase();
+
+        } else {
+            var parts = window.location.hash.slice(1).split("-").map(
+                function (item) {
+                    return parseInt(item);
+                });
+            this.set_experiment_phase(parts[0]);
+            this.set_instructions(parts[1]);
+            this.set_index(parts[2]);
+            this.set_trial_phase(parts[3]);
+        }
+    };
+
+    this.set_experiment_phase(experiment_phase);
+    this.set_instructions(instructions);
+    this.set_index(index);
+    this.set_trial_phase(trial_phase);
 };
 
 function debug(msg) {
@@ -99,7 +151,7 @@ function openwindow(hitid, assignmentid, workerid) {
 }
 
 function onexit() {
-    self.close()
+    this.close()
 }
 
 function set_poster(elem, image) {
@@ -117,33 +169,6 @@ function update_progress(num, num_trials) {
         "Progress " + (num+1) + "/" + num_trials);
 }
 
-function set_state(state) {
-    var parts = [
-        state.experiment_phase,
-        state.instructions,
-        state.index
-    ];
-
-    if (!state.instructions) {
-        parts[parts.length] = state.trial_phase;
-    }
-
-    window.location.hash = parts.join("-");
-}
-
-function get_state() {
-    var state;
-    if (window.location.hash == "") {
-        state = new State();
-    } else {
-        var parts = window.location.hash.slice(1).split("-").map(
-            function (item) {
-                return parseInt(item);
-            });
-        state = new State(parts[0], parts[1], parts[2], parts[3]);
-    }
-    return state;
-}
 
 function show_and_hide(elem1, elem2) {
     $("#" + elem1).fadeIn($c.fade, function () {
