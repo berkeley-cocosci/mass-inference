@@ -10,18 +10,18 @@
 
 // TODO: try to fix weird flickery behavior at the beginning of a trial
 // TODO: try to fix flickery behavior at the beginning of videos
-// TODO: you shouldn't be able to pause/unpause the videos by clicking on them
 // TODO: figure out why psiturk is forcing the debrief page
 
 // Initialize flowplayer
 var $f = flowplayer;
 if ($f.support.firstframe) {
-  $f(function (api, root) {
-    // show poster when video ends
-    api.bind("resume finish", function (e) {
-      root.toggleClass("is-poster", /finish/.test(e.type));
+    $f(function (api, root) {
+        // show poster when video ends
+        api.bind("resume finish", function (e) {
+            root.toggleClass("is-poster", /finish/.test(e.type));
+            api.disable(!/finish/.test(e.type));
+        });
     });
-  });
 }
 
 // Create and initialize the experiment configuration object
@@ -167,7 +167,7 @@ var TestPhase = function() {
     this.fb_player;
 
     // List of trials in this block of the experiment
-    this.trials = $c.trials[STATE.experiment_phase].slice(0, 1);
+    this.trials = $c.trials[STATE.experiment_phase];
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
