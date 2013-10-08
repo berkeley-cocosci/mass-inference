@@ -10,6 +10,7 @@
 
 // TODO: refactor Questionnaire (or remove it?)
 // TODO: try to fix weird flickery behavior at the beginning of a trial
+// TODO: try to fix flickery behavior at the beginning of videos
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -364,8 +365,6 @@ var TestPhase = function() {
             $("#mass-question").show();
 
             // Fade out text_feedback and fade in mass_response
-            // TODO: did I mean to take this replace out???
-            //replace("text_feedback", "mass_response");
             $("#text_feedback").fadeOut(
                 $c.fade,
                 function () {
