@@ -77,13 +77,13 @@ var Config = function (condition, counterbalance) {
         this.trials[EXPERIMENT.posttest] = data["posttest"];
 
         this.instructions[EXPERIMENT.pretest].examples = [
-            data.unstable_example.stimulus,
-            data.stable_example.stimulus,
+            data.unstable_example,
+            data.stable_example,
             null
         ];
         
         this.instructions[EXPERIMENT.experiment].examples = [
-            data.mass_example.stimulus
+            data.mass_example
         ];
     };
 

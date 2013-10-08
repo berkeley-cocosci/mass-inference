@@ -235,7 +235,7 @@ function replace(old_elem, new_elem) {
 
 // Create a flowplayer object in `elem`, load a playlist of `stims`,
 // and set the poster (background image) to `poster`.
-var make_player = function(elem, stims, poster) {
+function make_player(elem, stims, poster) {
 
     // Helper function to get the appropriate formats for each video
     var get_video_formats = function (stim) {
@@ -269,4 +269,18 @@ var make_player = function(elem, stims, poster) {
     }
 
     return p;
+}
+
+// Set background and button colors to reflect the different block
+// types
+function set_colors(color0, color1) {
+    if (color0) {
+        $(".color0").css("background-color", color0);
+        $("button.color0").html(color0);
+    }
+
+    if (color1) {
+        $(".color1").css("background-color", color1);
+        $("button.color1").html(color1);
+    }
 }

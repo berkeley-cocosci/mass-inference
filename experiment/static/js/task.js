@@ -68,9 +68,13 @@ var Instructions = function() {
             that.record_response();
         });
         
-        // Load the video player
-        if (this.examples[STATE.index]) {
-            var video = this.examples[STATE.index] + "~stimulus";
+        var example = this.examples[STATE.index];
+        if (example) {
+            // Set mass colors
+            set_colors(example.color0, example.color1);
+
+            // Load the video player
+            var video = example.stimulus + "~stimulus";
 
             // Start the video immediately
             var on_ready = function (e, api) {
@@ -231,10 +235,7 @@ var TestPhase = function() {
         set_poster("#mass_response", this.stimulus + "~feedback~B");
 
         // Set the stimulus colors
-        $(".left-color").css("background-color", this.trialinfo.color0);
-        $(".right-color").css("background-color", this.trialinfo.color1);
-        $("button.left-color").html(this.trialinfo.color0);
-        $("button.right-color").html(this.trialinfo.color1);
+        set_colors(this.trialinfo.color0, this.trialinfo.color1);
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
@@ -427,12 +428,7 @@ var TestPhase = function() {
 
         } else if (name == "mass") {
             // Left/right refers to different colors
-            // TODO: handle counterbalancing appropriately
-            if (value == "left") {
-                data.update({response: this.trialinfo.color0});
-            } else if (value == "right") {
-                data.update({response: this.trialinfo.color1});
-            }
+            data.update({response: this.trialinfo[value]});
         }
 
         // Create the record we want to save

@@ -43,10 +43,8 @@ for condition in conditions:
         conf['stable'] = False
         conf['fall? query'] = True
         conf['mass? query'] = True
-        conf['color0'] = ['yellow' if not flip else 'red'
-                          for flip in conf.flip_colors]
-        conf['color1'] = ['red' if not flip else 'yellow'
-                          for flip in conf.flip_colors]
+        conf['color0'] = 'yellow'
+        conf['color1'] = 'red'
 
         is_orig = conf.stimtype == "original"
         conf["mass? query"][is_orig] = False

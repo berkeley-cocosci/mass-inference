@@ -143,10 +143,10 @@ div.scalepart img {
     border-bottom: 2px solid black;
 }
 
-.left-color {
+.color0 {
     background-color: #ff3333;
 }
-.right-color {
+.color1 {
     background-color: #00ffff;
 }
 
@@ -348,8 +348,8 @@ div.scalepart img {
     box-shadow: 0px 0px 3px;
 }
 
-#mass-choice-left { top: 15%; }
-#mass-choice-right { bottom: 15%; }
+#mass-choice-0 { top: 15%; }
+#mass-choice-1 { bottom: 15%; }
 
 /* Feedback */
 
