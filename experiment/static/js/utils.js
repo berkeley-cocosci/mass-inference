@@ -1,13 +1,20 @@
 // TODO: document this file
-// TODO: document State object
 
-var State = function (experiment_phase, instructions, index, trial_phase) {
+// Object to hold the state of the experiment. It is initialized to
+// reflect the hash in the URL (see set_hash and load_hash for
+// details).
+var State = function () {
 
+    // One of the phases defined in EXPERIMENT
     this.experiment_phase;
+    // 0 (false) or 1 (true)
     this.instructions;
+    // Trial index
     this.index;
+    // One of the phases defined in TRIAL
     this.trial_phase;
 
+    // Update the experiment phase. Defaults to EXPERIMENT.pretest.
     this.set_experiment_phase = function (experiment_phase) {
         if (experiment_phase != undefined) {
             this.experiment_phase = experiment_phase;
@@ -16,6 +23,7 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         }
     };
 
+    // Update the instructions flag. Defaults to 1.
     this.set_instructions = function (instructions) {
         if (instructions != undefined) {
             this.instructions = instructions;
@@ -24,6 +32,7 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         }
     };
 
+    // Update the trial index. Defaults to 0.
     this.set_index = function (index) {
         if (index != undefined) {
             this.index = index;
@@ -32,6 +41,7 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         }
     };
 
+    // Update the trial phase. Defaults to TRIAL.prestim.
     this.set_trial_phase = function (trial_phase) {
         if (!this.instructions) {
             if (trial_phase != undefined) {
@@ -44,6 +54,16 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         }
     };
 
+    // Set the URL hash based on the current state. If
+    // this.instructions is 1, then it will look like:
+    //
+    //     <experiment_phase>-<instructions>-<index>
+    // 
+    // Otherwise, if this.instructions is 0, it will be:
+    //
+    //     <experiment_phase>-<instructions>-<index>-<trial_phase>
+    //
+    // Returns the URL hash string.
     this.set_hash = function () {
         var parts = [
             this.experiment_phase,
@@ -60,15 +80,21 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         return hash;
     };
 
+    // Update the State object based on the URL hash
     this.load_hash = function () {
+        // get the URL hash, and remove the # from the front
+        var hash = window.location.hash.slice(1);
+
         if (window.location.hash == "") {
+            // no hash is present, so use the defaults
             this.set_experiment_phase();
             this.set_instructions();
             this.set_index();
             this.set_trial_phase();
 
         } else {
-            var parts = window.location.hash.slice(1).split("-").map(
+            // split the hash into its components and set them
+            var parts = hash.split("-").map(
                 function (item) {
                     return parseInt(item);
                 });
@@ -79,10 +105,8 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
         }
     };
 
-    this.set_experiment_phase(experiment_phase);
-    this.set_instructions(instructions);
-    this.set_index(index);
-    this.set_trial_phase(trial_phase);
+    // Initialize the State object components
+    this.load_hash();
 };
 
 function debug(msg) {

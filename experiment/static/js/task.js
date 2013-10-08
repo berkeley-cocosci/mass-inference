@@ -427,7 +427,6 @@ var debriefing = function() {
 $(document).ready(function() { 
     // Start the experiment
     STATE = new State();
-    STATE.load_hash();
     if (STATE.instructions) {
         CURRENTVIEW = new Instructions();
     } else {
