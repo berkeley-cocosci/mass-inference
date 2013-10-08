@@ -5,6 +5,8 @@
  *     underscore
  */
 
+// TODO: fix scoping bug with "that = this"
+
 
 /****************
  * Internals    *
