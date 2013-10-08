@@ -1,12 +1,16 @@
-/*
+/* task.js
+ * 
+ * This file holds the main experiment code.
+ * 
  * Requires:
- *     config.js
- *     psiturk.js
- *     utils.js
+ *   config.js
+ *   psiturk.js
+ *   utils.js
  */
 
-// TODO: document Instructions class
 // TODO: document TestPhase class
+// TODO: fix scoping in Instructions class
+// TODO: fix scoping in TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
 
 // Initialize flowplayer
@@ -40,25 +44,28 @@ var STATE;
 
 var Instructions = function() {
 
-    debug("initialize instructions");
- 
+    // The list of pages for this set of instructions
     var pages = $c.instructions[STATE.experiment_phase].pages;
+    // The list of examples on each page of instructions
     var examples = $c.instructions[STATE.experiment_phase].examples;
-
+    // Time when a page of instructions is presented
     var timestamp;
+    // The flowplayer instance
     var player;
-    
+
+    // Display a page of instructions, based on the current
+    // STATE.index
     var show = function() {
-        debug("next (index=" + STATE.index + ")");
-        
-        // show the next page of instructions
+
+        // Load the next page of instructions
         psiTurk.showPage(pages[STATE.index]);
+        // Update the URL hash
         STATE.set_hash();
 
-        // bind a handler to the "next" button
-        $('.next').click(button_press);
+        // Bind a handler to the "next" button
+        $('.next').click(response_handler);
         
-        // load the player
+        // Load the video player
         if (examples[STATE.index]) {
             var video = examples[STATE.index] + "~stimulus";
 
@@ -84,19 +91,23 @@ var Instructions = function() {
         timestamp = new Date().getTime();
     };
 
-    var button_press = function() {
-        debug("button pressed");
+    // Handler for when the "next" button is pressed
+    var response_handler = function() {
 
         // Record the response time
         var rt = (new Date().getTime()) - timestamp;
+        debug("'Next' button pressed");
+
         // TODO: review recording of Instructions data
         psiTurk.recordTrialData(["$c.instructions", STATE.index, rt]);
 
-         // destroy the video player
+         // Destroy the video player
         if (player) {
             player.unload();
         }
 
+        // Go to the next page of instructions, or complete these
+        // instructions if there are no more pages
         STATE.set_index(STATE.index + 1);
         if (STATE.index == pages.length) {
             finish();
@@ -105,8 +116,9 @@ var Instructions = function() {
         }
     };
 
+    // Clean up the instructions phase and move on to the test phase
     var finish = function() {
-        debug("done with instructions")
+        debug("Done with instructions")
 
         // Record that the user has finished the instructions and 
         // moved on to the experiment. This changes their status code
@@ -115,12 +127,14 @@ var Instructions = function() {
         //     psiTurk.finishInstructions();
         // }
 
+        // Reset the state object for the test phase
         STATE.set_instructions(0);
         STATE.set_index();
         STATE.set_trial_phase();
         CURRENTVIEW = new TestPhase();
     };
 
+    // Display the first page of instructions
     show();
 };
 
