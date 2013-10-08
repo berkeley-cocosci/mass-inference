@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Error</title>
+  </head>
+  <body>
+    <div class="slide">
+      <div class="blue">
+	{% if errornum == 1008 %}
+
+	<h2> 
+	  Sorry, our records indicate that you have attempted to complete
+	  this hit, but quit before finishing.
+	</h2>        
+	<p>Because this is a Psychology experiment, you can only complete
+	this hit once.</p>
+
+	<p>Please release the hit so someone else can perform the
+	experiment.</p> 
+	
+	{% elif errornum == 1010 %}
+	
+	<h2> 
+	  Sorry, our records indicate that you have already completed (or
+	  attempted to complete) this hit.
+	</h2>        
+	<p>Because this is a Psychology experiment, you can only complete
+	this hit once.</p> 
+	
+	<p>Please release the hit so someone else can perform the
+	experiment.</p> 
+	
+	{% else %}
+
+	<h2> 
+	  Sorry, there was an unexpected error in our processing of your
+	  hit.
+	</h2>
+
+	{% endif %}
+
+	<p>If you would like to receive partial compensation or feel you
+	have reached this page in error, please email <a
+	href="mailto:cocosci-turk@lists.berkeley.edu">cocosci-turk@lists.berkeley.edu</a>
+	and send the following information:</p>
+	<p>
+	  Error: #{{ errornum }}<br />
+	  {% if hitId %} HitID: #{{ hitId }}<br /> {% endif %}
+	  {% if assignId %}AssignId: #{{ assignId }}<br /> {% endif %}
+	  {% if workerId %} WorkerId: #{{ workerId }}<br /> {% endif %}
+	</p>
+	<p>
+	  Our sincere apologies!
+	</p>
+      </div>
+    </div>
+  </body>
+</html>
