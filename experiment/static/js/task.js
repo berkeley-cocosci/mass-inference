@@ -232,13 +232,13 @@ var TestPhase = function() {
     phases[TRIAL.stim] = function () {
         debug("show stimulus");
         stim_player.play(0);
-        show_and_hide("stim", "prestim");
+        replace("prestim", "stim");
     };
 
     // Phase 3: show the response options for "fall?" question
     phases[TRIAL.fall_response] = function () {
         debug("show fall responses");
-        show_and_hide("fall_response", "stim");
+        replace("stim", "fall_response");
         if (stim_player) {
             stim_player.unload();
         }
@@ -268,7 +268,7 @@ var TestPhase = function() {
                 });
 
         } else if (fb == "fb") {
-            show_and_hide("feedback", "fall_response");
+            replace("fall_response", "feedback");
             setTimeout(advance, 2500);
 
         } else {
@@ -284,7 +284,7 @@ var TestPhase = function() {
             $("#fall-question").hide();
             $("#mass-question").show();
 
-            show_and_hide("mass_response", "feedback");
+            replace("feedback", "mass_response");
             if (fb_player) {
                 fb_player.unload();
             }

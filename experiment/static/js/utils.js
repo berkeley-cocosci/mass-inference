@@ -1,4 +1,9 @@
-// TODO: document this file
+/* utils.js
+ * 
+ * This file contains helper utility functions/objects for use by the
+ * main experiment code.
+ */
+
 
 // Object to hold the state of the experiment. It is initialized to
 // reflect the hash in the URL (see set_hash and load_hash for
@@ -109,67 +114,73 @@ var State = function () {
     this.load_hash();
 };
 
+// Log a message to the console, if debug mode is turned on.
 function debug(msg) {
     if ($c.debug) {
         console.log(msg);
     }
 }
 
+// Throw an assertion error if a statement is not true.
 function AssertException(message) { this.message = message; }
 AssertException.prototype.toString = function () {
     return 'AssertException: ' + this.message;
 };
-
 function assert(exp, message) {
     if (!exp) {
         throw new AssertException(message);
     }
 }
 
-// Mean of booleans (true==1; false==0)
-function boolpercent(arr) {
-    var count = 0;
-    for (var i=0; i<arr.length; i++) {
-        if (arr[i]) { count++; } 
-    }
-    return 100* count / arr.length;
-}
-
-function openwindow(hitid, assignmentid, workerid) {
+// Open a new window and display the consent form
+function open_window(hitid, assignmentid, workerid) {
     popup = window.open(
-        '/consent?hitId=' + hitid + '&assignmentId=' + assignmentid + '&workerId=' + workerid,
+        '/consent?' + 
+            'hitId=' + hitid + 
+            '&assignmentId=' + assignmentid + 
+            '&workerId=' + workerid,
         'Popup',
-        'toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=no,width=' + screen.availWidth + ',height=' + screen.availHeight + '');
-    popup.onunload = function() { location.reload(true) }
+        'toolbar=no,' +
+            'location=no,' +
+            'status=no,' +
+            'menubar=no,' + 
+            'scrollbars=yes,' + 
+            'resizable=no,' + 
+            'width=' + screen.availWidth + ',' +
+            'height=' + screen.availHeight + '');
+    popup.onunload = function() { 
+        location.reload(true) 
+    };
 }
 
-function onexit() {
-    this.close()
-}
-
+// Set the background image on an element.
 function set_poster(elem, image) {
     var path = "/static/stimuli/" + $c.condition + "/" + image + ".png";
     $(elem).css("background", "#FFF url(" + path + ") no-repeat");
     $(elem).css("background-size", "cover");
 }
 
+// Update the progress bar based on the current trial and total number
+// of trials.
 function update_progress(num, num_trials) {
     debug("update progress");
-
-    var width = 2 + 98*(num / (num_trials-1.0));
+    var width = 2 + 98 * (num / (num_trials - 1.0));
     $("#indicator-stage").css({"width": width + "%"});
-    $("#progress-text").html(
-        "Progress " + (num+1) + "/" + num_trials);
+    $("#progress-text").html("Progress " + (num + 1) + "/" + num_trials);
 }
 
-
-function show_and_hide(elem1, elem2) {
-    $("#" + elem1).fadeIn($c.fade, function () {
-        $("#" + elem2).hide();
+// Fade in new_elem, and then hide old_elem
+function replace(old_elem, new_elem) {
+    $("#" + new_elem).fadeIn($c.fade, function () {
+        $("#" + old_elem).hide();
     });
 }
 
+// Create a flowplayer object in `elem`, load a playlist of `stims`,
+// and set the poster (background image) to `poster`.
 var make_player = function(elem, stims, poster) {
+
+    // Helper function to get the appropriate formats for each video
     var get_video_formats = function (stim) {
         var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
         var formats = [
@@ -180,6 +191,7 @@ var make_player = function(elem, stims, poster) {
         return formats;
     };
 
+    // Create the new flowplayer instance
     var p = $f($(elem).flowplayer({
         debug: $c.debug,
         fullscreen: false,
@@ -194,6 +206,7 @@ var make_player = function(elem, stims, poster) {
         embed: false
     }));
 
+    // Set the poster
     if (poster) {
         set_poster(elem + ".flowplayer", poster);
     }
