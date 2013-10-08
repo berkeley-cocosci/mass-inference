@@ -9,7 +9,6 @@
  */
 
 // TODO: document TestPhase class
-// TODO: fix scoping in Instructions class
 // TODO: fix scoping in TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
 
@@ -45,29 +44,33 @@ var STATE;
 var Instructions = function() {
 
     // The list of pages for this set of instructions
-    var pages = $c.instructions[STATE.experiment_phase].pages;
+    this.pages = $c.instructions[STATE.experiment_phase].pages;
     // The list of examples on each page of instructions
-    var examples = $c.instructions[STATE.experiment_phase].examples;
+    this.examples = $c.instructions[STATE.experiment_phase].examples;
     // Time when a page of instructions is presented
-    var timestamp;
+    this.timestamp;
     // The flowplayer instance
-    var player;
+    this.player;
 
     // Display a page of instructions, based on the current
     // STATE.index
-    var show = function() {
+    this.show = function() {
 
         // Load the next page of instructions
-        psiTurk.showPage(pages[STATE.index]);
+        psiTurk.showPage(this.pages[STATE.index]);
         // Update the URL hash
         STATE.set_hash();
 
-        // Bind a handler to the "next" button
-        $('.next').click(response_handler);
+        // Bind a handler to the "next" button. We have to wrap it in
+        // an anonymous function to preserve the scope.
+        var that = this;
+        $('.next').click(function () {
+            that.record_response();
+        });
         
         // Load the video player
-        if (examples[STATE.index]) {
-            var video = examples[STATE.index] + "~stimulus";
+        if (this.examples[STATE.index]) {
+            var video = this.examples[STATE.index] + "~stimulus";
 
             // Start the video immediately
             var on_ready = function (e, api) {
@@ -79,45 +82,47 @@ var Instructions = function() {
             };
 
             // Initialize the player and start it
-            player = make_player("#player",     // element 
-                                 [video],      // stimuli
-                                 video + "~A") // background image
-                .bind("ready", on_ready)
+            this.player = make_player(
+                "#player",     // element 
+                [video],       // stimuli
+                video + "~A"   // background image
+
+            ).bind("ready", on_ready)
                 .bind("finish", on_finish)
                 .play(0);
         }
 
         // Record the time that an instructions page is presented
-        timestamp = new Date().getTime();
+        this.timestamp = new Date().getTime();
     };
 
     // Handler for when the "next" button is pressed
-    var response_handler = function() {
+    this.record_response = function() {
 
         // Record the response time
-        var rt = (new Date().getTime()) - timestamp;
+        var rt = (new Date().getTime()) - this.timestamp;
         debug("'Next' button pressed");
 
         // TODO: review recording of Instructions data
         psiTurk.recordTrialData(["$c.instructions", STATE.index, rt]);
 
          // Destroy the video player
-        if (player) {
-            player.unload();
+        if (this.player) {
+            this.player.unload();
         }
 
         // Go to the next page of instructions, or complete these
         // instructions if there are no more pages
-        STATE.set_index(STATE.index + 1);
-        if (STATE.index == pages.length) {
-            finish();
+        if ((STATE.index + 1) >= this.pages.length) {
+            this.finish();
         } else {
-            show();
+            STATE.set_index(STATE.index + 1);
+            this.show();
         }
     };
 
     // Clean up the instructions phase and move on to the test phase
-    var finish = function() {
+    this.finish = function() {
         debug("Done with instructions")
 
         // Record that the user has finished the instructions and 
@@ -135,7 +140,7 @@ var Instructions = function() {
     };
 
     // Display the first page of instructions
-    show();
+    this.show();
 };
 
 
