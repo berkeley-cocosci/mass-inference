@@ -3,21 +3,6 @@ import numpy as np
 import pandas as pd
 from path import path
 
-# config = {
-#     'conditions': [
-#         'vfb-0.1-cb',
-#         'vfb-10-cb'
-#     ],
-
-#     'examples': {
-#         'stable': 'tower_00846_0000000000',
-#         'unstable': 'tower_01798_0000000000',
-#         'mass': 'tower_00202_0010110101'
-#     },
-
-#     'trials': {}
-# }
-
 
 render_dir = path("../resources/render/G/")
 json_dir = path("../experiment/static/json/")
@@ -31,6 +16,7 @@ base_conds = dict(enumerate(base_conds))
 with open(json_dir.joinpath("conditions.json"), "w") as fh:
     json.dump(base_conds, fh, indent=2)
 
+rso = np.random.RandomState(0)
 
 for condition in conditions:
     render_configs = render_dir.joinpath(condition).glob("*.csv")
@@ -45,6 +31,9 @@ for condition in conditions:
 
     config = {}
     for conf_path in render_configs:
+        seed = abs(hash(conf_path.name))
+        print conf_path, seed
+
         conf = pd.DataFrame.from_csv(conf_path).reset_index()
         conf.stimulus = conf.stimulus.map(lambda x: path(x).namebase)
 
@@ -64,12 +53,18 @@ for condition in conditions:
         conf["color0"][is_orig] = None
         conf["color1"][is_orig] = None
 
-        conf = conf.drop(
-            ["full_render", "stimtype", "kappa", "flip_colors"],
-            axis=1)
+        conf = (conf
+                .drop(
+                    ["full_render", "stimtype", "kappa", "flip_colors"],
+                    axis=1)
+                .set_index('stimulus')
+                .sort()
+                .reset_index())
 
         idx = np.array(conf.index)
-        np.random.shuffle(idx)
+        rso.seed(seed)
+        rso.shuffle(idx)
+
         shuffled = conf.reindex(idx).reset_index(drop=True)
         shuffled.index.name = "trial"
         shuffled = shuffled.reset_index()
