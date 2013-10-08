@@ -1,0 +1,8 @@
+TODO: figure out what the experiment structure should be & document it
+TODO: fix lighting for tall towers
+TODO: make towers rotate longer at the beginning of the trial
+TODO: pick appropriate training towers for version G
+TODO: pick appropriate example towers for version G
+TODO: render floor images
+TODO: re-render stimuli movies
+

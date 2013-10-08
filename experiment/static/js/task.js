@@ -1,8 +1,13 @@
 /*
  * Requires:
+ *     config.js
  *     psiturk.js
  *     utils.js
  */
+
+// TODO: document Instructions class
+// TODO: document TestPhase class
+// TODO: refactor Questionnaire (or remove it?)
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -79,6 +84,7 @@ var Instructions = function() {
 
         // Record the response time
         var rt = (new Date().getTime()) - timestamp;
+        // TODO: review recording of Instructions data
         psiTurk.recordTrialData(["$c.instructions", STATE.index, rt]);
 
          // destroy the video player
@@ -129,7 +135,7 @@ var TestPhase = function() {
     var stim_player;
     var fb_player;
 
-    var trials = $c.trials[STATE.experiment_phase];
+    var trials = []; //$c.trials[STATE.experiment_phase];
     var stimulus;
     var trialinfo;
     
@@ -137,6 +143,10 @@ var TestPhase = function() {
 
     var init_trial = function () {
         debug("initializing trial");
+
+        if (STATE.index >= trials.length) {
+            return finish();
+        }
         
         trialinfo = trials[STATE.index];
         stimulus = trialinfo.stimulus;
@@ -153,6 +163,7 @@ var TestPhase = function() {
         fb_player = Player("video_feedback", [stimulus + "~feedback"], false);
 
         // Set appropriate backgrounds
+        // TODO: prestim image should be the floor
         set_poster("#prestim", stimulus + "~stimulus~A");
         set_poster("#stim.flowplayer", stimulus + "~stimulus~A");
         set_poster("#fall_response", stimulus + "~stimulus~B");
@@ -194,7 +205,6 @@ var TestPhase = function() {
         // Initialize the trial
         init_trial();
 
-        // XXX self should be the floor
         debug("show prestim");
         $("#prestim").show();
 
@@ -304,15 +314,11 @@ var TestPhase = function() {
     };
 
     var show = function () {
-        if (STATE.index >= trials.length) {
-            finish();
-        } else {
-            STATE.set_hash();
-            debug("next (trial_phase=" + STATE.trial_phase + ")");
+        STATE.set_hash();
+        debug("next (trial_phase=" + STATE.trial_phase + ")");
 
-            phases[STATE.trial_phase]();
-            starttime = new Date().getTime();
-        }
+        phases[STATE.trial_phase]();
+        starttime = new Date().getTime();
     };
 
     var response_handler = function(e) {
@@ -321,6 +327,8 @@ var TestPhase = function() {
         
         var response = this.value;
         listening = false;
+
+        // TODO: record response data for TestPhase
 
         if (response == "left" || response == "right") {
             STATE.set_trial_phase();
@@ -369,6 +377,7 @@ var Questionnaire = function() {
 
     record_responses = function() {
 
+        // TODO: fix recording of Questionniare data
         psiTurk.recordTrialData(['postquestionnaire', 'submit']);
 
         $('textarea').each( function(i, val) {
@@ -431,6 +440,7 @@ $(document).ready(function() {
     load_config(
         function () {
             // All pages to be loaded
+            // TODO: should preloading pages start happening before document.ready?
             var pages = $.map($c.instructions, 
                   function(item) { 
                       return item.pages 

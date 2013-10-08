@@ -1,3 +1,7 @@
+// TODO: document this file
+// TODO: document State object
+// TODO: should Player be an object or just a function...?
+
 var Player = function(elem, stims, loop) {
     var get_video_formats = function (stim) {
         var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;

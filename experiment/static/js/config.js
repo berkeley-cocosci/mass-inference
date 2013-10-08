@@ -1,3 +1,9 @@
+// TODO: make the config be a real Config object
+// TODO: document this file
+// TODO: document update_config function
+// TODO: document load_config function
+// TODO: document config object
+
 var EXPERIMENT = Object.freeze({
     pretest: 0,
     experiment: 1,
