@@ -20,25 +20,18 @@ if ($f.support.firstframe) {
   });
 }
 
+// Create and initialize the experiment configuration object
+var $c = new Config(condition, counterbalance);
+
 // Initalize psiturk object
 var psiTurk = new PsiTurk();
 
-// Create and initialize the experiment configuration object
-var $c = new Config(condition, counterbalance);
+// Preload the HTML template pages that we need for the experiment
+psiTurk.preloadPages($c.pages);
 
 // Objects to keep track of the current phase and state
 var CURRENTVIEW;
 var STATE;
-
-/********************
- * HTML manipulation
- *
- * All HTML files in the templates directory are requested 
- * from the server when the PsiTurk object is created above. We
- * need code to get those pages from the PsiTurk object and 
- * insert them into the document.
- *
- ********************/
 
 
 /*************************
@@ -438,16 +431,6 @@ var debriefing = function() {
  ******************/
 
 $(document).ready(function() { 
-    // All pages to be loaded
-    // TODO: should preloading pages start happening before document.ready?
-    var pages = $.map($c.instructions, 
-                      function(item) { 
-                          return item.pages 
-                      });
-    pages.push("test.html");
-    pages.push("postquestionnaire.html");
-    psiTurk.preloadPages(pages);
-
     // Start the experiment
     STATE = new State();
     STATE.load_hash();

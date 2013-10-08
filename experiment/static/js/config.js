@@ -33,18 +33,18 @@ var Config = function (condition, counterbalance) {
     this.cond_code = condition;
     this.cb_code = counterbalance;
 
-    // string to hold the human-readable condition name
+    // String to hold the human-readable condition name
     this.condition = null;
-    // whether debug information should be printed out
+    // Whether debug information should be printed out
     this.debug = true;
-    // the amount of time to fade HTML elements in/out
+    // The amount of time to fade HTML elements in/out
     this.fade = 200;
-    // list of trial information object for each experiment phase
+    // List of trial information object for each experiment phase
     this.trials = new Object();
-    // lists of pages and examples for each instruction page
-    this.instructions = new Object();
 
-    // We know the list of pages we want to display a priori
+    // Lists of pages and examples for each instruction page.  We know
+    // the list of pages we want to display a priori.
+    this.instructions = new Object();
     this.instructions[EXPERIMENT.pretest] = {
         pages: ["instructions1a.html",
                 "instructions1b.html",
@@ -57,6 +57,16 @@ var Config = function (condition, counterbalance) {
         pages: ["instructions3.html"],
         examples: [null]
     };
+
+    // The list of all the HTML pages that need to be loaded
+    this.pages = [
+        "test.html", 
+    ].concat(
+        $.map(this.instructions, 
+              function(item) { 
+                  return item.pages;
+              })
+    );
 
     // Parse the JSON object that we've requested and load it into the
     // configuration
