@@ -30,9 +30,9 @@ def parseargs():
         help="log10 mass ratio, only for mass towers (default: 0.0)")
     parser.add_argument(
         "--presentation-time",
-        action="store", dest="ptime", type=float, default=4.0,
+        action="store", dest="ptime", type=float, default=5.0,
         help=("amount of time in seconds to present the stimulus "
-              "for (default: 4.0)"))
+              "for (default: 5.0)"))
     parser.add_argument(
         "--feedback-time",
         action="store", dest="ftime", type=float, default=2.5,
