@@ -90,9 +90,9 @@ var State = function (experiment_phase, instructions, index, trial_phase) {
             parts[parts.length] = this.trial_phase;
         }
 
-	var hash = parts.join("-");
+        var hash = parts.join("-");
         window.location.hash = hash;
-	return hash;
+        return hash;
     };
 
     this.load_hash = function () {
