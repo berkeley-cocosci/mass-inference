@@ -8,8 +8,6 @@
 // TODO: document Instructions class
 // TODO: document TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
-// TODO: fix bug when page is refreshed on TRIAL.stim or TRIAL.feedback
-// TODO: fix order of feedback/mass question appearance
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -295,7 +293,13 @@ var TestPhase = function() {
             $("#fall-question").hide();
             $("#mass-question").show();
 
-            replace("feedback", "mass_response");
+            replace("text_feedback", "mass_response");
+            $("#text_feedback").fadeOut(
+                $c.fade,
+                function () {
+                    replace("feedback", "mass_response");
+                });
+
             if (fb_player) {
                 fb_player.unload();
             }
