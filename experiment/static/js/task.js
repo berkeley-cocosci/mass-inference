@@ -10,7 +10,7 @@
 
 // TODO: try to fix weird flickery behavior at the beginning of a trial
 // TODO: try to fix flickery behavior at the beginning of videos
-// TODO: figure out why psiturk is forcing the debrief page
+// TODO: trial order should be the same in all conditions
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -167,7 +167,7 @@ var TestPhase = function() {
     this.fb_player;
 
     // List of trials in this block of the experiment
-    this.trials = $c.trials[STATE.experiment_phase];
+    this.trials = $c.trials[STATE.experiment_phase].slice(0, 1);
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
