@@ -127,7 +127,7 @@ var State = function () {
         }
 
         // Find the name of the trial phase (or just use
-        // "instructions" if instructions is true)
+        // an empty string if instructions is true)
         if (!instructions) {
             for (item in TRIAL) {
                 if (TRIAL[item] == this.trial_phase) {
@@ -136,7 +136,7 @@ var State = function () {
                 }
             }
         } else {
-            trial_phase = "instructions";
+            trial_phase = "";
         }
 
         return [experiment_phase, instructions, index, trial_phase];

@@ -11,6 +11,7 @@
 // TODO: refactor Questionnaire (or remove it?)
 // TODO: try to fix weird flickery behavior at the beginning of a trial
 // TODO: try to fix flickery behavior at the beginning of videos
+// TODO: you shouldn't be able to pause/unpause the videos by clicking on them
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -105,7 +106,7 @@ var Instructions = function() {
 
         // Record the data. The format is: 
         // experiment phase, instructions, index, trial_phase, response time
-        var data = STATE.as_data().concat([rt]);
+        var data = STATE.as_data().concat(["", rt]);
         psiTurk.recordTrialData(data);
         debug(data);
 
@@ -200,8 +201,8 @@ var TestPhase = function() {
     this.init_trial = function () {
         debug("Initializing trial " + STATE.index);
 
-        // If the page was reloaded and we were at the end of the
-        // experiment, we might end up here, so finish this phase.
+        // If there are no more trials left, then we are at the end of
+        // this phase
         if (STATE.index >= this.trials.length) {
             return this.finish();
         }
@@ -216,7 +217,7 @@ var TestPhase = function() {
         // Register the response handler to record responses
         var that = this;
         $('button').click(function () {
-            that.record_response(this.value);
+            that.record_response(this.name, this.value);
         });
 
         // Initialize the video players
@@ -403,21 +404,48 @@ var TestPhase = function() {
 
     // Record a response (this could be either just clicking "start",
     // or actually a choice to the prompt(s))
-    this.record_response = function(response) {
+    this.record_response = function(name, value) {
         // If we're not listening for a response, do nothing
         if (!this.listening) return;
         this.listening = false;
 
+        var rt = (new Date().getTime()) - this.timestamp;
+        var data;
+        var record;
+
         debug("Record response");
 
-        // TODO: record response data for TestPhase
-        // TODO: figure out which response we got a little more cleanly
-        if (response == "left" || response == "right") {
+        // Parse the actual value of the data to record
+        if (name == "play") {
+            // Not a real response, so just save an empty string
+            data = "";
+
+        } else if (name == "fall") {
+            // We want a true/false boolean value
+            data = Boolean(value);
+
+        } else if (name == "mass") {
+            // Left/right refers to different colors
+            // TODO: handle counterbalancing appropriately
+            if (value == "left") {
+                data = this.trialinfo.color0;
+            } else if (value == "right") {
+                data = this.trialinfo.color1;
+            }
+        }
+
+        // Create the record we want to save
+        record = STATE.as_data().concat([data, rt]);
+        psiTurk.recordTrialData(record);
+        debug(record);
+
+        // Tell the state to go to the next trial phase or trial
+        if (name == "mass") {
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
         } else {
             STATE.set_trial_phase(STATE.trial_phase + 1);
-        }
+        }            
 
         // Update the page with the current phase/trial
         this.show();

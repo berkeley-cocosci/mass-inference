@@ -22,10 +22,10 @@
     <!-- Responses to "which is heavier?" -->
     <div id="mass_response" class="phase">
       <div id="mass-choice-right" class="mass-choice">
-	<button type="button" class="right-color" value="right"></button>
+	<button type="button" name="mass" class="right-color" value="right"></button>
       </div>
       <div id="mass-choice-left" class="mass-choice">
-	<button type="button" class="left-color" value="left"></button>
+	<button type="button" name="mass" class="left-color" value="left"></button>
       </div>
     </div>
 
@@ -42,10 +42,10 @@
     <!-- Responses to "will it fall?" -->
     <div id="fall_response" class="phase">
       <div class="fall-choice" id="fall-choice-no">
-	<button type="button" value="stable">No, it will NOT fall</button>
+	<button type="button" name="fall" value=false>No, it will NOT fall</button>
       </div>
       <div class="fall-choice" id="fall-choice-yes">
-	<button type="button" value="unstable">Yes, it will fall</button>
+	<button type="button" name="fall" value=true>Yes, it will fall</button>
       </div>
     </div>
 
@@ -59,7 +59,7 @@
 	<p>You may only watch the video once.</p>
       </div>
       <div id="play-button">
-	<button type="button" value="play">Play Video</button>
+	<button type="button" name="play">Play Video</button>
       </div>
     </div>
 
