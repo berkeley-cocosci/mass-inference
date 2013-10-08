@@ -8,8 +8,8 @@
  *   utils.js
  */
 
-// TODO: document TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
+// TODO: try to fix weird flickery behavior at the beginning of a trial
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -148,19 +148,32 @@ var Instructions = function() {
 
 var TestPhase = function() {
 
+    /* Instance variables */
+
     // When the time response period begins
     this.timestamp; 
+    // Whether the object is listening for responses
     this.listening = false;
 
+    // Video player for the stimulus
     this.stim_player;
+    // Video player for feedback
     this.fb_player;
 
+    // List of trials in this block of the experiment
     this.trials = $c.trials[STATE.experiment_phase];
-    this.stimulus;
+    // Information about the current trial
     this.trialinfo;
+    // The current stimulus name
+    this.stimulus;
     
+    // Handlers to setup each phase of a trial
     this.phases = new Object();
 
+    // Initialize a flowplayer in elem. This is different from
+    // make_player (in utils.js) in that it also binds a "finish"
+    // handler to set a new poster for the player, and to go to the
+    // next trial phase.
     this.init_player = function (elem, name) {
         var that = this;
         var video = this.stimulus + "~" + name;
@@ -178,21 +191,25 @@ var TestPhase = function() {
             .bind("finish", on_finish);
     };
 
+    // Initialize a new trial. This is called either at the beginning
+    // of a new trial, or if the page is reloaded between trials.
     this.init_trial = function () {
-        debug("initializing trial");
+        debug("Initializing trial " + STATE.index);
 
+        // If the page was reloaded and we were at the end of the
+        // experiment, we might end up here, so finish this phase.
         if (STATE.index >= this.trials.length) {
             return this.finish();
         }
         
+        // Load the new trialinfo and stimulus values
         this.trialinfo = this.trials[STATE.index];
         this.stimulus = this.trialinfo.stimulus;
 
         // Load the test.html snippet into the body of the page
         psiTurk.showPage('test.html');
 
-        // register the response handler that is defined above to handle
-        // responses
+        // Register the response handler to record responses
         var that = this;
         $('button').click(function () {
             that.record_response(this.value);
@@ -202,7 +219,7 @@ var TestPhase = function() {
         this.stim_player = this.init_player("#stim", "stimulus");
         this.fb_player = this.init_player("#video_feedback", "feedback");
 
-        // Set appropriate backgrounds
+        // Set appropriate backgrounds for phase elements
         // TODO: prestim image should be the floor
         set_poster("#prestim", this.stimulus + "~stimulus~A");
         set_poster("#fall_response", this.stimulus + "~stimulus~B");
@@ -214,21 +231,22 @@ var TestPhase = function() {
         $("button.left-color").html(this.trialinfo.color0);
         $("button.right-color").html(this.trialinfo.color1);
 
-        // Possibly show image
+        // Possibly show image (if the trials are not mass trials,
+        // then we don't want to show the image).
         if (STATE.experiment_phase == EXPERIMENT.experiment) {
             $("#question-image").find("img").show();
         } else {
             $("#question-image").find("img").hide();
         }
 
-        // Determine which feedback to show
+        // Determine which feedback to show (stable or unstable)
         if (this.trialinfo.stable) {
             $("#stable-feedback").show();
         } else {
             $("#unstable-feedback").show();
         }
 
-        // Display the question
+        // Display the question prompt
         $("#fall-question").show();
 
         // Update progress bar
@@ -240,35 +258,49 @@ var TestPhase = function() {
         // Initialize the trial
         that.init_trial();
 
-        debug("show prestim");
+        // Actually show the prestim element
+        debug("Show PRESTIM");
         $("#prestim").show();
 
+        // Listen for a response to show the stimulus
         that.listening = true;
     };
 
     // Phase 2: show the stimulus
     this.phases[TRIAL.stim] = function (that) {
-        debug("show stimulus");
+        debug("Show STIMULUS");
+
+        // If the player isn't ready, then bind a ready handler to it.
         if (!that.stim_player.ready) {
             that.stim_player.bind("ready", function (e, api) {
                 api.play();
             });
         }
-        that.stim_player.play(0);
+
+        // Hide prestim and show stim
         replace("prestim", "stim");
+
+        // Start playing the stimulus video
+        that.stim_player.play(0);
     };
 
     // Phase 3: show the response options for "fall?" question
     this.phases[TRIAL.fall_response] = function (that) {
-        debug("show fall responses");
+        debug("Show FALL_RESPONSE");
+
+        // Hide stim and show fall_response
         replace("stim", "fall_response");
+
+        // Destroy the player
         if (that.stim_player) that.stim_player.unload();
+
+        // Listen for a response
         that.listening = true;
     };
 
     // Phase 4: show feedback
     this.phases[TRIAL.feedback] = function (that) {
-        debug("show feedback");
+        debug("Show FEEDBACK");
 
         var fb = that.trialinfo.feedback;
         var advance = function () {
@@ -277,71 +309,107 @@ var TestPhase = function() {
         };
 
         if (fb == "vfb") {
+            // If we're showing video feedback, we need to show the
+            // player and also display the text feedback.
+
             var play = function () {
+                // If the player isn't ready, bind a ready handler to
+                // it so it will start playing when it is ready
                 if (!that.fb_player.ready) {
                     that.fb_player.bind("ready", function (e, api) {
                         api.play();
                     });
                 }
+
+                // Show the player and hide the fall responses
                 $("#video_feedback").show();
                 $("#fall_response").hide();
+
+                // Play the video
                 that.fb_player.play(0);
             };
 
+            // Temporarily hide the text and video feedback
             $("#text_feedback").hide();
             $("#video_feedback").hide();
+
+            // Show the div containing the text and video feedback
             $("#feedback").show();
+
+            // Fade in the text feedback, then show the video
             $("#text_feedback").fadeIn($c.fade, play);
 
         } else if (fb == "fb") {
+            // If we're only showing text feedback, we don't need to
+            // bother with the video player.
             replace("fall_response", "feedback");
             setTimeout(advance, 2500);
 
-        } else { setTimeout(advance, 200); }
+        } else { 
+            // If we're showing no feedback, just move on to the next
+            // trial phase.
+            setTimeout(advance, 200); 
+        }
     };
 
     // Phase 5: show response options for "mass?" question
     this.phases[TRIAL.mass_response] = function (that) {
+        // We won't query for the mass on every trial, so check to see
+        // if this is a trial where we do.
         if (that.trialinfo["mass? query"]) {
-            debug("show mass responses");
+            debug("Show MASS_RESPONSE");
 
+            // Swap the fall? prompt for the mass? prompt
             $("#fall-question").hide();
             $("#mass-question").show();
 
-            replace("text_feedback", "mass_response");
+            // Fade out text_feedback and fade in mass_response
+            // TODO: did I mean to take this replace out???
+            //replace("text_feedback", "mass_response");
             $("#text_feedback").fadeOut(
                 $c.fade,
                 function () {
                     replace("feedback", "mass_response");
                 });
 
+            // Destroy the player
             if (that.fb_player) that.fb_player.unload();
+
+            // Listen for a response
             that.listening = true;
 
         } else {
+            // Destroy the player
             if (that.fb_player) that.fb_player.unload();
+
+            // Move on to the next trial
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
             that.show();
         }
     };
 
+    // Show the current trial at the currect phase
     this.show = function () {
+        // Update the URL hash
         STATE.set_hash();
-        debug("next (trial_phase=" + STATE.trial_phase + ")");
-
+        // Call the phase setup handler
         this.phases[STATE.trial_phase](this);
+        // Record when this phase started
         this.timestamp = new Date().getTime();
     };
 
+    // Record a response (this could be either just clicking "start",
+    // or actually a choice to the prompt(s))
     this.record_response = function(response) {
-        debug("in response handler");
+        // If we're not listening for a response, do nothing
         if (!this.listening) return;
-        
         this.listening = false;
 
-        // TODO: record response data for TestPhase
+        debug("Record response");
 
+        // TODO: record response data for TestPhase
+        // TODO: figure out which response we got a little more cleanly
         if (response == "left" || response == "right") {
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
@@ -349,19 +417,22 @@ var TestPhase = function() {
             STATE.set_trial_phase(STATE.trial_phase + 1);
         }
 
+        // Update the page with the current phase/trial
         this.show();
     };
 
+    // Complete the set of trials in the test phase
     this.finish = function() {
-        debug("finish test phase");
+        debug("Finish test phase");
 
-        $("button").click(function() {}); // Unbind buttons
-
+        // Reset the state object for the next experiment phase
         STATE.set_experiment_phase(STATE.experiment_phase + 1);
         STATE.set_instructions();
         STATE.set_index();
         STATE.set_trial_phase();
 
+        // If we're at the end of the experiment, show the
+        // questionnaire
         if (STATE.experiment_phase >= EXPERIMENT.length) {
             CURRENTVIEW = new Questionnaire();
         } else {
