@@ -232,6 +232,11 @@ var TestPhase = function() {
     // Phase 2: show the stimulus
     phases[TRIAL.stim] = function () {
         debug("show stimulus");
+        if (!stim_player.ready) {
+            stim_player.bind("ready", function (e, api) {
+                api.play();
+            });
+        }
         stim_player.play(0);
         replace("prestim", "stim");
     };
@@ -263,6 +268,11 @@ var TestPhase = function() {
             $("#text_feedback").fadeIn(
                 $c.fade,
                 function () {
+                    if (!fb_player.ready) {
+                        fb_player.bind("ready", function (e, api) {
+                            api.play();
+                        });
+                    }
                     $("#video_feedback").show();
                     $("#fall_response").hide();
                     fb_player.play(0);
