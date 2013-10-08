@@ -3,6 +3,8 @@ TODO: fix lighting for tall towers
 TODO: make towers rotate longer at the beginning of the trial
 TODO: pick appropriate training towers for version G
 TODO: pick appropriate example towers for version G
+TODO: fix bug with rendering wrong initial frames
+TODO: fix render bug with corrupt initial frame
 TODO: render floor images
 TODO: re-render stimuli movies
 
