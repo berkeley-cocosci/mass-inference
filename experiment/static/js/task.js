@@ -11,6 +11,7 @@
 // TODO: try to fix weird flickery behavior at the beginning of a trial
 // TODO: try to fix flickery behavior at the beginning of videos
 // TODO: you shouldn't be able to pause/unpause the videos by clicking on them
+// TODO: figure out why psiturk is forcing the debrief page
 
 // Initialize flowplayer
 var $f = flowplayer;

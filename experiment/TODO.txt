@@ -7,4 +7,9 @@ TODO: fix bug with rendering wrong initial frames
 TODO: fix render bug with corrupt initial frame
 TODO: render floor images
 TODO: re-render stimuli movies
-
+TODO: test all conditions of experiment
+TODO: test full experiment on chrome
+TODO: test full experiment on firefox
+TODO: make sure IE users are locked out
+TODO: set up experiment on the sandbox
+TODO: collect some pilot data in sandbox from labmates
