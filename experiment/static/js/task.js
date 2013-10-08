@@ -61,12 +61,23 @@ var Instructions = function() {
         // load the player
         if (examples[STATE.index]) {
             var video = examples[STATE.index] + "~stimulus";
-            player = Player("player", [video], true);
-            set_poster("#player.flowplayer", video + "~A");
-            player.bind("ready", function (e, api) {
+
+            // Start the video immediately
+            var on_ready = function (e, api) {
                 api.play();
-            });
-            player.play(0);
+            };
+            // Loop the player by restarting the current video
+            var on_finish = function (e, api) {
+                api.prev();
+            };
+
+            // Initialize the player and start it
+            player = make_player("#player",     // element 
+                                 [video],      // stimuli
+                                 video + "~A") // background image
+                .bind("ready", on_ready)
+                .bind("finish", on_finish)
+                .play(0);
         }
 
         // Record the time that an instructions page is presented
@@ -135,6 +146,22 @@ var TestPhase = function() {
     
     var phases = new Object();
 
+    var init_player = function (elem, name) {
+        var video = stimulus + "~" + name;
+        var on_finish = function (e, api) {
+            debug(name + " finished");
+            api.unbind("finish");
+
+            set_poster(elem + ".flowplayer", video + "~B");
+            $(elem).addClass("is-poster");
+
+            STATE.set_trial_phase(STATE.trial_phase + 1);
+            show();
+        };
+        return make_player(elem, [video], video + "~A")
+            .bind("finish", on_finish);
+    };
+
     var init_trial = function () {
         debug("initializing trial");
 
@@ -153,19 +180,14 @@ var TestPhase = function() {
         $('button').click(response_handler);
 
         // Initialize the video players
-        stim_player = Player("stim", [stimulus + "~stimulus"], false);
-        fb_player = Player("video_feedback", [stimulus + "~feedback"], false);
+        stim_player = init_player("#stim", "stimulus");
+        fb_player = init_player("#video_feedback", "feedback");
 
         // Set appropriate backgrounds
         // TODO: prestim image should be the floor
         set_poster("#prestim", stimulus + "~stimulus~A");
-        set_poster("#stim.flowplayer", stimulus + "~stimulus~A");
         set_poster("#fall_response", stimulus + "~stimulus~B");
-        set_poster("#video_feedback.flowplayer", stimulus + "~feedback~A");
         set_poster("#mass_response", stimulus + "~feedback~B");
-
-        $("#stim").addClass("is-poster");
-        $("#video_feedback").addClass("is-poster");
 
         // Set the stimulus colors
         $(".left-color").css("background-color", trialinfo.color0);
@@ -208,22 +230,7 @@ var TestPhase = function() {
     // Phase 2: show the stimulus
     phases[TRIAL.stim] = function () {
         debug("show stimulus");
-
-        var onfinish_stim = function (e, api) {
-            debug("stimulus finished");
-            api.unbind("finish");
-
-            set_poster("#stim.flowplayer", stimulus + "~stimulus~B");
-            $("#stim").addClass("is-poster");
-
-            STATE.set_trial_phase(STATE.trial_phase + 1);
-            show();
-        };
-
-        stim_player
-            .bind("finish", onfinish_stim)
-            .play(0);
-
+        stim_player.play(0);
         show_and_hide("stim", "prestim");
     };
 
@@ -242,20 +249,9 @@ var TestPhase = function() {
         debug("show feedback");
 
         var fb = trialinfo.feedback;
-
         var advance = function () {
             STATE.set_trial_phase(STATE.trial_phase + 1);
             show();
-        };
-            
-        var onfinish_feedback = function (e, api) {
-            debug("done showing feedback");
-            api.unbind("finish");
-
-            set_poster("#video_feedback.flowplayer", stimulus + "~feedback~B");
-            $("#video_feedback").addClass("is-poster");
-
-            advance();
         };
 
         if (fb == "vfb") {
@@ -267,9 +263,7 @@ var TestPhase = function() {
                 function () {
                     $("#video_feedback").show();
                     $("#fall_response").hide();
-                    fb_player
-                        .bind("finish", onfinish_feedback)
-                        .play(0);
+                    fb_player.play(0);
                 });
 
         } else if (fb == "fb") {

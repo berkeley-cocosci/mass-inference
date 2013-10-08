@@ -1,40 +1,5 @@
 // TODO: document this file
 // TODO: document State object
-// TODO: should Player be an object or just a function...?
-
-var Player = function(elem, stims, loop) {
-    var get_video_formats = function (stim) {
-        var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
-        var formats = [
-            { webm: prefix + ".webm" },
-            { mp4: prefix + ".mp4" },
-            { ogg: prefix + ".ogg" }
-        ];
-        return formats;
-    };
-
-    var p = $f($("#" + elem).flowplayer({
-        debug: $c.debug,
-        fullscreen: false,
-        keyboard: false,
-        muted: true,
-        ratio: 0.75,
-        splash: false,
-        tooltip: false,
-        playlist: stims.map(get_video_formats),
-        advance: false,
-        loop: false,
-        embed: false
-    }));
-
-    if (loop) {
-        p.bind("finish", function (e, api) {
-            api.prev();
-        });
-    }
-
-    return p;
-}
 
 var State = function (experiment_phase, instructions, index, trial_phase) {
 
@@ -178,4 +143,36 @@ function show_and_hide(elem1, elem2) {
     $("#" + elem1).fadeIn($c.fade, function () {
         $("#" + elem2).hide();
     });
+}
+
+var make_player = function(elem, stims, poster) {
+    var get_video_formats = function (stim) {
+        var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
+        var formats = [
+            { webm: prefix + ".webm" },
+            { mp4: prefix + ".mp4" },
+            { ogg: prefix + ".ogg" }
+        ];
+        return formats;
+    };
+
+    var p = $f($(elem).flowplayer({
+        debug: $c.debug,
+        fullscreen: false,
+        keyboard: false,
+        muted: true,
+        ratio: 0.75,
+        splash: false,
+        tooltip: false,
+        playlist: stims.map(get_video_formats),
+        advance: false,
+        loop: false,
+        embed: false
+    }));
+
+    if (poster) {
+        set_poster(elem + ".flowplayer", poster);
+    }
+
+    return p;
 }
