@@ -1,4 +1,3 @@
-// TODO: make the config be a real Config object
 // TODO: document this file
 // TODO: document update_config function
 // TODO: document load_config function
@@ -20,67 +19,92 @@ var TRIAL = Object.freeze({
     length: 5
 });
 
-// Load experiment configuration
-var $c = {
-    condition: null,
-    debug: true,
-    fade: 200,
-    trials: new Object(),
-    instructions: new Object()
-};
+// Experiment configuration object
+var Config = function (condition, counterbalance) {
 
-var update_config = function (data, callback) {
-    debug("Got JSON configuration");
-    
-    $c.trials[EXPERIMENT.pretest] = data["pretest"];
-    $c.trials[EXPERIMENT.experiment] = data["experiment"]; 
-    $c.trials[EXPERIMENT.posttest] = data["posttest"];
+    // These are numeric codes representing the condition and whether
+    // the trials are counterbalanced
+    this.cond_code = condition;
+    this.cb_code = counterbalance;
 
-    $c.instructions[EXPERIMENT.pretest] = {
-        pages: [
-            "instructions1a.html",
-            "instructions1b.html",
-            "instructions1c.html"
-        ],
-        
-        examples: [
-            data.unstable_example.stimulus,
-            data.stable_example.stimulus,
-            null
-        ]
+    // string to hold the human-readable condition name
+    this.condition = null;
+    // whether debug information should be printed out
+    this.debug = true;
+    // the amount of time to fade HTML elements in/out
+    this.fade = 200;
+    // list of trial information object for each experiment phase
+    this.trials = new Object();
+    // lists of pages and examples for each instruction page
+    this.instructions = new Object();
+
+    // We know the list of pages we want to display a priori
+    this.instructions[EXPERIMENT.pretest] = {
+        pages: ["instructions1a.html",
+                "instructions1b.html",
+                "instructions1c.html"]
     };
-    
-    $c.instructions[EXPERIMENT.experiment] = {
-        pages: ["instructions2.html"],
-        examples: [data.mass_example.stimulus]
+    this.instructions[EXPERIMENT.experiment] = {
+        pages: ["instructions2.html"]
     };
-
-    $c.instructions[EXPERIMENT.posttest] = {
+    this.instructions[EXPERIMENT.posttest] = {
         pages: ["instructions3.html"],
         examples: [null]
     };
 
-    callback();
-};
+    // Parse the JSON object that we've requested and load it into the
+    // configuration
+    this.parse_config = function (data) {
+        this.trials[EXPERIMENT.pretest] = data["pretest"];
+        this.trials[EXPERIMENT.experiment] = data["experiment"]; 
+        this.trials[EXPERIMENT.posttest] = data["posttest"];
 
+        this.instructions[EXPERIMENT.pretest].examples = [
+            data.unstable_example.stimulus,
+            data.stable_example.stimulus,
+            null
+        ];
+        
+        this.instructions[EXPERIMENT.experiment].examples = [
+            data.mass_example.stimulus
+        ];
+    };
 
-var load_config = function(callback) {
-    var get_condition = function (conditions) {
-        debug("Got list of conditions");
-        $c.condition = conditions[condition] + "-cb" + counterbalance;
+    // Load the condition name from the server
+    this.load_condition = function () {
+        var that = this;
         $.ajax({
             dataType: "json",
-            url: "/static/json/" + $c.condition + ".json",
+            url: "/static/json/conditions.json",
             async: false,
-            success: function (data) { update_config(data, callback); }
+            success: function (data) {
+                if (that.debug) {
+                    console.log("Got list of conditions");
+                }
+                that.condition = data[that.cond_code] + 
+                    "-cb" + that.cb_code;
+            }
         });
     };
-        
-    $.ajax({
-        dataType: "json",
-        url: "/static/json/conditions.json",
-        async: false,
-        success: get_condition
-    });
-};
 
+    // Load the experiment configuration from the server
+    this.load_config = function () {
+        var that = this;
+        $.ajax({
+            dataType: "json",
+            url: "/static/json/" + this.condition + ".json",
+            async: false,
+            success: function (data) { 
+                if (that.debug) {
+                    console.log("Got configuration data");
+                }
+                that.parse_config(data);
+            }
+        });
+    };
+
+    // Request from the server configuration information for this run
+    // of the experiment
+    this.load_condition();
+    this.load_config();
+};

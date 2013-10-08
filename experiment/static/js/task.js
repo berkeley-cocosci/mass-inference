@@ -25,6 +25,9 @@ if ($f.support.firstframe) {
 // Initalize psiturk object
 var psiTurk = new PsiTurk();
 
+// Create and initialize the experiment configuration object
+$c = new Config(condition, counterbalance);
+
 // Objects to keep track of the current phase and state
 var CURRENTVIEW;
 var STATE;
@@ -437,26 +440,22 @@ var debriefing = function() {
  ******************/
 
 $(document).ready(function() { 
-    load_config(
-        function () {
-            // All pages to be loaded
-            // TODO: should preloading pages start happening before document.ready?
-            var pages = $.map($c.instructions, 
-                  function(item) { 
-                      return item.pages 
-                  });
-            pages.push("test.html");
-            pages.push("postquestionnaire.html");
-            psiTurk.preloadPages(pages);
+    // All pages to be loaded
+    // TODO: should preloading pages start happening before document.ready?
+    var pages = $.map($c.instructions, 
+                      function(item) { 
+                          return item.pages 
+                      });
+    pages.push("test.html");
+    pages.push("postquestionnaire.html");
+    psiTurk.preloadPages(pages);
 
-            // Start the experiment
-            STATE = new State();
-            STATE.load_hash();
-            if (STATE.instructions) {
-                CURRENTVIEW = new Instructions();
-            } else {
-                CURRENTVIEW = new TestPhase();
-            }
-        }
-    );
+    // Start the experiment
+    STATE = new State();
+    STATE.load_hash();
+    if (STATE.instructions) {
+        CURRENTVIEW = new Instructions();
+    } else {
+        CURRENTVIEW = new TestPhase();
+    }
 });
