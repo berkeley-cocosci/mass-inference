@@ -9,7 +9,6 @@
  */
 
 // TODO: document TestPhase class
-// TODO: fix scoping in TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
 
 // Initialize flowplayer
@@ -107,9 +106,7 @@ var Instructions = function() {
         psiTurk.recordTrialData(["$c.instructions", STATE.index, rt]);
 
          // Destroy the video player
-        if (this.player) {
-            this.player.unload();
-        }
+        if (this.player) this.player.unload();
 
         // Go to the next page of instructions, or complete these
         // instructions if there are no more pages
@@ -151,22 +148,22 @@ var Instructions = function() {
 
 var TestPhase = function() {
 
-    debug("initialize test phase");
+    // When the time response period begins
+    this.timestamp; 
+    this.listening = false;
 
-    var starttime; // time response period begins
-    var listening = false;
+    this.stim_player;
+    this.fb_player;
 
-    var stim_player;
-    var fb_player;
-
-    var trials = $c.trials[STATE.experiment_phase];
-    var stimulus;
-    var trialinfo;
+    this.trials = $c.trials[STATE.experiment_phase];
+    this.stimulus;
+    this.trialinfo;
     
-    var phases = new Object();
+    this.phases = new Object();
 
-    var init_player = function (elem, name) {
-        var video = stimulus + "~" + name;
+    this.init_player = function (elem, name) {
+        var that = this;
+        var video = this.stimulus + "~" + name;
         var on_finish = function (e, api) {
             debug(name + " finished");
             api.unbind("finish");
@@ -175,44 +172,47 @@ var TestPhase = function() {
             $(elem).addClass("is-poster");
 
             STATE.set_trial_phase(STATE.trial_phase + 1);
-            show();
+            that.show();
         };
         return make_player(elem, [video], video + "~A")
             .bind("finish", on_finish);
     };
 
-    var init_trial = function () {
+    this.init_trial = function () {
         debug("initializing trial");
 
-        if (STATE.index >= trials.length) {
-            return finish();
+        if (STATE.index >= this.trials.length) {
+            return this.finish();
         }
         
-        trialinfo = trials[STATE.index];
-        stimulus = trialinfo.stimulus;
+        this.trialinfo = this.trials[STATE.index];
+        this.stimulus = this.trialinfo.stimulus;
 
         // Load the test.html snippet into the body of the page
         psiTurk.showPage('test.html');
 
         // register the response handler that is defined above to handle
         // responses
-        $('button').click(response_handler);
+        var that = this;
+        $('button').click(function () {
+            that.record_response(this.value);
+        });
 
         // Initialize the video players
-        stim_player = init_player("#stim", "stimulus");
-        fb_player = init_player("#video_feedback", "feedback");
+        this.stim_player = this.init_player("#stim", "stimulus");
+        this.fb_player = this.init_player("#video_feedback", "feedback");
 
         // Set appropriate backgrounds
         // TODO: prestim image should be the floor
-        set_poster("#prestim", stimulus + "~stimulus~A");
-        set_poster("#fall_response", stimulus + "~stimulus~B");
-        set_poster("#mass_response", stimulus + "~feedback~B");
+        set_poster("#prestim", this.stimulus + "~stimulus~A");
+        set_poster("#fall_response", this.stimulus + "~stimulus~B");
+        set_poster("#mass_response", this.stimulus + "~feedback~B");
 
         // Set the stimulus colors
-        $(".left-color").css("background-color", trialinfo.color0);
-        $(".right-color").css("background-color", trialinfo.color1);
-        $("button.left-color").html(trialinfo.color0);
-        $("button.right-color").html(trialinfo.color1);
+        $(".left-color").css("background-color", this.trialinfo.color0);
+        $(".right-color").css("background-color", this.trialinfo.color1);
+        $("button.left-color").html(this.trialinfo.color0);
+        $("button.right-color").html(this.trialinfo.color1);
 
         // Possibly show image
         if (STATE.experiment_phase == EXPERIMENT.experiment) {
@@ -222,7 +222,7 @@ var TestPhase = function() {
         }
 
         // Determine which feedback to show
-        if (trialinfo.stable) {
+        if (this.trialinfo.stable) {
             $("#stable-feedback").show();
         } else {
             $("#unstable-feedback").show();
@@ -232,81 +232,77 @@ var TestPhase = function() {
         $("#fall-question").show();
 
         // Update progress bar
-        update_progress(STATE.index, trials.length);
+        update_progress(STATE.index, this.trials.length);
     };
 
     // Phase 1: show the floor and "start" button
-    phases[TRIAL.prestim] = function() {
+    this.phases[TRIAL.prestim] = function(that) {
         // Initialize the trial
-        init_trial();
+        that.init_trial();
 
         debug("show prestim");
         $("#prestim").show();
 
-        listening = true;
+        that.listening = true;
     };
 
     // Phase 2: show the stimulus
-    phases[TRIAL.stim] = function () {
+    this.phases[TRIAL.stim] = function (that) {
         debug("show stimulus");
-        if (!stim_player.ready) {
-            stim_player.bind("ready", function (e, api) {
+        if (!that.stim_player.ready) {
+            that.stim_player.bind("ready", function (e, api) {
                 api.play();
             });
         }
-        stim_player.play(0);
+        that.stim_player.play(0);
         replace("prestim", "stim");
     };
 
     // Phase 3: show the response options for "fall?" question
-    phases[TRIAL.fall_response] = function () {
+    this.phases[TRIAL.fall_response] = function (that) {
         debug("show fall responses");
         replace("stim", "fall_response");
-        if (stim_player) {
-            stim_player.unload();
-        }
-        listening = true;
+        if (that.stim_player) that.stim_player.unload();
+        that.listening = true;
     };
 
     // Phase 4: show feedback
-    phases[TRIAL.feedback] = function () {
+    this.phases[TRIAL.feedback] = function (that) {
         debug("show feedback");
 
-        var fb = trialinfo.feedback;
+        var fb = that.trialinfo.feedback;
         var advance = function () {
             STATE.set_trial_phase(STATE.trial_phase + 1);
-            show();
+            that.show();
         };
 
         if (fb == "vfb") {
+            var play = function () {
+                if (!that.fb_player.ready) {
+                    that.fb_player.bind("ready", function (e, api) {
+                        api.play();
+                    });
+                }
+                $("#video_feedback").show();
+                $("#fall_response").hide();
+                that.fb_player.play(0);
+            };
+
             $("#text_feedback").hide();
             $("#video_feedback").hide();
             $("#feedback").show();
-            $("#text_feedback").fadeIn(
-                $c.fade,
-                function () {
-                    if (!fb_player.ready) {
-                        fb_player.bind("ready", function (e, api) {
-                            api.play();
-                        });
-                    }
-                    $("#video_feedback").show();
-                    $("#fall_response").hide();
-                    fb_player.play(0);
-                });
+            $("#text_feedback").fadeIn($c.fade, play);
 
         } else if (fb == "fb") {
             replace("fall_response", "feedback");
             setTimeout(advance, 2500);
 
-        } else {
-            setTimeout(advance, 200);
-        }
+        } else { setTimeout(advance, 200); }
     };
 
     // Phase 5: show response options for "mass?" question
-    phases[TRIAL.mass_response] = function () {
-        if (trialinfo["mass? query"]) {
+    this.phases[TRIAL.mass_response] = function (that) {
+        if (that.trialinfo["mass? query"]) {
             debug("show mass responses");
 
             $("#fall-question").hide();
@@ -319,37 +315,30 @@ var TestPhase = function() {
                     replace("feedback", "mass_response");
                 });
 
-            if (fb_player) {
-                fb_player.unload();
-            }
-
-            listening = true;
+            if (that.fb_player) that.fb_player.unload();
+            that.listening = true;
 
         } else {
-            if (fb_player) {
-                fb_player.unload();
-            }
-
+            if (that.fb_player) that.fb_player.unload();
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
-            show();
+            that.show();
         }
     };
 
-    var show = function () {
+    this.show = function () {
         STATE.set_hash();
         debug("next (trial_phase=" + STATE.trial_phase + ")");
 
-        phases[STATE.trial_phase]();
-        starttime = new Date().getTime();
+        this.phases[STATE.trial_phase](this);
+        this.timestamp = new Date().getTime();
     };
 
-    var response_handler = function(e) {
+    this.record_response = function(response) {
         debug("in response handler");
-        if (!listening) return;
+        if (!this.listening) return;
         
-        var response = this.value;
-        listening = false;
+        this.listening = false;
 
         // TODO: record response data for TestPhase
 
@@ -360,10 +349,10 @@ var TestPhase = function() {
             STATE.set_trial_phase(STATE.trial_phase + 1);
         }
 
-        show();
+        this.show();
     };
 
-    var finish = function() {
+    this.finish = function() {
         debug("finish test phase");
 
         $("button").click(function() {}); // Unbind buttons
@@ -383,10 +372,10 @@ var TestPhase = function() {
     // Initialize the current trial -- we need to do this here in
     // addition to in prestim in case someone refreshes the page in
     // the middle of a trial
-    init_trial();
+    this.init_trial();
 
     // Start the test
-    show();
+    this.show();
 };
 
 
