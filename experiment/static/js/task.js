@@ -8,6 +8,7 @@
 // TODO: document Instructions class
 // TODO: document TestPhase class
 // TODO: refactor Questionnaire (or remove it?)
+// TODO: fix bug when page is refreshed on TRIAL.stim or TRIAL.feedback
 
 // Initialize flowplayer
 var $f = flowplayer;
