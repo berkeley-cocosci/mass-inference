@@ -93,23 +93,16 @@ span.consent {
 /* Flow player                                                      */
 /********************************************************************/
 
-/* .fp-controls { display: none; } */
-/* .fp-embed { display: none; } */
-/* .fp-time { display: none; } */
-/* .fp-help { display: none; } */
-
 /* /\* don't show the player ui when the player is ready *\/ */
 .is-splash.flowplayer .fp-ui, .is-paused.flowplayer .fp-ui { background: none; }
-/* .is-splash.flowplayer .fp-ui,.is-paused.flowplayer .fp-ui { display: none; } */
-/* #player.is-finished .fp-ui,#player.is-finished .fp-engine { display: none; } */
 
 .flowplayer {
     background-size: cover !important;
 }
 
-.flowplayer.is-seeking .fp-waiting { 
-    display: none; 
-}
+/* .flowplayer.is-seeking .fp-waiting {  */
+/*     display: none;  */
+/* } */
 
 /********************************************************************/
 /* Instructions slide components                                    */
@@ -399,19 +392,17 @@ div.scalepart img {
 /* Finished slide components                                        */
 /********************************************************************/
 
-#code-container {
-    margin-top: .625em;
-    margin-bottom: .625em;
+#submit_error_slide {
+    display: none;
 }
 
-#code {
-    background-color: #FEA;
-    text-align: center;
-    width: 55%;
-    padding: .5em;
-    border: 1px solid black;
-    margin: 0px auto;
+#resubmit_slide {
+    display: none;
 }
+
+/********************************************************************/
+/* Error                                                            */
+/********************************************************************/
 
 #error-message {
     background-color: #FEA;

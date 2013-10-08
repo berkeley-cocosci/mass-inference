@@ -60,7 +60,8 @@ var Config = function (condition, counterbalance) {
 
     // The list of all the HTML pages that need to be loaded
     this.pages = [
-        "test.html", 
+        "trial.html", 
+        "submit.html"
     ].concat(
         $.map(this.instructions, 
               function(item) { 

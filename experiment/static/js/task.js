@@ -8,7 +8,6 @@
  *   utils.js
  */
 
-// TODO: refactor Questionnaire (or remove it?)
 // TODO: try to fix weird flickery behavior at the beginning of a trial
 // TODO: try to fix flickery behavior at the beginning of videos
 // TODO: you shouldn't be able to pause/unpause the videos by clicking on them
@@ -167,7 +166,7 @@ var TestPhase = function() {
     this.fb_player;
 
     // List of trials in this block of the experiment
-    this.trials = $c.trials[STATE.experiment_phase];
+    this.trials = $c.trials[STATE.experiment_phase].slice(0, 1);
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
@@ -212,8 +211,8 @@ var TestPhase = function() {
         this.trialinfo = this.trials[STATE.index];
         this.stimulus = this.trialinfo.stimulus;
 
-        // Load the test.html snippet into the body of the page
-        psiTurk.showPage('test.html');
+        // Load the trial.html snippet into the body of the page
+        psiTurk.showPage('trial.html');
 
         // Register the response handler to record responses
         var that = this;
@@ -462,10 +461,50 @@ var TestPhase = function() {
         STATE.set_index();
         STATE.set_trial_phase();
 
-        // If we're at the end of the experiment, show the
-        // questionnaire
+        // If we're at the end of the experiment, submit the data to
+        // mechanical turk, otherwise go on to the next experiment
+        // phase and show the relevant instructions
         if (STATE.experiment_phase >= EXPERIMENT.length) {
-            CURRENTVIEW = new Questionnaire();
+
+            // Send them to the debriefing form, but delay a bit, so
+            // they know what's happening
+            var debrief = function() {
+                setTimeout(function () {
+                    window.location = "/debrief?uniqueId=" + psiTurk.taskdata.id;
+                }, 2000);
+            };
+
+            // Prompt them to resubmit the HIT, because it failed the first time
+            var prompt_resubmit = function() {
+                $("#resubmit_slide").click(resubmit);
+                $(".slide").hide();
+                $("#submit_error_slide").show();
+            };
+
+            // Show a page saying that the HIT is resubmitting, and
+            // show the error page again if it times out or error
+            var resubmit = function() {
+                $(".slide").hide();
+                $("#resubmit_slide").show();
+
+                var reprompt = setTimeout(prompt_resubmit, 10000);
+                psiTurk.saveData({
+                    success: function() {
+                        clearInterval(reprompt); 
+                        finish();
+                    }, 
+                    error: prompt_resubmit
+                });
+            };
+
+            // Render a page saying it's submitting
+            psiTurk.showPage("submit.html")
+            psiTurk.teardownTask();
+            psiTurk.saveData({
+                success: debrief, 
+                error: prompt_resubmit
+            });
+
         } else {
             CURRENTVIEW = new Instructions();
         }
@@ -478,68 +517,6 @@ var TestPhase = function() {
 
     // Start the test
     this.show();
-};
-
-
-/****************
- * Questionnaire *
- ****************/
-
-var Questionnaire = function() {
-
-    var error_message = "<h1>Oops!</h1><p>Something went wrong submitting your HIT. This might happen if you lose your internet connection. Press the button to resubmit.</p><button id='resubmit'>Resubmit</button>";
-
-    record_responses = function() {
-
-        // TODO: fix recording of Questionniare data
-        psiTurk.recordTrialData(['postquestionnaire', 'submit']);
-
-        $('textarea').each( function(i, val) {
-            psiTurk.recordUnstructuredData(this.id, this.value);
-        });
-        $('select').each( function(i, val) {
-            psiTurk.recordUnstructuredData(this.id, this.value);                
-        });
-
-    };
-    
-    finish = function() {
-        debriefing();
-    };
-    
-    prompt_resubmit = function() {
-        replaceBody(error_message);
-        $("#resubmit").click(resubmit);
-    };
-
-    resubmit = function() {
-        replaceBody("<h1>Trying to resubmit...</h1>");
-        reprompt = setTimeout(prompt_resubmit, 10000);
-        
-        psiTurk.saveData({
-            success: function() {
-                clearInterval(reprompt); 
-                finish();
-            }, 
-            error: prompt_resubmit}
-                        );
-    };
-
-    // Load the questionnaire snippet 
-    psiTurk.showPage('postquestionnaire.html');
-    psiTurk.recordTrialData(['postquestionnaire', 'begin']);
-    
-    $("#continue").click(function () {
-        record_responses();
-        psiTurk.teardownTask();
-            psiTurk.saveData({success: finish, error: prompt_resubmit});
-    });
-    
-};
-
-
-var debriefing = function() { 
-    window.location="/debrief?uniqueId=" + psiTurk.taskdata.id; 
 };
 
 
