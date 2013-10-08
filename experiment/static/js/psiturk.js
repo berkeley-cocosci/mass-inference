@@ -5,8 +5,6 @@
  *     underscore
  */
 
-// TODO: fix scoping bug with "that = this"
-
 
 /****************
  * Internals    *
@@ -139,54 +137,57 @@ var TaskData = Backbone.Model.extend({
  * API *
  ******/
 var PsiTurk = function() {
-    that = this;
-
-    var taskdata = new TaskData();
-    taskdata.fetch({async: false});
     
     /*  DATA: */
+    this.taskdata = new TaskData();
+    this.taskdata.fetch({async: false});
     this.pages = {};
-    this.taskdata = taskdata;
     
     /*  METHODS: */
+
+    // Preload images
     this.preloadImages = function(imagenames) {
 	$(imagenames).each(function() {
 	    image = new Image();
 	    image.src = this;
 	});
     };
-    
+
+    // Preload pages
     this.preloadPages = function(pagenames) {
+        var that = this;
 	// Synchronously preload pages.
 	$(pagenames).each(function() {
 	    $.ajax({
 		url: this,
-		success: function(page_html) { that.pages[this.url] = page_html;},
+		success: function(page_html) { 
+                    that.pages[this.url] = page_html;
+                },
 		dataType: "html",
 		async: false
 	    });
 	});
     };
-    // Get HTML file from collection and pass on to a callback
+
+    // Get HTML file from collection
     this.getPage = function(pagename) {
-	return that.pages[pagename];
+	return this.pages[pagename];
     };
-    
     
     // Add a line of data with any number of columns
     this.recordTrialData = function(trialdata) {
-	taskdata.addTrialData(trialdata);
+	this.taskdata.addTrialData(trialdata);
     };
     
     // Add data value for a named column. If a value already
     // exists for that column, it will be overwritten
     this.recordUnstructuredData = function(field, value) {
-	taskdata.addUnstructuredData(field, value);
+	this.taskdata.addUnstructuredData(field, value);
     };
     
     // Save data to server
     this.saveData = function(callbacks) {
-	taskdata.save(undefined, callbacks);
+	this.taskdata.save(undefined, callbacks);
     };
     
     // Notify app that participant has begun main experiment
@@ -198,5 +199,4 @@ var PsiTurk = function() {
 	Backbone.Notifications.trigger('_psiturk_finishedtask', optmessage);
     };
     this.showPage = _.compose(replaceBody, this.getPage);
-    return this;
 };
