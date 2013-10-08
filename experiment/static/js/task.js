@@ -106,9 +106,10 @@ var Instructions = function() {
 
         // Record the data. The format is: 
         // experiment phase, instructions, index, trial_phase, response time
-        var data = STATE.as_data().concat(["", rt]);
-        psiTurk.recordTrialData(data);
-        debug(data);
+        var data = new DataRecord();
+        data.update({response: "", response_time: rt});
+        psiTurk.recordTrialData(data.to_array());
+        debug(data.to_array());
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -410,34 +411,34 @@ var TestPhase = function() {
         this.listening = false;
 
         var rt = (new Date().getTime()) - this.timestamp;
-        var data;
-        var record;
+        var data = new DataRecord();
+        data.update(this.trialinfo);
+        data.update({response_time: rt});
 
         debug("Record response");
 
         // Parse the actual value of the data to record
         if (name == "play") {
             // Not a real response, so just save an empty string
-            data = "";
+            data.update({response: ""});
 
         } else if (name == "fall") {
             // We want a true/false boolean value
-            data = Boolean(value);
+            data.update({response: Boolean(value)});
 
         } else if (name == "mass") {
             // Left/right refers to different colors
             // TODO: handle counterbalancing appropriately
             if (value == "left") {
-                data = this.trialinfo.color0;
+                data.update({response: this.trialinfo.color0});
             } else if (value == "right") {
-                data = this.trialinfo.color1;
+                data.update({response: this.trialinfo.color1});
             }
         }
 
         // Create the record we want to save
-        record = STATE.as_data().concat([data, rt]);
-        psiTurk.recordTrialData(record);
-        debug(record);
+        psiTurk.recordTrialData(data.to_array());
+        debug(data.to_array());
 
         // Tell the state to go to the next trial phase or trial
         if (name == "mass") {

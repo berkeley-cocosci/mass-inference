@@ -146,6 +146,31 @@ var State = function () {
     this.load_hash();
 };
 
+// Object to properly format rows of data
+var DataRecord = function () {
+    this.update = function (other) {
+        _.extend(this, other);
+    };
+
+    this.to_array = function () {
+        return STATE.as_data().concat([
+            this.feedback,
+            this.ratio,
+            this.counterbalance,
+            this.trial,
+            this.stimulus,
+            this.response,
+            this.response_time,
+            this.angle,
+            this.color0,
+            this.color1,
+            this.feedback_time,
+            this.presentation_time,
+            this.stable
+        ]);
+    };
+};
+
 // Log a message to the console, if debug mode is turned on.
 function debug(msg) {
     if ($c.debug) {
