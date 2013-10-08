@@ -99,12 +99,15 @@ var Instructions = function() {
     // Handler for when the "next" button is pressed
     this.record_response = function() {
 
-        // Record the response time
+        // Calculate the response time
         var rt = (new Date().getTime()) - this.timestamp;
         debug("'Next' button pressed");
 
-        // TODO: review recording of Instructions data
-        psiTurk.recordTrialData(["$c.instructions", STATE.index, rt]);
+        // Record the data. The format is: 
+        // experiment phase, instructions, index, trial_phase, response time
+        var data = STATE.as_data().concat([rt]);
+        psiTurk.recordTrialData(data);
+        debug(data);
 
          // Destroy the video player
         if (this.player) this.player.unload();

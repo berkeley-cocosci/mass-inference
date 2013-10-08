@@ -110,6 +110,38 @@ var State = function () {
         }
     };
 
+    // Return a list of the state's properties in human-readable form,
+    // to be recorded as data in the database
+    this.as_data = function () {
+        var experiment_phase;
+        var instructions = Boolean(this.instructions);
+        var index = this.index;
+        var trial_phase;
+        
+        // Find the name of the experiment phase
+        for (item in EXPERIMENT) {
+            if (EXPERIMENT[item] == this.experiment_phase) {
+                experiment_phase = item;
+                break;
+            }
+        }
+
+        // Find the name of the trial phase (or just use
+        // "instructions" if instructions is true)
+        if (!instructions) {
+            for (item in TRIAL) {
+                if (TRIAL[item] == this.trial_phase) {
+                    trial_phase = item;
+                    break
+                }
+            }
+        } else {
+            trial_phase = "instructions";
+        }
+
+        return [experiment_phase, instructions, index, trial_phase];
+    };
+
     // Initialize the State object components
     this.load_hash();
 };
