@@ -100,7 +100,7 @@ var Instructions = function() {
         // Record that the user has finished the instructions and 
         // moved on to the experiment. This changes their status code
         // in the database.
-        // if (state.experiment_phase == EXPERIMENT.pretest) {
+        // if (STATE.experiment_phase == EXPERIMENT.pretest) {
         //     psiTurk.finishInstructions();
         // }
 
@@ -415,7 +415,9 @@ var Questionnaire = function() {
 };
 
 
-var debriefing = function() { window.location="/debrief?uniqueId=" + psiTurk.taskdata.id; };
+var debriefing = function() { 
+    window.location="/debrief?uniqueId=" + psiTurk.taskdata.id; 
+};
 
 
 // --------------------------------------------------------------------
