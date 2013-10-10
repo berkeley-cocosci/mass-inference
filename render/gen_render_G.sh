@@ -96,13 +96,13 @@ makedir "$OUTDIR/vfb-0.1-cb1"
 ## Shared stimuli ##
 #################### 
 
-gen_render_config -o "$OUTDIR/shared/stable_example.csv" --full "$SSODIR/stability-example-stable-F/*"
+gen_render_config -o "$OUTDIR/shared/stable_example.csv" --full "$SSODIR/mass-inference-stable-example-G/*"
 render_movies -c "$OUTDIR/shared/stable_example.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/unstable_example.csv" --full "$SSODIR/stability-example-unstable-F/*"
+gen_render_config -o "$OUTDIR/shared/unstable_example.csv" --full "$SSODIR/mass-inference-unstable-example-G/*"
 render_movies -c "$OUTDIR/shared/unstable_example.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/pretest.csv" "$SSODIR/mass-oneshot-training-F/*"
+gen_render_config -o "$OUTDIR/shared/pretest.csv" "$SSODIR/mass-inference-training-G/*"
 cp "$OUTDIR/shared/pretest.csv" "$OUTDIR/shared/posttest.csv"
 render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 
@@ -111,10 +111,10 @@ render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 ## Mass examples ##
 ###################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/mass_example.csv" --kappa 1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/mass_example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass_example.csv" --kappa -1.0 "$SSODIR/mass-oneshot-example-F/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass_example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-oneshot-example-F/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb0/mass_example.csv" --kappa 1.0 "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb1/mass_example.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb0/mass_example.csv" --kappa -1.0 "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb1/mass_example.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-example-G/*"
 
 render_movies -c "$OUTDIR/vfb-10-cb0/mass_example.csv" -d "$OUTDIR/vfb-10-cb0"
 render_movies -c "$OUTDIR/vfb-10-cb1/mass_example.csv" -d "$OUTDIR/vfb-10-cb1"
@@ -126,10 +126,10 @@ render_movies -c "$OUTDIR/vfb-0.1-cb1/mass_example.csv" -d "$OUTDIR/vfb-0.1-cb1"
 ## Experiment ##
 ################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --kappa 1.0 "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --kappa -1.0 "$SSODIR/mass-inference/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-inference/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --kappa 1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --kappa -1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
 
 render_movies -c "$OUTDIR/vfb-10-cb0/experiment.csv" -d "$OUTDIR/vfb-10-cb0"
 render_movies -c "$OUTDIR/vfb-10-cb1/experiment.csv" -d "$OUTDIR/vfb-10-cb1"
