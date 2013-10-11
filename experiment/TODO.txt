@@ -1,3 +1,5 @@
+TODO: use fewer towers (maybe 20?)
+TODO: pick informative mass example
 TODO: figure out what the experiment structure should be & document it
 TODO: re-render stimuli movies
 TODO: test all conditions of experiment
