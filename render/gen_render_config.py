@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 
-def gen_angles(n):
-    angles = np.random.randint(0, 360, n)
+def gen_angles(n, rso):
+    angles = rso.randint(0, 360, n)
     return angles
 
 
@@ -54,6 +54,10 @@ def parseargs():
         action="store", dest="color1", type=str, default=None,
         help="color of type 1 blocks")
     parser.add_argument(
+        "--seed",
+        action="store", dest="seed", type=int, default=120938,
+        help="seed for random number generator")
+    parser.add_argument(
         "--flip-colors",
         action="store_true", dest="flip", default=False,
         help="swap block colors")
@@ -87,7 +91,7 @@ def parseargs():
         'occlude': [args.occlude]*N,
         'presentation_time': [args.ptime]*N,
         'feedback_time': [args.ftime]*N,
-        'angle': gen_angles(N),
+        'angle': gen_angles(N, np.random.RandomState(args.seed)),
         'full_render': [args.full_render]*N,
         'color0': [args.color0]*N,
         'color1': [args.color1]*N,

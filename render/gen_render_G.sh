@@ -96,13 +96,13 @@ makedir "$OUTDIR/vfb-0.1-cb1"
 ## Shared stimuli ##
 #################### 
 
-gen_render_config -o "$OUTDIR/shared/stable_example.csv" --full "$SSODIR/mass-inference-stable-example-G/*"
+gen_render_config -o "$OUTDIR/shared/stable_example.csv" --seed 10239 --full "$SSODIR/mass-inference-stable-example-G/*"
 render_movies -c "$OUTDIR/shared/stable_example.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/unstable_example.csv" --full "$SSODIR/mass-inference-unstable-example-G/*"
+gen_render_config -o "$OUTDIR/shared/unstable_example.csv" --seed 10240 --full "$SSODIR/mass-inference-unstable-example-G/*"
 render_movies -c "$OUTDIR/shared/unstable_example.csv" -d "$OUTDIR/shared"
 
-gen_render_config -o "$OUTDIR/shared/pretest.csv" "$SSODIR/mass-inference-training-G/*"
+gen_render_config -o "$OUTDIR/shared/pretest.csv" --seed 10241 "$SSODIR/mass-inference-training-G/*"
 cp "$OUTDIR/shared/pretest.csv" "$OUTDIR/shared/posttest.csv"
 render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 
@@ -111,10 +111,10 @@ render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 ## Mass examples ##
 ###################
 
-gen_render_config -o "$OUTDIR/nfb-10-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --full "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-10-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --full "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb0/mass_example.csv" --seed 10242 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb1/mass_example.csv" --seed 10242 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb0/mass_example.csv" --seed 10242 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb1/mass_example.csv" --seed 10242 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
 
 render_movies -c "$OUTDIR/nfb-10-cb0/mass_example.csv" -d "$OUTDIR/nfb-10-cb0"
 render_movies -c "$OUTDIR/nfb-10-cb1/mass_example.csv" -d "$OUTDIR/nfb-10-cb1"
@@ -126,10 +126,10 @@ render_movies -c "$OUTDIR/nfb-0.1-cb1/mass_example.csv" -d "$OUTDIR/nfb-0.1-cb1"
 ## Experiment Part A ##
 #######################
 
-gen_render_config -o "$OUTDIR/nfb-10-cb0/experiment.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-10-cb1/experiment.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb0/experiment.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb1/experiment.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb0/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb1/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb0/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb1/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
 
 render_movies -c "$OUTDIR/nfb-10-cb0/experiment.csv" -d "$OUTDIR/nfb-10-cb0"
 render_movies -c "$OUTDIR/nfb-10-cb1/experiment.csv" -d "$OUTDIR/nfb-10-cb1"
@@ -141,10 +141,10 @@ render_movies -c "$OUTDIR/nfb-0.1-cb1/experiment.csv" -d "$OUTDIR/nfb-0.1-cb1"
 ## Experiment Part B ##
 #######################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
 
 render_movies -c "$OUTDIR/vfb-10-cb0/experiment.csv" -d "$OUTDIR/vfb-10-cb0"
 render_movies -c "$OUTDIR/vfb-10-cb1/experiment.csv" -d "$OUTDIR/vfb-10-cb1"
