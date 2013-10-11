@@ -10,6 +10,9 @@ conditions = {
         "experimentA": "nfb-0.1",
         "experimentB": "vfb-0.1",
         "posttest": "shared",
+        "unstable_example": "shared",
+        "stable_example": "shared",
+        "mass_example": "nfb-0.1"
     },
 
     "1": {
@@ -17,6 +20,9 @@ conditions = {
         "experimentA": "nfb-0.1",
         "experimentB": "vfb-10",
         "posttest": "shared",
+        "unstable_example": "shared",
+        "stable_example": "shared",
+        "mass_example": "nfb-0.1"
     },
 
     "2": {
@@ -24,6 +30,9 @@ conditions = {
         "experimentA": "nfb-10",
         "experimentB": "vfb-0.1",
         "posttest": "shared",
+        "unstable_example": "shared",
+        "stable_example": "shared",
+        "mass_example": "nfb-10"
     },
 
     "3": {
@@ -31,7 +40,17 @@ conditions = {
         "experimentA": "nfb-10",
         "experimentB": "vfb-10",
         "posttest": "shared",
+        "unstable_example": "shared",
+        "stable_example": "shared",
+        "mass_example": "nfb-10"
     },
+}
+
+examples = {
+    "pretest": ["unstable_example", "stable_example", None],
+    "experimentA": ["mass_example"],
+    "experimentB": [None],
+    "posttest": [None]
 }
 
 render_dir = path("../resources/render/G/")
@@ -53,11 +72,20 @@ def get_meta(stim, kappa):
 
 
 for condition, maps in conditions.iteritems():
-    config = {}
-    for phase, pth in maps.iteritems():
-        for cb in [0, 1]:
+    for cb in [0, 1]:
+        config = {}
+        for phase, pth in maps.iteritems():
 
             if phase in ("pretest", "posttest"):
+                render_config = render_dir.joinpath(
+                    pth, "%s.csv" % phase)
+
+                fb = "vfb"
+                ratio = 1
+                ask_fall = True
+                ask_mass = False
+
+            elif phase in ("stable_example", "unstable_example"):
                 render_config = render_dir.joinpath(
                     pth, "%s.csv" % phase)
 
@@ -125,5 +153,6 @@ for condition, maps in conditions.iteritems():
 
             config[phase] = trials
 
-    with open(json_dir.joinpath("%s.json" % condition), "w") as fh:
-        json.dump(config, fh, indent=2, allow_nan=False)
+        configpath = json_dir.joinpath("%s-cb%d.json" % (condition, cb))
+        with open(configpath, "w") as fh:
+            json.dump(config, fh, indent=2, allow_nan=False)
