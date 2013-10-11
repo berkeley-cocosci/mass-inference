@@ -290,7 +290,6 @@ class RenderMovies(ViewTowers):
             g = int(color[3:5], base=16) / 255.
             b = int(color[5:7], base=16) / 255.
             rgba = (r, g, b, 1)
-            print color, rgba
             return rgba
 
         i = self.ssos.index(self.sso)
