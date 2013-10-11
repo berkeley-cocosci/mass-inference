@@ -126,30 +126,30 @@ render_movies -c "$OUTDIR/nfb-0.1-cb1/mass_example.csv" -d "$OUTDIR/nfb-0.1-cb1"
 ## Experiment Part A ##
 #######################
 
-gen_render_config -o "$OUTDIR/nfb-10-cb0/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-10-cb1/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb0/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb1/experiment.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb0/experimentA.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb1/experimentA.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb0/experimentA.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb1/experimentA.csv" --seed 10243 --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
 
-render_movies -c "$OUTDIR/nfb-10-cb0/experiment.csv" -d "$OUTDIR/nfb-10-cb0"
-render_movies -c "$OUTDIR/nfb-10-cb1/experiment.csv" -d "$OUTDIR/nfb-10-cb1"
-render_movies -c "$OUTDIR/nfb-0.1-cb0/experiment.csv" -d "$OUTDIR/nfb-0.1-cb0"
-render_movies -c "$OUTDIR/nfb-0.1-cb1/experiment.csv" -d "$OUTDIR/nfb-0.1-cb1"
+render_movies -c "$OUTDIR/nfb-10-cb0/experimentA.csv" -d "$OUTDIR/nfb-10-cb0"
+render_movies -c "$OUTDIR/nfb-10-cb1/experimentA.csv" -d "$OUTDIR/nfb-10-cb1"
+render_movies -c "$OUTDIR/nfb-0.1-cb0/experimentA.csv" -d "$OUTDIR/nfb-0.1-cb0"
+render_movies -c "$OUTDIR/nfb-0.1-cb1/experimentA.csv" -d "$OUTDIR/nfb-0.1-cb1"
 
 
 #######################
 ## Experiment Part B ##
 #######################
 
-gen_render_config -o "$OUTDIR/vfb-10-cb0/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-10-cb1/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 "$SSODIR/mass-inference-G/*"
-gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experiment.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb0/experimentB.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-10-cb1/experimentB.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb0/experimentB.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 "$SSODIR/mass-inference-G/*"
+gen_render_config -o "$OUTDIR/vfb-0.1-cb1/experimentB.csv" --seed 10244 --label0 "purple" --label1 "green" --color0 "#7B3294" --color1 "#008837" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-G/*"
 
-render_movies -c "$OUTDIR/vfb-10-cb0/experiment.csv" -d "$OUTDIR/vfb-10-cb0"
-render_movies -c "$OUTDIR/vfb-10-cb1/experiment.csv" -d "$OUTDIR/vfb-10-cb1"
-render_movies -c "$OUTDIR/vfb-0.1-cb0/experiment.csv" -d "$OUTDIR/vfb-0.1-cb0"
-render_movies -c "$OUTDIR/vfb-0.1-cb1/experiment.csv" -d "$OUTDIR/vfb-0.1-cb1"
+render_movies -c "$OUTDIR/vfb-10-cb0/experimentB.csv" -d "$OUTDIR/vfb-10-cb0"
+render_movies -c "$OUTDIR/vfb-10-cb1/experimentB.csv" -d "$OUTDIR/vfb-10-cb1"
+render_movies -c "$OUTDIR/vfb-0.1-cb0/experimentB.csv" -d "$OUTDIR/vfb-0.1-cb0"
+render_movies -c "$OUTDIR/vfb-0.1-cb1/experimentB.csv" -d "$OUTDIR/vfb-0.1-cb1"
 
 
 #####################################################
