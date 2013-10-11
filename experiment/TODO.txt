@@ -1,6 +1,5 @@
-TODO: use fewer towers (maybe 20?)
-TODO: pick informative mass example
-TODO: figure out what the experiment structure should be & document it
+TODO: handle color names appropriately in javascript
+TODO: update web experiment structure
 TODO: re-render stimuli movies
 TODO: test all conditions of experiment
 TODO: test full experiment on chrome
