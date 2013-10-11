@@ -1,4 +1,5 @@
-TODO: load shared stimuli from shared folder
+TODO: fall? responses should be 1-10
+TODO: clean up make_trial_config.py
 TODO: handle color names appropriately in javascript
 TODO: update web experiment structure
 TODO: test all conditions of experiment
@@ -7,4 +8,4 @@ TODO: test full experiment on firefox
 TODO: make sure IE users are locked out
 TODO: set up experiment on the sandbox
 TODO: collect some pilot data in sandbox from labmates
-TODO: clean up make_trial_config.py
+
