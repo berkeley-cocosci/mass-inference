@@ -285,15 +285,23 @@ class RenderMovies(ViewTowers):
     def _set_block_graphics(self, block, blocktype):
         ViewTowers._set_block_graphics(self, block, blocktype)
 
+        def get_rgb(color):
+            r = int(color[1:3], base=16) / 255.
+            g = int(color[3:5], base=16) / 255.
+            b = int(color[5:7], base=16) / 255.
+            rgba = (r, g, b, 1)
+            print color, rgba
+            return rgba
+
         i = self.ssos.index(self.sso)
-        color0 = self.options['color0'][i]
-        color1 = self.options['color1'][i]
+        color0 = get_rgb(self.options['color0'][i])
+        color1 = get_rgb(self.options['color1'][i])
 
         if self.stimtype == "mass_colors":
             if blocktype == 0:
-                block.setColor(color0)
+                block.setColor(*color0)
             elif blocktype == 1:
-                block.setColor(color1)
+                block.setColor(*color1)
 
     def goto_sso(self, i):
         ViewTowers.goto_sso(self, i)
