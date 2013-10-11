@@ -32,8 +32,14 @@ STIMTYPES = {
     'mass-oneshot-F': "mass_colors",
     'mass-oneshot-example-F': "mass_colors",
     'mass-oneshot-training-F': "original",
-    'mass-inference': "mass_colors",
 
+    'mass-inference-G': "mass_colors",
+    'mass-inference-example-G': "mass_colors",
+    'mass-inference-training-G': "original",
+    'mass-inference-stable-example-G': "original",
+    'mass-inference-unstable-example-G': "original",
+
+    'mass-all': "mass_plastic_stone",
     'mass-prediction-stability': "mass_plastic_stone",
     'mass-prediction-direction': "mass_plastic_stone",
 
@@ -57,7 +63,7 @@ class ViewTowers(Viewer):
 
         self.place_camera()
         self.create_lights()
-        self.win.setClearColor((0.25, 0.25, 0.45, 1.0))
+        self.win.setClearColor((0.05, 0.05, 0.1, 1.0))
         self.disableMouse()
 
         self.stimtype = None
@@ -76,20 +82,22 @@ class ViewTowers(Viewer):
 
         # positions for point lights
         plight_pos = [
-            rtz2xyz(1.5, 4*np.pi/12., 1.167),
-            rtz2xyz(1.5, 12*np.pi/12., 1.167),
-            rtz2xyz(1.5, 20*np.pi/12., 1.167),
-            (0.067, 0.034, 5)
+            rtz2xyz(1.5, 4*np.pi/12., 0),
+            rtz2xyz(1.5, 12*np.pi/12., 0),
+            rtz2xyz(1.5, 20*np.pi/12., 0),
+            (0, 0, 1.3),
         ]
 
         # create point lights
+        self.plights = p3d.NodePath("plights")
         for i, pos in enumerate(plight_pos):
             plight = pm.PointLight('plight%d' % i)
             plight.setColor((0.5, 0.5, 0.5, 1.0))
             plight.setAttenuation((0, 0, 0.5))
-            plnp = self.lights.attachNewNode(plight)
+            plnp = self.plights.attachNewNode(plight)
             plnp.setPos(pos)
             self.render.setLight(plnp)
+        self.plights.reparentTo(self.lights)
 
         # update the position and color of the spotlight
         slnp = self.lights.find('slight')
@@ -97,7 +105,7 @@ class ViewTowers(Viewer):
         slnp.lookAt(self.look_at)
         slnp.node().setColor((1, 1, 1, 1))
 
-        # update the color of the ambient ligh
+        # update the color of the ambient light
         alnp = self.lights.find('alight')
         alnp.node().setColor((0.2, 0.2, 0.2, 1))
 
@@ -250,7 +258,7 @@ class ViewTowers(Viewer):
 
         # give it a little extra ambient light
         alight = pm.AmbientLight('alight2')
-        alight.setColor((0.4, 0.4, 0.4, 1.0))
+        alight.setColor((0.6, 0.6, 0.6, 1.0))
         alnp = self.lights.attachNewNode(alight)
         self.floor.setLight(alnp)
 
@@ -267,6 +275,10 @@ class ViewTowers(Viewer):
         self._store_blocktype_props()
         self.flip_colors(flip=self.options['flip_colors'][i], update=False)
         self._apply_blocktype_props()
+
+        minb, maxb = self.sso.getTightBounds()
+        height = max(2, maxb[2])
+        self.plights.setPos(0, 0, height*2/3.)
 
     def attach_physics(self):
         map(self._set_block_physics, self.curr_psos, self.curr_blocktypes)

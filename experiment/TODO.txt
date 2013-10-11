@@ -1,5 +1,4 @@
 TODO: figure out what the experiment structure should be & document it
-TODO: fix lighting for tall towers
 TODO: re-render stimuli movies
 TODO: test all conditions of experiment
 TODO: test full experiment on chrome
