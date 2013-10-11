@@ -111,10 +111,10 @@ render_movies -c "$OUTDIR/shared/pretest.csv" -d "$OUTDIR/shared"
 ## Mass examples ##
 ###################
 
-gen_render_config -o "$OUTDIR/nfb-10-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-10-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 "$SSODIR/mass-inference-example-G/*"
-gen_render_config -o "$OUTDIR/nfb-0.1-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-10-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa 1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb0/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --full "$SSODIR/mass-inference-example-G/*"
+gen_render_config -o "$OUTDIR/nfb-0.1-cb1/mass_example.csv" --label0 "red" --label1 "blue" --color0 "#CA0020" --color1 "#0571B0" --kappa -1.0 --flip-colors --full "$SSODIR/mass-inference-example-G/*"
 
 render_movies -c "$OUTDIR/nfb-10-cb0/mass_example.csv" -d "$OUTDIR/nfb-10-cb0"
 render_movies -c "$OUTDIR/nfb-10-cb1/mass_example.csv" -d "$OUTDIR/nfb-10-cb1"
