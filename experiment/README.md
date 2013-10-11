@@ -36,14 +36,15 @@ The structure of this experiment goes as follows:
 
 So, we need to render the following sets of towers:
 
- * G-vfb-0.1-cb0
- * G-vfb-0.1-cb1
- * G-vfb-10-cb0
- * G-vfb-10-cb1
- * G-nfb-0.1-cb0
- * G-nfb-0.1-cb1
- * G-nfb-10-cb0
- * G-nfb-10-cb1
+ * nfb-0.1-cb0
+ * nfb-0.1-cb1
+ * nfb-10-cb0
+ * nfb-10-cb1
+
+ * vfb-0.1-cb0
+ * vfb-0.1-cb1
+ * vfb-10-cb0
+ * vfb-10-cb1
 
 And there will be 4 possible conditions times 2 for counterbalancing:
 
