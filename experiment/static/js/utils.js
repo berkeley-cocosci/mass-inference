@@ -273,14 +273,20 @@ function make_player(elem, stims, poster, phase) {
 
 // Set background and button colors to reflect the different block
 // types
-function set_colors(color0, color1) {
-    if (color0) {
-        $(".color0").css("background-color", color0);
-        $("button.color0").html(color0);
+function set_colors(trial) {
+    if (trial.color0) {
+        $(".color0").css("background-color", trial.color0);
+        $("button.color0").html(trial.label0);
+	$("span.color0").css("background-color", "inherit");
+	$("span.color0").css("color", trial.color0)
+	$("span.color0").html(trial.label0);
     }
 
-    if (color1) {
-        $(".color1").css("background-color", color1);
-        $("button.color1").html(color1);
+    if (trial.color1) {
+        $(".color1").css("background-color", trial.color1);
+        $("button.color1").html(trial.label1);
+	$("span.color1").css("background-color", "inherit");
+	$("span.color1").css("color", trial.color1)
+	$("span.color1").html(trial.label1);
     }
 }

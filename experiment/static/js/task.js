@@ -71,7 +71,24 @@ var Instructions = function() {
         var example = this.examples[STATE.index];
         if (example) {
             // Set mass colors
-            set_colors(example.color0, example.color1);
+            set_colors(example);
+	    // TODO: why is kappa wrong here??
+	    var kappa;
+	    if (!$c.counterbalance) {
+		kappa = example.kappa;
+	    } else {
+		kappa = -example.kappa;
+	    }
+
+	    if (kappa < 0) {
+		$("#color0-mass").html("light");
+		$("#color1-mass").html("heavy");
+		$(".color1-heavy").show();
+	    } else if (kappa > 0) {
+		$("#color0-mass").html("heavy");
+		$("#color1-mass").html("light");
+		$(".color0-heavy").show();
+	    }
 
             // Load the video player
             var video = example.stimulus + "~stimulus";

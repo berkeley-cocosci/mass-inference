@@ -150,6 +150,20 @@ div.scalepart img {
     background-color: #00ffff;
 }
 
+span.color0, span.color1 {
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+#masses {
+    text-align: center;
+    font-size: 1.25em;
+}
+
+.color0-heavy, .color1-heavy {
+    display: none;
+}
+
 /********************************************************************/
 /* Trial slide components                                           */
 /********************************************************************/
