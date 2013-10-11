@@ -39,19 +39,19 @@ def parseargs():
         help="amount of time in seconds to show feedback for (default: 2.5)")
     parser.add_argument(
         "--label0",
-        action="store", dest="label0", type=float, default="0",
+        action="store", dest="label0", type=str, default="0",
         help="label of type 0 blocks")
     parser.add_argument(
         "--label1",
-        action="store", dest="label1", type=float, default="1",
+        action="store", dest="label1", type=str, default="1",
         help="label of type 1 blocks")
     parser.add_argument(
         "--color0",
-        action="store", dest="color0", type=float, default=None,
+        action="store", dest="color0", type=str, default=None,
         help="color of type 0 blocks")
     parser.add_argument(
         "--color1",
-        action="store", dest="color0", type=float, default=None,
+        action="store", dest="color1", type=str, default=None,
         help="color of type 1 blocks")
     parser.add_argument(
         "--flip-colors",
