@@ -292,14 +292,13 @@ class RenderMovies(ViewTowers):
             rgba = (r, g, b, 1)
             return rgba
 
-        i = self.ssos.index(self.sso)
-        color0 = get_rgb(self.options['color0'][i])
-        color1 = get_rgb(self.options['color1'][i])
-
         if self.stimtype == "mass_colors":
+            i = self.ssos.index(self.sso)
             if blocktype == 0:
+                color0 = get_rgb(self.options['color0'][i])
                 block.setColor(*color0)
             elif blocktype == 1:
+                color1 = get_rgb(self.options['color1'][i])
                 block.setColor(*color1)
 
     def goto_sso(self, i):
