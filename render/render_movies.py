@@ -282,6 +282,19 @@ class RenderMovies(ViewTowers):
 
         return script
 
+    def _set_block_graphics(self, block, blocktype):
+        ViewTowers._set_block_graphics(self, block, blocktype)
+
+        i = self.ssos.index(self.sso)
+        color0 = self.options['color0'][i]
+        color1 = self.options['color1'][i]
+
+        if self.stimtype == "mass_colors":
+            if blocktype == 0:
+                block.setColor(color0)
+            elif blocktype == 1:
+                block.setColor(color1)
+
     def goto_sso(self, i):
         ViewTowers.goto_sso(self, i)
         self.script = self.make_script(i)
