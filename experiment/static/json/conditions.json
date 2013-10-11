@@ -1,4 +1,26 @@
 {
-  "0": "vfb-0.1", 
-  "1": "vfb-10"
+  "1": {
+    "experimentA": "nfb-0.1", 
+    "experimentB": "vfb-10", 
+    "pretest": "shared", 
+    "posttest": "shared"
+  }, 
+  "0": {
+    "experimentA": "nfb-0.1", 
+    "experimentB": "vfb-0.1", 
+    "pretest": "shared", 
+    "posttest": "shared"
+  }, 
+  "3": {
+    "experimentA": "nfb-10", 
+    "experimentB": "vfb-10", 
+    "pretest": "shared", 
+    "posttest": "shared"
+  }, 
+  "2": {
+    "experimentA": "nfb-10", 
+    "experimentB": "vfb-0.1", 
+    "pretest": "shared", 
+    "posttest": "shared"
+  }
 }
