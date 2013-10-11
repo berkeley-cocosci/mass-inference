@@ -172,7 +172,8 @@ echo
 if [[ "$REPLY" =~ ^[Yy]$ ]]; then
     remove "$EXPDIR"
     makedir "$EXPDIR"
-    hardlink "$OUTDIR/shared" "$EXPDIR/shared"
+    hardlink "$OUTDIR/shared" "$EXPDIR/shared-cb0"
+    hardlink "$OUTDIR/shared" "$EXPDIR/shared-cb1"
     hardlink "$OUTDIR/nfb-10-cb0" "$EXPDIR/nfb-10-cb0"
     hardlink "$OUTDIR/nfb-10-cb1" "$EXPDIR/nfb-10-cb1"
     hardlink "$OUTDIR/nfb-0.1-cb0" "$EXPDIR/nfb-0.1-cb0"
