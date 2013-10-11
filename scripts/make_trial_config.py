@@ -1,3 +1,4 @@
+import dbtools
 import json
 import numpy as np
 import pandas as pd
@@ -16,7 +17,16 @@ base_conds = dict(enumerate(base_conds))
 with open(json_dir.joinpath("conditions.json"), "w") as fh:
     json.dump(base_conds, fh, indent=2)
 
+DBPATH = path("../resources/sso/metadata.db")
+tbl = dbtools.Table(DBPATH, "stability")
+
 rso = np.random.RandomState(0)
+
+
+def get_meta(stim, kappa):
+    meta = tbl.select(where=("stimulus=? and kappa=?", (stim, kappa)))
+    assert len(meta) == 1
+    return meta
 
 for condition in conditions:
     render_configs = render_dir.joinpath(condition).glob("*.csv")
@@ -40,7 +50,6 @@ for condition in conditions:
         conf['feedback'] = fb
         conf['ratio'] = ratio
         conf['counterbalance'] = cb
-        conf['stable'] = False
         conf['fall? query'] = True
         conf['mass? query'] = True
         conf['color0'] = 'yellow'
@@ -51,6 +60,11 @@ for condition in conditions:
         conf["color0"][is_orig] = None
         conf["color1"][is_orig] = None
 
+        meta = pd.concat(map(get_meta, conf.stimulus, conf.kappa))
+        meta['stable'] = meta['stable'].astype('bool')
+        meta = meta.drop('dataset', axis=1)
+
+        conf = pd.merge(conf, meta, on=['stimulus', 'kappa'])
         conf = (conf
                 .drop(
                     ["full_render", "stimtype", "kappa", "flip_colors"],

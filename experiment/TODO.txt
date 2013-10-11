@@ -8,4 +8,3 @@ TODO: make sure IE users are locked out
 TODO: set up experiment on the sandbox
 TODO: collect some pilot data in sandbox from labmates
 TODO: clean up make_trial_config.py
-TODO: include stability information in trial configs
