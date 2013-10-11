@@ -17,7 +17,7 @@
     "kappa": 0.0, 
     "nfell": 0, 
     "occlude": false, 
-    "ratio": 1
+    "ratio": "1"
   }, 
   "experimentA": [
     {
@@ -842,7 +842,7 @@
       "kappa": 0.0, 
       "nfell": 4, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -862,7 +862,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -882,7 +882,7 @@
       "kappa": 0.0, 
       "nfell": 6, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -902,7 +902,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -922,7 +922,7 @@
       "kappa": 0.0, 
       "nfell": 3, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -942,7 +942,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }
   ], 
   "mass_example": {
@@ -983,7 +983,7 @@
     "kappa": 0.0, 
     "nfell": 6, 
     "occlude": false, 
-    "ratio": 1
+    "ratio": "1"
   }, 
   "pretest": [
     {
@@ -1004,7 +1004,7 @@
       "kappa": 0.0, 
       "nfell": 6, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1024,7 +1024,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1044,7 +1044,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1064,7 +1064,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1084,7 +1084,7 @@
       "kappa": 0.0, 
       "nfell": 4, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1104,7 +1104,7 @@
       "kappa": 0.0, 
       "nfell": 3, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }
   ]
 }

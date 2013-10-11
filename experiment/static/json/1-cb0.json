@@ -17,7 +17,7 @@
     "kappa": 0.0, 
     "nfell": 0, 
     "occlude": false, 
-    "ratio": 1
+    "ratio": "1"
   }, 
   "experimentA": [
     {
@@ -842,7 +842,7 @@
       "kappa": 0.0, 
       "nfell": 4, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -862,7 +862,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -882,7 +882,7 @@
       "kappa": 0.0, 
       "nfell": 6, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -902,7 +902,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -922,7 +922,7 @@
       "kappa": 0.0, 
       "nfell": 3, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -942,7 +942,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }
   ], 
   "mass_example": {
@@ -953,15 +953,15 @@
     "color0": "#CA0020", 
     "stimulus": "tower_00366_0110011001", 
     "label1": "blue", 
-    "stable": false, 
+    "stable": true, 
     "color1": "#0571B0", 
     "trial": 0, 
     "presentation_time": 5.0, 
     "counterbalance": 0, 
     "fall? query": true, 
     "label0": "red", 
-    "kappa": 1.0, 
-    "nfell": 4, 
+    "kappa": -1.0, 
+    "nfell": 0, 
     "occlude": false, 
     "ratio": "0.1"
   }, 
@@ -983,7 +983,7 @@
     "kappa": 0.0, 
     "nfell": 6, 
     "occlude": false, 
-    "ratio": 1
+    "ratio": "1"
   }, 
   "pretest": [
     {
@@ -1004,7 +1004,7 @@
       "kappa": 0.0, 
       "nfell": 6, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1024,7 +1024,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1044,7 +1044,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1064,7 +1064,7 @@
       "kappa": 0.0, 
       "nfell": 0, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1084,7 +1084,7 @@
       "kappa": 0.0, 
       "nfell": 4, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }, 
     {
       "mass? query": false, 
@@ -1104,7 +1104,7 @@
       "kappa": 0.0, 
       "nfell": 3, 
       "occlude": false, 
-      "ratio": 1
+      "ratio": "1"
     }
   ]
 }

@@ -81,7 +81,7 @@ for condition, maps in conditions.iteritems():
                     pth, "%s.csv" % phase)
 
                 fb = "vfb"
-                ratio = 1
+                ratio = "1"
                 ask_fall = True
                 ask_mass = False
 
@@ -90,7 +90,7 @@ for condition, maps in conditions.iteritems():
                     pth, "%s.csv" % phase)
 
                 fb = "vfb"
-                ratio = 1
+                ratio = "1"
                 ask_fall = True
                 ask_mass = False
 
@@ -118,6 +118,14 @@ for condition, maps in conditions.iteritems():
             conf['fall? query'] = ask_fall
             conf['mass? query'] = ask_mass
 
+            # XXX: hack! kappa might not be correct for the mass
+            # example because we want the example tower to be the same
+            # for everyone (including whether it falls or not), so for
+            # counterbalanced trials we actually flip kappa rather
+            # than the colors
+            if phase == "mass_example":
+                conf.kappa = np.log10(float(ratio))
+
             meta = pd.concat(map(get_meta, conf.stimulus, conf.kappa))
             meta['stable'] = meta['stable'].astype('bool')
             meta = meta.drop('dataset', axis=1)
@@ -130,6 +138,9 @@ for condition, maps in conditions.iteritems():
                     .set_index('stimulus')
                     .sort()
                     .reset_index())
+
+            r2kappa = np.array(map(float, conf.ratio))
+            assert (10**conf.kappa == r2kappa).all()
 
             idx = np.array(conf.index)
             rso.seed(seed)
