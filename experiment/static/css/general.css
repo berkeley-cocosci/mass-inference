@@ -211,12 +211,13 @@ span.color0, span.color1 {
     display: none;
 }
 
-#question-image {
+.question-image {
     position: relative;
     float: right;
     height: 1.8em;
     text-align: center;
     margin-top: 0.5em;
+    display: none;
 }
 
 /* Trial phases */

@@ -72,23 +72,6 @@ var Instructions = function() {
         if (example) {
             // Set mass colors
             set_colors(example);
-	    // TODO: why is kappa wrong here??
-	    var kappa;
-	    if (!$c.counterbalance) {
-		kappa = example.kappa;
-	    } else {
-		kappa = -example.kappa;
-	    }
-
-	    if (kappa < 0) {
-		$("#color0-mass").html("light");
-		$("#color1-mass").html("heavy");
-		$(".color1-heavy").show();
-	    } else if (kappa > 0) {
-		$("#color0-mass").html("heavy");
-		$("#color1-mass").html("light");
-		$(".color0-heavy").show();
-	    }
 
             // Load the video player
             var video = example.stimulus + "~stimulus";
@@ -252,15 +235,15 @@ var TestPhase = function() {
         set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
 
         // Set the stimulus colors
-        set_colors(this.trialinfo.color0, this.trialinfo.color1);
+        set_colors(this.trialinfo);
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
 	// TODO: show an appropriate image during experimentA
-        if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-            $("#question-image").find("img").show();
-        } else {
-            $("#question-image").find("img").hide();
+        if (STATE.experiment_phase == EXPERIMENT.experimentA) {
+            $("#question-image-A").show();
+        } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
+            $("#question-image-B").show();
         }
 
         // Determine which feedback to show (stable or unstable)

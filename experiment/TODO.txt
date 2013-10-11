@@ -1,4 +1,6 @@
 TODO: fall? responses should be 1-10
+TODO: mass? responses should be left shift or right shift
+TODO: update instructions3.html
 TODO: clean up make_trial_config.py
 TODO: handle color names appropriately in javascript
 TODO: update web experiment structure
