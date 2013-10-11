@@ -1,26 +1,38 @@
 {
   "1": {
+    "stable_example": "shared", 
     "experimentA": "nfb-0.1", 
     "experimentB": "vfb-10", 
-    "pretest": "shared", 
-    "posttest": "shared"
+    "posttest": "shared", 
+    "mass_example": "nfb-0.1", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
   }, 
   "0": {
+    "stable_example": "shared", 
     "experimentA": "nfb-0.1", 
     "experimentB": "vfb-0.1", 
-    "pretest": "shared", 
-    "posttest": "shared"
+    "posttest": "shared", 
+    "mass_example": "nfb-0.1", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
   }, 
   "3": {
+    "stable_example": "shared", 
     "experimentA": "nfb-10", 
     "experimentB": "vfb-10", 
-    "pretest": "shared", 
-    "posttest": "shared"
+    "posttest": "shared", 
+    "mass_example": "nfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
   }, 
   "2": {
+    "stable_example": "shared", 
     "experimentA": "nfb-10", 
     "experimentB": "vfb-0.1", 
-    "pretest": "shared", 
-    "posttest": "shared"
+    "posttest": "shared", 
+    "mass_example": "nfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
   }
 }
