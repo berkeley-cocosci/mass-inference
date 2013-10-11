@@ -230,8 +230,7 @@ var TestPhase = function() {
         this.fb_player = this.init_player("#video_feedback", "feedback");
 
         // Set appropriate backgrounds for phase elements
-        // TODO: prestim image should be the floor
-        set_poster("#prestim", this.stimulus + "~stimulus~A", STATE.experiment_phase);
+        set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
         set_poster("#fall_response", this.stimulus + "~stimulus~B", STATE.experiment_phase);
         set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
 
