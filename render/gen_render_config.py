@@ -38,6 +38,22 @@ def parseargs():
         action="store", dest="ftime", type=float, default=2.5,
         help="amount of time in seconds to show feedback for (default: 2.5)")
     parser.add_argument(
+        "--label0",
+        action="store", dest="label0", type=float, default="0",
+        help="label of type 0 blocks")
+    parser.add_argument(
+        "--label1",
+        action="store", dest="label1", type=float, default="1",
+        help="label of type 1 blocks")
+    parser.add_argument(
+        "--color0",
+        action="store", dest="color0", type=float, default=None,
+        help="color of type 0 blocks")
+    parser.add_argument(
+        "--color1",
+        action="store", dest="color0", type=float, default=None,
+        help="color of type 1 blocks")
+    parser.add_argument(
         "--flip-colors",
         action="store_true", dest="flip", default=False,
         help="swap block colors")
@@ -73,6 +89,10 @@ def parseargs():
         'feedback_time': [args.ftime]*N,
         'angle': gen_angles(N),
         'full_render': [args.full_render]*N,
+        'color0': [args.color0]*N,
+        'color1': [args.color1]*N,
+        'label0': [args.label0]*N,
+        'label1': [args.label1]*N
     }
 
     return options, args.filename
