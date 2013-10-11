@@ -8,9 +8,10 @@
 // order that the phases should be presented.
 var EXPERIMENT = Object.freeze({
     pretest: 0,
-    experiment: 1,
-    posttest: 2,
-    length: 3
+    experimentA: 1,
+    experimentB: 2,
+    posttest: 3,
+    length: 4
 });
 
 // Enum-like object mapping trial phase names to ids, in the order
@@ -29,12 +30,12 @@ var TRIAL = Object.freeze({
 // whether the trials are counterbalanced.
 var Config = function (condition, counterbalance) {
 
-    // These are the numeric codes for condition and counterbalancing
-    this.cond_code = condition;
-    this.cb_code = counterbalance;
+    // These are the condition and counterbalancing ids
+    this.condition = condition;
+    this.counterbalance = counterbalance;
 
-    // String to hold the human-readable condition name
-    this.condition = null;
+    // Paths to stimuli, depending on experiment phase
+    this.resource_paths = null;
     // Whether debug information should be printed out
     this.debug = true;
     // The amount of time to fade HTML elements in/out
@@ -50,11 +51,15 @@ var Config = function (condition, counterbalance) {
                 "instructions1b.html",
                 "instructions1c.html"]
     };
-    this.instructions[EXPERIMENT.experiment] = {
+    this.instructions[EXPERIMENT.experimentA] = {
         pages: ["instructions2.html"]
     };
-    this.instructions[EXPERIMENT.posttest] = {
+    this.instructions[EXPERIMENT.experimentB] = {
         pages: ["instructions3.html"],
+	examples: [null]
+    };
+    this.instructions[EXPERIMENT.posttest] = {
+        pages: ["instructions4.html"],
         examples: [null]
     };
 
@@ -69,20 +74,28 @@ var Config = function (condition, counterbalance) {
               })
     );
 
+    this.get_path = function (experiment_phase) {
+	return "/static/stimuli/" + 
+	    this.resource_paths[experiment_phase] + 
+	    "-cb" + this.counterbalance + "/";
+    };
+
     // Parse the JSON object that we've requested and load it into the
     // configuration
     this.parse_config = function (data) {
         this.trials[EXPERIMENT.pretest] = data["pretest"];
-        this.trials[EXPERIMENT.experiment] = data["experiment"]; 
+        this.trials[EXPERIMENT.experimentA] = data["experimentA"];
+        this.trials[EXPERIMENT.experimentB] = data["experimentB"];
         this.trials[EXPERIMENT.posttest] = data["posttest"];
 
+	console.log(data.unstable_example);
         this.instructions[EXPERIMENT.pretest].examples = [
             data.unstable_example,
             data.stable_example,
             null
         ];
         
-        this.instructions[EXPERIMENT.experiment].examples = [
+        this.instructions[EXPERIMENT.experimentA].examples = [
             data.mass_example
         ];
     };
@@ -98,8 +111,10 @@ var Config = function (condition, counterbalance) {
                 if (that.debug) {
                     console.log("Got list of conditions");
                 }
-                that.condition = data[that.cond_code] + 
-                    "-cb" + that.cb_code;
+                that.resource_paths = new Object();
+		for (key in data[that.condition]) {
+		    that.resource_paths[EXPERIMENT[key]] = data[that.condition][key];
+		}
             }
         });
     };
@@ -109,7 +124,8 @@ var Config = function (condition, counterbalance) {
         var that = this;
         $.ajax({
             dataType: "json",
-            url: "/static/json/" + this.condition + ".json",
+            url: "/static/json/" + this.condition + 
+		"-cb" + this.counterbalance + ".json",
             async: false,
             success: function (data) { 
                 if (that.debug) {

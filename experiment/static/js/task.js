@@ -89,7 +89,8 @@ var Instructions = function() {
             this.player = make_player(
                 "#player",     // element 
                 [video],       // stimuli
-                video + "~A"   // background image
+                video + "~A",  // background image
+		STATE.experiment_phase
 
             ).bind("ready", on_ready)
                 .bind("finish", on_finish)
@@ -190,13 +191,13 @@ var TestPhase = function() {
             debug(name + " finished");
             api.unbind("finish");
 
-            set_poster(elem + ".flowplayer", video + "~B");
+            set_poster(elem + ".flowplayer", video + "~B", STATE.experiment_phase);
             $(elem).addClass("is-poster");
 
             STATE.set_trial_phase(STATE.trial_phase + 1);
             that.show();
         };
-        return make_player(elem, [video], video + "~A")
+        return make_player(elem, [video], video + "~A", STATE.experiment_phase)
             .bind("finish", on_finish);
     };
 
@@ -230,16 +231,17 @@ var TestPhase = function() {
 
         // Set appropriate backgrounds for phase elements
         // TODO: prestim image should be the floor
-        set_poster("#prestim", this.stimulus + "~stimulus~A");
-        set_poster("#fall_response", this.stimulus + "~stimulus~B");
-        set_poster("#mass_response", this.stimulus + "~feedback~B");
+        set_poster("#prestim", this.stimulus + "~stimulus~A", STATE.experiment_phase);
+        set_poster("#fall_response", this.stimulus + "~stimulus~B", STATE.experiment_phase);
+        set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
 
         // Set the stimulus colors
         set_colors(this.trialinfo.color0, this.trialinfo.color1);
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
-        if (STATE.experiment_phase == EXPERIMENT.experiment) {
+	// TODO: show an appropriate image during experimentA
+        if (STATE.experiment_phase == EXPERIMENT.experimentB) {
             $("#question-image").find("img").show();
         } else {
             $("#question-image").find("img").hide();

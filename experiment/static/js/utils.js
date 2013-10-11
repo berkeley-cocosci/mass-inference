@@ -211,8 +211,8 @@ function open_window(hitid, assignmentid, workerid) {
 }
 
 // Set the background image on an element.
-function set_poster(elem, image) {
-    var path = "/static/stimuli/" + $c.condition + "/" + image + ".png";
+function set_poster(elem, image, phase) {
+    var path = $c.get_path(phase) + image + ".png";
     $(elem).css("background", "#FFF url(" + path + ") no-repeat");
     $(elem).css("background-size", "cover");
 }
@@ -235,11 +235,11 @@ function replace(old_elem, new_elem) {
 
 // Create a flowplayer object in `elem`, load a playlist of `stims`,
 // and set the poster (background image) to `poster`.
-function make_player(elem, stims, poster) {
+function make_player(elem, stims, poster, phase) {
 
     // Helper function to get the appropriate formats for each video
     var get_video_formats = function (stim) {
-        var prefix = "/static/stimuli/" +  $c.condition + "/" + stim;
+        var prefix = $c.get_path(phase) + stim;
         var formats = [
             { webm: prefix + ".webm" },
             { mp4: prefix + ".mp4" },
@@ -265,7 +265,7 @@ function make_player(elem, stims, poster) {
 
     // Set the poster
     if (poster) {
-        set_poster(elem + ".flowplayer", poster);
+        set_poster(elem + ".flowplayer", poster, phase);
     }
 
     return p;
