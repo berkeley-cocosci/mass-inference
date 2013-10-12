@@ -11,12 +11,15 @@
   </div>
 
   <div id="question-container" class="blue">
-    <div id="fall-question" class="question"><b>Question:</b> Will the tower fall down?</div>
+    <div id="fall-question" class="question"><b>Question:</b> On a scale from 1-7, how likely is the tower to fall down?</div>
     <div id="mass-question" class="question"><b>Question:</b> Which is the <b>heavy</b> color?</div>
     <div id="question-image-A" class="question-image">
-      
-      <div class="color0-heavy"><div class="scalepart"><img src="static/images/scale-left_0000_left0.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scale-left_0001_right1.png" class="color1" alt="" /></div></div>
-      <div class="color1-heavy"><div class="scalepart"><img src="static/images/scale-right_0000_left1.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scale-right_0001_right0.png" class="color1" alt="" /></div></div>
+      <div><span class="color0"></span> is <span id="color0-mass" class="color0"></span></div>
+      <div>
+	<div class="color0-heavy"><div class="scalepart"><img src="static/images/scale-left_0000_left0.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scale-left_0001_right1.png" class="color1" alt="" /></div></div>
+	<div class="color1-heavy"><div class="scalepart"><img src="static/images/scale-right_0000_left1.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scale-right_0001_right0.png" class="color1" alt="" /></div></div>
+      </div>
+      <div><span class="color1"></span> is <span id="color1-mass" class="color1"></span></div>
     </div>
     <div id="question-image-B" class="question-image"><div class="scalepart"><img src="static/images/scales-both_0000_left1.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0001_right0.png" class="color1" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0002_left0.png" class="color0" alt="" /></div><div class="scalepart"><img src="static/images/scales-both_0003_right1.png" class="color1" alt="" /></div></div>
     <div class="spacer"></div>
@@ -46,11 +49,26 @@
 
     <!-- Responses to "will it fall?" -->
     <div id="fall_response" class="phase">
-      <div class="fall-choice" id="fall-choice-no">
-	<button type="button" name="fall" value=false>No, it will NOT fall</button>
-      </div>
-      <div class="fall-choice" id="fall-choice-yes">
-	<button type="button" name="fall" value=true>Yes, it will fall</button>
+      <!-- <div class="fall-choice" id="fall-choice-no"> -->
+      <!-- 	<button type="button" name="fall" value=false>No, it will NOT fall</button> -->
+      <!-- </div> -->
+      <!-- <div class="fall-choice" id="fall-choice-yes"> -->
+      <!-- 	<button type="button" name="fall" value=true>Yes, it will fall</button> -->
+      <!-- </div> -->
+      <div>
+	<div id="fall-choices">
+	  <div>1</div>
+	  <div>2</div>
+	  <div>3</div>
+	  <div>4</div>
+	  <div>5</div>
+	  <div>6</div>
+	  <div>7</div>
+	</div>
+	<div id="fall-choice-descriptions">
+	  <div id="fall-no">&#8592; UNLIKELY to fall</div>
+	  <div id="fall-yes">LIKELY to fall &#8594;</div>
+	</div>
       </div>
     </div>
 
@@ -60,11 +78,8 @@
     <!-- Shown before the video -->
     <div id="prestim" class="phase">
       <div id="video-instructions">
-	<p>When you are ready, click the 'Play Video' button.</p>
+	<p>When you are ready, press SPACE.</p>
 	<p>You may only watch the video once.</p>
-      </div>
-      <div id="play-button">
-	<button type="button" name="play">Play Video</button>
       </div>
     </div>
 

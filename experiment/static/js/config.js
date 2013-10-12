@@ -25,6 +25,27 @@ var TRIAL = Object.freeze({
     length: 5
 });
 
+// Enum-like object for representing key names.
+var KEYS = new Object();
+KEYS[TRIAL.prestim] = {
+    32: ""  // space
+};
+KEYS[TRIAL.stim] = {};
+KEYS[TRIAL.fall_response] = {
+    49: 1,  // 1
+    50: 2,  // 2
+    51: 3,  // 3
+    52: 4,  // 4
+    53: 5,  // 5
+    54: 6,  // 6
+    55: 7,  // 7
+};
+KEYS[TRIAL.feedback] = {};
+KEYS[TRIAL.mass_response] = {
+    44: 0,  // comma
+    46: 1,  // period
+};
+
 // Object to hold the experiment configuration. It takes as parameters
 // the numeric codes representing the experimental condition and
 // whether the trials are counterbalanced.

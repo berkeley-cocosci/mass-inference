@@ -219,12 +219,6 @@ var TestPhase = function() {
         // Load the trial.html snippet into the body of the page
         psiTurk.showPage('trial.html');
 
-        // Register the response handler to record responses
-        var that = this;
-        $('button').click(function () {
-            that.record_response(this.name, this.value);
-        });
-
         // Initialize the video players
         this.stim_player = this.init_player("#stim", "stimulus");
         this.fb_player = this.init_player("#video_feedback", "feedback");
@@ -241,9 +235,9 @@ var TestPhase = function() {
         // then we don't want to show the image).
 	// TODO: show an appropriate image during experimentA
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
-            $("#question-image-A").show();
+	    $("#question-image-A").show()
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-            $("#question-image-B").show();
+	    $("#question-image-B").show()
         }
 
         // Determine which feedback to show (stable or unstable)
@@ -258,6 +252,12 @@ var TestPhase = function() {
 
         // Update progress bar
         update_progress(STATE.index, this.trials.length);
+
+        // Register the response handler to record responses
+	var that = this;
+	$("body").focus().keypress(function (e) {
+	    that.record_response(e.keyCode);
+	});
     };
 
     // Phase 1: show the floor and "start" button
@@ -406,31 +406,23 @@ var TestPhase = function() {
 
     // Record a response (this could be either just clicking "start",
     // or actually a choice to the prompt(s))
-    this.record_response = function(name, value) {
+    this.record_response = function(key) {
         // If we're not listening for a response, do nothing
         if (!this.listening) return;
-        this.listening = false;
 
+	// Record response time
         var rt = (new Date().getTime()) - this.timestamp;
-        var data = new DataRecord();
-        data.update(this.trialinfo);
-        data.update({response_time: rt});
-
-        debug("Record response");
 
         // Parse the actual value of the data to record
-        if (name == "play") {
-            // Not a real response, so just save an empty string
-            data.update({response: ""});
+	var response = KEYS[STATE.trial_phase][key];
+	if (response == undefined) return;
+        this.listening = false;
 
-        } else if (name == "fall") {
-            // We want a true/false boolean value
-            data.update({response: Boolean(value)});
+        debug("Record response: " + response);
 
-        } else if (name == "mass") {
-            // Left/right refers to different colors
-            data.update({response: this.trialinfo[value]});
-        }
+        var data = new DataRecord();
+        data.update(this.trialinfo);
+        data.update({response_time: rt, response: response});
 
         // Create the record we want to save
         psiTurk.recordTrialData(data.to_array());

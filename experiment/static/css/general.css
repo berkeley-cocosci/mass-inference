@@ -199,25 +199,29 @@ span.color0, span.color1 {
 /* Question */
 
 #question-container{
-    position: relative;
     padding-top: .625em;
     padding-bottom: .625em;
-    line-height: 3em;
 }
 
 .question {
-    font-size: 1.25em;
-    float: left;
+    font-size: 1.2em;
     display: none;
+    text-align: center;
 }
 
 .question-image {
-    position: relative;
-    float: right;
-    height: 1.8em;
     text-align: center;
-    margin-top: 0.5em;
+    margin-top: 1em;
     display: none;
+}
+
+.question-image > div {
+    display: inline-block;
+    padding: 0 1em;
+}
+
+.question-image > div > div > div.scalepart {
+    height: 1.8em;
 }
 
 /* Trial phases */
@@ -259,33 +263,6 @@ span.color0, span.color1 {
     top: 44%;
 }
 
-#play-button {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    top: 72%;
-}
-
-#play-button button {
-    background-color: white;
-    box-shadow: 1px 1px 3px;
-    border: 1px solid black;
-    border-radius: 4em;
-    -moz-border-radius: 4em;
-    -webkit-border-radius: 4em;
-
-    margin: 1%;
-    padding: 4% 8% 4% 8%;
-
-    font-family: Georgia, serif;
-    font-size: 1.25em;
-}
-
-#play-button button:active {
-    background-color: #c9c9c9;
-    box-shadow: 0px 0px 3px;
-}
-
 /* Stim */
 
 #stim {
@@ -299,38 +276,47 @@ span.color0, span.color1 {
 #fall_response {
     position: absolute;
     z-index: 75;
-    text-align: right;
+    text-align: center;
     height: 100%;
     width: 100%;
     display: none;
     background-size: 100%;
 }
 
-.fall-choice {
+#fall-choices {
     position: absolute;
-    height: 15%;
     width: 100%;
     font-size: 1.25em;
+    top: 0%;
 }
 
-.fall-choice button {
-    width: 32%;
-    height: 100%;
-    border-radius: 4em 0 0 4em;
-    padding-right: 1%;
-    text-align: right;
-    background-color: #FFFFFF;
-    margin: 0;
-    border-right: none;
+#fall-choice-descriptions {
+    position: absolute;
+    width: 100%;
+    font-size: 1.25em;
+    top: 15%;
 }
 
-.fall-choice button:active {
-    box-shadow: 0px 0px 3px;
-    background-color: #AAAAAA;
+#fall-choices div {
+    display: inline-block;
+    padding: 0.75em 1.4em;
+    margin: 0.4em;
+    background-color: white;
+    border: 1px solid black;
 }
 
-#fall-choice-no { top: 15%; }
-#fall-choice-yes { bottom: 15%; }
+#fall-choice-descriptions > div {
+    color: white;
+    margin: 0 0.5em;
+}
+
+#fall-no {
+    float: left;
+}
+
+#fall-yes {
+    float: right;
+}
 
 /* Mass? responses */
 
