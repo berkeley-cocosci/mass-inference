@@ -295,16 +295,38 @@ var TestPhase = function() {
 
     // Phase 3: show the response options for "fall?" question
     this.phases[TRIAL.fall_response] = function (that) {
-        debug("Show FALL_RESPONSE");
+        // We won't ask for fall predictions on every trial, so check
+        // to see if this is a trial where we do.
+        if (that.trialinfo["fall? query"]) {
+            debug("Show FALL_RESPONSE");
 
-        // Hide stim and show fall_response
-        replace("stim", "fall_response");
+            // Hide stim and show fall_response
+            replace("stim", "fall_response");
 
-        // Destroy the player
-        if (that.stim_player) that.stim_player.unload();
+            // Destroy the player
+            if (that.stim_player) {
+		that.stim_player.unload();
+		$("#stim").replaceWith('<div id="stim" class="phase fixed-controls no-toggle no-time no-volume no-mute">');
+	    }
 
-        // Listen for a response
-        that.listening = true;
+            // Listen for a response
+            that.listening = true;
+
+	} else {
+	    // Hide the stimulus
+	    $("#stim").hide();
+
+            // Destroy the player
+            if (that.stim_player) {
+		that.stim_player.unload();
+		$("#stim").replaceWith('<div id="stim" class="phase fixed-controls no-toggle no-time no-volume no-mute">');
+	    }
+
+            // Move on to the next trial
+            STATE.set_trial_phase();
+            STATE.set_index(STATE.index + 1);
+            that.show();
+	}
     };
 
     // Phase 4: show feedback
