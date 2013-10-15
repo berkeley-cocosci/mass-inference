@@ -221,7 +221,9 @@ var TestPhase = function() {
 
         // Initialize the video players
         this.stim_player = this.init_player("#stim", "stimulus");
-        this.fb_player = this.init_player("#video_feedback", "feedback");
+	if (this.trialinfo.feedback != 'nfb') {
+            this.fb_player = this.init_player("#video_feedback", "feedback");
+	}
 
         // Set appropriate backgrounds for phase elements
         set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
