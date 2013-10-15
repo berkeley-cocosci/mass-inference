@@ -235,9 +235,9 @@ var TestPhase = function() {
         // then we don't want to show the image).
 	// TODO: show an appropriate image during experimentA
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
-	    $("#question-image-A").show()
+	    $("#question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-	    $("#question-image-B").show()
+	    $("#question-image-B").show();
         }
 
         // Determine which feedback to show (stable or unstable)
