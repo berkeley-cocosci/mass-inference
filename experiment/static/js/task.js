@@ -453,7 +453,7 @@ var TestPhase = function() {
         debug(data.to_array());
 
         // Tell the state to go to the next trial phase or trial
-        if (name == "mass") {
+        if (STATE.trial_phase == TRIAL.mass_response) {
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
         } else {
