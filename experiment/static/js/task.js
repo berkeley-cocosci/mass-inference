@@ -13,15 +13,6 @@
 
 // Initialize flowplayer
 var $f = flowplayer;
-if ($f.support.firstframe) {
-    $f(function (api, root) {
-        // show poster when video ends
-        api.bind("resume finish", function (e) {
-            root.toggleClass("is-poster", /finish/.test(e.type));
-            api.disable(!/finish/.test(e.type));
-        });
-    });
-}
 
 // Create and initialize the experiment configuration object
 var $c = new Config(condition, counterbalance);
@@ -35,6 +26,7 @@ psiTurk.preloadPages($c.pages);
 // Objects to keep track of the current phase and state
 var CURRENTVIEW;
 var STATE;
+var PLAYER;
 
 
 /*************************
@@ -56,15 +48,20 @@ var Instructions = function() {
     // STATE.index
     this.show = function() {
 
+        debug("show slide " + this.pages[STATE.index]);
+
         // Load the next page of instructions
-        psiTurk.showPage(this.pages[STATE.index]);
+        $(".slide").hide();
+        var slide = $("#" + this.pages[STATE.index]);
+        slide.show();
+
         // Update the URL hash
         STATE.set_hash();
 
         // Bind a handler to the "next" button. We have to wrap it in
         // an anonymous function to preserve the scope.
         var that = this;
-        $('.next').click(function () {
+        slide.find('.next').click(function () {
             that.record_response();
         });
         
@@ -74,7 +71,10 @@ var Instructions = function() {
             set_colors(example);
 
             // Load the video player
-            var video = example.stimulus + "~stimulus";
+            var videos = [get_video_formats(
+                example.stimulus + "~stimulus",
+                STATE.experiment_phase)];
+            var player_id = "#" + slide.find(".example").attr("id");
 
             // Start the video immediately
             var on_ready = function (e, api) {
@@ -86,13 +86,8 @@ var Instructions = function() {
             };
 
             // Initialize the player and start it
-            this.player = make_player(
-                "#player",     // element 
-                [video],       // stimuli
-                video + "~A",  // background image
-		STATE.experiment_phase
-
-            ).bind("ready", on_ready)
+            this.player = make_player(player_id, videos)
+                .bind("ready", on_ready)
                 .bind("finish", on_finish)
                 .play(0);
         }
@@ -164,15 +159,9 @@ var TestPhase = function() {
     this.timestamp; 
     // Whether the object is listening for responses
     this.listening = false;
-    this.playing = false;
-
-    // Video player for the stimulus and feedback
-    this.player;
-    this.player_idx = {};
-    this.video_idx = 0;
 
     // List of trials in this block of the experiment
-    this.trials = $c.trials[STATE.experiment_phase];
+    this.trials = $c.trials[STATE.experiment_phase].slice(0, 2);
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
@@ -181,61 +170,18 @@ var TestPhase = function() {
     // Handlers to setup each phase of a trial
     this.phases = new Object();
 
-    // Initialize a flowplayer in elem. This is different from
-    // make_player (in utils.js) in that it also binds a "finish"
-    // handler to set a new poster for the player, and to go to the
-    // next trial phase.
-    this.init_player = function () {
-	var videos = [];
-	var idx = 0;
-	for (i in this.trials) {
-	    videos.push(this.trials[i].stimulus + "~stimulus");
-	    this.player_idx[i] = {
-		'stimulus': idx
-	    };
-	    idx = idx + 1;
-
-	    if (this.trials[i]['feedback'] == 'vfb') {
-		videos.push(this.trials[i].stimulus + "~feedback");
-		this.player_idx[i]['feedback'] = idx;
-		idx = idx + 1;
-	    }
-	}
-
-        var that = this;
-        var on_finish = function (e, api) {
-	    if (!that.playing) {
-		assert(false, "player finished, but it shouldn't be playing!");
-		return;
-	    }
-            debug("player finished");
-	    that.playing = false;
-            STATE.set_trial_phase(STATE.trial_phase + 1);
-            that.show();
-        };
-
-	var on_ready = function (e, api) {
-	    if (!that.playing) {
-		debug("player ready, but not playing!");
-		return;
-	    }
-	    debug("player ready and about to play index " + that.video_idx);
-	    api.play(that.video_idx);
-	};
-
-	var p = make_player("#stim", videos, null, STATE.experiment_phase);
-	return p.bind("finish", on_finish).bind("ready", on_ready);
-    };
-
     // Initialize a new trial. This is called either at the beginning
     // of a new trial, or if the page is reloaded between trials.
     this.init_trial = function () {
         debug("Initializing trial " + STATE.index);
 
+        $(".phase").hide();
+
         // If there are no more trials left, then we are at the end of
         // this phase
         if (STATE.index >= this.trials.length) {
-            return this.finish();
+            this.finish();
+            return false;
         }
         
         // Load the new trialinfo and stimulus values
@@ -252,11 +198,11 @@ var TestPhase = function() {
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
-	// TODO: show an appropriate image during experimentA
+        // TODO: show an appropriate image during experimentA
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
-	    $("#question-image-A").show();
+            $("#question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-	    $("#question-image-B").show();
+            $("#question-image-B").show();
         }
 
         // Determine which feedback to show (stable or unstable)
@@ -275,36 +221,37 @@ var TestPhase = function() {
         update_progress(STATE.index, this.trials.length);
 
         // Register the response handler to record responses
-	var that = this;
-	$("body").focus().keypress(function (e) {
-	    that.record_response(e.keyCode);
-	});
+        var that = this;
+        $("body").focus().keypress(function (e) {
+            that.record_response(e.keyCode);
+        });
+
+        return true;
     };
 
     // Phase 1: show the floor and "start" button
     this.phases[TRIAL.prestim] = function(that) {
         // Initialize the trial
-        that.init_trial();
+        if (that.init_trial()) {
 
-        // Actually show the prestim element
-        debug("Show PRESTIM");
-        $("#prestim").show();
+            // Actually show the prestim element
+            debug("Show PRESTIM");
+            $("#prestim").show();
 
-        // Listen for a response to show the stimulus
-        that.listening = true;
+            // Listen for a response to show the stimulus
+            that.listening = true;
+        };
     };
 
     // Phase 2: show the stimulus
     this.phases[TRIAL.stim] = function (that) {
         debug("Show STIMULUS");
-	    
+            
         // Hide prestim and show stim
         replace("prestim", "stim");
 
         // Start playing the stimulus video
-	that.video_idx = that.player_idx[STATE.index]['stimulus'];
-        that.player.play(that.video_idx);
-	that.playing = true;
+        PLAYER.play("stimulus");
     };
 
     // Phase 3: show the response options for "fall?" question
@@ -320,15 +267,15 @@ var TestPhase = function() {
             // Listen for a response
             that.listening = true;
 
-	} else {
-	    // Hide the stimulus
-	    $("#stim").hide();
+        } else {
+            // Hide the stimulus
+            $("#stim").hide();
 
             // Move on to the next trial
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
             that.show();
-	}
+        }
     };
 
     // Phase 4: show feedback
@@ -344,15 +291,13 @@ var TestPhase = function() {
         if (fb == "vfb") {
             // If we're showing video feedback, we need to show the
             // player and also display the text feedback.
-	    
+            
             // Show the player and hide the fall responses
             replace("fall_response", "feedback");
-	    $("#stim").show();
+            $("#stim").show();
 
             // Play the video
-	    that.video_idx = that.player_idx[STATE.index]['feedback'];
-            that.player.play(that.video_idx);
-	    that.playing = true;
+            PLAYER.play("feedback");
 
         } else if (fb == "fb") {
             // If we're only showing text feedback, we don't need to
@@ -385,8 +330,8 @@ var TestPhase = function() {
             that.listening = true;
 
         } else {
-	    $("#feedback").hide();
-	    
+            $("#feedback").hide();
+            
             // Move on to the next trial
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
@@ -410,12 +355,12 @@ var TestPhase = function() {
         // If we're not listening for a response, do nothing
         if (!this.listening) return;
 
-	// Record response time
+        // Record response time
         var rt = (new Date().getTime()) - this.timestamp;
 
         // Parse the actual value of the data to record
-	var response = KEYS[STATE.trial_phase][key];
-	if (response == undefined) return;
+        var response = KEYS[STATE.trial_phase][key];
+        if (response == undefined) return;
         this.listening = false;
 
         debug("Record response: " + response);
@@ -500,18 +445,16 @@ var TestPhase = function() {
     };
 
     // Load the trial html page
-    psiTurk.showPage("trial.html");
-
-    // Initialize the video players
-    this.player = this.init_player();
+    $(".slide").hide();
+    $("#trial").show();
 
     // Initialize the current trial -- we need to do this here in
     // addition to in prestim in case someone refreshes the page in
     // the middle of a trial
-    this.init_trial();
-
-    // Start the test
-    this.show();
+    if (this.init_trial()) {
+        // Start the test
+        this.show();
+    };
 };
 
 
@@ -523,8 +466,12 @@ var TestPhase = function() {
  ******************/
 
 $(document).ready(function() { 
+    psiTurk.showPage("trial.html");
+    
     // Start the experiment
     STATE = new State();
+    PLAYER = new Player();
+
     if (STATE.instructions) {
         CURRENTVIEW = new Instructions();
     } else {

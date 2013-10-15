@@ -68,19 +68,19 @@ var Config = function (condition, counterbalance) {
     // the list of pages we want to display a priori.
     this.instructions = new Object();
     this.instructions[EXPERIMENT.pretest] = {
-        pages: ["instructions1a.html",
-                "instructions1b.html",
-                "instructions1c.html"]
+        pages: ["instructions1a",
+                "instructions1b",
+                "instructions1c"]
     };
     this.instructions[EXPERIMENT.experimentA] = {
-        pages: ["instructions2.html"]
+        pages: ["instructions2"]
     };
     this.instructions[EXPERIMENT.experimentB] = {
-        pages: ["instructions3.html"],
+        pages: ["instructions3"],
 	examples: [null]
     };
     this.instructions[EXPERIMENT.posttest] = {
-        pages: ["instructions4.html"],
+        pages: ["instructions4"],
         examples: [null]
     };
 
@@ -88,12 +88,7 @@ var Config = function (condition, counterbalance) {
     this.pages = [
         "trial.html", 
         "submit.html"
-    ].concat(
-        $.map(this.instructions, 
-              function(item) { 
-                  return item.pages;
-              })
-    );
+    ];
 
     this.get_path = function (experiment_phase) {
 	return "/static/stimuli/" + 

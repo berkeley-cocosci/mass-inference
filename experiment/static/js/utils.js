@@ -233,23 +233,21 @@ function replace(old_elem, new_elem) {
     });
 }
 
+// Helper function to get the appropriate formats for each video
+var get_video_formats = function (stim, phase) {
+    var prefix = $c.get_path(phase) + stim;
+    var formats = [
+        { webm: prefix + ".webm" },
+        { mp4: prefix + ".mp4" },
+        { ogg: prefix + ".ogg" }
+    ];
+    return formats;
+};
+
 // Create a flowplayer object in `elem`, load a playlist of `stims`,
 // and set the poster (background image) to `poster`.
-function make_player(elem, stims, poster, phase) {
-
-    // Helper function to get the appropriate formats for each video
-    var get_video_formats = function (stim) {
-        var prefix = $c.get_path(phase) + stim;
-        var formats = [
-            { webm: prefix + ".webm" },
-            { mp4: prefix + ".mp4" },
-            { ogg: prefix + ".ogg" }
-        ];
-        return formats;
-    };
-
-    // Create the new flowplayer instance
-    var p = $f($(elem).flowplayer({
+function make_player(elem, stims) {
+    return $f($(elem).flowplayer({
         debug: $c.debug,
         fullscreen: false,
         keyboard: false,
@@ -257,18 +255,11 @@ function make_player(elem, stims, poster, phase) {
         ratio: 0.75,
         splash: false,
         tooltip: false,
-        playlist: stims.map(get_video_formats),
+        playlist: stims,
         advance: false,
         loop: false,
         embed: false
     }));
-
-    // Set the poster
-    if (poster) {
-        set_poster(elem + ".flowplayer", poster, phase);
-    }
-
-    return p;
 }
 
 // Set background and button colors to reflect the different block
@@ -276,9 +267,9 @@ function make_player(elem, stims, poster, phase) {
 function set_colors(trial) {
     var kappa;
     if (!$c.counterbalance) {
-	kappa = trial.kappa;
+        kappa = trial.kappa;
     } else {
-	kappa = -trial.kappa;
+        kappa = -trial.kappa;
     }
 
     $(".color0").css("background-color", trial.color0);
@@ -294,12 +285,91 @@ function set_colors(trial) {
     $("span.color1").html(trial.label1);
 
     if (kappa < 0) {
-	$("#color0-mass").html("light");
-	$("#color1-mass").html("heavy");
-	$(".color1-heavy").show();
+        $("#color0-mass").html("light");
+        $("#color1-mass").html("heavy");
+        $(".color1-heavy").show();
     } else if (kappa > 0) {
-	$("#color0-mass").html("heavy");
-	$("#color1-mass").html("light");
-	$(".color0-heavy").show();
+        $("#color0-mass").html("heavy");
+        $("#color1-mass").html("light");
+        $(".color0-heavy").show();
     }
 }
+
+var Player = function () {
+    this.player;
+    this.videos = [];
+    this.index_table = {};
+    this.playing = false;
+    this.curr_index = 0;
+
+    this.play = function (type) {
+        this.curr_index = this.index_table[STATE.experiment_phase][STATE.index][type];
+        debug("playing index " + this.curr_index);
+        this.player.play(this.curr_index);
+        this.playing = true;
+    };
+
+    this.add_videos = function () {
+        var that = this;
+        var idx = 0;
+
+        var doit = function (phase) {
+
+            var videos = [];
+            var trials = $c.trials[phase];
+            
+            that.index_table[phase] = {};
+
+            for (i in trials) {
+                videos.push(trials[i].stimulus + "~stimulus");
+                that.index_table[phase][i] = {'stimulus': idx};
+                idx = idx + 1;
+
+                if (trials[i]['feedback'] == 'vfb') {
+                    videos.push(trials[i].stimulus + "~feedback");
+                    that.index_table[phase][i]['feedback'] = idx;
+                    idx = idx + 1;
+                }
+            }
+
+            that.videos = that.videos.concat(videos.map(
+                function (stim) {
+                    return get_video_formats(stim, phase);
+                }));
+        };
+
+        doit(EXPERIMENT.pretest);
+        doit(EXPERIMENT.experimentA);
+        doit(EXPERIMENT.experimentB);
+        doit(EXPERIMENT.posttest);
+    };
+
+    var that = this;
+    var on_finish = function (e, api) {
+        if (!that.playing) {
+            assert(false, "player finished, but it shouldn't be playing!");
+            return;
+        }
+        debug("player finished");
+        that.playing = false;
+        api.disable(false);
+
+        STATE.set_trial_phase(STATE.trial_phase + 1);
+        CURRENTVIEW.show();
+    };
+
+    var on_ready = function (e, api) {
+        if (!that.playing) {
+            debug("player ready, but not playing!");
+            return;
+        }
+        debug("player ready and about to play");
+        api.play();
+        api.disable(true);
+    };
+
+    this.add_videos();
+    this.player = make_player("#stim", this.videos)
+        .bind("finish", on_finish)
+        .bind("ready", on_ready);
+};
