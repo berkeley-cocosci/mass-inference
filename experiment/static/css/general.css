@@ -354,21 +354,14 @@ span.color0, span.color1 {
 
 /* Feedback */
 
-#video_feedback {
-    position: absolute;
-    z-index: 50;
-    width: 100%;
-    height: 100%;
-}
-
-#text_feedback {
+#feedback {
     position: absolute;
     z-index: 100;
     width: 100%;
     height: 100%;
 }
 
-#text_feedback div {
+#feedback div {
     width: 100%;
     height: 10%;
     text-align: center;
@@ -377,7 +370,7 @@ span.color0, span.color1 {
     display: none;
 }
 
-#text-feedback p { margin-top: 2%; }
+#feedback p { margin-top: 2%; }
 
 #stable-feedback {
     background-color: #FFFFFF;

@@ -164,11 +164,12 @@ var TestPhase = function() {
     this.timestamp; 
     // Whether the object is listening for responses
     this.listening = false;
+    this.playing = false;
 
-    // Video player for the stimulus
-    this.stim_player;
-    // Video player for feedback
-    this.fb_player;
+    // Video player for the stimulus and feedback
+    this.player;
+    this.player_idx = {};
+    this.video_idx = 0;
 
     // List of trials in this block of the experiment
     this.trials = $c.trials[STATE.experiment_phase];
@@ -184,21 +185,46 @@ var TestPhase = function() {
     // make_player (in utils.js) in that it also binds a "finish"
     // handler to set a new poster for the player, and to go to the
     // next trial phase.
-    this.init_player = function (elem, name) {
+    this.init_player = function () {
+	var videos = [];
+	var idx = 0;
+	for (i in this.trials) {
+	    videos.push(this.trials[i].stimulus + "~stimulus");
+	    this.player_idx[i] = {
+		'stimulus': idx
+	    };
+	    idx = idx + 1;
+
+	    if (this.trials[i]['feedback'] == 'vfb') {
+		videos.push(this.trials[i].stimulus + "~feedback");
+		this.player_idx[i]['feedback'] = idx;
+		idx = idx + 1;
+	    }
+	}
+
         var that = this;
-        var video = this.stimulus + "~" + name;
         var on_finish = function (e, api) {
-            debug(name + " finished");
-            api.unbind("finish");
-
-            set_poster(elem + ".flowplayer", video + "~B", STATE.experiment_phase);
-            $(elem).addClass("is-poster");
-
+	    if (!that.playing) {
+		assert(false, "player finished, but it shouldn't be playing!");
+		return;
+	    }
+            debug("player finished");
+	    that.playing = false;
             STATE.set_trial_phase(STATE.trial_phase + 1);
             that.show();
         };
-        return make_player(elem, [video], video + "~A", STATE.experiment_phase)
-            .bind("finish", on_finish);
+
+	var on_ready = function (e, api) {
+	    if (!that.playing) {
+		debug("player ready, but not playing!");
+		return;
+	    }
+	    debug("player ready and about to play index " + that.video_idx);
+	    api.play(that.video_idx);
+	};
+
+	var p = make_player("#stim", videos, null, STATE.experiment_phase);
+	return p.bind("finish", on_finish).bind("ready", on_ready);
     };
 
     // Initialize a new trial. This is called either at the beginning
@@ -215,15 +241,6 @@ var TestPhase = function() {
         // Load the new trialinfo and stimulus values
         this.trialinfo = this.trials[STATE.index];
         this.stimulus = this.trialinfo.stimulus;
-
-        // Load the trial.html snippet into the body of the page
-        psiTurk.showPage('trial.html');
-
-        // Initialize the video players
-        this.stim_player = this.init_player("#stim", "stimulus");
-	if (this.trialinfo.feedback != 'nfb') {
-            this.fb_player = this.init_player("#video_feedback", "feedback");
-	}
 
         // Set appropriate backgrounds for phase elements
         set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
@@ -245,7 +262,9 @@ var TestPhase = function() {
         // Determine which feedback to show (stable or unstable)
         if (this.trialinfo.stable) {
             $("#stable-feedback").show();
+            $("#unstable-feedback").hide();
         } else {
+            $("#stable-feedback").hide();
             $("#unstable-feedback").show();
         }
 
@@ -278,19 +297,14 @@ var TestPhase = function() {
     // Phase 2: show the stimulus
     this.phases[TRIAL.stim] = function (that) {
         debug("Show STIMULUS");
-
-        // If the player isn't ready, then bind a ready handler to it.
-        if (!that.stim_player.ready) {
-            that.stim_player.bind("ready", function (e, api) {
-                api.play();
-            });
-        }
-
+	    
         // Hide prestim and show stim
         replace("prestim", "stim");
 
         // Start playing the stimulus video
-        that.stim_player.play(0);
+	that.video_idx = that.player_idx[STATE.index]['stimulus'];
+        that.player.play(that.video_idx);
+	that.playing = true;
     };
 
     // Phase 3: show the response options for "fall?" question
@@ -303,24 +317,12 @@ var TestPhase = function() {
             // Hide stim and show fall_response
             replace("stim", "fall_response");
 
-            // Destroy the player
-            if (that.stim_player) {
-		that.stim_player.unload();
-		$("#stim").replaceWith('<div id="stim" class="phase fixed-controls no-toggle no-time no-volume no-mute">');
-	    }
-
             // Listen for a response
             that.listening = true;
 
 	} else {
 	    // Hide the stimulus
 	    $("#stim").hide();
-
-            // Destroy the player
-            if (that.stim_player) {
-		that.stim_player.unload();
-		$("#stim").replaceWith('<div id="stim" class="phase fixed-controls no-toggle no-time no-volume no-mute">');
-	    }
 
             // Move on to the next trial
             STATE.set_trial_phase();
@@ -342,33 +344,15 @@ var TestPhase = function() {
         if (fb == "vfb") {
             // If we're showing video feedback, we need to show the
             // player and also display the text feedback.
+	    
+            // Show the player and hide the fall responses
+            replace("fall_response", "feedback");
+	    $("#stim").show();
 
-            var play = function () {
-                // If the player isn't ready, bind a ready handler to
-                // it so it will start playing when it is ready
-                if (!that.fb_player.ready) {
-                    that.fb_player.bind("ready", function (e, api) {
-                        api.play();
-                    });
-                }
-
-                // Show the player and hide the fall responses
-                $("#video_feedback").show();
-                $("#fall_response").hide();
-
-                // Play the video
-                that.fb_player.play(0);
-            };
-
-            // Temporarily hide the text and video feedback
-            $("#text_feedback").hide();
-            $("#video_feedback").hide();
-
-            // Show the div containing the text and video feedback
-            $("#feedback").show();
-
-            // Fade in the text feedback, then show the video
-            $("#text_feedback").fadeIn($c.fade, play);
+            // Play the video
+	    that.video_idx = that.player_idx[STATE.index]['feedback'];
+            that.player.play(that.video_idx);
+	    that.playing = true;
 
         } else if (fb == "fb") {
             // If we're only showing text feedback, we don't need to
@@ -379,7 +363,7 @@ var TestPhase = function() {
         } else { 
             // If we're showing no feedback, just move on to the next
             // trial phase.
-            setTimeout(advance, 200); 
+            setTimeout(advance, 200);
         }
     };
 
@@ -395,22 +379,14 @@ var TestPhase = function() {
             $("#mass-question").show();
 
             // Fade out text_feedback and fade in mass_response
-            $("#text_feedback").fadeOut(
-                $c.fade,
-                function () {
-                    replace("feedback", "mass_response");
-                });
-
-            // Destroy the player
-            if (that.fb_player) that.fb_player.unload();
+            replace("feedback", "mass_response");
 
             // Listen for a response
             that.listening = true;
 
         } else {
-            // Destroy the player
-            if (that.fb_player) that.fb_player.unload();
-
+	    $("#feedback").hide();
+	    
             // Move on to the next trial
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
@@ -522,6 +498,12 @@ var TestPhase = function() {
             CURRENTVIEW = new Instructions();
         }
     };
+
+    // Load the trial html page
+    psiTurk.showPage("trial.html");
+
+    // Initialize the video players
+    this.player = this.init_player();
 
     // Initialize the current trial -- we need to do this here in
     // addition to in prestim in case someone refreshes the page in
