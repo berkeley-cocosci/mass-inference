@@ -9,7 +9,6 @@
  */
 
 // TODO: try to fix weird flickery behavior at the beginning of a trial
-// TODO: try to fix flickery behavior at the beginning of videos
 
 // Initialize flowplayer
 var $f = flowplayer;
@@ -201,7 +200,6 @@ var TestPhase = function() {
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
-        // TODO: show an appropriate image during experimentA
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
             $("#question-image-A").show();
             $("#question-image-B").hide();
@@ -278,7 +276,7 @@ var TestPhase = function() {
             that.listening = true;
 
         } else if (that.trialinfo["feedback"] != "nfb") {
-	    // TODO: implement this properly
+	    // TODO: implement stim-->feedback transition properly on inference trials
             // show a message that says "press space to see what
             // happens when physics is turned on" and listen for a
             // response
@@ -334,8 +332,7 @@ var TestPhase = function() {
         // We won't query for the mass on every trial, so check to see
         // if this is a trial where we do.
         if (that.trialinfo["mass? query"]) {
-	    // TODO: show a message that promps for the keys to press
-	    // to respond to the mass query
+	    // TODO: show a message that prompts for the keys to press to respond to the mass query
             debug("Show MASS_RESPONSE");
 
             // Swap the fall? prompt for the mass? prompt
