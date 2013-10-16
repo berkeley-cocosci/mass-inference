@@ -42,8 +42,8 @@ KEYS[TRIAL.fall_response] = {
 };
 KEYS[TRIAL.feedback] = {};
 KEYS[TRIAL.mass_response] = {
-    44: 0,  // comma
-    46: 1,  // period
+    48: 0,  // 0
+    49: 1,  // 1
 };
 
 // Object to hold the experiment configuration. It takes as parameters

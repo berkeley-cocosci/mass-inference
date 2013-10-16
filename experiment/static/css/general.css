@@ -321,36 +321,39 @@ span.color0, span.color1 {
 /* Mass? responses */
 
 #mass_response {
+    position: absolute;
     z-index: 75;
-    text-align: left;
+    text-align: center;
     height: 100%;
     width: 100%;
     display: none;
     background-size: 100%;
 }
 
-.mass-choice {
+#mass-choices {
     position: absolute;
-    height: 15%;
     width: 100%;
     font-size: 1.25em;
+    top: 0%;
 }
 
-.mass-choice button {
-    width: 32%;
-    height: 100%;
-    border-radius: 0 4em 4em 0;
+#mass-choice-left, #mass-choice-right {
+    display: inline-block;
+    padding: 0.75em 1.4em;
+    margin: 1em 2em;
+    background-color: white;
+    border: 1px solid black;
     text-transform: capitalize;
-    margin: 0;
-    border-left: none;
+    line-height: 1.2em;
 }
 
-.mass-choice button:active {
-    box-shadow: 0px 0px 3px;
+#mass-choice-left {
+    float: left;
 }
 
-#mass-choice-0 { top: 15%; }
-#mass-choice-1 { bottom: 15%; }
+#mass-choice-right {
+    float: right;
+}
 
 /* Feedback */
 

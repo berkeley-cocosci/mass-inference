@@ -1,5 +1,4 @@
 TODO: feedback in experimentB appears to be incorrect
-TODO: mass? responses should be comma/period
 TODO: update instructions3.html
 TODO: clean up make_trial_config.py
 TODO: test all conditions of experiment

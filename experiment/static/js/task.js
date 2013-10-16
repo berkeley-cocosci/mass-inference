@@ -200,6 +200,7 @@ var TestPhase = function() {
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
+	// TODO: question image shouldn't show in posttest
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
             $("#question-image-A").show();
             $("#question-image-B").hide();
@@ -332,7 +333,6 @@ var TestPhase = function() {
         // We won't query for the mass on every trial, so check to see
         // if this is a trial where we do.
         if (that.trialinfo["mass? query"]) {
-	    // TODO: show a message that prompts for the keys to press to respond to the mass query
             debug("Show MASS_RESPONSE");
 
             // Swap the fall? prompt for the mass? prompt
