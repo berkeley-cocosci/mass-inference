@@ -273,24 +273,26 @@ function set_colors(trial) {
     }
 
     $(".color0").css("background-color", trial.color0);
-    $("button.color0").html(trial.label0);
     $("span.color0").css("background-color", "inherit");
     $("span.color0").css("color", trial.color0)
-    $("span.color0").html(trial.label0);
 
     $(".color1").css("background-color", trial.color1);
-    $("button.color1").html(trial.label1);
     $("span.color1").css("background-color", "inherit");
     $("span.color1").css("color", trial.color1)
-    $("span.color1").html(trial.label1);
+
+    $("button.color0").html(trial.label0);
+    $("button.color1").html(trial.label1);
+
+    $(".color0-name").html(trial.label0);
+    $(".color1-name").html(trial.label1);
 
     if (kappa < 0) {
-        $("#color0-mass").html("light");
-        $("#color1-mass").html("heavy");
+        $(".color0-mass").html("light");
+        $(".color1-mass").html("heavy");
         $(".color1-heavy").show();
     } else if (kappa > 0) {
-        $("#color0-mass").html("heavy");
-        $("#color1-mass").html("light");
+        $(".color0-mass").html("heavy");
+        $(".color1-mass").html("light");
         $(".color0-heavy").show();
     }
 }

@@ -201,7 +201,9 @@ var TestPhase = function() {
         // TODO: show an appropriate image during experimentA
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
             $("#question-image-A").show();
+            $("#question-image-B").hide();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
+            $("#question-image-A").hide();
             $("#question-image-B").show();
         }
 
@@ -215,7 +217,12 @@ var TestPhase = function() {
         }
 
         // Display the question prompt
-        $("#fall-question").show();
+        $(".question").hide();
+        if (this.trialinfo["fall? query"]) {
+            $("#fall-question").show();
+        } else if (this.trialinfo["mass? query"]) {
+            $("#mass-question").show();
+        }
 
         // Update progress bar
         update_progress(STATE.index, this.trials.length);
