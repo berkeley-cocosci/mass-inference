@@ -68,6 +68,9 @@ var Instructions = function() {
         var example = this.examples[STATE.index];
         if (example) {
             // Set mass colors
+	    // TODO: instructions before experimentB don't get the color set
+	    // this is because they don't tecnically have an example,
+	    // so we need a better way of setting colors...
             set_colors(example);
 
             // Load the video player
@@ -274,13 +277,20 @@ var TestPhase = function() {
             // Listen for a response
             that.listening = true;
 
+        } else if (that.trialinfo["feedback"] != "nfb") {
+	    // TODO: implement this properly
+            // show a message that says "press space to see what
+            // happens when physics is turned on" and listen for a
+            // response
+            STATE.set_trial_phase(STATE.trial_phase + 1);
+            that.show();
+
         } else {
             // Hide the stimulus
             $("#stim").hide();
 
             // Move on to the next trial
-            STATE.set_trial_phase();
-            STATE.set_index(STATE.index + 1);
+            STATE.set_trial_phase(STATE.trial_phase + 1);
             that.show();
         }
     };
@@ -324,6 +334,8 @@ var TestPhase = function() {
         // We won't query for the mass on every trial, so check to see
         // if this is a trial where we do.
         if (that.trialinfo["mass? query"]) {
+	    // TODO: show a message that promps for the keys to press
+	    // to respond to the mass query
             debug("Show MASS_RESPONSE");
 
             // Swap the fall? prompt for the mass? prompt
