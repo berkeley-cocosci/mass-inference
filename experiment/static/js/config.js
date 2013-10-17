@@ -81,7 +81,6 @@ var Config = function (condition, counterbalance) {
     };
     this.instructions[EXPERIMENT.experimentB] = {
         pages: ["instructions3"],
-	examples: [null]
     };
     this.instructions[EXPERIMENT.posttest] = {
         pages: ["instructions4"],
@@ -118,6 +117,10 @@ var Config = function (condition, counterbalance) {
         this.instructions[EXPERIMENT.experimentA].examples = [
             data.mass_example
         ];
+
+	this.instructions[EXPERIMENT.experimentB].examples = [
+	    data.experimentB[0]
+	];
     };
 
     // Load the condition name from the server

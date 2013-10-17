@@ -65,34 +65,35 @@ var Instructions = function() {
         });
         
         var example = this.examples[STATE.index];
+	var player_elem = slide.find(".example");
+
         if (example) {
             // Set mass colors
-	    // TODO: instructions before experimentB don't get the color set
-	    // this is because they don't tecnically have an example,
-	    // so we need a better way of setting colors...
             set_colors(example);
 
-            // Load the video player
-            var videos = [get_video_formats(
-                example.stimulus + "~stimulus",
-                STATE.experiment_phase)];
-            var player_id = "#" + slide.find(".example").attr("id");
+	    if (player_elem.length > 0) {
+		// Load the video player
+		var videos = [get_video_formats(
+                    example.stimulus + "~stimulus",
+                    STATE.experiment_phase)];
+		var player_id = "#" + player_elem.attr("id");
 
-            // Start the video immediately
-            var on_ready = function (e, api) {
-                api.play();
-            };
-            // Loop the player by restarting the current video
-            var on_finish = function (e, api) {
-                api.prev();
-            };
+		// Start the video immediately
+		var on_ready = function (e, api) {
+                    api.play();
+		};
+		// Loop the player by restarting the current video
+		var on_finish = function (e, api) {
+                    api.prev();
+		};
 
-            // Initialize the player and start it
-            this.player = make_player(player_id, videos)
-                .bind("ready", on_ready)
-                .bind("finish", on_finish)
-                .play(0);
-        }
+		// Initialize the player and start it
+		this.player = make_player(player_id, videos)
+                    .bind("ready", on_ready)
+                    .bind("finish", on_finish)
+                    .play(0);
+            }
+	}
 
         // Record the time that an instructions page is presented
         this.timestamp = new Date().getTime();
