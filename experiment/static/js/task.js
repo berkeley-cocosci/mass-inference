@@ -200,14 +200,20 @@ var TestPhase = function() {
         // Set the stimulus colors
         set_colors(this.trialinfo);
 
+        // Display the question prompt
+        $(".question").hide();
+        if (this.trialinfo["fall? query"]) {
+            $("#fall-question").show();
+        } else if (this.trialinfo["mass? query"]) {
+            $("#mass-question").show();
+        }
+
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
-	// TODO: question image shouldn't show in posttest
+	$(".question-image").hide();
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
             $("#question-image-A").show();
-            $("#question-image-B").hide();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-            $("#question-image-A").hide();
             $("#question-image-B").show();
         }
 
@@ -218,14 +224,6 @@ var TestPhase = function() {
         } else {
             $("#stable-feedback").hide();
             $("#unstable-feedback").show();
-        }
-
-        // Display the question prompt
-        $(".question").hide();
-        if (this.trialinfo["fall? query"]) {
-            $("#fall-question").show();
-        } else if (this.trialinfo["mass? query"]) {
-            $("#mass-question").show();
         }
 
         // Update progress bar
