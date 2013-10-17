@@ -192,6 +192,7 @@ var TestPhase = function() {
 
         // Set appropriate backgrounds for phase elements
         set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
+        set_poster("#prefeedback", this.stimulus + "~stimulus~B", STATE.experiment_phase);
         set_poster("#fall_response", this.stimulus + "~stimulus~B", STATE.experiment_phase);
         set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
 
@@ -255,6 +256,7 @@ var TestPhase = function() {
     // Phase 2: show the stimulus
     this.phases[TRIAL.stim] = function (that) {
         debug("Show STIMULUS");
+	// TODO: wrong video is shown if the page is refreshed
             
         // Hide prestim and show stim
         replace("prestim", "stim");
@@ -276,14 +278,6 @@ var TestPhase = function() {
             // Listen for a response
             that.listening = true;
 
-        } else if (that.trialinfo["feedback"] != "nfb") {
-	    // TODO: implement stim-->feedback transition properly on inference trials
-            // show a message that says "press space to see what
-            // happens when physics is turned on" and listen for a
-            // response
-            STATE.set_trial_phase(STATE.trial_phase + 1);
-            that.show();
-
         } else {
             // Hide the stimulus
             $("#stim").hide();
@@ -292,6 +286,26 @@ var TestPhase = function() {
             STATE.set_trial_phase(STATE.trial_phase + 1);
             that.show();
         }
+    };
+
+    this.phases[TRIAL.prefeedback] = function (that) {
+	if (!that.trialinfo["fall? query"] && that.trialinfo["feedback"] != "nfb") {
+	    debug("Show PREFEEDBACK");
+
+            // Show the prefeedback element
+	    $("#feedback-instructions").show();
+            replace("fall_response", "prefeedback");
+
+            // Listen for a response to show the feedback
+            that.listening = true;
+
+	} else {
+	    $("#feedback-instructions").hide();
+            replace("fall_response", "prefeedback");
+
+	    STATE.set_trial_phase(STATE.trial_phase + 1);
+	    that.show();
+	}
     };
 
     // Phase 4: show feedback
@@ -309,7 +323,7 @@ var TestPhase = function() {
             // player and also display the text feedback.
             
             // Show the player and hide the fall responses
-            replace("fall_response", "feedback");
+            replace("prefeedback", "feedback");
             $("#stim").show();
 
             // Play the video
@@ -318,7 +332,7 @@ var TestPhase = function() {
         } else if (fb == "fb") {
             // If we're only showing text feedback, we don't need to
             // bother with the video player.
-            replace("fall_response", "feedback");
+            replace("prefeedback", "feedback");
             setTimeout(advance, 2500);
 
         } else { 
@@ -390,7 +404,7 @@ var TestPhase = function() {
         debug(data.to_array());
 
         // Tell the state to go to the next trial phase or trial
-        if (STATE.trial_phase == TRIAL.mass_response) {
+        if (STATE.trial_phase == (TRIAL.length - 1)) {
             STATE.set_trial_phase();
             STATE.set_index(STATE.index + 1);
         } else {

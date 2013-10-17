@@ -20,9 +20,10 @@ var TRIAL = Object.freeze({
     prestim: 0,
     stim: 1,
     fall_response: 2,
-    feedback: 3,
-    mass_response: 4,
-    length: 5
+    prefeedback: 3,
+    feedback: 4,
+    mass_response: 5,
+    length: 6
 });
 
 // Enum-like object for representing key names.
@@ -39,6 +40,9 @@ KEYS[TRIAL.fall_response] = {
     53: 5,  // 5
     54: 6,  // 6
     55: 7,  // 7
+};
+KEYS[TRIAL.prefeedback] = {
+    32: ""  // space
 };
 KEYS[TRIAL.feedback] = {};
 KEYS[TRIAL.mass_response] = {

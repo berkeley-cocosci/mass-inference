@@ -355,6 +355,26 @@ span.color0, span.color1 {
     float: right;
 }
 
+/* Prefeedback */
+
+#prefeedback {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-size: 100%;
+}
+
+#feedback-instructions {
+    position: absolute;
+    width: 100%;
+    font-size: 1.25em;
+    text-align: center;
+    color: white;
+    top: 10%;
+}
+
 /* Feedback */
 
 #feedback {
