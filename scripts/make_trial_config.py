@@ -46,13 +46,6 @@ conditions = {
     },
 }
 
-examples = {
-    "pretest": ["unstable_example", "stable_example", None],
-    "experimentA": ["mass_example"],
-    "experimentB": [None],
-    "posttest": [None]
-}
-
 render_dir = path("../resources/render/G/")
 json_dir = path("../experiment/static/json/")
 
