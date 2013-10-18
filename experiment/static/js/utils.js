@@ -226,10 +226,17 @@ function update_progress(num, num_trials) {
     $("#progress-text").html("Progress " + (num + 1) + "/" + num_trials);
 }
 
-// Fade in new_elem, and then hide old_elem
-function replace(old_elem, new_elem) {
-    $("#" + new_elem).fadeIn($c.fade, function () {
-        $("#" + old_elem).hide();
+// Fade in new_elems, and then hide everything else
+function show_phase(new_elem, callback) {
+    $(".phase").removeClass("current-phase");
+    $(".phase").addClass("inactive-phase");
+
+    $("#" + new_elem).removeClass("inactive-phase");
+    $("#" + new_elem).addClass("current-phase");
+
+    $(".current-phase").fadeIn($c.fade, function () {
+	$(".inactive-phase").hide();
+	if (callback) callback();
     });
 }
 

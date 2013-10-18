@@ -8,8 +8,6 @@
  *   utils.js
  */
 
-// TODO: try to fix weird flickery behavior at the beginning of a trial
-
 // Initialize flowplayer
 var $f = flowplayer;
 
@@ -52,7 +50,7 @@ var Instructions = function() {
         // Load the next page of instructions
         $(".slide").hide();
         var slide = $("#" + this.pages[STATE.index]);
-        slide.show();
+        slide.fadeIn($c.fade);
 
         // Update the URL hash
         STATE.set_hash();
@@ -177,8 +175,7 @@ var TestPhase = function() {
     // of a new trial, or if the page is reloaded between trials.
     this.init_trial = function () {
         debug("Initializing trial " + STATE.index);
-
-        $(".phase").hide();
+	$(".phase").hide();
 
         // If there are no more trials left, then we are at the end of
         // this phase
@@ -195,7 +192,11 @@ var TestPhase = function() {
         set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
         set_poster("#prefeedback", this.stimulus + "~stimulus~B", STATE.experiment_phase);
         set_poster("#fall_response", this.stimulus + "~stimulus~B", STATE.experiment_phase);
-        set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
+	if (this.trialinfo.stable) {
+            set_poster("#mass_response", this.stimulus + "~feedback~A", STATE.experiment_phase);
+	} else {
+            set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
+	}
 
         // Set the stimulus colors
         set_colors(this.trialinfo);
@@ -240,16 +241,21 @@ var TestPhase = function() {
 
     // Phase 1: show the floor and "start" button
     this.phases[TRIAL.prestim] = function(that) {
+	$("#phase-container").hide();
+
         // Initialize the trial
         if (that.init_trial()) {
+	    // Actually show the prestim element
+	    debug("Show PRESTIM");
 
-            // Actually show the prestim element
-            debug("Show PRESTIM");
-            $("#prestim").show();
-
-            // Listen for a response to show the stimulus
-            that.listening = true;
-        };
+	    setTimeout(function () {
+		$("#prestim").show();
+		$("#phase-container").fadeIn($c.fade, function () {
+		    // Listen for a response to show the stimulus
+		    that.listening = true;
+		});
+	    }, 100);
+	}
     };
 
     // Phase 2: show the stimulus
@@ -258,7 +264,7 @@ var TestPhase = function() {
 	// TODO: wrong video is shown if the page is refreshed
             
         // Hide prestim and show stim
-        replace("prestim", "stim");
+        show_phase("stim");
 
         // Start playing the stimulus video
         PLAYER.play("stimulus");
@@ -272,15 +278,12 @@ var TestPhase = function() {
             debug("Show FALL_RESPONSE");
 
             // Hide stim and show fall_response
-            replace("stim", "fall_response");
+            show_phase("fall_response");
 
             // Listen for a response
             that.listening = true;
 
         } else {
-            // Hide the stimulus
-            $("#stim").hide();
-
             // Move on to the next trial
             STATE.set_trial_phase(STATE.trial_phase + 1);
             that.show();
@@ -293,14 +296,14 @@ var TestPhase = function() {
 
             // Show the prefeedback element
 	    $("#feedback-instructions").show();
-            replace("fall_response", "prefeedback");
+            show_phase("prefeedback");
 
             // Listen for a response to show the feedback
             that.listening = true;
 
 	} else {
 	    $("#feedback-instructions").hide();
-            replace("fall_response", "prefeedback");
+            show_phase("prefeedback");
 
 	    STATE.set_trial_phase(STATE.trial_phase + 1);
 	    that.show();
@@ -317,21 +320,20 @@ var TestPhase = function() {
             that.show();
         };
 
-        if (fb == "vfb") {
+        if (fb == "vfb" && !that.trialinfo.stable) {
             // If we're showing video feedback, we need to show the
             // player and also display the text feedback.
             
             // Show the player and hide the fall responses
-            replace("prefeedback", "feedback");
-            $("#stim").show();
+	    show_phase("stim", function () { $("#feedback").fadeIn($c.fade); });	    
 
             // Play the video
             PLAYER.play("feedback");
 
-        } else if (fb == "fb") {
+        } else if (fb == "fb" || (fb == "vfb" && that.trialinfo.stable)) {
             // If we're only showing text feedback, we don't need to
             // bother with the video player.
-            replace("prefeedback", "feedback");
+	    show_phase("stim", function () { $("#feedback").fadeIn($c.fade); });	    
             setTimeout(advance, 2500);
 
         } else { 
@@ -353,7 +355,8 @@ var TestPhase = function() {
             $("#mass-question").show();
 
             // Fade out text_feedback and fade in mass_response
-            replace("feedback", "mass_response");
+	    $("#feedback").hide();
+            show_phase("mass_response");
 
             // Listen for a response
             that.listening = true;
@@ -441,14 +444,14 @@ var TestPhase = function() {
             var prompt_resubmit = function() {
                 $("#resubmit_slide").click(resubmit);
                 $(".slide").hide();
-                $("#submit_error_slide").show();
+                $("#submit_error_slide").fadeIn($c.fade);
             };
 
             // Show a page saying that the HIT is resubmitting, and
             // show the error page again if it times out or error
             var resubmit = function() {
                 $(".slide").hide();
-                $("#resubmit_slide").show();
+                $("#resubmit_slide").fadeIn($c.fade);
 
                 var reprompt = setTimeout(prompt_resubmit, 10000);
                 psiTurk.saveData({
@@ -475,7 +478,7 @@ var TestPhase = function() {
 
     // Load the trial html page
     $(".slide").hide();
-    $("#trial").show();
+    $("#trial").fadeIn($c.fade);
 
     // Initialize the current trial -- we need to do this here in
     // addition to in prestim in case someone refreshes the page in

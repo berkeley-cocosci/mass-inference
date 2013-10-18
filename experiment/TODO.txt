@@ -1,3 +1,4 @@
+TODO: "no thanks" button doesn't work
 TODO: feedback in experimentB appears to be incorrect
 TODO: clean up make_trial_config.py
 TODO: test all conditions of experiment
