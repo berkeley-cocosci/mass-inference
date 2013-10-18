@@ -1,4 +1,3 @@
-TODO: "no thanks" button doesn't work
 TODO: clean up make_trial_config.py
 TODO: test all conditions of experiment
 TODO: test full experiment on chrome
