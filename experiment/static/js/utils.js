@@ -164,6 +164,8 @@ var DataRecord = function () {
             this.angle,
             this.color0,
             this.color1,
+            this.label0,
+            this.label1,
             this.feedback_time,
             this.presentation_time,
             this.stable
@@ -318,6 +320,13 @@ var Player = function () {
         this.playing = true;
     };
 
+    this.load = function (type) {
+        this.curr_index = this.index_table[STATE.experiment_phase][STATE.index][type];
+        debug("loading index " + this.curr_index);
+        this.player.play(this.curr_index);
+        this.playing = false;
+    };
+
     this.add_videos = function () {
         var that = this;
         var idx = 0;
@@ -359,6 +368,7 @@ var Player = function () {
             assert(false, "player finished, but it shouldn't be playing!");
             return;
         }
+
         debug("player finished");
         that.playing = false;
         api.disable(false);
@@ -368,11 +378,19 @@ var Player = function () {
     };
 
     var on_ready = function (e, api) {
+        if (that.curr_index != api.video.index) {
+            debug("player is trying to play the wrong index: " + api.video.index);
+            api.play(that.curr_index);
+	    return;
+	}
+
         if (!that.playing) {
-            debug("player ready, but not playing!");
+            debug("player ready, but not playing");
+	    api.pause();
             return;
         }
-        debug("player ready and about to play");
+
+        debug("player ready and about to play index " + api.video.index);
         api.play();
         api.disable(true);
     };

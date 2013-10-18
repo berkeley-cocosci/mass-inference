@@ -263,7 +263,6 @@ var TestPhase = function() {
     // Phase 2: show the stimulus
     this.phases[TRIAL.stim] = function (that) {
         debug("Show STIMULUS");
-	// TODO: wrong video is shown if the page is refreshed
             
         // Hide prestim and show stim
         show_phase("stim");
@@ -327,15 +326,24 @@ var TestPhase = function() {
             // player and also display the text feedback.
             
             // Show the player and hide the fall responses
-	    show_phase("stim", function () { $("#feedback").fadeIn($c.fade); });	    
+            show_phase("stim", function () { 
+		$("#feedback").fadeIn($c.fade); 
+	    });
 
             // Play the video
             PLAYER.play("feedback");
 
         } else if (fb == "fb" || (fb == "vfb" && that.trialinfo.stable)) {
-            // If we're only showing text feedback, we don't need to
-            // bother with the video player.
-	    show_phase("stim", function () { $("#feedback").fadeIn($c.fade); });	    
+            // If we're only showing text feedback, we don't want to
+            // actually play a video
+
+	    // Show the player and hide the fall responses
+            show_phase("stim", function () { 
+		$("#feedback").fadeIn($c.fade); 
+	    });
+
+	    // Load the video (but don't actually play it)
+            PLAYER.load("feedback");
             setTimeout(advance, 2500);
 
         } else { 
