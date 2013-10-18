@@ -1,3 +1,17 @@
+TODO: instructions should explicitly say to press keys
+TODO: mass example says red is heavy, but it looks like blue is?
+TODO: make it more explicit that there won't be feedback
+TODO: say how many trials there will be in total
+TODO: make it more explicit that the heavy color does not change
+TODO: set up experiment on the cocosci server
+TODO: write tentative analysis of experiment data
+TODO: comment experiment code
+TODO: write README for how to create the experiment from scratch
+TODO: write some unit tests
+TODO: increase the initial presentation rotation time
+TODO: choose different random orders per person
+TODO: add set of 10 trials at the beginning to practice with mass
+TODO: comment make_trial_config.py
 TODO: clean up make_trial_config.py
 TODO: test all conditions of experiment
 TODO: test full experiment on chrome
