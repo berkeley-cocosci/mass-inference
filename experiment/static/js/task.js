@@ -163,8 +163,7 @@ var TestPhase = function() {
     this.listening = false;
 
     // List of trials in this block of the experiment
-    // TODO: use the full list of trials
-    this.trials = $c.trials[STATE.experiment_phase].slice(0, 2);
+    this.trials = $c.trials[STATE.experiment_phase];
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
