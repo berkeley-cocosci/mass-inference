@@ -131,6 +131,7 @@ var Instructions = function() {
         // Record that the user has finished the instructions and 
         // moved on to the experiment. This changes their status code
         // in the database.
+	// TODO: enable finish instructions
         // if (STATE.experiment_phase == EXPERIMENT.pretest) {
         //     psiTurk.finishInstructions();
         // }
@@ -162,6 +163,7 @@ var TestPhase = function() {
     this.listening = false;
 
     // List of trials in this block of the experiment
+    // TODO: use the full list of trials
     this.trials = $c.trials[STATE.experiment_phase].slice(0, 2);
     // Information about the current trial
     this.trialinfo;
