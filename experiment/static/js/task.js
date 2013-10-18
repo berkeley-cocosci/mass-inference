@@ -63,35 +63,35 @@ var Instructions = function() {
         });
         
         var example = this.examples[STATE.index];
-	var player_elem = slide.find(".example");
+        var player_elem = slide.find(".example");
 
         if (example) {
             // Set mass colors
             set_colors(example);
 
-	    if (player_elem.length > 0) {
-		// Load the video player
-		var videos = [get_video_formats(
+            if (player_elem.length > 0) {
+                // Load the video player
+                var videos = [get_video_formats(
                     example.stimulus + "~stimulus",
                     STATE.experiment_phase)];
-		var player_id = "#" + player_elem.attr("id");
+                var player_id = "#" + player_elem.attr("id");
 
-		// Start the video immediately
-		var on_ready = function (e, api) {
+                // Start the video immediately
+                var on_ready = function (e, api) {
                     api.play();
-		};
-		// Loop the player by restarting the current video
-		var on_finish = function (e, api) {
+                };
+                // Loop the player by restarting the current video
+                var on_finish = function (e, api) {
                     api.prev();
-		};
+                };
 
-		// Initialize the player and start it
-		this.player = make_player(player_id, videos)
+                // Initialize the player and start it
+                this.player = make_player(player_id, videos)
                     .bind("ready", on_ready)
                     .bind("finish", on_finish)
                     .play(0);
             }
-	}
+        }
 
         // Record the time that an instructions page is presented
         this.timestamp = new Date().getTime();
@@ -131,7 +131,7 @@ var Instructions = function() {
         // Record that the user has finished the instructions and 
         // moved on to the experiment. This changes their status code
         // in the database.
-	// TODO: enable finish instructions
+        // TODO: enable finish instructions
         // if (STATE.experiment_phase == EXPERIMENT.pretest) {
         //     psiTurk.finishInstructions();
         // }
@@ -177,7 +177,7 @@ var TestPhase = function() {
     // of a new trial, or if the page is reloaded between trials.
     this.init_trial = function () {
         debug("Initializing trial " + STATE.index);
-	$(".phase").hide();
+        $(".phase").hide();
 
         // If there are no more trials left, then we are at the end of
         // this phase
@@ -194,11 +194,11 @@ var TestPhase = function() {
         set_poster("#prestim", this.stimulus + "~floor", STATE.experiment_phase);
         set_poster("#prefeedback", this.stimulus + "~stimulus~B", STATE.experiment_phase);
         set_poster("#fall_response", this.stimulus + "~stimulus~B", STATE.experiment_phase);
-	if (this.trialinfo.stable) {
+        if (this.trialinfo.stable) {
             set_poster("#mass_response", this.stimulus + "~feedback~A", STATE.experiment_phase);
-	} else {
+        } else {
             set_poster("#mass_response", this.stimulus + "~feedback~B", STATE.experiment_phase);
-	}
+        }
 
         // Set the stimulus colors
         set_colors(this.trialinfo);
@@ -213,7 +213,7 @@ var TestPhase = function() {
 
         // Possibly show image (if the trials are not mass trials,
         // then we don't want to show the image).
-	$(".question-image").hide();
+        $(".question-image").hide();
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
             $("#question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
@@ -243,21 +243,21 @@ var TestPhase = function() {
 
     // Phase 1: show the floor and "start" button
     this.phases[TRIAL.prestim] = function(that) {
-	$("#phase-container").hide();
+        $("#phase-container").hide();
 
         // Initialize the trial
         if (that.init_trial()) {
-	    // Actually show the prestim element
-	    debug("Show PRESTIM");
+            // Actually show the prestim element
+            debug("Show PRESTIM");
 
-	    setTimeout(function () {
-		$("#prestim").show();
-		$("#phase-container").fadeIn($c.fade, function () {
-		    // Listen for a response to show the stimulus
-		    that.listening = true;
-		});
-	    }, 100);
-	}
+            setTimeout(function () {
+                $("#prestim").show();
+                $("#phase-container").fadeIn($c.fade, function () {
+                    // Listen for a response to show the stimulus
+                    that.listening = true;
+                });
+            }, 100);
+        }
     };
 
     // Phase 2: show the stimulus
@@ -292,23 +292,23 @@ var TestPhase = function() {
     };
 
     this.phases[TRIAL.prefeedback] = function (that) {
-	if (!that.trialinfo["fall? query"] && that.trialinfo["feedback"] != "nfb") {
-	    debug("Show PREFEEDBACK");
+        if (!that.trialinfo["fall? query"] && that.trialinfo["feedback"] != "nfb") {
+            debug("Show PREFEEDBACK");
 
             // Show the prefeedback element
-	    $("#feedback-instructions").show();
+            $("#feedback-instructions").show();
             show_phase("prefeedback");
 
             // Listen for a response to show the feedback
             that.listening = true;
 
-	} else {
-	    $("#feedback-instructions").hide();
+        } else {
+            $("#feedback-instructions").hide();
             show_phase("prefeedback");
 
-	    STATE.set_trial_phase(STATE.trial_phase + 1);
-	    that.show();
-	}
+            STATE.set_trial_phase(STATE.trial_phase + 1);
+            that.show();
+        }
     };
 
     // Phase 4: show feedback
@@ -365,7 +365,7 @@ var TestPhase = function() {
             $("#mass-question").show();
 
             // Fade out text_feedback and fade in mass_response
-	    $("#feedback").hide();
+            $("#feedback").hide();
             show_phase("mass_response");
 
             // Listen for a response

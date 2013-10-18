@@ -95,9 +95,9 @@ var Config = function (condition, counterbalance) {
     ];
 
     this.get_path = function (experiment_phase) {
-	return "/static/stimuli/" + 
-	    this.resource_paths[experiment_phase] + 
-	    "-cb" + this.counterbalance + "/";
+        return "/static/stimuli/" + 
+            this.resource_paths[experiment_phase] + 
+            "-cb" + this.counterbalance + "/";
     };
 
     // Parse the JSON object that we've requested and load it into the
@@ -108,7 +108,7 @@ var Config = function (condition, counterbalance) {
         this.trials[EXPERIMENT.experimentB] = data["experimentB"];
         this.trials[EXPERIMENT.posttest] = data["posttest"];
 
-	console.log(data.unstable_example);
+        console.log(data.unstable_example);
         this.instructions[EXPERIMENT.pretest].examples = [
             data.unstable_example,
             data.stable_example,
@@ -119,9 +119,9 @@ var Config = function (condition, counterbalance) {
             data.mass_example
         ];
 
-	this.instructions[EXPERIMENT.experimentB].examples = [
-	    data.experimentB[0]
-	];
+        this.instructions[EXPERIMENT.experimentB].examples = [
+            data.experimentB[0]
+        ];
     };
 
     // Load the condition name from the server
@@ -136,9 +136,9 @@ var Config = function (condition, counterbalance) {
                     console.log("Got list of conditions");
                 }
                 that.resource_paths = new Object();
-		for (key in data[that.condition]) {
-		    that.resource_paths[EXPERIMENT[key]] = data[that.condition][key];
-		}
+                for (key in data[that.condition]) {
+                    that.resource_paths[EXPERIMENT[key]] = data[that.condition][key];
+                }
             }
         });
     };
@@ -149,7 +149,7 @@ var Config = function (condition, counterbalance) {
         $.ajax({
             dataType: "json",
             url: "/static/json/" + this.condition + 
-		"-cb" + this.counterbalance + ".json",
+                "-cb" + this.counterbalance + ".json",
             async: false,
             success: function (data) { 
                 if (that.debug) {

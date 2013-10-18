@@ -237,8 +237,8 @@ function show_phase(new_elem, callback) {
     $("#" + new_elem).addClass("current-phase");
 
     $(".current-phase").fadeIn($c.fade, function () {
-	$(".inactive-phase").hide();
-	if (callback) callback();
+        $(".inactive-phase").hide();
+        if (callback) callback();
     });
 }
 
