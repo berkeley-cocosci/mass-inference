@@ -60,8 +60,13 @@ rso = np.random.RandomState(0)
 
 def get_meta(stim, kappa):
     meta = tbl.select(where=("stimulus=? and kappa=?", (stim, kappa)))
-    assert len(meta) == 1
-    return meta
+    if len(meta) == 0:
+        raise RuntimeError("could not find metadata for '%s' with k=%s" % (
+            stim, kappa))
+    if len(meta) > 1:
+        assert (meta['nfell'][0] == meta['nfell']).all()
+        assert (meta['stable'][0] == meta['stable']).all()
+    return meta[:1]
 
 
 for condition, maps in conditions.iteritems():
