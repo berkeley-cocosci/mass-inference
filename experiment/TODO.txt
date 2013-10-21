@@ -9,7 +9,6 @@ TODO: comment experiment code
 TODO: write README for how to create the experiment from scratch
 TODO: write some unit tests
 TODO: increase the initial presentation rotation time
-TODO: choose different random orders per person
 TODO: comment make_trial_config.py
 TODO: clean up make_trial_config.py
 TODO: test all conditions of experiment

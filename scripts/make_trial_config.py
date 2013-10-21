@@ -59,8 +59,6 @@ with open(json_dir.joinpath("conditions.json"), "w") as fh:
 DBPATH = path("../resources/sso/metadata.db")
 tbl = dbtools.Table(DBPATH, "stability")
 
-rso = np.random.RandomState(0)
-
 
 def get_meta(stim, kappa):
     meta = tbl.select(where=("stimulus=? and kappa=?", (stim, kappa)))
@@ -108,8 +106,7 @@ for condition, maps in conditions.iteritems():
                     ask_fall = False
                     ask_mass = True
 
-            seed = abs(hash(phase))
-            print condition, phase, seed
+            print condition, cb, phase
 
             conf = pd.DataFrame.from_csv(render_config).reset_index()
             conf.stimulus = conf.stimulus.map(lambda x: path(x).namebase)
@@ -144,17 +141,8 @@ for condition, maps in conditions.iteritems():
             r2kappa = np.array(map(float, conf.ratio))
             assert (10**conf.kappa == r2kappa).all()
 
-            idx = np.array(conf.index)
-            rso.seed(seed)
-            rso.shuffle(idx)
-
-            shuffled = conf.reindex(idx).reset_index(drop=True)
-            shuffled.index.name = "trial"
-            shuffled = shuffled.reset_index()
-
-            dicts = shuffled.T.to_dict()
-            trials = [dicts[i] for i in shuffled.index]
-
+            trials = conf.reset_index(drop=True).T.to_dict().values()
+            trials.sort(cmp=lambda x, y: cmp(x['stimulus'], y['stimulus']))
             for trial in trials:
                 for key, val in trial.iteritems():
                     if isinstance(val, float) and np.isnan(val):

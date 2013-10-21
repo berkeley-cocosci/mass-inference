@@ -164,6 +164,7 @@ var TestPhase = function() {
 
     // List of trials in this block of the experiment
     this.trials = $c.trials[STATE.experiment_phase];
+    _.shuffle(this.trials);
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
@@ -410,7 +411,11 @@ var TestPhase = function() {
 
         var data = new DataRecord();
         data.update(this.trialinfo);
-        data.update({response_time: rt, response: response});
+        data.update({
+	    response_time: rt, 
+	    response: response,
+	    trial: STATE.index
+	});
 
         // Create the record we want to save
         psiTurk.recordTrialData(data.to_array());
