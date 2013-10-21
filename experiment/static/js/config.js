@@ -10,8 +10,9 @@ var EXPERIMENT = Object.freeze({
     pretest: 0,
     experimentA: 1,
     experimentB: 2,
-    posttest: 3,
-    length: 4
+    experimentC: 3,
+    posttest: 4,
+    length: 5
 });
 
 // Enum-like object mapping trial phase names to ids, in the order
@@ -73,18 +74,22 @@ var Config = function (condition, counterbalance) {
     // the list of pages we want to display a priori.
     this.instructions = new Object();
     this.instructions[EXPERIMENT.pretest] = {
-        pages: ["instructions1a",
-                "instructions1b",
-                "instructions1c"]
+        pages: ["instructions-pretest-1",
+                "instructions-pretest-2",
+                "instructions-pretest-3"]
     };
     this.instructions[EXPERIMENT.experimentA] = {
-        pages: ["instructions2"]
+        pages: ["instructions-experimentA"]
     };
     this.instructions[EXPERIMENT.experimentB] = {
-        pages: ["instructions3"],
+        pages: ["instructions-experimentB"],
+	examples: [null]
+    };
+    this.instructions[EXPERIMENT.experimentC] = {
+        pages: ["instructions-experimentC"],
     };
     this.instructions[EXPERIMENT.posttest] = {
-        pages: ["instructions4"],
+        pages: ["instructions-posttest"],
         examples: [null]
     };
 
@@ -106,6 +111,7 @@ var Config = function (condition, counterbalance) {
         this.trials[EXPERIMENT.pretest] = data["pretest"];
         this.trials[EXPERIMENT.experimentA] = data["experimentA"];
         this.trials[EXPERIMENT.experimentB] = data["experimentB"];
+        this.trials[EXPERIMENT.experimentC] = data["experimentC"];
         this.trials[EXPERIMENT.posttest] = data["posttest"];
 
         console.log(data.unstable_example);
@@ -119,8 +125,8 @@ var Config = function (condition, counterbalance) {
             data.mass_example
         ];
 
-        this.instructions[EXPERIMENT.experimentB].examples = [
-            data.experimentB[0]
+        this.instructions[EXPERIMENT.experimentC].examples = [
+            data.experimentC[0]
         ];
     };
 

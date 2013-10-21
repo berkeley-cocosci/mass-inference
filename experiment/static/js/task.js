@@ -214,9 +214,11 @@ var TestPhase = function() {
         // then we don't want to show the image).
         $(".question-image").hide();
         if (STATE.experiment_phase == EXPERIMENT.experimentA) {
-            $("#question-image-A").show();
+            $(".question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
-            $("#question-image-B").show();
+            $(".question-image-B").show();
+        } else if (STATE.experiment_phase == EXPERIMENT.experimentC) {
+            $(".question-image-C").show();
         }
 
         // Determine which feedback to show (stable or unstable)

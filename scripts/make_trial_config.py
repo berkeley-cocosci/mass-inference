@@ -7,42 +7,46 @@ from path import path
 conditions = {
     "0": {
         "pretest": "shared",
-        "experimentA": "nfb-0.1",
-        "experimentB": "vfb-0.1",
+        "experimentA": "vfb-0.1",
+        "experimentB": "nfb-0.1",
+        "experimentC": "vfb-0.1",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "nfb-0.1"
+        "mass_example": "vfb-0.1"
     },
 
     "1": {
         "pretest": "shared",
-        "experimentA": "nfb-0.1",
-        "experimentB": "vfb-10",
+        "experimentA": "vfb-0.1",
+        "experimentB": "nfb-0.1",
+        "experimentC": "vfb-10",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "nfb-0.1"
+        "mass_example": "vfb-0.1"
     },
 
     "2": {
         "pretest": "shared",
-        "experimentA": "nfb-10",
-        "experimentB": "vfb-0.1",
+        "experimentA": "vfb-10",
+        "experimentB": "nfb-10",
+        "experimentC": "vfb-0.1",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "nfb-10"
+        "mass_example": "vfb-10"
     },
 
     "3": {
         "pretest": "shared",
-        "experimentA": "nfb-10",
-        "experimentB": "vfb-10",
+        "experimentA": "vfb-10",
+        "experimentB": "nfb-10",
+        "experimentC": "vfb-10",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "nfb-10"
+        "mass_example": "vfb-10"
     },
 }
 
@@ -97,10 +101,10 @@ for condition, maps in conditions.iteritems():
                     "%s-cb%d" % (pth, cb), "%s.csv" % phase)
 
                 fb, ratio = pth.split("-")
-                if phase == "experimentA":
+                if phase in ("experimentA", "experimentB"):
                     ask_fall = True
                     ask_mass = False
-                elif phase == "experimentB":
+                elif phase == "experimentC":
                     ask_fall = False
                     ask_mass = True
 

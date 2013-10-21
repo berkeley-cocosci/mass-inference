@@ -359,6 +359,7 @@ var Player = function () {
         doit(EXPERIMENT.pretest);
         doit(EXPERIMENT.experimentA);
         doit(EXPERIMENT.experimentB);
+        doit(EXPERIMENT.experimentC);
         doit(EXPERIMENT.posttest);
     };
 
