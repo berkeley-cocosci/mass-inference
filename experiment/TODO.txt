@@ -1,6 +1,5 @@
 TODO: instructions should explicitly say to press keys
 TODO: mass example says red is heavy, but it looks like blue is?
-TODO: make it more explicit that there won't be feedback
 TODO: say how many trials there will be in total
 TODO: make it more explicit that the heavy color does not change
 TODO: set up experiment on the cocosci server
