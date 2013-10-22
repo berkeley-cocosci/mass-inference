@@ -15,7 +15,6 @@
 Backbone.Notifications = {};
 _.extend(Backbone.Notifications, Backbone.Events);
 
-var optoutmessage = "By leaving this page, you opt out of the experiment.";
 var startTask = function () {
     psiTurk.saveData();
     
@@ -32,8 +31,8 @@ var startTask = function () {
 	    type: "POST",
 	    data: {uniqueId: uniqueId}
 	});
-	alert(msg);
-	return "Are you sure you want to leave the experiment?";
+
+	return "By leaving this page, you opt out of the experiment.";
     });
 };
 Backbone.Notifications.on('_psiturk_finishedinstructions', startTask);
