@@ -107,6 +107,8 @@ var Instructions = function() {
         // Record the data. The format is: 
         // experiment phase, instructions, index, trial_phase, response time
         var data = new DataRecord();
+	data.update(STATE.as_data());
+        data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
         psiTurk.recordTrialData(data.to_array());
         debug(data.to_array());
@@ -411,6 +413,7 @@ var TestPhase = function() {
 
         var data = new DataRecord();
         data.update(this.trialinfo);
+	data.update(STATE.as_data());
         data.update({
 	    response_time: rt, 
 	    response: response,
@@ -514,12 +517,19 @@ var TestPhase = function() {
  ******************/
 
 $(document).ready(function() { 
+    // Record field names for the data that we'll be collecting
+    var data = new DataRecord();
+    psiTurk.recordTrialData(data.fields);
+    debug(data.fields);
+
+    // Load the HTML for the trials
     psiTurk.showPage("trial.html");
     
     // Start the experiment
     STATE = new State();
     PLAYER = new Player();
 
+    // Begin the experiment phase
     if (STATE.instructions) {
         CURRENTVIEW = new Instructions();
     } else {

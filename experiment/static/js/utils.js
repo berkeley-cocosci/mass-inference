@@ -139,7 +139,12 @@ var State = function () {
             trial_phase = "";
         }
 
-        return [experiment_phase, instructions, index, trial_phase];
+        return {
+	    'experiment_phase': experiment_phase, 
+	    'instructions': instructions,
+	    'index': index, 
+	    'trial_phase': trial_phase
+	};
     };
 
     // Initialize the State object components
@@ -148,28 +153,38 @@ var State = function () {
 
 // Object to properly format rows of data
 var DataRecord = function () {
+    this.fields = [
+	"experiment_phase",
+	"instructions",
+	"index",
+	"trial_phase",
+	"feedback",
+	"ratio",
+	"counterbalance",
+	"trial",
+	"stimulus",
+	"response",
+	"response_time",
+	"angle",
+	"color0",
+	"color1",
+	"label0",
+	"label1",
+	"feedback_time",
+	"presentation_time",
+	"stable"
+    ];
+
     this.update = function (other) {
         _.extend(this, other);
     };
 
     this.to_array = function () {
-        return STATE.as_data().concat([
-            this.feedback,
-            this.ratio,
-            this.counterbalance,
-            this.trial,
-            this.stimulus,
-            this.response,
-            this.response_time,
-            this.angle,
-            this.color0,
-            this.color1,
-            this.label0,
-            this.label1,
-            this.feedback_time,
-            this.presentation_time,
-            this.stable
-        ]);
+	var arr = [];
+	for (i in this.fields) {
+	    arr.push(this[this.fields[i]]);
+	}
+	return arr;
     };
 };
 
