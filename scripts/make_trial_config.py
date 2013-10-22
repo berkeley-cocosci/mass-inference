@@ -50,7 +50,7 @@ conditions = {
     },
 }
 
-render_dir = path("../resources/render/G/")
+render_dir = path("../experiment/static/stimuli/")
 json_dir = path("../experiment/static/json/")
 
 with open(json_dir.joinpath("conditions.json"), "w") as fh:
@@ -75,36 +75,19 @@ for condition, maps in conditions.iteritems():
     for cb in [0, 1]:
         config = {}
         for phase, pth in maps.iteritems():
+            render_config = render_dir.joinpath(
+                "%s-cb%d" % (pth, cb), "%s.csv" % phase)
 
             if phase in ("pretest", "posttest"):
-                render_config = render_dir.joinpath(
-                    pth, "%s.csv" % phase)
-
                 fb = "vfb"
                 ratio = "1"
-                ask_fall = True
-                ask_mass = False
 
             elif phase in ("stable_example", "unstable_example"):
-                render_config = render_dir.joinpath(
-                    pth, "%s.csv" % phase)
-
                 fb = "vfb"
                 ratio = "1"
-                ask_fall = True
-                ask_mass = False
 
             else:
-                render_config = render_dir.joinpath(
-                    "%s-cb%d" % (pth, cb), "%s.csv" % phase)
-
                 fb, ratio = pth.split("-")
-                if phase in ("experimentA", "experimentB"):
-                    ask_fall = True
-                    ask_mass = False
-                elif phase == "experimentC":
-                    ask_fall = False
-                    ask_mass = True
 
             print condition, cb, phase
 
@@ -114,8 +97,6 @@ for condition, maps in conditions.iteritems():
             conf['feedback'] = fb
             conf['ratio'] = ratio
             conf['counterbalance'] = cb
-            conf['fall? query'] = ask_fall
-            conf['mass? query'] = ask_mass
 
             # XXX: hack! kappa might not be correct for the mass
             # example because we want the example tower to be the same

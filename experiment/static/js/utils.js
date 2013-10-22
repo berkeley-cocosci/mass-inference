@@ -140,11 +140,11 @@ var State = function () {
         }
 
         return {
-	    'experiment_phase': experiment_phase, 
-	    'instructions': instructions,
-	    'index': index, 
-	    'trial_phase': trial_phase
-	};
+            'experiment_phase': experiment_phase, 
+            'instructions': instructions,
+            'index': index, 
+            'trial_phase': trial_phase
+        };
     };
 
     // Initialize the State object components
@@ -154,26 +154,27 @@ var State = function () {
 // Object to properly format rows of data
 var DataRecord = function () {
     this.fields = [
-	"experiment_phase",
-	"instructions",
-	"index",
-	"trial_phase",
-	"feedback",
-	"ratio",
-	"counterbalance",
-	"trial",
-	"stimulus",
-	"response",
-	"response_time",
-	"stable",
-	"color0",
-	"color1",
-	"label0",
-	"label1",
-	"camera_start",
-	"camera_spin",
-	"feedback_time",
-	"presentation_time"
+        "experiment_phase",
+        "instructions",
+        "index",
+        "trial_phase",
+        "feedback",
+        "ratio",
+        "counterbalance",
+        "trial",
+        "stimulus",
+        "response",
+        "response_time",
+        "stable",
+        "nfell",
+        "color0",
+        "color1",
+        "label0",
+        "label1",
+        "camera_start",
+        "camera_spin",
+        "feedback_time",
+        "presentation_time"
     ];
 
     this.update = function (other) {
@@ -181,11 +182,11 @@ var DataRecord = function () {
     };
 
     this.to_array = function () {
-	var arr = [];
-	for (i in this.fields) {
-	    arr.push(this[this.fields[i]]);
-	}
-	return arr;
+        var arr = [];
+        for (i in this.fields) {
+            arr.push(this[this.fields[i]]);
+        }
+        return arr;
     };
 };
 
@@ -398,12 +399,12 @@ var Player = function () {
         if (that.curr_index != api.video.index) {
             debug("player is trying to play the wrong index: " + api.video.index);
             api.play(that.curr_index);
-	    return;
-	}
+            return;
+        }
 
         if (!that.playing) {
             debug("player ready, but not playing");
-	    api.pause();
+            api.pause();
             return;
         }
 
@@ -417,3 +418,14 @@ var Player = function () {
         .bind("finish", on_finish)
         .bind("ready", on_ready);
 };
+
+// Whether to ask the "fall?" question
+function ask_fall_query() {
+    return _.contains(FALL_PHASES, STATE.experiment_phase);
+}
+
+// Whether to ask the "mass?" question
+function ask_mass_query() {
+    return _.contains(MASS_PHASES, STATE.experiment_phase) &&
+        _.contains(MASS_TRIALS, STATE.index);
+}

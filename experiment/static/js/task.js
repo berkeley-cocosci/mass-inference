@@ -107,7 +107,7 @@ var Instructions = function() {
         // Record the data. The format is: 
         // experiment phase, instructions, index, trial_phase, response time
         var data = new DataRecord();
-	data.update(STATE.as_data());
+        data.update(STATE.as_data());
         data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
         psiTurk.recordTrialData(data.to_array());
@@ -207,9 +207,9 @@ var TestPhase = function() {
 
         // Display the question prompt
         $(".question").hide();
-        if (this.trialinfo["fall? query"]) {
+        if (ask_fall_query()) {
             $("#fall-question").show();
-        } else if (this.trialinfo["mass? query"]) {
+        } else if (ask_mass_query()) {
             $("#mass-question").show();
         }
 
@@ -277,9 +277,9 @@ var TestPhase = function() {
 
     // Phase 3: show the response options for "fall?" question
     this.phases[TRIAL.fall_response] = function (that) {
-        // We won't ask for fall predictions on every trial, so check
-        // to see if this is a trial where we do.
-        if (that.trialinfo["fall? query"]) {
+        // We don't always ask for fall predictions, so check to see
+        // if this is a trial where we do.
+        if (ask_fall_query()) {
             debug("Show FALL_RESPONSE");
 
             // Hide stim and show fall_response
@@ -296,7 +296,7 @@ var TestPhase = function() {
     };
 
     this.phases[TRIAL.prefeedback] = function (that) {
-        if (!that.trialinfo["fall? query"] && that.trialinfo["feedback"] != "nfb") {
+        if (ask_mass_query() && that.trialinfo["feedback"] != "nfb") {
             debug("Show PREFEEDBACK");
 
             // Show the prefeedback element
@@ -331,8 +331,8 @@ var TestPhase = function() {
             
             // Show the player and hide the fall responses
             show_phase("stim", function () { 
-		$("#feedback").fadeIn($c.fade); 
-	    });
+                $("#feedback").fadeIn($c.fade); 
+            });
 
             // Play the video
             PLAYER.play("feedback");
@@ -341,12 +341,12 @@ var TestPhase = function() {
             // If we're only showing text feedback, we don't want to
             // actually play a video
 
-	    // Show the player and hide the fall responses
+            // Show the player and hide the fall responses
             show_phase("stim", function () { 
-		$("#feedback").fadeIn($c.fade); 
-	    });
+                $("#feedback").fadeIn($c.fade); 
+            });
 
-	    // Load the video (but don't actually play it)
+            // Load the video (but don't actually play it)
             PLAYER.load("feedback");
             setTimeout(advance, 2500);
 
@@ -361,7 +361,7 @@ var TestPhase = function() {
     this.phases[TRIAL.mass_response] = function (that) {
         // We won't query for the mass on every trial, so check to see
         // if this is a trial where we do.
-        if (that.trialinfo["mass? query"]) {
+        if (ask_mass_query()) {
             debug("Show MASS_RESPONSE");
 
             // Swap the fall? prompt for the mass? prompt
@@ -413,12 +413,12 @@ var TestPhase = function() {
 
         var data = new DataRecord();
         data.update(this.trialinfo);
-	data.update(STATE.as_data());
+        data.update(STATE.as_data());
         data.update({
-	    response_time: rt, 
-	    response: response,
-	    trial: STATE.index
-	});
+            response_time: rt, 
+            response: response,
+            trial: STATE.index
+        });
 
         // Create the record we want to save
         psiTurk.recordTrialData(data.to_array());
@@ -527,8 +527,8 @@ $(document).ready(function() {
     
     // Display a link to reload, if there is a problem loading a video/image
     $(".reload").html("Loading error? <a href=\"#\" " + 
-		      "onClick=\"CURRENTVIEW.show()\">Click here</a> " + 
-		      "to try again.");
+                      "onClick=\"CURRENTVIEW.show()\">Click here</a> " + 
+                      "to try again.");
     
     // Start the experiment
     STATE = new State();

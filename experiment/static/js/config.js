@@ -27,6 +27,19 @@ var TRIAL = Object.freeze({
     length: 6
 });
 
+// The phases in which we will ask the "fall?" question
+var FALL_PHASES = [
+    EXPERIMENT.pretest,
+    EXPERIMENT.experimentA,
+    EXPERIMENT.experimentB,
+    EXPERIMENT.posttest
+];
+
+// The phases in which we will ask the "mass?" question
+var MASS_PHASES = [EXPERIMENT.experimentC];
+// The trials on which we will ask the "mass?" question
+var MASS_TRIALS = [0, 1, 2, 3, 4, 6, 9, 13, 19];
+
 // Enum-like object for representing key names.
 var KEYS = new Object();
 KEYS[TRIAL.prestim] = {
@@ -83,7 +96,7 @@ var Config = function (condition, counterbalance) {
     };
     this.instructions[EXPERIMENT.experimentB] = {
         pages: ["instructions-experimentB"],
-	examples: [null]
+        examples: [null]
     };
     this.instructions[EXPERIMENT.experimentC] = {
         pages: ["instructions-experimentC"],
