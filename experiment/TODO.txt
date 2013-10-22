@@ -1,3 +1,7 @@
+TODO: add in refresh option if the video/image doesn't load properly
+TODO: re-render movies with faster camera spin
+TODO: add a bit of noise to block color so they are more distinguishable
+TODO: ask for mass inferences on a log scale
 TODO: mass example says red is heavy, but it looks like blue is?
 TODO: set up experiment on the cocosci server
 TODO: write tentative analysis of experiment data
