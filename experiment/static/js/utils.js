@@ -165,14 +165,15 @@ var DataRecord = function () {
 	"stimulus",
 	"response",
 	"response_time",
-	"angle",
+	"stable",
 	"color0",
 	"color1",
 	"label0",
 	"label1",
+	"camera_start",
+	"camera_spin",
 	"feedback_time",
-	"presentation_time",
-	"stable"
+	"presentation_time"
     ];
 
     this.update = function (other) {
