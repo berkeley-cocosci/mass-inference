@@ -71,6 +71,11 @@ div.continue {
     margin-top: 1%;
 }
 
+div.reload {
+    text-align: center;
+    font-size: small;
+}
+
 /********************************************************************/
 /* Index slide components                                           */
 /********************************************************************/
@@ -99,10 +104,6 @@ span.consent {
 .flowplayer {
     background-size: cover !important;
 }
-
-/* .flowplayer.is-seeking .fp-waiting {  */
-/*     display: none;  */
-/* } */
 
 /********************************************************************/
 /* Instructions slide components                                    */

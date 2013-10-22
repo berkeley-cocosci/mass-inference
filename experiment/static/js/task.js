@@ -525,6 +525,11 @@ $(document).ready(function() {
     // Load the HTML for the trials
     psiTurk.showPage("trial.html");
     
+    // Display a link to reload, if there is a problem loading a video/image
+    $(".reload").html("Loading error? <a href=\"#\" " + 
+		      "onClick=\"CURRENTVIEW.show()\">Click here</a> " + 
+		      "to try again.");
+    
     // Start the experiment
     STATE = new State();
     PLAYER = new Player();
