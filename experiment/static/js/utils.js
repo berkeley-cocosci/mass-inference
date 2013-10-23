@@ -404,6 +404,7 @@ var Player = function () {
 
         if (!that.playing) {
             debug("player ready, but not playing");
+            unset_reload($("#trial"));
             api.pause();
             return;
         }
