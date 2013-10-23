@@ -167,7 +167,6 @@ var TestPhase = function() {
 
     // List of trials in this block of the experiment
     this.trials = $c.trials[STATE.experiment_phase];
-    _.shuffle(this.trials);
     // Information about the current trial
     this.trialinfo;
     // The current stimulus name
