@@ -98,8 +98,9 @@ span.consent {
 /* Flow player                                                      */
 /********************************************************************/
 
-/* /\* don't show the player ui when the player is ready *\/ */
+/* don't show the player ui when the player is ready */
 .is-splash.flowplayer .fp-ui, .is-paused.flowplayer .fp-ui { background: none; }
+.flowplayer .fp-speed.fp-hilite { opacity: 0; }
 
 .flowplayer {
     background-size: cover !important;
