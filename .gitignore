@@ -4,4 +4,7 @@ figures/*.png
 resources/sso/mass-all
 resources/render
 experiment/static/stimuli/
+experiment/config.txt
+experiment/deploy.sh
+experiment/participants.db
 old
