@@ -429,3 +429,18 @@ function ask_mass_query() {
     return _.contains(MASS_PHASES, STATE.experiment_phase) &&
         _.contains(MASS_TRIALS, STATE.index);
 }
+
+var reload_phase = function (hash) {
+    window.location.hash = hash;
+    STATE.load_hash();
+    CURRENTVIEW.show();
+}
+
+function set_reload(elem) {
+    var hash = STATE.set_hash();
+    elem.find(".reload").html(
+        "Loading error? <a href=\"#" + hash + "\" " +
+            "onClick=\"reload_phase('" + hash + "')\">Click here</a> " +
+            "to try again.");
+}
+

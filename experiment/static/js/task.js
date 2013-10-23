@@ -50,6 +50,7 @@ var Instructions = function() {
         // Load the next page of instructions
         $(".slide").hide();
         var slide = $("#" + this.pages[STATE.index]);
+        set_reload(slide);
         slide.fadeIn($c.fade);
 
         // Update the URL hash
@@ -209,7 +210,7 @@ var TestPhase = function() {
         $(".question").hide();
         if (ask_fall_query()) {
             $("#fall-question").show();
-        } else if (ask_mass_query()) {
+        } else {
             $("#mass-question").show();
         }
 
@@ -296,7 +297,13 @@ var TestPhase = function() {
     };
 
     this.phases[TRIAL.prefeedback] = function (that) {
-        if (ask_mass_query() && that.trialinfo["feedback"] != "nfb") {
+        if (ask_fall_query() || that.trialinfo["feedback"] == "nfb") {
+            $("#feedback-instructions").hide();
+            show_phase("prefeedback");
+
+            STATE.set_trial_phase(STATE.trial_phase + 1);
+            that.show();
+        } else {
             debug("Show PREFEEDBACK");
 
             // Show the prefeedback element
@@ -305,13 +312,6 @@ var TestPhase = function() {
 
             // Listen for a response to show the feedback
             that.listening = true;
-
-        } else {
-            $("#feedback-instructions").hide();
-            show_phase("prefeedback");
-
-            STATE.set_trial_phase(STATE.trial_phase + 1);
-            that.show();
         }
     };
 
@@ -388,7 +388,7 @@ var TestPhase = function() {
     // Show the current trial at the currect phase
     this.show = function () {
         // Update the URL hash
-        STATE.set_hash();
+        set_reload($("#trial"));
         // Call the phase setup handler
         this.phases[STATE.trial_phase](this);
         // Record when this phase started
@@ -524,11 +524,6 @@ $(document).ready(function() {
 
     // Load the HTML for the trials
     psiTurk.showPage("trial.html");
-    
-    // Display a link to reload, if there is a problem loading a video/image
-    $(".reload").html("Loading error? <a href=\"#\" " + 
-                      "onClick=\"CURRENTVIEW.show()\">Click here</a> " + 
-                      "to try again.");
     
     // Start the experiment
     STATE = new State();
