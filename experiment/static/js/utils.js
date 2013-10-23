@@ -409,6 +409,7 @@ var Player = function () {
         }
 
         debug("player ready and about to play index " + api.video.index);
+        unset_reload($("#trial"));
         api.play();
         api.disable(true);
     };
@@ -431,6 +432,7 @@ function ask_mass_query() {
 }
 
 var reload_phase = function (hash) {
+    debug("reloading state " + hash);
     window.location.hash = hash;
     STATE.load_hash();
     CURRENTVIEW.show();
@@ -442,5 +444,9 @@ function set_reload(elem) {
         "Loading error? <a href=\"#" + hash + "\" " +
             "onClick=\"reload_phase('" + hash + "')\">Click here</a> " +
             "to try again.");
+}
+
+function unset_reload(elem) {
+    elem.find(".reload").html("");
 }
 

@@ -79,6 +79,7 @@ var Instructions = function() {
 
                 // Start the video immediately
                 var on_ready = function (e, api) {
+                    unset_reload(slide);
                     api.play();
                 };
                 // Loop the player by restarting the current video
