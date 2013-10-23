@@ -76,7 +76,6 @@ var Config = function (condition, counterbalance) {
     // Paths to stimuli, depending on experiment phase
     this.resource_paths = null;
     // Whether debug information should be printed out
-    // TODO: set debug to false
     this.debug = true;
     // The amount of time to fade HTML elements in/out
     this.fade = 200;
