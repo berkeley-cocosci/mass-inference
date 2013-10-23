@@ -121,11 +121,11 @@ var Config = function (condition, counterbalance) {
     // Parse the JSON object that we've requested and load it into the
     // configuration
     this.parse_config = function (data) {
-        this.trials[EXPERIMENT.pretest] = data["pretest"];
-        this.trials[EXPERIMENT.experimentA] = data["experimentA"];
-        this.trials[EXPERIMENT.experimentB] = data["experimentB"];
-        this.trials[EXPERIMENT.experimentC] = data["experimentC"];
-        this.trials[EXPERIMENT.posttest] = data["posttest"];
+        this.trials[EXPERIMENT.pretest] = _.shuffle(data["pretest"]);
+        this.trials[EXPERIMENT.experimentA] = _.shuffle(data["experimentA"]);
+        this.trials[EXPERIMENT.experimentB] = _.shuffle(data["experimentB"]);
+        this.trials[EXPERIMENT.experimentC] = _.shuffle(data["experimentC"]);
+        this.trials[EXPERIMENT.posttest] = _.shuffle(data["posttest"]);
 
         console.log(data.unstable_example);
         this.instructions[EXPERIMENT.pretest].examples = [
