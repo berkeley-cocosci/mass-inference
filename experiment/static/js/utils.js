@@ -312,11 +312,11 @@ function set_colors(trial) {
     $(".color0-name").html(trial.label0);
     $(".color1-name").html(trial.label1);
 
-    if (kappa < 0) {
+    if (kappa > 0) {
         $(".color0-mass").html("light");
         $(".color1-mass").html("heavy");
         $(".color1-heavy").show();
-    } else if (kappa > 0) {
+    } else if (kappa < 0) {
         $(".color0-mass").html("heavy");
         $(".color1-mass").html("light");
         $(".color0-heavy").show();
