@@ -128,21 +128,42 @@ div.example-container {
     width: 100%;
 }
 
-#scales {
+div.big-scales {
     height: 4.25em;
     margin-bottom: .625em;
     margin-top: 1.5em;
+}
+
+div.small-scales {
+    height: 1.8em;
+}
+
+div.scales {
     text-align: center;
 }
 
-div.scalepart {
+div.scales > div {
+    height: 100%;
+}
+
+div.scales > div > ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
     display: inline-block;
     height: 100%;
 }
 
-div.scalepart img {
-    height: 100%;
+li.scalepart {
+    display: inline-block;
+    height: 99%;
+    float: left;
+}
+
+li.scalepart img {
+    height: 101%;
     border-bottom: 2px solid black;
+    display: block;
 }
 
 .color0 {
@@ -222,9 +243,9 @@ span.color0, span.color1 {
     padding: 0 1em;
 }
 
-.question-image > div > div > div.scalepart {
-    height: 1.8em;
-}
+/* .question-image > div > ul > li.scalepart { */
+/*     height: 1.8em; */
+/* } */
 
 /* Trial phases */
 

@@ -238,8 +238,8 @@ var TestPhase = function() {
 
         // Register the response handler to record responses
         var that = this;
-        $("body").focus().keypress(function (e) {
-            that.record_response(e.keyCode);
+        $(document.body).attr("tabIndex", 1).keydown(function (e) {
+            that.record_response(e.which);
         });
 
         return true;
