@@ -291,13 +291,6 @@ function make_player(elem, stims) {
 // Set background and button colors to reflect the different block
 // types
 function set_colors(trial) {
-    var kappa;
-    if (!$c.counterbalance) {
-        kappa = trial.kappa;
-    } else {
-        kappa = -trial.kappa;
-    }
-
     $(".color0").css("background-color", trial.color0);
     $("span.color0").css("background-color", "inherit");
     $("span.color0").css("color", trial.color0)
@@ -312,11 +305,11 @@ function set_colors(trial) {
     $(".color0-name").html(trial.label0);
     $(".color1-name").html(trial.label1);
 
-    if (kappa > 0) {
+    if (trial.kappa > 0) {
         $(".color0-mass").html("light");
         $(".color1-mass").html("heavy");
         $(".color1-heavy").show();
-    } else if (kappa < 0) {
+    } else if (trial.kappa < 0) {
         $(".color0-mass").html("heavy");
         $(".color1-mass").html("light");
         $(".color0-heavy").show();

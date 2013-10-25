@@ -86,6 +86,14 @@ for condition, maps in conditions.iteritems():
                 fb = "vfb"
                 ratio = "1"
 
+            # XXX: hack! ratio might not be correct for the mass
+            # example because we want the example tower to be the same
+            # for everyone (including whether it falls or not), so we
+            # don't actually use a different kappa
+            elif phase == "mass_example":
+                fb = "vfb"
+                ratio = "10"
+
             else:
                 fb, ratio = pth.split("-")
 
@@ -97,14 +105,6 @@ for condition, maps in conditions.iteritems():
             conf['feedback'] = fb
             conf['ratio'] = ratio
             conf['counterbalance'] = cb
-
-            # XXX: hack! kappa might not be correct for the mass
-            # example because we want the example tower to be the same
-            # for everyone (including whether it falls or not), so for
-            # counterbalanced trials we actually flip kappa rather
-            # than the colors
-            if phase == "mass_example":
-                conf.kappa = np.log10(float(ratio))
 
             meta = pd.concat(map(get_meta, conf.stimulus, conf.kappa))
             meta['stable'] = meta['stable'].astype('bool')
