@@ -3,7 +3,6 @@
 ## Before running the pilot
 
 * TODO: test all conditions of experiment
-* TODO: test full experiment on firefox
 * TODO: make sure IE users are locked out
 * TODO: drop `mass-inference-G-test` table from database
 
