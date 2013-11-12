@@ -111,13 +111,7 @@ for condition, maps in conditions.iteritems():
             meta = meta.drop('dataset', axis=1)
 
             conf = pd.merge(conf, meta, on=['stimulus', 'kappa'])
-            conf = (conf
-                    .drop(
-                        ["full_render", "stimtype", "flip_colors"],
-                        axis=1)
-                    .set_index('stimulus')
-                    .sort()
-                    .reset_index())
+            conf = conf.set_index('stimulus').sort().reset_index()
 
             r2kappa = np.array(map(float, conf.ratio))
             assert (10**conf.kappa == r2kappa).all()
