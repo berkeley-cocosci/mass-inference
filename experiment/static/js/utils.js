@@ -308,11 +308,13 @@ function set_colors(trial) {
     if (trial.kappa > 0) {
         $(".color0-mass").html("light");
         $(".color1-mass").html("heavy");
+        $(".color0-heavy").hide();
         $(".color1-heavy").show();
     } else if (trial.kappa < 0) {
         $(".color0-mass").html("heavy");
         $(".color1-mass").html("light");
         $(".color0-heavy").show();
+        $(".color1-heavy").hide();
     }
 }
 
