@@ -1,0 +1,52 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:35:04.527210", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "82713ac2c478e250128cf36b8f926ec5", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 447410, 
+      "modified": "2013-10-19 15:35:04.488486", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "question": "Use the mouse to indicate how far the blocks will scatter."
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:35:04.527189"
+    }
+  ], 
+  "name": "scatter.dpkg"
+}

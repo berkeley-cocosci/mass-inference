@@ -1,0 +1,82 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:32:39.512444", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "00340715ec4f55349333b9d27004ce10", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 657033, 
+      "modified": "2013-10-19 15:32:39.462319", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "question": "Will this tower fall?", 
+        "possible_responses": [
+          [
+            1, 
+            "definitely unstable"
+          ], 
+          [
+            2, 
+            "probably unstable"
+          ], 
+          [
+            3, 
+            "possible unstable"
+          ], 
+          [
+            4, 
+            "not sure"
+          ], 
+          [
+            5, 
+            "possibly stable"
+          ], 
+          [
+            6, 
+            "probably stable"
+          ], 
+          [
+            7, 
+            "definitely stable"
+          ]
+        ]
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:32:39.512422"
+    }
+  ], 
+  "name": "mass_stability_2.dpkg"
+}

@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2013-11-10 20:03:54.276786", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "name": "stability_sameheight_ipe_fall.dpkg", 
+  "title": null, 
+  "version": "1.2.0", 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "b373e35c9fd1158428e76584eef24e74", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "path": "./model.csv", 
+      "bytes": 517049, 
+      "modified": "2013-11-10 20:03:54.231248"
+    }, 
+    {
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/Users/jhamrick/project/mass-inference/data/model-raw/stability_sameheight_ipe.dpkg"
+      }, 
+      "modified": "2013-11-10 20:03:54.276764"
+    }
+  ]
+}

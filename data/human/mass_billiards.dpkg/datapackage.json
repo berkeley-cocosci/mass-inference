@@ -1,0 +1,82 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:32:27.221375", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "3a2a50acebca729946836a51717e22a8", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 333323, 
+      "modified": "2013-10-19 15:32:27.196446", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "question": "Which color ball is lighter?", 
+        "possible_responses": [
+          [
+            1, 
+            "definitely red"
+          ], 
+          [
+            2, 
+            ""
+          ], 
+          [
+            3, 
+            ""
+          ], 
+          [
+            4, 
+            "can't tell"
+          ], 
+          [
+            5, 
+            ""
+          ], 
+          [
+            6, 
+            ""
+          ], 
+          [
+            7, 
+            "definitely yellow"
+          ]
+        ]
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:32:27.221359"
+    }
+  ], 
+  "name": "mass_billiards.dpkg"
+}
