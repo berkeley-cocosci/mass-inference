@@ -9,7 +9,7 @@ from statsmodels.stats.proportion import binom_test
 from statsmodels.stats.proportion import proportion_confint
 from statsmodels.stats.proportion import proportions_chisquare
 
-import model_observer as mo
+from mass.model import model_observer as mo
 
 from snippets.safemath import normalize
 from snippets import datapackage as dpkg
