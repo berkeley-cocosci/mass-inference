@@ -58,7 +58,18 @@ class RenderMovies(ViewTowers):
     def set_camera_angle(self, angle, task):
         self.camera_rot.setH(angle)
 
-    def save_screenshot(self, phase):
+    def thunk(self, task):
+        if task.getElapsedFrames() > 1:
+            return task.done
+        return task.cont
+
+    def hide_stimulus(self, task):
+        self.sso.detachNode()
+
+    def show_stimulus(self, task):
+        self.sso.reparentTo(self.scene)
+
+    def save_screenshot(self, phase, task):
         ext = self.options['ext']
         outdir = path(self.options['outdir'])
 
@@ -74,12 +85,9 @@ class RenderMovies(ViewTowers):
 
         logging.info("Saved screenshot to %s" % ss_path)
 
-    def start_recording(self, time, phase, task):
+    def start_recording(self, time, task):
         ext = self.options['ext']
         fps = self.options['fps']
-
-        # take a screenshot of the first frame
-        self.save_screenshot(phase + "~A")
 
         # create a temporary directory for the frame files
         self.render_path = tempfile.mkdtemp()
@@ -99,9 +107,6 @@ class RenderMovies(ViewTowers):
         ext = self.options['ext']
         outdir = self.options['outdir']
         fps = self.options['fps']
-
-        # take a screenshot of the last frame
-        self.save_screenshot(phase + "~B")
 
         # remove the first file, because it is sometimes corrupted
         files = sorted(path(self.render_path).listdir())
@@ -209,6 +214,16 @@ class RenderMovies(ViewTowers):
         # set the camera angle
         add_step(None, "set_camera_angle", angle)
 
+        # save a screenshot of the floor -- we need to add these
+        # "thunk" steps to render a few frames before we actually take
+        # the screenshot, to ensure that the graphics buffer is
+        # cleaned out
+        add_step(None, "hide_stimulus")
+        add_step(None, "thunk")
+        add_step(None, "save_screenshot", "floor")
+        add_step(None, "show_stimulus")
+        add_step(None, "thunk")
+
         # start recording
         if full_render and show_feedback:
             if drop_occluder:
@@ -222,7 +237,8 @@ class RenderMovies(ViewTowers):
             else:
                 rtime = 1.0 + ptime
 
-        add_step(None, "start_recording", rtime, "stimulus")
+        add_step(None, "save_screenshot", "stimulus~A")
+        add_step(None, "start_recording", rtime)
 
         # spin the camera
         add_step(ptime, "rotate")
@@ -236,6 +252,7 @@ class RenderMovies(ViewTowers):
         # save the stimulus presentation
         if not full_render:
             add_step(None, "stop_recording", "stimulus")
+            add_step(None, "save_screenshot", "stimulus~B")
 
         if show_feedback:
             if not full_render:
@@ -243,7 +260,8 @@ class RenderMovies(ViewTowers):
                     rtime = 1.0 + ftime
                 else:
                     rtime = 0.5 + ftime
-                add_step(None, "start_recording", rtime, "feedback")
+                add_step(None, "save_screenshot", "feedback~A")
+                add_step(None, "start_recording", rtime)
 
             # raise the occluder
             add_step(0.5, "wait")
@@ -257,10 +275,31 @@ class RenderMovies(ViewTowers):
             # save the feedback
             if full_render:
                 add_step(None, "stop_recording", "stimulus")
+                add_step(None, "save_screenshot", "stimulus~B")
             else:
                 add_step(None, "stop_recording", "feedback")
+                add_step(None, "save_screenshot", "feedback~B")
 
         return script
+
+    def _set_block_graphics(self, block, blocktype):
+        ViewTowers._set_block_graphics(self, block, blocktype)
+
+        def get_rgb(color):
+            r = int(color[1:3], base=16) / 255.
+            g = int(color[3:5], base=16) / 255.
+            b = int(color[5:7], base=16) / 255.
+            rgba = (r, g, b, 1)
+            return rgba
+
+        if self.stimtype == "mass_colors":
+            i = self.ssos.index(self.sso)
+            if blocktype == 0:
+                color0 = get_rgb(self.options['color0'][i])
+                block.setColor(*color0)
+            elif blocktype == 1:
+                color1 = get_rgb(self.options['color1'][i])
+                block.setColor(*color1)
 
     def goto_sso(self, i):
         ViewTowers.goto_sso(self, i)

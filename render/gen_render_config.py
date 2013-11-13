@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 
-def gen_angles(n):
-    angles = np.random.randint(0, 360, n)
+def gen_angles(n, rso):
+    angles = rso.randint(0, 360, n)
     return angles
 
 
@@ -30,13 +30,33 @@ def parseargs():
         help="log10 mass ratio, only for mass towers (default: 0.0)")
     parser.add_argument(
         "--presentation-time",
-        action="store", dest="ptime", type=float, default=4.0,
+        action="store", dest="ptime", type=float, default=5.0,
         help=("amount of time in seconds to present the stimulus "
-              "for (default: 4.0)"))
+              "for (default: 5.0)"))
     parser.add_argument(
         "--feedback-time",
         action="store", dest="ftime", type=float, default=2.5,
         help="amount of time in seconds to show feedback for (default: 2.5)")
+    parser.add_argument(
+        "--label0",
+        action="store", dest="label0", type=str, default="0",
+        help="label of type 0 blocks")
+    parser.add_argument(
+        "--label1",
+        action="store", dest="label1", type=str, default="1",
+        help="label of type 1 blocks")
+    parser.add_argument(
+        "--color0",
+        action="store", dest="color0", type=str, default=None,
+        help="color of type 0 blocks")
+    parser.add_argument(
+        "--color1",
+        action="store", dest="color1", type=str, default=None,
+        help="color of type 1 blocks")
+    parser.add_argument(
+        "--seed",
+        action="store", dest="seed", type=int, default=120938,
+        help="seed for random number generator")
     parser.add_argument(
         "--flip-colors",
         action="store_true", dest="flip", default=False,
@@ -71,8 +91,12 @@ def parseargs():
         'occlude': [args.occlude]*N,
         'presentation_time': [args.ptime]*N,
         'feedback_time': [args.ftime]*N,
-        'angle': gen_angles(N),
+        'angle': gen_angles(N, np.random.RandomState(args.seed)),
         'full_render': [args.full_render]*N,
+        'color0': [args.color0]*N,
+        'color1': [args.color1]*N,
+        'label0': [args.label0]*N,
+        'label1': [args.label1]*N
     }
 
     return options, args.filename
@@ -82,7 +106,7 @@ def save_options(options, filename):
     df = pd.DataFrame(options).set_index('stimulus')
     pth = path(filename).splitpath()[0]
     if not pth.exists():
-        pth.mkdir_p()
+        pth.makedirs_p()
     df.to_csv(filename)
 
 

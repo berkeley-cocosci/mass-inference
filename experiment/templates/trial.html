@@ -1,0 +1,269 @@
+<div class="slide" id="instructions-pretest-1">
+  <h1>Instructions</h1>
+  <div class="blue">
+    <p>In this experiment, you will make judgments about towers of
+    building blocks. There will be 62 trials total.</p> 
+    <p>As below, the camera rotates around a <i>frozen</i>
+    snapshot of the tower.</p>
+    <p>Afterwards, the tower is <i>unfrozen</i>, allowing physics
+    to affect it.</p>
+    <p>This causes some towers to fall down:</p>
+  </div>
+  <div class="example-container">
+    <div id="player-1a" class="example fixed-controls no-toggle no-time no-volume no-mute">
+    </div>
+  </div>
+  <div class="reload"></div>
+  <div class="continue">
+    <button type="button" class="next">Next</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-pretest-2">
+  <h1>Instructions (cont.)</h1>
+  <div class="blue">
+    <p>Other towers do <i>not</i> fall when they are unfrozen:</p>
+  </div>
+  <div class="example-container">
+    <div id="player-1b" class="example fixed-controls no-toggle no-time no-volume no-mute">
+    </div>
+  </div>
+  <div class="reload"></div>
+  <div class="continue">
+    <button type="button" class="next">Next</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-pretest-3">
+  <h1>Instructions (cont.)</h1>
+  <div class="blue">
+    <p>We'll start out with a few practice trials in which you
+    will:</p>
+    <ol>
+      <li><b>Watch</b> the <i>frozen</i> tower</li>
+      <li><b>Respond</b> whether it will fall or not by clicking a
+      button</li>
+      <li><b>Watch</b> what happens when the tower is <i>unfrozen</i></li>
+    </ol>
+    <p>When you click "Start", the practice trials will begin.</p>
+  </div>
+  <div class="continue">
+    <button type="button" class="next">Start</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-experimentA">
+  <h1>Instructions</h1>
+  <div class="blue">
+    <p>Good! Now, the blocks have different weights depending on
+    color.</p>
+    <p>You should keep the weights of the blocks in mind when
+    determining if they will fall.</p>
+    <div id="masses">
+      <p><span class="color0-name color0"></span> blocks are <span
+      class="color0-mass color0"></span></p>
+      <p><span class="color1-name color1"></span> blocks are <span
+      class="color1-mass color1"></span></p>
+    </div>
+      <div class="scales big-scales">
+        <div class="color0-heavy">
+          <ul>
+            <li class="scalepart color0"><img src="static/images/scale-left_0000_left0.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scale-left_0001_right1.png" alt="" /></li>
+            <div class="spacer"></div>
+          </ul>
+        </div>
+        <div class="color1-heavy">
+          <ul>
+            <li class="scalepart color0"><img src="static/images/scale-right_0000_left1.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scale-right_0001_right0.png" alt="" /></li>
+            <div class="spacer"></div>
+          </ul>
+        </div>
+      </div>
+  </div>
+  <div class="example-container">
+    <div id="player-2" class="example fixed-controls no-toggle no-time no-volume no-mute">
+    </div>
+  </div>
+  <div class="reload"></div>
+  <div class="continue">
+    <button type="button" class="next">Start</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-experimentB">
+  <h1>Instructions</h1>
+  <div class="blue">
+    <p>Great! Now, the next set of trials will be exactly the same as
+    the ones you just did, except that <b>we will no longer show you
+    or tell you what happens</b> when the tower is unfrozen.</p>
+  </div>
+  <div class="continue">
+    <button type="button" class="next">Start</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-experimentC">
+  <h1>Instructions</h1>
+  <div class="blue">
+    <p>Nice job! Now, the blocks will be <span class="color0-name
+    color0"></span> and <span class="color1-name color1"></span>.</p>
+    <p>But, we won't tell you which is the heavier color. Instead,
+    you'll get to see whether the towers fall or not, and you should
+    <b>try to figure out which blocks are heavier</b>.</p>
+    <p>Note that the heavy color does not change: it is the same for
+    every trial.</p>
+    <p>On <i>some</i> (not all) trials, we will ask you which color
+    you think is the "heavy color":</p>
+    <div class="scales big-scales">
+      <div>
+        <ul>
+          <li class="scalepart color0"><img src="static/images/scales-both_0000_left1.png" alt="" /></li>
+          <li class="scalepart color1"><img src="static/images/scales-both_0001_right0.png" alt="" /></li>
+          <li class="scalepart color0"><img src="static/images/scales-both_0002_left0.png" alt="" /></li>
+          <li class="scalepart color1"><img src="static/images/scales-both_0003_right1.png" alt="" /></li>
+          <div class="spacer"></div>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="continue">
+    <button type="button" class="next">Start</button>
+  </div>
+</div>
+
+
+<div class="slide" id="instructions-posttest">
+  <h1>Instructions</h1>
+  <div class="blue">
+    <p>Great, you're almost done! There are just a few more trials
+    like the ones you did at the beginning.</p>
+  </div>
+  <div class="continue">
+    <button type="button" class="next">Start</button>
+  </div>
+</div>
+
+
+<!-- Trial Slide -->
+<div class="slide" id="trial">
+  <div id="progress">
+    <div id="progress-text">Progress</div>
+    <div id="indicator-container">
+      <div id="indicator-outer">
+        <div id="indicator-stage"></div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <div id="question-container" class="blue">
+    <div id="fall-question" class="question"><b>Question:</b> On a scale from 1-7, how likely is the tower to fall down?</div>
+    <div id="mass-question" class="question"><b>Question:</b> Which is the <b>heavy</b> color?</div>
+    <div align="center" style="margin-top: 0.4em;">Press the key corresponding to your choice.</div>
+    <div class="question-image-A question-image-B question-image">
+      <div><span class="color0-name color0"></span> is <span class="color0-mass color0"></span></div>
+      <div class="scales small-scales">
+        <div class="color0-heavy">
+          <ul>
+            <li class="scalepart color0"><img src="static/images/scale-left_0000_left0.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scale-left_0001_right1.png" alt="" /></li>
+            <div class="spacer"></div>
+          </ul>
+        </div>
+        <div class="color1-heavy">
+          <ul>
+            <li class="scalepart color0"><img src="static/images/scale-right_0000_left1.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scale-right_0001_right0.png" alt="" /></li>
+            <div class="spacer"></div>
+          </ul>
+        </div>
+      </div>
+      <div><span class="color1-name color1"></span> is <span class="color1-mass color1"></span></div>
+    </div>
+    <div class="question-image-C question-image">
+      <div class="scales small-scales">
+        <div>
+          <ul>
+            <li class="scalepart color0"><img src="static/images/scales-both_0000_left1.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scales-both_0001_right0.png" alt="" /></li>
+            <li class="scalepart color0"><img src="static/images/scales-both_0002_left0.png" alt="" /></li>
+            <li class="scalepart color1"><img src="static/images/scales-both_0003_right1.png" alt="" /></li>
+            <div class="spacer"></div>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <div id="phase-container">
+
+    <!-- Responses to "which is heavier?" -->
+    <div id="mass_response" class="phase">
+      <div>
+        <div id="mass-choices">
+          <div id="mass-choice-left" class="color1">
+            <span>1 - <span class="color1-name"></span></span>
+          </div>
+          <div id="mass-choice-right" class="color0">
+            <span>0 - <span class="color0-name"></span></span>
+          </div>
+          <div class="spacer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feedback -->
+    <div id="feedback" class="phase">
+      <div id="stable-feedback"><p>Tower does not fall</p></div>
+      <div id="unstable-feedback"><p>Tower falls</p></div>
+    </div>
+
+    <!-- Pre-feedback -->
+    <div id="prefeedback" class="phase">
+      <div id="feedback-instructions">
+            <p>To see what happens when physics is turned on, press
+            SPACE.</p>
+      </div>
+    </div>
+
+    <!-- Responses to "will it fall?" -->
+    <div id="fall_response" class="phase">
+      <div>
+        <div id="fall-choices">
+          <div>1</div>
+          <div>2</div>
+          <div>3</div>
+          <div>4</div>
+          <div>5</div>
+          <div>6</div>
+          <div>7</div>
+        </div>
+        <div id="fall-choice-descriptions">
+          <div id="fall-no">&#8592; UNLIKELY to fall</div>
+          <div id="fall-yes">LIKELY to fall &#8594;</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stimulus -->
+    <div id="stim" class="phase fixed-controls no-toggle no-time no-volume no-mute"></div>
+
+    <!-- Shown before the video -->
+    <div id="prestim" class="phase">
+      <div id="video-instructions">
+        <p>When you are ready, press SPACE.</p>
+        <p>You may only watch the video once.</p>
+      </div>
+    </div>
+
+  </div>
+  <div class="reload"></div>
+</div>
