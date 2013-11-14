@@ -52,3 +52,26 @@ And there will be 4 possible conditions times 2 for counterbalancing:
  * G nfb-0.1 vfb-10
  * G nfb-10 vfb-0.1
  * G nfb-10 vfb-10
+
+## Setting up the remote experiment
+
+You'll need to configure the remote server to use Flask, see e.g. the
+[instructions for dreamhosters](http://wiki.dreamhost.com/Flask).
+
+For the `passenger_wsgi.py` file that should be in the root of the
+virtualenv, I used the following code:
+
+```
+import sys, os
+INTERP = os.path.join(os.environ['HOME'], 'jhamrick.cocosci.berkeley.edu', 'bin', 'python')
+if sys.executable != INTERP:
+    os.execl(INTERP, INTERP, *sys.argv)
+
+os.chdir(os.path.join(os.environ['HOME'], 'jhamrick.cocosci.berkeley.edu', 'experiment'))
+sys.path.append(os.getcwd())
+from psiturk.experiment import app as application
+
+# Uncomment next two lines to enable debugging
+# from werkzeug.debug import DebuggedApplication
+# application = DebuggedApplication(application, evalex=True)
+```
