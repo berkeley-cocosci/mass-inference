@@ -90,5 +90,5 @@ if __name__ == "__main__":
     # deploy experiment files
     if args.deploy or args.all:
         run_cmd([
-            "python", BIN_PATH.joinpath("render/deploy_experiment.py")
+            "python", BIN_PATH.joinpath("experiment/deploy_experiment.py")
         ])
