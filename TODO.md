@@ -2,10 +2,8 @@
 
 ## Before running the pilot
 
-* TODO: figure out why it's trying to load an unsafe script
 * TODO: test all conditions of experiment
 * TODO: make sure IE users are locked out
-* TODO: drop `mass-inference-G-test` table from database
 
 ## Running pilot
 
