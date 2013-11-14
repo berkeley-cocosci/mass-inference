@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2013-11-08 17:36:11.659730", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "name": "stability_sameheight_truth_fall.dpkg", 
+  "title": null, 
+  "version": "1.3.0", 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "04a50ea549bc2bbd134eabd8ca60eb6b", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "path": "./model.csv", 
+      "bytes": 4789, 
+      "modified": "2013-11-08 17:36:11.657189"
+    }, 
+    {
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/Users/jhamrick/project/mass-inference/data/model-raw/stability_sameheight_truth.dpkg"
+      }, 
+      "modified": "2013-11-08 17:36:11.659716"
+    }
+  ]
+}

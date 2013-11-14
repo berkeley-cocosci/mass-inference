@@ -1,0 +1,71 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:38:16.120013", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "1d9d6342cb81b7ae33263582e4e82ae0", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 384394, 
+      "modified": "2013-10-19 15:38:16.091870", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "floor_texture": "colored_rings_green.png", 
+        "question": "What is the outermost color that a block will fall on?", 
+        "possible_responses": [
+          [
+            1, 
+            "light green"
+          ], 
+          [
+            2, 
+            "medium-light green"
+          ], 
+          [
+            3, 
+            "medium-dark green"
+          ], 
+          [
+            4, 
+            "dark green"
+          ]
+        ]
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:38:16.119992"
+    }
+  ], 
+  "name": "scatter_discrete.dpkg"
+}

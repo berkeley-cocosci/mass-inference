@@ -1,0 +1,83 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:26:37.755768", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "7808c400dd7a26a0e02d9ff813c3c6e1", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 134621, 
+      "modified": "2013-10-19 15:26:37.743989", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "floor_texture": "colored_halves_grayscale.png", 
+        "question": "Will most of the blocks fall on the dark or light side of the table?", 
+        "possible_responses": [
+          [
+            1, 
+            "definitely light side"
+          ], 
+          [
+            2, 
+            ""
+          ], 
+          [
+            3, 
+            ""
+          ], 
+          [
+            4, 
+            "don't know"
+          ], 
+          [
+            5, 
+            ""
+          ], 
+          [
+            6, 
+            ""
+          ], 
+          [
+            7, 
+            "definitely dark side"
+          ]
+        ]
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:26:37.755751"
+    }
+  ], 
+  "name": "direction_discrete_halves.dpkg"
+}

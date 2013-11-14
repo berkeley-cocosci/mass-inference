@@ -8,3 +8,4 @@ experiment/config.txt
 experiment/deploy.sh
 experiment/participants.db
 old
+data/sim-raw

@@ -1,0 +1,284 @@
+{
+  "description": null, 
+  "last_modified": "2013-11-13 15:22:43.019092", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "cb207e3b5ed55dbdde5b5c5beb889dbe", 
+      "name": "simulations.npy", 
+      "format": "npy", 
+      "bytes": 907296, 
+      "modified": "2013-11-13 15:22:43.001872", 
+      "path": "./simulations.npy"
+    }, 
+    {
+      "hash": "bfb18c274e382479f88efb8976cdba44", 
+      "name": "forces.npy", 
+      "format": "npy", 
+      "bytes": 432, 
+      "modified": "2013-11-13 15:22:43.018078", 
+      "path": "./forces.npy"
+    }, 
+    {
+      "hash": "5a328b25a580d1a5ec7c6b2b2d5a1982", 
+      "name": "noises.npy", 
+      "format": "npy", 
+      "bytes": 4896, 
+      "modified": "2013-11-13 15:22:43.018639", 
+      "path": "./noises.npy"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "sigma", 
+          "phi", 
+          "kappa", 
+          "stimulus", 
+          "sample", 
+          "time", 
+          "object", 
+          "posquat"
+        ], 
+        "physics": {
+          "force_duration": 0.2, 
+          "gravity": [
+            0.0, 
+            0.0, 
+            -9.81
+          ]
+        }, 
+        "index_levels": {
+          "phi": [
+            0.0
+          ], 
+          "kappa": [
+            -1.3, 
+            -1.2, 
+            -1.1, 
+            -1.0, 
+            -0.9, 
+            -0.8, 
+            -0.7, 
+            -0.6, 
+            -0.5, 
+            -0.4, 
+            -0.3, 
+            -0.2, 
+            -0.1, 
+            0.0, 
+            0.1, 
+            0.2, 
+            0.3, 
+            0.4, 
+            0.5, 
+            0.6, 
+            0.7, 
+            0.8, 
+            0.9, 
+            1.0, 
+            1.1, 
+            1.2, 
+            1.3
+          ], 
+          "stimulus": [
+            "tower_00013_0110111000", 
+            "tower_00029_1010011010", 
+            "tower_00031_1000010111", 
+            "tower_00035_0110101001", 
+            "tower_00051_1100000111", 
+            "tower_00135_0110000111", 
+            "tower_00154_0010111100", 
+            "tower_00231_0011101010", 
+            "tower_00251_1000001111", 
+            "tower_00324_0011111000", 
+            "tower_00373_1011010100", 
+            "tower_00395_0010010111", 
+            "tower_00418_1001010101", 
+            "tower_00419_0101000111", 
+            "tower_00465_1000011011", 
+            "tower_00476_0010110101", 
+            "tower_00498_0111101000", 
+            "tower_00525_1000111100", 
+            "tower_00546_0101001101", 
+            "tower_01833_1010010011"
+          ], 
+          "object": [
+            "block0-physics", 
+            "block1-physics", 
+            "block2-physics", 
+            "block3-physics", 
+            "block4-physics", 
+            "block5-physics", 
+            "block6-physics", 
+            "block7-physics", 
+            "block8-physics", 
+            "block9-physics"
+          ], 
+          "sample": [
+            0
+          ], 
+          "posquat": [
+            "x", 
+            "y", 
+            "z", 
+            "q0", 
+            "q1", 
+            "q2", 
+            "q3"
+          ], 
+          "time": [
+            "pre-repel", 
+            "0.0", 
+            "2.0"
+          ], 
+          "sigma": [
+            0.0
+          ]
+        }, 
+        "simulations": {
+          "duration": 2.0, 
+          "substep_size": 0.001, 
+          "step_size": 0.01, 
+          "record_interval": 10, 
+          "n_substeps": 10
+        }
+      }, 
+      "name": "simulation_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-13 15:22:43.019075"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "phi", 
+          "stimulus", 
+          "sample"
+        ], 
+        "index_levels": {
+          "stimulus": [
+            "tower_00013_0110111000", 
+            "tower_00029_1010011010", 
+            "tower_00031_1000010111", 
+            "tower_00035_0110101001", 
+            "tower_00051_1100000111", 
+            "tower_00135_0110000111", 
+            "tower_00154_0010111100", 
+            "tower_00231_0011101010", 
+            "tower_00251_1000001111", 
+            "tower_00324_0011111000", 
+            "tower_00373_1011010100", 
+            "tower_00395_0010010111", 
+            "tower_00418_1001010101", 
+            "tower_00419_0101000111", 
+            "tower_00465_1000011011", 
+            "tower_00476_0010110101", 
+            "tower_00498_0111101000", 
+            "tower_00525_1000111100", 
+            "tower_00546_0101001101", 
+            "tower_01833_1010010011"
+          ], 
+          "sample": [
+            0
+          ], 
+          "phi": [
+            0.0
+          ]
+        }
+      }, 
+      "name": "force_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-13 15:22:43.019084"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "sigma", 
+          "stimulus", 
+          "sample", 
+          "object", 
+          "position"
+        ], 
+        "index_levels": {
+          "stimulus": [
+            "tower_00013_0110111000", 
+            "tower_00029_1010011010", 
+            "tower_00031_1000010111", 
+            "tower_00035_0110101001", 
+            "tower_00051_1100000111", 
+            "tower_00135_0110000111", 
+            "tower_00154_0010111100", 
+            "tower_00231_0011101010", 
+            "tower_00251_1000001111", 
+            "tower_00324_0011111000", 
+            "tower_00373_1011010100", 
+            "tower_00395_0010010111", 
+            "tower_00418_1001010101", 
+            "tower_00419_0101000111", 
+            "tower_00465_1000011011", 
+            "tower_00476_0010110101", 
+            "tower_00498_0111101000", 
+            "tower_00525_1000111100", 
+            "tower_00546_0101001101", 
+            "tower_01833_1010010011"
+          ], 
+          "sample": [
+            0
+          ], 
+          "object": [
+            "block0-physics", 
+            "block1-physics", 
+            "block2-physics", 
+            "block3-physics", 
+            "block4-physics", 
+            "block5-physics", 
+            "block6-physics", 
+            "block7-physics", 
+            "block8-physics", 
+            "block9-physics"
+          ], 
+          "sigma": [
+            0.0
+          ], 
+          "position": [
+            "x", 
+            "y", 
+            "z"
+          ]
+        }
+      }, 
+      "name": "noise_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-13 15:22:43.019088"
+    }
+  ], 
+  "name": "mass_inference-G-b_truth.dpkg"
+}
