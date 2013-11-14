@@ -43,7 +43,7 @@ var MASS_TRIALS = [0, 1, 2, 3, 5, 8, 13, 19];
 // Enum-like object for representing key names.
 var KEYS = new Object();
 KEYS[TRIAL.prestim] = {
-    32: ""  // space
+    67: ""  // c
 };
 KEYS[TRIAL.stim] = {};
 KEYS[TRIAL.fall_response] = {
@@ -56,7 +56,7 @@ KEYS[TRIAL.fall_response] = {
     55: 7,  // 7
 };
 KEYS[TRIAL.prefeedback] = {
-    32: ""  // space
+    67: ""  // c
 };
 KEYS[TRIAL.feedback] = {};
 KEYS[TRIAL.mass_response] = {

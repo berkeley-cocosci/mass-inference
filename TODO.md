@@ -2,10 +2,7 @@
 
 ## Before running the pilot
 
-* TODO: finish rerunning mass_all ipe simulations
-* TODO: re-run choose-stimuli.ipynb
-* TOOD: run mass_inference-G simulations
-* TODO: render stimuli
+* TODO: figure out why it's trying to load an unsafe script
 * TODO: test all conditions of experiment
 * TODO: make sure IE users are locked out
 * TODO: drop `mass-inference-G-test` table from database
