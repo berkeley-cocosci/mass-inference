@@ -99,7 +99,6 @@ def load_data(data_path, fields):
 
     # process other various fields to make sure they're in the right
     # data format
-    data['timestamp'] = parse_timestamp(data, 'psiturk_time')
     data['instructions'] = map(str2bool, data['instructions'])
     data['response_time'] = data['response_time'].astype('float') / 1e3
     data['feedback_time'] = data['feedback_time'].astype('float')
@@ -109,27 +108,8 @@ def load_data(data_path, fields):
     data['camera_start'] = data['camera_start'].astype('float')
     data['camera_spin'] = data['camera_spin'].astype('float')
     data['response'] = data['response'].astype('float')
+    data['trial_phase'] = data['trial_phase'].fillna('prestim')
 
-    # create separate 'fall? response' / 'fall? time' columns
-    try:
-        fall_response = data.groupby('trial_phase').get_group('fall_response')
-    except KeyError:
-        data['fall? response'] = np.nan
-    else:
-        data['fall? response'] = fall_response['response']
-        data['fall? time'] = fall_response['response_time']
-
-    # create separate 'mass? response' / 'mass? time' columns
-    try:
-        mass_response = data.groupby('trial_phase').get_group('mass_response')
-    except KeyError:
-        data['mass? response'] = np.nan
-    else:
-        data['mass? response'] = mass_response['response']
-        data['mass? time'] = mass_response['response_time']
-
-    # drop rows that don't have an associated response
-    data = data.dropna(subset=['response'], how='all')
     # remove instructions rows
     data = data\
         .groupby('instructions')\
@@ -142,16 +122,26 @@ def load_data(data_path, fields):
 
     # drop columns we don't care about
     data = data.drop([
-        'psiturk_time',
         'psiturk_currenttrial',
-        'instructions',
-        'trial_phase',
-        'response',
-        'response_time'], axis=1)
+        'instructions'], axis=1)
 
-    # sort the dataframe by pid/mode/trial
+    # extract the responses and times and make them separate columns,
+    # rather than separate phases
+    fields = ['psiturk_time', 'response', 'response_time']
+    data = data.set_index(['HIT', 'pid', 'mode', 'trial', 'trial_phase'])
+    responses = data[fields].unstack('trial_phase')
+    data = data.reset_index('trial_phase', drop=True).drop(fields, axis=1)
+
+    data['fall? response'] = responses['response', 'fall_response']
+    data['fall? time'] = responses['response_time', 'fall_response']
+    data['mass? response'] = responses['response', 'mass_response']
+    data['mass? time'] = responses['response_time', 'mass_response']
+    data['timestamp'] = responses['psiturk_time', 'prestim']
+    data['timestamp'] = parse_timestamp(data, 'timestamp')
+
+    # drop duplicated rows and sort the dataframe
     data = data\
-        .set_index(['pid', 'mode', 'trial'])\
+        .drop_duplicates()\
         .sortlevel()\
         .reset_index()
 
