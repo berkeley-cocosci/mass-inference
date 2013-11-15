@@ -416,7 +416,6 @@ var TestPhase = function() {
         data.update({
             response_time: rt, 
             response: response,
-            trial: STATE.index
         });
 
         // Create the record we want to save
@@ -516,13 +515,21 @@ var TestPhase = function() {
  ******************/
 
 $(document).ready(function() { 
-    // Record field names for the data that we'll be collecting
-    var data = new DataRecord();
-    psiTurk.recordTrialData(data.fields);
-    debug(data.fields);
-
     // Load the HTML for the trials
     psiTurk.showPage("trial.html");
+
+    // Record field names for the data that we'll be collecting
+    var data = new DataRecord();
+    psiTurk.recordUnstructuredData("fields", data.fields);
+    debug(data.fields);
+
+    // Record various unstructured data
+    psiTurk.recordUnstructuredData("condition", condition);
+    psiTurk.recordUnstructuredData("counterbalance", counterbalance);
+    psiTurk.recordUnstructuredData("fall_question", $("#fall-question").html());
+    psiTurk.recordUnstructuredData("fall_choices", $("#fall_response").html());
+    psiTurk.recordUnstructuredData("mass_question", $("#mass-question").html());
+    psiTurk.recordUnstructuredData("mass_choices", $("#mass_response").html());
     
     // Start the experiment
     STATE = new State();

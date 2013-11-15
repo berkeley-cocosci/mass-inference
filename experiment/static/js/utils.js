@@ -161,7 +161,6 @@ var DataRecord = function () {
         "feedback",
         "ratio",
         "counterbalance",
-        "trial",
         "stimulus",
         "response",
         "response_time",
@@ -445,4 +444,3 @@ function set_reload(elem) {
 function unset_reload(elem) {
     elem.find(".reload").html("");
 }
-
