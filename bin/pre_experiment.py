@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from mass import RENDER_PATH, BIN_PATH
-from mass import RENDER_SCRIPT_PATH as SCRIPT_PATH
+from mass import BIN_PATH
 from termcolor import colored
 import logging
 import subprocess
@@ -32,12 +31,12 @@ if __name__ == "__main__":
         default=False,
         help="force tasks to complete")
 
-    group = parser.add_argument_group(title="render operations")
+    group = parser.add_argument_group(title="pre-experiment operations")
     group.add_argument(
         "-a", "--all",
         action="store_true",
         default=False,
-        help="perform all actions")
+        help="perform all pre-experiment actions")
     group.add_argument(
         "--link",
         action="store_true",
