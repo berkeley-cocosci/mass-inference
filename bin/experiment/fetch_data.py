@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-import urllib2
-from path import path
 from mass import DATA_PATH
+from path import path
+import logging
+import urllib2
+
+logger = logging.getLogger('mass.experiment')
 
 
 def add_auth(url, username, password):
@@ -52,14 +55,14 @@ def fetch(site_root, filename, experiment, force=False):
         handler = urllib2.urlopen(url)
     except IOError as err:
         if getattr(err, 'code', None) == 401:
-            print "Server authentication failed."
+            logger.error("Server authentication failed.")
             raise err
         else:
             raise
 
     # download the data
     data = handler.read()
-    print "Fetched succesfully: %s" % url
+    logger.info("Fetched succesfully: %s", url)
 
     # make the destination folder if it doesn't exist
     if not dest.dirname().exists():
@@ -68,7 +71,7 @@ def fetch(site_root, filename, experiment, force=False):
     # write out the data file
     with open(dest, "w") as fh:
         fh.write(data)
-    print "Saved to '%s'" % dest.relpath()
+    logger.info("Saved to '%s'", dest.relpath())
 
 
 if __name__ == "__main__":
