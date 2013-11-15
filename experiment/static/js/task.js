@@ -520,8 +520,9 @@ $(document).ready(function() {
 
     // Record field names for the data that we'll be collecting
     var data = new DataRecord();
-    psiTurk.recordUnstructuredData("fields", data.fields);
-    debug(data.fields);
+    var fields = JSON.stringify(data.fields);
+    psiTurk.recordUnstructuredData("fields", fields);
+    debug(fields);
 
     // Record various unstructured data
     psiTurk.recordUnstructuredData("condition", condition);
