@@ -7,7 +7,6 @@
 
 ## Running pilot
 
-* TODO: set up experiment on the sandbox
 * TODO: collect some pilot data in sandbox from labmates
 
 ## After running the pilot
@@ -18,8 +17,6 @@
 ## Before running the actual experiment
 
 * TODO: set database table to `mass-inference-G`
-* TODO: set `$c.debug` in `config.js` to false
-* TODO: enable `psiTurk.finishInstructions` in `task.js`
 
 ## Other stuff
 
@@ -35,8 +32,8 @@
 [x] stability_sameheight
 	[x] ipe
 	[x] truth
-[ ] mass_all
-	[ ] ipe
+[x] mass_all
+	[x] ipe
 	[x] truth
 [x] mass_learning
 	[x] ipe
