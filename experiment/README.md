@@ -63,15 +63,16 @@ virtualenv, I used the following code:
 
 ```
 import sys, os
-INTERP = os.path.join(os.environ['HOME'], 'jhamrick.cocosci.berkeley.edu', 'bin', 'python')
+base_path = "/home/cocosci/cocosci-python.dreamhosters.com"
+INTERP = os.path.join(base_path, 'bin', 'python')
 if sys.executable != INTERP:
     os.execl(INTERP, INTERP, *sys.argv)
 
-os.chdir(os.path.join(os.environ['HOME'], 'jhamrick.cocosci.berkeley.edu', 'experiment'))
+os.chdir(os.path.join(base_path, 'experiment'))
 sys.path.append(os.getcwd())
 from psiturk.experiment import app as application
 
 # Uncomment next two lines to enable debugging
-# from werkzeug.debug import DebuggedApplication
-# application = DebuggedApplication(application, evalex=True)
+#from werkzeug.debug import DebuggedApplication
+#application = DebuggedApplication(application, evalex=True)
 ```

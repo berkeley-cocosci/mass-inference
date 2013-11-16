@@ -84,7 +84,7 @@ if __name__ == "__main__":
         help="Experiment version.")
     parser.add_argument(
         "-a", "--address",
-        default="http://jhamrick.cocosci.berkeley.edu/data",
+        default="http://cocosci.berkeley.edu:22361/data",
         help="Address from which to fetch data files.")
     parser.add_argument(
         "-u", "--user",
