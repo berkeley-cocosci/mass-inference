@@ -3,7 +3,6 @@
 ## Before running the pilot
 
 * TODO: test all conditions of experiment
-* TODO: make sure IE users are locked out
 
 ## Running pilot
 
@@ -19,6 +18,8 @@
 * TODO: set database table to `mass-inference-G`
 
 ## Other stuff
+
+* TODO: in Firefox when fall question is asked, a white screen flashes
 
 * TODO: comment experiment javascript code
 * TODO: write some unit tests
