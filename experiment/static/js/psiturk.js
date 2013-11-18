@@ -16,27 +16,21 @@ Backbone.Notifications = {};
 _.extend(Backbone.Notifications, Backbone.Events);
 
 var startTask = function () {
-    psiTurk.saveData();
+    // psiTurk.saveData();
     
-    $.ajax("inexp", {
-	type: "POST",
-	data: {uniqueId: uniqueId}
-    });
-    
-    // Provide opt-out 
-    $(window).on("beforeunload", function(){
-	psiTurk.saveData();
-	
-	$.ajax("quitter", {
-	    type: "POST",
-	    data: {uniqueId: uniqueId}
-	});
-
-	return "By leaving this page, you opt out of the experiment.";
-    });
+    // $.ajax("inexp", {
+    // 	type: "POST",
+    // 	data: {uniqueId: uniqueId}
+    // });    
 };
 Backbone.Notifications.on('_psiturk_finishedinstructions', startTask);
 Backbone.Notifications.on('_psiturk_finishedtask', function(msg) { $(window).off("beforeunload"); });
+
+$(window).bind("beforeunload", function(){
+    Backbone.Notifications.trigger('_psiturk_refreshed');
+    psiTurk.saveData();
+    return "After refreshing, the experiment will resume where you left off.";
+});
 
 $(window).blur( function() {
     Backbone.Notifications.trigger('_psiturk_lostfocus');
@@ -45,8 +39,6 @@ $(window).blur( function() {
 $(window).focus( function() {
     Backbone.Notifications.trigger('_psiturk_gainedfocus');	
 });
-
-
 
 // track changes in window size
 triggerResize = function() {
@@ -100,6 +92,7 @@ var TaskData = Backbone.Model.extend({
 	this.listenTo(Backbone.Notifications, '_psiturk_lostfocus', function() { this.addEvent('focus', 'off'); });
 	this.listenTo(Backbone.Notifications, '_psiturk_gainedfocus', function() { this.addEvent('focus', 'on'); });
 	this.listenTo(Backbone.Notifications, '_psiturk_windowresize', function(newsize) { this.addEvent('window_resize', newsize); });
+	this.listenTo(Backbone.Notifications, '_psiturk_refreshed', function() { this.addEvent('refresh', ''); });
     },
 
     addTrialData: function(trialdata) {
@@ -186,6 +179,7 @@ var PsiTurk = function() {
     
     // Save data to server
     this.saveData = function(callbacks) {
+	console.log("Saving task data");
 	this.taskdata.save(undefined, callbacks);
     };
     

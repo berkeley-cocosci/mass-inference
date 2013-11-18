@@ -132,11 +132,11 @@ var Instructions = function() {
     this.finish = function() {
         debug("Done with instructions")
 
-        // Record that the user has finished the instructions and 
-        // moved on to the experiment. This changes their status code
-        // in the database.
+        // Record that the user has finished the instructions and
+        // moved on to the experiment. This changes their status
+        // code in the database.
         if (STATE.experiment_phase == EXPERIMENT.pretest) {
-            psiTurk.finishInstructions();
+	    psiTurk.finishInstructions();
         }
 
         // Reset the state object for the test phase
