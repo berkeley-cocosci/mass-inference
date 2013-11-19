@@ -119,6 +119,8 @@ def load_data(data_path, fields):
     data = data.rename(columns={
         'index': 'trial',
         'experiment_phase': 'mode'})
+    # make trials be 1-indexed
+    data['trial'] += 1
 
     # drop columns we don't care about
     data = data.drop([
