@@ -161,9 +161,9 @@ def load_events(data_path):
     events['timestamp'] = parse_timestamp(events, 'timestamp')
     # sort by pid/HIT
     events = events\
-        .set_index(['HIT', 'pid'])\
-        .sortlevel()\
-        .reset_index()
+        .set_index(['HIT', 'pid', 'timestamp'])\
+        .reset_index()\
+        .sort(['HIT', 'pid', 'timestamp'])
 
     return events
 
