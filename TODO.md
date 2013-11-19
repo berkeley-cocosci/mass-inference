@@ -1,24 +1,8 @@
 # To-do lists
 
-## Before running the pilot
-
-* TODO: test all conditions of experiment
-
-## Running pilot
-
-* TODO: collect some pilot data in sandbox from labmates
-
-## After running the pilot
-
-* TODO: write tentative analysis of experiment data
-* TODO: verify that experiment actually takes about 15 minutes
-
-## Before running the actual experiment
-
-* TODO: set database table to `mass-inference-G`
-
 ## Other stuff
 
+* TODO: in nfb, it is trying to load feedback images
 * TODO: in Firefox when fall question is asked, a white screen flashes
 
 * TODO: comment experiment javascript code
