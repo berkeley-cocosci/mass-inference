@@ -67,6 +67,10 @@ def load_meta(data_path):
     conds = split_uniqueid(
         meta[['condition', 'counterbalance']].reset_index(),
         0).set_index('pid')
+    conds['condition'] = conds['condition'].astype(int)
+    conds['counterbalance'] = conds['counterbalance'].astype(int)
+    conds['assignment'] = conds['assignment'].astype(str)
+    conds = conds.T.to_dict()
 
     # make sure everyone saw the same questions/possible responses
     meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
@@ -79,12 +83,11 @@ def load_meta(data_path):
     # convert the remaining metadata to a dictionary and update it
     # with the parsed conditions
     meta = meta.drop(['fields'], axis=1).reset_index(drop=True).T.to_dict()[0]
-    meta['participants'] = conds.T.to_dict()
 
-    return meta, fields
+    return meta, conds, fields
 
 
-def load_data(data_path, fields):
+def load_data(data_path, conds, fields):
     """Load experiment trial data from the given path. Returns a pandas
     DataFrame.
 
@@ -130,7 +133,8 @@ def load_data(data_path, fields):
     # extract the responses and times and make them separate columns,
     # rather than separate phases
     fields = ['psiturk_time', 'response', 'response_time']
-    data = data.set_index(['assignment', 'pid', 'mode', 'trial', 'trial_phase'])
+    data = data.set_index(
+        ['assignment', 'pid', 'mode', 'trial', 'trial_phase'])
     responses = data[fields].unstack('trial_phase')
     data = data.reset_index('trial_phase', drop=True).drop(fields, axis=1)
 
@@ -146,6 +150,21 @@ def load_data(data_path, fields):
         .drop_duplicates()\
         .sortlevel()\
         .reset_index()
+
+    def add_condition(df):
+        info = conds[df.name]
+        df['condition'] = info['condition']
+        # sanity check -- make sure assignment and counterbalance
+        # fields match
+        assert (df['assignment'] == info['assignment']).all()
+        assert (df['counterbalance'] == info['counterbalance']).all()
+        return df
+
+    # add a column for the condition code
+    data = data.groupby('pid').apply(add_condition)
+
+    # create a column for the kappa value of the feedback they saw
+    data['kappa0'] = np.log10(data['ratio'])
 
     return data
 
@@ -231,8 +250,8 @@ if __name__ == "__main__":
         dest_path.dirname().makedirs_p()
 
     # load the data
-    meta, fields = load_meta(data_path)
-    data = load_data(data_path, fields)
+    meta, conds, fields = load_meta(data_path)
+    data = load_data(data_path, conds, fields)
     events = load_events(data_path)
 
     # save it
