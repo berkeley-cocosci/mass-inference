@@ -30,14 +30,14 @@ def str2bool(x):
 def split_uniqueid(df, field):
     """PsiTurk outputs a field which is formatted as
     'workerid:assignmentid'. This function splits the field into two
-    separate fields, 'pid' and 'HIT', and drops the old field from the
-    dataframe.
+    separate fields, 'pid' and 'assignment', and drops the old field
+    from the dataframe.
 
     """
 
     workerid, assignmentid = zip(*map(lambda x: x.split(":"), df[field]))
     df['pid'] = workerid
-    df['HIT'] = assignmentid
+    df['assignment'] = assignmentid
     df = df.drop([field], axis=1)
     return df
 
@@ -94,7 +94,7 @@ def load_data(data_path, fields):
         "trialdata_all.csv"), header=None)
     # set the column names
     data.columns = fields
-    # split apart psiturk_id into pid and HIT
+    # split apart psiturk_id into pid and assignment
     data = split_uniqueid(data, 'psiturk_id')
 
     # process other various fields to make sure they're in the right
@@ -130,7 +130,7 @@ def load_data(data_path, fields):
     # extract the responses and times and make them separate columns,
     # rather than separate phases
     fields = ['psiturk_time', 'response', 'response_time']
-    data = data.set_index(['HIT', 'pid', 'mode', 'trial', 'trial_phase'])
+    data = data.set_index(['assignment', 'pid', 'mode', 'trial', 'trial_phase'])
     responses = data[fields].unstack('trial_phase')
     data = data.reset_index('trial_phase', drop=True).drop(fields, axis=1)
 
@@ -157,15 +157,15 @@ def load_events(data_path):
     """
     # load the data
     events = pd.read_csv(data_path.joinpath("eventdata_all.csv"))
-    # split uniqueid into pid and HIT
+    # split uniqueid into pid and assignment
     events = split_uniqueid(events, 'uniqueid')
     # parse timestamps
     events['timestamp'] = parse_timestamp(events, 'timestamp')
-    # sort by pid/HIT
+    # sort by pid/assignment
     events = events\
-        .set_index(['HIT', 'pid', 'timestamp'])\
+        .set_index(['assignment', 'pid', 'timestamp'])\
         .reset_index()\
-        .sort(['HIT', 'pid', 'timestamp'])
+        .sort(['assignment', 'pid', 'timestamp'])
 
     return events
 
