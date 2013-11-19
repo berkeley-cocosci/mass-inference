@@ -51,7 +51,71 @@ def parse_timestamp(df, field):
     return timestamp
 
 
+def find_bad_participants(data):
+    """Check participant data to make sure they pass the following
+    conditions:
+
+    1. No duplicated trials
+    2. They finished the whole experiment
+    3. They passed the posttest
+
+    Returns a dictionary of failed participants that includes the
+    reasons why they failed.
+
+    """
+
+    participants = []
+    for (assignment, pid), df in data.groupby(['assignment', 'pid']):
+        info = {
+            'pid': pid,
+            'assignment': assignment,
+
+            # defaults
+            'duplicate_trials': False,
+            'incomplete': False,
+            'failed_posttest': False
+        }
+
+        # go ahead and add this to our list now -- the dictionary is
+        # mutable, so when we update stuff later the dictionary in the
+        # list will also be updated
+        participants.append(info)
+
+        # check for duplicated entries
+        dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
+                  .duplicated().any()
+        if dupes:
+            logger.warning("%s:%s has duplicate trials", pid, assignment)
+            info['duplicate_trials'] = True
+
+        # check to make sure they actually finished
+        try:
+            posttest = df\
+                .groupby(['mode', 'trial_phase'])\
+                .get_group(('posttest', 'fall_response'))
+        except KeyError:
+            incomplete = True
+        else:
+            incomplete = np.isnan(posttest['response']).any()
+        if incomplete:
+            logger.warning("%s:%s is incomplete", pid, assignment)
+            info['incomplete'] = True
+            continue
+
+        # check to see if they passed the posttest
+        truth = (posttest['nfell'] > 0).astype(float)
+        resp = (posttest['response'] > 4).astype(float)
+        resp[posttest['response'] == 4] = np.nan
+        failed = (truth != resp).sum() > 1
+        if failed:
+            logger.warning("%s:%s failed posttest", pid, assignment)
+            info['failed_posttest'] = True
+
+    return participants
+
+
 def load_meta(data_path):
+
     """Load experiment metadata from the given path. Returns a dictionary
     containing the metadata as well as a list of fields for the trial
     data.
@@ -130,6 +194,30 @@ def load_data(data_path, conds, fields):
         'psiturk_currenttrial',
         'instructions'], axis=1)
 
+    # construct a dataframe containing information about the
+    # participants
+    p_conds = pd\
+        .DataFrame\
+        .from_dict(conds).T\
+        .reset_index()\
+        .rename(columns={'index': 'pid'})
+    p_info = pd\
+        .DataFrame\
+        .from_dict(find_bad_participants(data))
+    participants = pd.merge(p_conds, p_info, on=['assignment', 'pid'])
+
+    # drop bad participants
+    bad_pids = p_info.set_index(['assignment', 'pid']).any(axis=1)
+    n_subj = len(bad_pids)
+    n_good = (~bad_pids).sum()
+    logger.info(
+        "%d/%d (%.1f%%) participants OK",
+        n_good, n_subj, n_good * 100. / n_subj)
+    data = data\
+        .set_index(['assignment', 'pid'])\
+        .drop(bad_pids.index[bad_pids])\
+        .reset_index()
+
     # extract the responses and times and make them separate columns,
     # rather than separate phases
     fields = ['psiturk_time', 'response', 'response_time']
@@ -166,7 +254,7 @@ def load_data(data_path, conds, fields):
     # create a column for the kappa value of the feedback they saw
     data['kappa0'] = np.log10(data['ratio'])
 
-    return data
+    return data, participants
 
 
 def load_events(data_path):
@@ -189,7 +277,7 @@ def load_events(data_path):
     return events
 
 
-def save_dpkg(dataset_path, data, meta, events):
+def save_dpkg(dataset_path, data, meta, events, participants):
     dp = dpkg.DataPackage(name=dataset_path.name, licenses=['odc-by'])
     dp['version'] = '1.0.0'
     dp.add_contributor("Jessica B. Hamrick", "jhamrick@berkeley.edu")
@@ -205,14 +293,21 @@ def save_dpkg(dataset_path, data, meta, events):
     dp.add_resource(r1)
 
     # add metadata, and save it inline as json
-    r2 = dpkg.Resource(name="experiment_metadata", fmt="json", data=meta)
+    r2 = dpkg.Resource(name="metadata", fmt="json", data=meta)
     r2['mediaformat'] = 'application/json'
     dp.add_resource(r2)
 
     # add event data, and save it as csv
     r3 = dpkg.Resource(
-        name="experiment_events.csv", fmt="csv",
-        pth="./experiment_events.csv", data=events)
+        name="events.csv", fmt="csv",
+        pth="./events.csv", data=events)
+    r3['mediaformat'] = 'text/csv'
+    dp.add_resource(r3)
+
+    # add participant info, and save it as csv
+    r3 = dpkg.Resource(
+        name="participants.csv", fmt="csv",
+        pth="./participants.csv", data=participants)
     r3['mediaformat'] = 'text/csv'
     dp.add_resource(r3)
 
@@ -251,8 +346,8 @@ if __name__ == "__main__":
 
     # load the data
     meta, conds, fields = load_meta(data_path)
-    data = load_data(data_path, conds, fields)
+    data, participants = load_data(data_path, conds, fields)
     events = load_events(data_path)
 
     # save it
-    save_dpkg(dest_path, data, meta, events)
+    save_dpkg(dest_path, data, meta, events, participants)
