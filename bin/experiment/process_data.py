@@ -90,13 +90,21 @@ def find_bad_participants(data):
 
         # check to make sure they actually finished
         try:
+            pretest = df\
+                .groupby(['mode', 'trial_phase'])\
+                .get_group(('pretest', 'fall_response'))
             posttest = df\
                 .groupby(['mode', 'trial_phase'])\
                 .get_group(('posttest', 'fall_response'))
         except KeyError:
             incomplete = True
         else:
-            incomplete = np.isnan(posttest['response']).any()
+            incomplete = any([
+                np.isnan(pretest['response']).any(),
+                np.isnan(posttest['response']).any(),
+                len(pretest) != 6,
+                len(posttest) != 6
+            ])
         if incomplete:
             logger.warning("%s:%s is incomplete", pid, assignment)
             info['incomplete'] = True
