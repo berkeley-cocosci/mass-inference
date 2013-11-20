@@ -3,7 +3,9 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from datetime import datetime
 from mass import DATA_PATH
+from path import path
 from snippets import datapackage as dpkg
+import dbtools
 import json
 import logging
 import numpy as np
@@ -51,7 +53,7 @@ def parse_timestamp(df, field):
     return timestamp
 
 
-def find_bad_participants(data):
+def find_bad_participants(exp, data):
     """Check participant data to make sure they pass the following
     conditions:
 
@@ -71,6 +73,7 @@ def find_bad_participants(data):
             'assignment': assignment,
 
             # defaults
+            'repeat_worker': False,
             'duplicate_trials': False,
             'incomplete': False,
             'failed_posttest': False
@@ -80,6 +83,17 @@ def find_bad_participants(data):
         # mutable, so when we update stuff later the dictionary in the
         # list will also be updated
         participants.append(info)
+
+        # see if they already did (a version of) the experiment
+        dbpath = DATA_PATH.joinpath("human", "workers.db")
+        tbl = dbtools.Table(dbpath, "workers")
+        datasets = tbl.select("dataset", where=("pid=?", pid))['dataset']
+        exps = map(lambda x: path(x).namebase, datasets)
+        if exp in exps:
+            exps.remove(exp)
+        if len(exps) > 0:
+            logger.warning("%s:%s is a repeat worker", pid, assignment)
+            info['repeat_worker'] = True
 
         # check for duplicated entries
         dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
@@ -97,6 +111,8 @@ def find_bad_participants(data):
                 .groupby(['mode', 'trial_phase'])\
                 .get_group(('posttest', 'fall_response'))
         except KeyError:
+            pretest = None
+            posttest = None
             incomplete = True
         else:
             incomplete = any([
@@ -108,13 +124,15 @@ def find_bad_participants(data):
         if incomplete:
             logger.warning("%s:%s is incomplete", pid, assignment)
             info['incomplete'] = True
-            continue
 
         # check to see if they passed the posttest
-        truth = (posttest['nfell'] > 0).astype(float)
-        resp = (posttest['response'] > 4).astype(float)
-        resp[posttest['response'] == 4] = np.nan
-        failed = (truth != resp).sum() > 1
+        if posttest:
+            truth = (posttest['nfell'] > 0).astype(float)
+            resp = (posttest['response'] > 4).astype(float)
+            resp[posttest['response'] == 4] = np.nan
+            failed = (truth != resp).sum() > 1
+        else:
+            failed = True
         if failed:
             logger.warning("%s:%s failed posttest", pid, assignment)
             info['failed_posttest'] = True
@@ -211,7 +229,7 @@ def load_data(data_path, conds, fields):
         .rename(columns={'index': 'pid'})
     p_info = pd\
         .DataFrame\
-        .from_dict(find_bad_participants(data))
+        .from_dict(find_bad_participants(data_path.namebase, data))
     participants = pd.merge(p_conds, p_info, on=['assignment', 'pid'])
 
     # drop bad participants
