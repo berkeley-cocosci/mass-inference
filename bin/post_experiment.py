@@ -47,11 +47,17 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="process raw data into datapackages")
+    group.add_argument(
+        "--extract",
+        action="store_true",
+        default=False,
+        help="extract worker ids")
 
     args = parser.parse_args()
     required = [
         args.fetch,
         args.process,
+        args.extract,
         args.all
     ]
 
@@ -81,4 +87,12 @@ if __name__ == "__main__":
         ]
         if force:
             cmd.append("-f")
+        run_cmd(cmd)
+
+    # extract ids
+    if args.extract or args.all:
+        cmd = [
+            "python", BIN_PATH.joinpath("experiment/extract_workers.py"),
+            "-e", exp
+        ]
         run_cmd(cmd)
