@@ -6,6 +6,7 @@ prefer-parasite-buffer #f
 # Scenesim settings
 viewer-resize-window #f
 viewer-use-shaders #t
+viewer-set-cam-lens #f
 
 # Custom settings. Paths are relative to the root mass-inference
 # directory (e.g. /Users/jhamrick/project/mass-inference)
