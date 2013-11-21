@@ -18,8 +18,20 @@ CONDITION = ['order', 'feedback', 'ratio']
 PID = CONDITION + ['pid']
 PARAMS = ['sigma', 'phi', 'kappa']
 
-binom_mean = mo.binom_mean
-binom_std = mo.binom_std
+
+def binom_mean(samps, axis=None):
+    alpha = np.sum(samps, axis=axis) + 0.5
+    beta = np.sum(1-samps, axis=axis) + 0.5
+    pfell_mean = alpha / (alpha + beta)
+    return pfell_mean
+
+
+def binom_std(samps, axis=None):
+    alpha = np.sum(samps, axis=axis) + 0.5
+    beta = np.sum(1-samps, axis=axis) + 0.5
+    pfell_var = (alpha*beta) / ((alpha+beta)**2 * (alpha+beta+1))
+    pfell_std = np.sqrt(pfell_var)
+    return pfell_std
 
 
 def uncounterbalance(arr):
@@ -139,9 +151,6 @@ def simulate_model(condinfo, ipe, fb, n_fake=2000):
     trials = np.array(trialinfo.trial)
     stims = np.array(trialinfo.stimulus)
 
-    # random number generator
-    rso = np.random.RandomState(1)
-
     # convert the data frames to numpy arrays
     ipe_mat = make_ipe_mat(ipe, stims)
     fb_mat = make_fb_mat(fb, stims, fbtype, ratio)
@@ -153,7 +162,7 @@ def simulate_model(condinfo, ipe, fb, n_fake=2000):
     # simulate fall? responses and model belief over time
     responses, model_belief = mo.simulateResponses(
         n_fake, fb_mat, ipe_mat, kappas,
-        prior=prior, p_ignore=0.0, smooth=True, rso=rso)
+        prior=prior, p_ignore=0.0, smooth=True)
 
     # create dataframe for responses
     mdata = make_mdata(responses, trials, stims, fbtype)
@@ -493,10 +502,10 @@ def evaluate_model(responses, modelname, ipe, fb):
     return lh
 
 
-def bootstrap(x, rso, nsamples=10000):
+def bootstrap(x, nsamples=10000):
     arr = np.asarray(x)
     n, = arr.shape
-    boot_idx = rso.randint(0, n, n*nsamples)
+    boot_idx = np.random.randint(0, n, n*nsamples)
     boot_arr = arr[boot_idx].reshape((n, nsamples))
     boot_mean = boot_arr.mean(axis=0)
     stats = pd.Series(
@@ -506,7 +515,7 @@ def bootstrap(x, rso, nsamples=10000):
     return stats
 
 
-def bootstrap_test_gt(x, model1, model2, rso, nsamples=10000):
+def bootstrap_test_gt(x, model1, model2, nsamples=10000):
     groups = x.groupby(level='model')
     try:
         arr1 = np.asarray(groups.get_group(model1))
@@ -516,7 +525,7 @@ def bootstrap_test_gt(x, model1, model2, rso, nsamples=10000):
 
     assert arr1.shape == arr2.shape
     n, = arr1.shape
-    boot_idx = rso.randint(0, n, n*nsamples)
+    boot_idx = np.random.randint(0, n, n*nsamples)
     boot_arr1 = arr1[boot_idx].reshape((n, nsamples))
     boot_arr2 = arr2[boot_idx].reshape((n, nsamples))
     boot_mean1 = boot_arr1.mean(axis=0)
