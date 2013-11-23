@@ -110,6 +110,9 @@ def find_bad_participants(exp, data):
             posttest = df\
                 .groupby(['mode', 'trial_phase'])\
                 .get_group(('posttest', 'fall_response'))
+            prestim = df\
+                .groupby(['trial_phase'])\
+                .get_group('prestim')
         except KeyError:
             pretest = None
             posttest = None
@@ -119,7 +122,8 @@ def find_bad_participants(exp, data):
                 np.isnan(pretest['response']).any(),
                 np.isnan(posttest['response']).any(),
                 len(pretest) != 6,
-                len(posttest) != 6
+                len(posttest) != 6,
+                len(prestim) != 62
             ])
         if incomplete:
             logger.warning("%s:%s is incomplete", pid, assignment)
