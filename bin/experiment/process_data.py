@@ -71,12 +71,8 @@ def find_bad_participants(exp, data):
         info = {
             'pid': pid,
             'assignment': assignment,
-
-            # defaults
-            'repeat_worker': False,
-            'duplicate_trials': False,
-            'incomplete': False,
-            'failed_posttest': False
+            'note': None,
+            'timestamp': None
         }
 
         # go ahead and add this to our list now -- the dictionary is
@@ -84,23 +80,20 @@ def find_bad_participants(exp, data):
         # list will also be updated
         participants.append(info)
 
-        # see if they already did (a version of) the experiment
-        dbpath = DATA_PATH.joinpath("human", "workers.db")
-        tbl = dbtools.Table(dbpath, "workers")
-        datasets = tbl.select("dataset", where=("pid=?", pid))['dataset']
-        exps = map(lambda x: path(x).namebase, datasets)
-        if exp in exps:
-            exps.remove(exp)
-        if len(exps) > 0:
-            logger.warning("%s:%s is a repeat worker", pid, assignment)
-            info['repeat_worker'] = True
+        # get the time they started the experiment
+        times = df['psiturk_time'].copy()
+        times.sort()
+        start_time = pd.to_datetime(
+            datetime.fromtimestamp(times.irow(0) / 1e3))
+        info['timestamp'] = start_time
 
         # check for duplicated entries
         dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
                   .duplicated().any()
         if dupes:
-            logger.warning("%s:%s has duplicate trials", pid, assignment)
-            info['duplicate_trials'] = True
+            logger.warning("%s has duplicate trials", pid)
+            info['note'] = "duplicate_trials"
+            continue
 
         # check to make sure they actually finished
         try:
@@ -126,8 +119,9 @@ def find_bad_participants(exp, data):
                 len(prestim) != 62
             ])
         if incomplete:
-            logger.warning("%s:%s is incomplete", pid, assignment)
-            info['incomplete'] = True
+            logger.warning("%s is incomplete", pid)
+            info['note'] = "incomplete"
+            continue
 
         # check to see if they passed the posttest
         if posttest:
@@ -138,8 +132,21 @@ def find_bad_participants(exp, data):
         else:
             failed = True
         if failed:
-            logger.warning("%s:%s failed posttest", pid, assignment)
-            info['failed_posttest'] = True
+            logger.warning("%s failed posttest", pid)
+            info['note'] = "failed_posttest"
+            continue
+
+        # see if they already did (a version of) the experiment
+        dbpath = DATA_PATH.joinpath("human", "workers.db")
+        tbl = dbtools.Table(dbpath, "workers")
+        datasets = tbl.select("dataset", where=("pid=?", pid))['dataset']
+        exps = map(lambda x: path(x).namebase, datasets)
+        if exp in exps:
+            exps.remove(exp)
+        if len(exps) > 0:
+            logger.warning("%s is a repeat worker", pid)
+            info['note'] = "repeat_worker"
+            continue
 
     return participants
 
@@ -234,18 +241,29 @@ def load_data(data_path, conds, fields):
     p_info = pd\
         .DataFrame\
         .from_dict(find_bad_participants(data_path.namebase, data))
-    participants = pd.merge(p_conds, p_info, on=['assignment', 'pid'])
+    participants = pd.merge(p_conds, p_info, on=['assignment', 'pid'])\
+                     .sort('timestamp')\
+                     .set_index('timestamp')
 
     # drop bad participants
-    bad_pids = p_info.set_index(['assignment', 'pid']).any(axis=1)
-    n_subj = len(bad_pids)
-    n_good = (~bad_pids).sum()
+    all_pids = p_info.set_index(['assignment', 'pid'])
+    bad_pids = all_pids.dropna()
+    n_failed = len(bad_pids.groupby('note').get_group('failed_posttest'))
+    n_subj = len(all_pids)
+    n_good = n_subj - len(bad_pids)
+    n_completed = n_good + n_failed
     logger.info(
-        "%d/%d (%.1f%%) participants OK",
-        n_good, n_subj, n_good * 100. / n_subj)
+        "%d/%d (%.1f%%) participants completed experiment",
+        n_completed, n_subj, n_completed * 100. / n_subj)
+    logger.info(
+        "%d/%d (%.1f%%) completed participants failed posttest",
+        n_failed, n_completed, n_failed * 100. / n_completed)
+    logger.info(
+        "%d/%d (%.1f%%) completed participants OK",
+        n_good, n_completed, n_good * 100. / n_completed)
     data = data\
         .set_index(['assignment', 'pid'])\
-        .drop(bad_pids.index[bad_pids])\
+        .drop(bad_pids.index)\
         .reset_index()
 
     # extract the responses and times and make them separate columns,
