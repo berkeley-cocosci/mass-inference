@@ -8,13 +8,27 @@ from .util import LazyProperty
 
 
 class ObserverModel(object):
-    def __init__(self, ipe, fb, trials, kappa0, prior=None):
-        self.ipe = ipe.P_fall_smooth.copy()
-        self.fb = fb.fall[kappa0].copy()
-        self.kappa0 = kappa0
 
+    # names of the keys that get stored when the model is pickled
+    _state_keys = [
+        'trials',
+        'n_trial',
+        'ipe',
+        'fb',
+        'kappa0',
+        'kappas',
+        'n_kappa',
+        'prior',
+        'pymc_values'
+    ]
+
+    def __init__(self, ipe, fb, trials, kappa0, prior=None):
         self.trials = map(str, trials)
         self.n_trial = len(self.trials)
+
+        self.ipe = ipe.P_fall_smooth.ix[self.trials]
+        self.fb = fb.fall[kappa0].ix[self.trials]
+        self.kappa0 = kappa0
 
         self.kappas = map(float, self.ipe.columns)
         self.n_kappa = len(self.kappas)
@@ -26,17 +40,61 @@ class ObserverModel(object):
         else:
             self.prior = np.log(np.array(prior))
 
-        if sorted(self.ipe.index) != sorted(self.S):
-            print self.ipe.index
-            print self.S
-            raise ValueError("IPE index does not match trials")
+        self.init_pymc_variables()
 
-        if sorted(self.fb.index) != sorted(self.S):
-            print self.fb.index
-            print self.S
-            raise ValueError("Feedback index does not match trials")
-
+    def init_pymc_variables(self):
         self.variables = [self.J_fall, self.J_mass, self.F, self.k]
+
+    @property
+    def pymc_values(self):
+        values = {}
+
+        values['J_fall'] = np.empty(self.J_fall.shape, dtype=np.float64)
+        for i, J_fall in enumerate(self.J_fall):
+            values['J_fall'][i] = J_fall.value
+
+        values['J_mass'] = np.empty(self.J_mass.shape, dtype=np.float64)
+        for i, J_mass in enumerate(self.J_mass):
+            values['J_mass'][i] = J_mass.value
+
+        values['F'] = np.empty(self.F.shape, dtype=np.float64)
+        for i, F in enumerate(self.F):
+            values['F'][i] = F.value
+
+        values['k'] = np.empty(self.k.shape, dtype=np.float64)
+        for i, k in enumerate(self.k):
+            values['k'][i] = k.value
+
+        return values
+
+    @pymc_values.setter
+    def pymc_values(self, values):
+        for i, J_fall in enumerate(self.J_fall):
+            J_fall.value = values['J_fall'][i]
+
+        for i, J_mass in enumerate(self.J_mass):
+            J_mass.value = values['J_mass'][i]
+
+        for i, F in enumerate(self.F):
+            F.value = values['F'][i]
+
+        for i, k in enumerate(self.k):
+            k.value = values['k'][i]
+
+    def __getstate__(self):
+        state = {key: getattr(self, key) for key in self._state_keys}
+        return state
+
+    def __setstate__(self, state):
+        for key in self._state_keys:
+            # we have to set these values AFTER we've initialized the
+            # pymc variables
+            if key == 'pymc_values':
+                continue
+            setattr(self, key, state[key])
+
+        self.init_pymc_variables()
+        self.pymc_values = state['pymc_values']
 
     @LazyProperty
     def S(self):
