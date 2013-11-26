@@ -1,5 +1,6 @@
 import pymc
 import numpy as np
+import IPython
 from pymc.distributions import normal_like
 
 from .util import LazyProperty
@@ -121,3 +122,19 @@ class FallModel(object):
         m = pymc.MAP(self)
         m.fit()
         assert self.k.value == m.k.value
+
+    def graph(self, pth):
+        fig_name = pth.namebase
+        fig_fmt = pth.ext.lstrip('.')
+        fig_dir = pth.dirname()
+
+        if not fig_dir.exists():
+            fig_dir.makedirs_p()
+
+        pymc.graph.graph(
+            pymc.Model(self),
+            name=fig_name,
+            format=fig_fmt,
+            path=fig_dir)
+
+        return IPython.display.Image(pth)
