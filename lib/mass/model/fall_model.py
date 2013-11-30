@@ -1,8 +1,10 @@
 import pymc
 import numpy as np
 import IPython
-from pymc.distributions import normal_like
+import matplotlib.pyplot as plt
+import pandas as pd
 
+from pymc.distributions import binomial_like
 from .util import LazyProperty
 
 
@@ -14,30 +16,31 @@ class FallModel(object):
         'n_trial',
         'ipe_mean',
         'ipe_var',
+        'ipe_smooth',
         'exp',
-        'kappas',
-        'n_kappa',
         'prior',
+        'kappas',
         'pymc_values'
     ]
 
-    def __init__(self, ipe, exp, trials, prior=None):
+    def __init__(self, ipe, exp, trials, kappas, prior=None):
         self.trials = map(str, trials)
         self.n_trial = len(self.trials)
 
-        self.ipe_mean = ipe.P_fall_mean.ix[self.trials]
-        self.ipe_var = ipe.P_fall_var.ix[self.trials]
+        self.kappas = map(float, kappas)
+
+        if len(self.kappas) != 2:
+            raise ValueError("invalid number of kappas: %d" % len(self.kappas))
+
+        self.ipe_mean = ipe.P_fall_mean.ix[self.trials][self.kappas]
+        self.ipe_var = ipe.P_fall_var.ix[self.trials][self.kappas]
+        self.ipe_smooth = ipe.P_fall_smooth.ix[self.trials][self.kappas]
         self.exp = exp.ix[self.trials]
 
-        self.kappas = map(float, self.ipe_mean.columns)
-        self.n_kappa = len(self.kappas)
-
         if prior is None:
-            self.prior = np.ones(self.n_kappa) / self.n_kappa
-        elif len(prior) != self.n_kappa:
-            raise ValueError("given prior is not the right shape")
+            self.prior = 0.5
         else:
-            self.prior = np.array(prior)
+            self.prior = float(prior)
 
         self.init_pymc_variables()
 
@@ -46,20 +49,16 @@ class FallModel(object):
 
     @property
     def pymc_values(self):
-        # we don't need S because it is deterministic or J because it
-        # is observed
-        values = {}
-        values['k'] = self.k.value
-        values['p_fall'] = np.empty(self.p_fall.shape, dtype=np.float64)
-        for i, p_fall in enumerate(self.p_fall):
-            values['p_fall'][i] = p_fall.value
+        # we don't need S or p_fall because they are deterministic, or
+        # J because it is observed
+        values = {
+            'k': self.k.value
+        }
         return values
 
     @pymc_values.setter
     def pymc_values(self, values):
         self.k.value = values['k']
-        for i, p_fall in enumerate(self.p_fall):
-            p_fall.value = values['p_fall'][i]
 
     def __getstate__(self):
         state = {key: getattr(self, key) for key in self._state_keys}
@@ -89,7 +88,8 @@ class FallModel(object):
 
     @LazyProperty
     def k(self):
-        return pymc.Categorical('k', self.prior)
+        k = pymc.Bernoulli('k', self.prior)
+        return k
 
     @LazyProperty
     def p_fall(self):
@@ -97,11 +97,9 @@ class FallModel(object):
         p_fall = np.empty(self.n_trial, dtype=object)
         k = self.k
         for t, S in enumerate(self.S):
-            @pymc.stochastic(name="p_fall_%d" % t)
-            def p_fall_t(value=0.5, k=k, S=S):
-                mu = self.ipe_mean.ix[S, int(k)]
-                tau = 1. / self.ipe_var.ix[S, int(k)]
-                return normal_like(value, mu, tau)
+            @pymc.deterministic(name="p_fall_%d" % t)
+            def p_fall_t(k=k, S=S):
+                return self.ipe_smooth.ix[S, int(k)]
             p_fall[t] = p_fall_t
         return p_fall
 
@@ -118,10 +116,27 @@ class FallModel(object):
                 value=value, observed=True)
         return J
 
+    @property
+    def logp(self):
+        m = pymc.Model(self)
+        return m.logp
+
+    @property
+    def logp_k(self):
+        vals = [False, True]
+        logp = np.empty(len(vals))
+        for i, v in enumerate(vals):
+            self.k.value = v
+            logp[i] = self.logp
+        s = pd.Series(logp, index=self.kappas)
+        s.index.name = 'kappa'
+        return s
+
     def fit(self):
-        m = pymc.MAP(self)
-        m.fit()
-        assert self.k.value == m.k.value
+        vals = [False, True]
+        logp = self.logp_k
+        best = vals[np.argmax(logp)]
+        self.k.value = best
 
     def graph(self, pth):
         fig_name = pth.namebase
@@ -138,3 +153,17 @@ class FallModel(object):
             path=fig_dir)
 
         return IPython.display.Image(pth)
+
+    def plot_J_pdf(self, t, ax=None):
+        p_fall = self.p_fall[t]
+        J = self.J[t]
+        X = np.arange(7)
+        pX = np.exp([binomial_like(x, 6, p_fall) for x in X])
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        ax.plot(X+1, pX, ls='-', marker='o')
+        ax.vlines(J.value+1, 0, 1)
+        ax.set_ylim(0, 1)
+        ax.set_xlim(0.5, 7.5)
