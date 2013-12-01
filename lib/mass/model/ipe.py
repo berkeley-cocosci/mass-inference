@@ -50,7 +50,7 @@ class IPE(object):
     def P_fall_var(self):
         return self.unstable.groupby('stimulus').apply(self._sample_kappa_var)
 
-    @property
+    @LazyProperty
     def P_fall_smooth(self):
         mean = self.P_fall_mean
 
