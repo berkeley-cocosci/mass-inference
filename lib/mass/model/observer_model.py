@@ -22,22 +22,25 @@ class ObserverModel(object):
         'pymc_values'
     ]
 
-    def __init__(self, ipe, fb, trials, kappa0, prior=None):
+    def __init__(self, ipe, fb, trials, kappa0, kappas=None, prior=None):
         self.trials = map(str, trials)
         self.n_trial = len(self.trials)
 
-        self.ipe = ipe.P_fall_smooth.ix[self.trials]
+        if kappas is None:
+            self.kappas = map(float, ipe.P_fall_smooth.columns)
+        else:
+            self.kappas = map(float, kappas)
+        self.n_kappa = len(self.kappas)
+
+        self.ipe = ipe.P_fall_smooth.ix[self.trials][self.kappas]
         self.fb = fb.fall[kappa0].ix[self.trials]
         self.kappa0 = kappa0
 
-        self.kappas = map(float, self.ipe.columns)
-        self.n_kappa = len(self.kappas)
-
         if prior is None:
             self.prior = np.log(np.ones(self.n_kappa) / self.n_kappa)
-        elif len(prior) != self.n_kappa:
-            raise ValueError("given prior is not the right shape")
         else:
+            if len(prior) != self.n_kappa:
+                raise ValueError("given prior is not the right shape")
             self.prior = np.log(np.array(prior))
 
         self.init_pymc_variables()
@@ -135,15 +138,18 @@ class ObserverModel(object):
                 print B
                 print B.sum()
                 raise ValueError
-            p_mass[t] = np.log(B[ibig].sum() + 0.5 * B[ieq])
+            p_mass[t] = B[ibig].sum()
+            if ieq.sum() > 0:
+                p_mass[t] += 0.5 * B[ieq]
+            p_mass[t] = np.log(p_mass[t])
         return p_mass
 
     @LazyProperty
     def J_fall(self):
-        """Bernoulli judgment of whether the tower will fall"""
+        """Binomial judgment of whether the tower will fall"""
         J = np.empty(self.n_trial, dtype=object)
         for t in xrange(self.n_trial):
-            J[t] = pymc.Bernoulli('J_fall_%d' % t, np.exp(self.p_fall[t]))
+            J[t] = pymc.Binomial('J_fall_%d' % t, 6, np.exp(self.p_fall[t]))
         return J
 
     @LazyProperty
@@ -166,12 +172,14 @@ class ObserverModel(object):
             if np.isnan(value):
                 @pymc.stochastic(dtype=int, observed=False, name="F_%d" % t)
                 def F_t(value=1, k=k):
-                    return bernoulli_like(value, ipe[int(k)])
+                    kappa = self.kappas[int(k)]
+                    return bernoulli_like(value, ipe[kappa])
 
             else:
                 @pymc.stochastic(dtype=int, observed=True, name="F_%d" % t)
                 def F_t(value=value, k=k):
-                    return bernoulli_like(value, ipe[int(k)])
+                    kappa = self.kappas[int(k)]
+                    return bernoulli_like(value, ipe[kappa])
 
             F[t] = F_t
 
@@ -251,7 +259,7 @@ class ObserverModel(object):
         # evaluate
         p_J_fall = np.empty(J_fall.shape)
         for t in xrange(J_fall.size):
-            self.J_fall[t].set_value(J_fall[t])
+            self.J_fall[t] = J_fall[t]
             p_J_fall[t] = self.J_fall[t].logp
 
         return p_J_fall
@@ -267,7 +275,7 @@ class ObserverModel(object):
         for t in xrange(J_mass.size):
             if np.isnan(J_mass[t].value):
                 continue
-            self.J_mass[t].set_value(J_mass[t])
+            self.J_mass[t] = J_mass[t]
             p_J_mass[t] = self.J_mass[t].logp
 
         return p_J_mass
@@ -280,8 +288,12 @@ class ObserverModel(object):
             fig, ax = plt.subplots()
 
         im = ax.imshow(np.exp(self.B).T, cmap='gray', interpolation='nearest')
-        ax.set_yticks([self.kappas.index(x) for x in [-1, 0, 1]])
-        ax.set_yticklabels(['0.1', '1.0', '10'])
+        try:
+            ax.set_yticks([self.kappas.index(x) for x in [-1, 0, 1]])
+            ax.set_yticklabels(['0.1', '1.0', '10'])
+        except ValueError:
+            ax.set_yticks(np.arange(self.n_kappa))
+            ax.set_yticklabels(self.kappas)
         ax.set_xlabel("Trial number")
         ax.set_ylabel("Mass ratio ($r$)")
         cb = plt.colorbar(im)
