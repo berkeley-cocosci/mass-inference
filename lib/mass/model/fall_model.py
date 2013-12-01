@@ -14,23 +14,25 @@ class FallModel(object):
     _state_keys = [
         'trials',
         'n_trial',
+        'kappas',
+        'n_kappa',
         'ipe_mean',
         'ipe_var',
         'ipe_smooth',
         'exp',
         'prior',
-        'kappas',
         'pymc_values'
     ]
 
-    def __init__(self, ipe, exp, trials, kappas, prior=None):
+    def __init__(self, ipe, exp, trials, kappas=None, prior=None):
         self.trials = map(str, trials)
         self.n_trial = len(self.trials)
 
-        self.kappas = map(float, kappas)
-
-        if len(self.kappas) != 2:
-            raise ValueError("invalid number of kappas: %d" % len(self.kappas))
+        if kappas is None:
+            self.kappas = map(float, ipe.P_fall_mean.columns)
+        else:
+            self.kappas = map(float, kappas)
+        self.n_kappa = len(self.kappas)
 
         self.ipe_mean = ipe.P_fall_mean.ix[self.trials][self.kappas]
         self.ipe_var = ipe.P_fall_var.ix[self.trials][self.kappas]
@@ -38,9 +40,11 @@ class FallModel(object):
         self.exp = exp.ix[self.trials]
 
         if prior is None:
-            self.prior = 0.5
+            self.prior = np.log(np.ones(self.n_kappa) / float(self.n_kappa))
         else:
-            self.prior = float(prior)
+            if len(prior) != self.n_kappa:
+                raise ValueError("given prior is not the right shape")
+            self.prior = np.log(prior)
 
         self.init_pymc_variables()
 
@@ -88,7 +92,7 @@ class FallModel(object):
 
     @LazyProperty
     def k(self):
-        k = pymc.Bernoulli('k', self.prior)
+        k = pymc.Categorical('k', np.exp(self.prior))
         return k
 
     @LazyProperty
@@ -99,7 +103,8 @@ class FallModel(object):
         for t, S in enumerate(self.S):
             @pymc.deterministic(name="p_fall_%d" % t)
             def p_fall_t(k=k, S=S):
-                return self.ipe_smooth.ix[S, int(k)]
+                kappa = self.kappas[int(k)]
+                return self.ipe_smooth.ix[S, kappa]
             p_fall[t] = p_fall_t
         return p_fall
 
@@ -123,19 +128,17 @@ class FallModel(object):
 
     @property
     def logp_k(self):
-        vals = [False, True]
-        logp = np.empty(len(vals))
-        for i, v in enumerate(vals):
-            self.k.value = v
+        logp = np.empty(self.n_kappa)
+        for i in np.arange(self.n_kappa):
+            self.k.value = i
             logp[i] = self.logp
         s = pd.Series(logp, index=self.kappas)
         s.index.name = 'kappa'
         return s
 
     def fit(self):
-        vals = [False, True]
         logp = self.logp_k
-        best = vals[np.argmax(logp)]
+        best = np.arange(self.n_kappa)[np.argmax(logp)]
         self.k.value = best
 
     def graph(self, pth):
