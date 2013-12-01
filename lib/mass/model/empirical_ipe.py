@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy
 
 from .util import LazyProperty
 
@@ -22,7 +21,9 @@ class EmpiricalIPE(object):
             index='pid',
             columns='kappa',
             values='fall? response')
-        return samps.apply(scipy.stats.sem)
+        var = samps.var()
+        n = samps.count()
+        return var / n
 
     @LazyProperty
     def P_fall_mean(self):

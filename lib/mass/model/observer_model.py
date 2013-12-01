@@ -116,6 +116,11 @@ class ObserverModel(object):
             else:
                 lh = [bernoulli_like(F, p) for p in self.ipe.ix[S]]
                 B[t+1] = normalize(B[t] + lh)[1]
+            if not np.allclose(np.exp(B[t+1]).sum(), 1):
+                print B[t+1]
+                print np.exp(B[t+1])
+                print np.exp(B[t+1]).sum()
+                raise ValueError
         return B
 
     @LazyProperty
@@ -134,10 +139,6 @@ class ObserverModel(object):
         ieq = np.array(self.kappas) == 0
         for t in xrange(self.n_trial + 1):
             B = np.exp(self.B[t])
-            if not np.allclose(B.sum(), 1):
-                print B
-                print B.sum()
-                raise ValueError
             p_mass[t] = B[ibig].sum()
             if ieq.sum() > 0:
                 p_mass[t] += 0.5 * B[ieq]
