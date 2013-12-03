@@ -1,0 +1,52 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:32:26.622901", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "e52960073b9ff9ed54adf8cb43d94f1c", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 547994, 
+      "modified": "2013-10-19 15:32:26.570472", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "question": "Use the mouse to indicate the direction that the tower will fall and how far\nthe blocks will scatter."
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:32:26.622883"
+    }
+  ], 
+  "name": "direction_scatter.dpkg"
+}

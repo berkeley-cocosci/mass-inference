@@ -1,0 +1,378 @@
+{
+  "description": null, 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2013-11-08 18:42:32.853541", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "name": "stability_original_truth.dpkg", 
+  "title": null, 
+  "version": "1.2.0", 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "94d53ccb0c344d9f7905cca17bb15964", 
+      "name": "simulations.npy", 
+      "format": "npy", 
+      "bytes": 100896, 
+      "modified": "2013-11-08 18:42:32.850627", 
+      "path": "./simulations.npy"
+    }, 
+    {
+      "hash": "075d8acfaccd5d48d1f42b4969da178e", 
+      "name": "forces.npy", 
+      "format": "npy", 
+      "bytes": 1072, 
+      "modified": "2013-11-08 18:42:32.852677", 
+      "path": "./forces.npy"
+    }, 
+    {
+      "hash": "2d58efa158aa6ead742b615a92064189", 
+      "name": "noises.npy", 
+      "format": "npy", 
+      "bytes": 14496, 
+      "modified": "2013-11-08 18:42:32.853045", 
+      "path": "./noises.npy"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "sigma", 
+          "phi", 
+          "kappa", 
+          "stimulus", 
+          "sample", 
+          "time", 
+          "object", 
+          "posquat"
+        ], 
+        "physics": {
+          "force_duration": 0.2, 
+          "gravity": [
+            0.0, 
+            0.0, 
+            -9.81
+          ]
+        }, 
+        "index_levels": {
+          "phi": [
+            0.0
+          ], 
+          "kappa": [
+            0.0
+          ], 
+          "stimulus": [
+            "tower_00015_0000000000", 
+            "tower_00081_0000000000", 
+            "tower_00098_0000000000", 
+            "tower_00149_0000000000", 
+            "tower_00150_0000000000", 
+            "tower_00176_0000000000", 
+            "tower_00202_0000000000", 
+            "tower_00259_0000000000", 
+            "tower_00292_0000000000", 
+            "tower_00363_0000000000", 
+            "tower_00377_0000000000", 
+            "tower_00404_0000000000", 
+            "tower_00473_0000000000", 
+            "tower_00500_0000000000", 
+            "tower_00608_0000000000", 
+            "tower_00617_0000000000", 
+            "tower_00629_0000000000", 
+            "tower_00647_0000000000", 
+            "tower_00691_0000000000", 
+            "tower_00767_0000000000", 
+            "tower_00815_0000000000", 
+            "tower_00880_0000000000", 
+            "tower_00891_0000000000", 
+            "tower_00918_0000000000", 
+            "tower_01011_0000000000", 
+            "tower_01048_0000000000", 
+            "tower_01060_0000000000", 
+            "tower_01104_0000000000", 
+            "tower_01113_0000000000", 
+            "tower_01142_0000000000", 
+            "tower_01143_0000000000", 
+            "tower_01201_0000000000", 
+            "tower_01203_0000000000", 
+            "tower_01209_0000000000", 
+            "tower_01264_0000000000", 
+            "tower_01273_0000000000", 
+            "tower_01307_0000000000", 
+            "tower_01339_0000000000", 
+            "tower_01390_0000000000", 
+            "tower_01404_0000000000", 
+            "tower_01441_0000000000", 
+            "tower_01452_0000000000", 
+            "tower_01471_0000000000", 
+            "tower_01490_0000000000", 
+            "tower_01512_0000000000", 
+            "tower_01536_0000000000", 
+            "tower_01583_0000000000", 
+            "tower_01592_0000000000", 
+            "tower_01640_0000000000", 
+            "tower_01650_0000000000", 
+            "tower_01694_0000000000", 
+            "tower_01736_0000000000", 
+            "tower_01785_0000000000", 
+            "tower_01833_0000000000", 
+            "tower_01838_0000000000", 
+            "tower_01846_0000000000", 
+            "tower_01931_0000000000", 
+            "tower_01933_0000000000", 
+            "tower_01956_0000000000", 
+            "tower_01984_0000000000"
+          ], 
+          "object": [
+            "block0-physics", 
+            "block1-physics", 
+            "block2-physics", 
+            "block3-physics", 
+            "block4-physics", 
+            "block5-physics", 
+            "block6-physics", 
+            "block7-physics", 
+            "block8-physics", 
+            "block9-physics"
+          ], 
+          "sample": [
+            0
+          ], 
+          "posquat": [
+            "x", 
+            "y", 
+            "z", 
+            "q0", 
+            "q1", 
+            "q2", 
+            "q3"
+          ], 
+          "time": [
+            "pre-repel", 
+            "0.0", 
+            "2.0"
+          ], 
+          "sigma": [
+            0.0
+          ]
+        }, 
+        "simulations": {
+          "duration": 2.0, 
+          "substep_size": 0.001, 
+          "step_size": 0.01, 
+          "record_interval": 10, 
+          "n_substeps": 10
+        }
+      }, 
+      "name": "simulation_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-08 18:42:32.853525"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "phi", 
+          "stimulus", 
+          "sample"
+        ], 
+        "index_levels": {
+          "stimulus": [
+            "tower_00015_0000000000", 
+            "tower_00081_0000000000", 
+            "tower_00098_0000000000", 
+            "tower_00149_0000000000", 
+            "tower_00150_0000000000", 
+            "tower_00176_0000000000", 
+            "tower_00202_0000000000", 
+            "tower_00259_0000000000", 
+            "tower_00292_0000000000", 
+            "tower_00363_0000000000", 
+            "tower_00377_0000000000", 
+            "tower_00404_0000000000", 
+            "tower_00473_0000000000", 
+            "tower_00500_0000000000", 
+            "tower_00608_0000000000", 
+            "tower_00617_0000000000", 
+            "tower_00629_0000000000", 
+            "tower_00647_0000000000", 
+            "tower_00691_0000000000", 
+            "tower_00767_0000000000", 
+            "tower_00815_0000000000", 
+            "tower_00880_0000000000", 
+            "tower_00891_0000000000", 
+            "tower_00918_0000000000", 
+            "tower_01011_0000000000", 
+            "tower_01048_0000000000", 
+            "tower_01060_0000000000", 
+            "tower_01104_0000000000", 
+            "tower_01113_0000000000", 
+            "tower_01142_0000000000", 
+            "tower_01143_0000000000", 
+            "tower_01201_0000000000", 
+            "tower_01203_0000000000", 
+            "tower_01209_0000000000", 
+            "tower_01264_0000000000", 
+            "tower_01273_0000000000", 
+            "tower_01307_0000000000", 
+            "tower_01339_0000000000", 
+            "tower_01390_0000000000", 
+            "tower_01404_0000000000", 
+            "tower_01441_0000000000", 
+            "tower_01452_0000000000", 
+            "tower_01471_0000000000", 
+            "tower_01490_0000000000", 
+            "tower_01512_0000000000", 
+            "tower_01536_0000000000", 
+            "tower_01583_0000000000", 
+            "tower_01592_0000000000", 
+            "tower_01640_0000000000", 
+            "tower_01650_0000000000", 
+            "tower_01694_0000000000", 
+            "tower_01736_0000000000", 
+            "tower_01785_0000000000", 
+            "tower_01833_0000000000", 
+            "tower_01838_0000000000", 
+            "tower_01846_0000000000", 
+            "tower_01931_0000000000", 
+            "tower_01933_0000000000", 
+            "tower_01956_0000000000", 
+            "tower_01984_0000000000"
+          ], 
+          "sample": [
+            0
+          ], 
+          "phi": [
+            0.0
+          ]
+        }
+      }, 
+      "name": "force_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-08 18:42:32.853533"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "index_names": [
+          "sigma", 
+          "stimulus", 
+          "sample", 
+          "object", 
+          "position"
+        ], 
+        "index_levels": {
+          "stimulus": [
+            "tower_00015_0000000000", 
+            "tower_00081_0000000000", 
+            "tower_00098_0000000000", 
+            "tower_00149_0000000000", 
+            "tower_00150_0000000000", 
+            "tower_00176_0000000000", 
+            "tower_00202_0000000000", 
+            "tower_00259_0000000000", 
+            "tower_00292_0000000000", 
+            "tower_00363_0000000000", 
+            "tower_00377_0000000000", 
+            "tower_00404_0000000000", 
+            "tower_00473_0000000000", 
+            "tower_00500_0000000000", 
+            "tower_00608_0000000000", 
+            "tower_00617_0000000000", 
+            "tower_00629_0000000000", 
+            "tower_00647_0000000000", 
+            "tower_00691_0000000000", 
+            "tower_00767_0000000000", 
+            "tower_00815_0000000000", 
+            "tower_00880_0000000000", 
+            "tower_00891_0000000000", 
+            "tower_00918_0000000000", 
+            "tower_01011_0000000000", 
+            "tower_01048_0000000000", 
+            "tower_01060_0000000000", 
+            "tower_01104_0000000000", 
+            "tower_01113_0000000000", 
+            "tower_01142_0000000000", 
+            "tower_01143_0000000000", 
+            "tower_01201_0000000000", 
+            "tower_01203_0000000000", 
+            "tower_01209_0000000000", 
+            "tower_01264_0000000000", 
+            "tower_01273_0000000000", 
+            "tower_01307_0000000000", 
+            "tower_01339_0000000000", 
+            "tower_01390_0000000000", 
+            "tower_01404_0000000000", 
+            "tower_01441_0000000000", 
+            "tower_01452_0000000000", 
+            "tower_01471_0000000000", 
+            "tower_01490_0000000000", 
+            "tower_01512_0000000000", 
+            "tower_01536_0000000000", 
+            "tower_01583_0000000000", 
+            "tower_01592_0000000000", 
+            "tower_01640_0000000000", 
+            "tower_01650_0000000000", 
+            "tower_01694_0000000000", 
+            "tower_01736_0000000000", 
+            "tower_01785_0000000000", 
+            "tower_01833_0000000000", 
+            "tower_01838_0000000000", 
+            "tower_01846_0000000000", 
+            "tower_01931_0000000000", 
+            "tower_01933_0000000000", 
+            "tower_01956_0000000000", 
+            "tower_01984_0000000000"
+          ], 
+          "sample": [
+            0
+          ], 
+          "object": [
+            "block0-physics", 
+            "block1-physics", 
+            "block2-physics", 
+            "block3-physics", 
+            "block4-physics", 
+            "block5-physics", 
+            "block6-physics", 
+            "block7-physics", 
+            "block8-physics", 
+            "block9-physics"
+          ], 
+          "sigma": [
+            0.0
+          ], 
+          "position": [
+            "x", 
+            "y", 
+            "z"
+          ]
+        }
+      }, 
+      "name": "noise_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-08 18:42:32.853536"
+    }
+  ]
+}

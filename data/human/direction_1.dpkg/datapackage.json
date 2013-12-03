@@ -1,0 +1,52 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-18 19:16:04.990600", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "7359ee79538e37b54d5cf82c799feb4f", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 133772, 
+      "modified": "2013-10-18 19:16:04.976852", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "question": "Use the mouse to indicate the direction that the tower will fall."
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-18 19:16:04.990576"
+    }
+  ], 
+  "name": "direction_1.dpkg"
+}

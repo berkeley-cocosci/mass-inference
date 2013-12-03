@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "last_modified": "2013-11-10 22:26:25.925718", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "c70463e22d735732fdfb5a2772e01a56", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "bytes": 5330131, 
+      "modified": "2013-11-10 22:26:25.408053", 
+      "path": "./model.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/Users/jhamrick/project/mass-inference/data/model-raw/mass_learning_ipe.dpkg"
+      }, 
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-11-10 22:26:25.925697"
+    }
+  ], 
+  "name": "mass_learning_ipe_fall.dpkg"
+}

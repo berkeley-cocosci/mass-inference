@@ -1,0 +1,118 @@
+{
+  "description": null, 
+  "last_modified": "2013-10-19 15:32:37.022097", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }, 
+    {
+      "email": "tom_griffiths@berkeley.edu", 
+      "name": "Thomas L. Griffiths"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "e3bade25ba97b1022da843780f2f7bf9", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 99059, 
+      "modified": "2013-10-19 15:32:37.014622", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "completion_codes": {
+          "023": null, 
+          "004": "4a40b9e9ed13898c288af236788211337f3697c1", 
+          "010": "dbec3cc3810eb4e08fe46e190c347cf6fca7c2ec", 
+          "011": "81e58ef156753ae76099be1335881cb5e7964bab", 
+          "012": "47e2a9e1096f052a939c2db2b1acd4e53492e660", 
+          "013": null, 
+          "014": "8adc12f50de99ef41bbae12777823fddede94342", 
+          "015": "d961fc0c149f0976829f2c5b18f5035b9319d809", 
+          "016": "59a9f2c525522f16ebd22883e8d1c823c3501c79", 
+          "017": "c9a4b7a5d47b1fae75249873709a4b8ca174bba9", 
+          "018": null, 
+          "019": null, 
+          "003": "96324117dab7e6993570617993501b0e848472d1", 
+          "002": "e8438c755bc8b57c439099df74f2dfba547862c8", 
+          "001": "110d20cef521ed8e030f08f74a6124b355a9caf9", 
+          "021": "7c82f472b89dbb751b58dfc1b309bdadc7be6cdf", 
+          "020": "f108cd1853d259a5a7d7a8aa0f3f51d130ab040d", 
+          "005": null, 
+          "022": "c1ef3bed72b26dc86705acea5511f9b09d6d8ace", 
+          "009": "ba84883aefdc5e0d2885fef03ce72f2d618e5875", 
+          "008": "45c452abf5fbccd09f428ade7a2b2e07ac3c02bf", 
+          "025": "a0a576a7346ccdd2fb719305a47c0d5f44396ce8", 
+          "024": null, 
+          "007": "f0021621d66acfc4b602bceca59b56d2e1c3bb26", 
+          "006": "246ec9b016f000252d3f0769044a5974ce9db2ea"
+        }, 
+        "validation_codes": {
+          "023": "db6b53efa9f49a51ae5e1842d55c99fa3c3b3dfe", 
+          "004": "14f7f0be3a3a9f8d49629e565193459912cccdd5", 
+          "010": "0e45ee6de4da82cb78fc9b7f96ec26a42589889d", 
+          "011": "1f390e80527e89d4835c105cc6fa8ca09382e08b", 
+          "012": "e72f8aaf26baea31e2e069f15772beef87323e69", 
+          "013": "d5031825f15eba5ee45c7bf79f5615800ec778ac", 
+          "014": "d92f5986705b8c30357655847e0506213f4b2d57", 
+          "015": "9ee4631853ced3eb9ad7cdd424e15e81a50c5a3a", 
+          "016": "d6688f8c7103c5d589b778228e097a44c60cdd98", 
+          "017": "4f74ec72692cd18acb389c817817cb391579814b", 
+          "018": "4813ec6efc2ecb2bd89ce3de473480bbab979aab", 
+          "019": "e0f8d06f6524adf509f0297aa5ec8355d837e263", 
+          "003": "75db48562cc824c09d4139c7bc51b8b60c7a2bf1", 
+          "002": "ca2f54c894dfbff2bc9c760c2bbb932e20ae2825", 
+          "001": "a6ea83be0353e80030e3bb68a3751325b35e20f0", 
+          "021": "ad3aac5bd8a80305db220c2879f49972fb608b0f", 
+          "020": "961c1b7a2d9c846f20df4c35a0a08c35e528591f", 
+          "005": "18a06a6089fab20737d79c8d1de19aadbda21e06", 
+          "022": "b55133cecca2a75314a31fb77eba582bb399e1ba", 
+          "009": "741a9659cf2dfbfd34bef74be6ba66aaa2af561f", 
+          "008": "4b4e0cb802d7ae33b48eeb0b108d13862104fba1", 
+          "025": "6f9a701e9ea78551d1c4221529572398bbb9f46b", 
+          "024": "34d1954cd0426559f352902325c5fde8be90fdb2", 
+          "007": "9dce6b52db8df7bb42ee98f37022783acdb004e4", 
+          "006": "3da47ef5e666c9201585f7ba5f2bdd2d5a36ab00"
+        }
+      }, 
+      "name": "experiment_metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2013-10-19 15:32:37.020700"
+    }, 
+    {
+      "hash": "ddf0adf1b90044d984318bd9a76de6bc", 
+      "name": "turk.csv", 
+      "format": "csv", 
+      "bytes": 15670, 
+      "modified": "2013-10-19 15:32:37.020710", 
+      "mediaformat": "text/csv", 
+      "path": "./turk.csv"
+    }
+  ], 
+  "name": "mass_oneshot_F.dpkg"
+}

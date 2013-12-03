@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2013-11-08 18:42:33.455356", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "name": "stability_original_truth_fall.dpkg", 
+  "title": null, 
+  "version": "1.4.0", 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "1126c8445879ba2858b93a425a942f11", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "path": "./model.csv", 
+      "bytes": 2669, 
+      "modified": "2013-11-08 18:42:33.453445"
+    }, 
+    {
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/Users/jhamrick/project/mass-inference/data/model-raw/stability_original_truth.dpkg"
+      }, 
+      "modified": "2013-11-08 18:42:33.455341"
+    }
+  ]
+}

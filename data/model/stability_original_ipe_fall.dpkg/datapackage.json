@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2013-11-10 19:47:30.442344", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "name": "stability_original_ipe_fall.dpkg", 
+  "title": null, 
+  "version": "1.2.0", 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "d191617513b1d61477074bdb9b0bba1c", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "path": "./model.csv", 
+      "bytes": 286329, 
+      "modified": "2013-11-10 19:47:30.413503"
+    }, 
+    {
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/Users/jhamrick/project/mass-inference/data/model-raw/stability_original_ipe.dpkg"
+      }, 
+      "modified": "2013-11-10 19:47:30.442325"
+    }
+  ]
+}
