@@ -7,7 +7,7 @@ filename = "condition_counts.csv"
 
 def run(data, results_path, seed):
     # compute how many participants we have for each condition
-    counts = data['exp']\
+    counts = data['human']['all']\
         .groupby(['condition', 'counterbalance'])['pid']\
         .apply(lambda x: len(x.unique()))\
         .reset_index()

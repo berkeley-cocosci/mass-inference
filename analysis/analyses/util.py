@@ -1,7 +1,7 @@
 from path import path
 import pandas as pd
 
-from mass.analysis import load_human, load_all#, load_model
+from mass.analysis import load_human, load_model, load_all
 # from mental_rotation.analysis import beta, bootcorr, modtheta
 # from mental_rotation.analysis import bootstrap_median, bootstrap_mean
 
@@ -32,8 +32,8 @@ latex_mean = r"$M={median:.1f}$, 95\% CI $[{lower:.1f}, {upper:.1f}]$"
 
 def run_analysis(func):
     version = 'G'
-    data_path = path('../../data')
-    results_path = path('../../results')
+    data_path = path('../data')
+    results_path = path('../results')
     seed = 923012
     data = load_all(version, data_path)
     pth = func(data, results_path, seed)

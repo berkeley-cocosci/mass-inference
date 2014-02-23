@@ -10,6 +10,7 @@ from statsmodels.stats.proportion import proportion_confint
 from statsmodels.stats.proportion import proportions_chisquare
 
 from mass.model import model_observer as mo
+from mass.model import IPE, NoFeedback, Feedback
 
 from snippets.safemath import normalize
 from snippets import datapackage as dpkg
@@ -551,15 +552,47 @@ def load_human(version, data_path):
     expC = exp.groupby('mode').get_group('experimentC')
 
     exp_data = {
-        'expA': expA,
-        'expB': expB,
-        'expC': expC,
-        'exp': exp
+        'A': expA,
+        'B': expB,
+        'C': expC,
+        'all': exp
     }
 
     return exp_all, exp_data
 
 
-def load_all(version, data_path):
-    exp_all, exp_data = load_human(version, data_path)
-    return exp_data
+def load_model(version, data_path):
+    sigma = 0.04
+    phi = 0.2
+
+    ipe = {
+        'A': IPE("mass_inference-%s-a_ipe_fall" % version,
+                 sigma=sigma, phi=phi),
+        'B': IPE("mass_inference-%s-b_ipe_fall" % version,
+                 sigma=sigma, phi=phi),
+        'C': IPE("mass_inference-%s-b_ipe_fall" % version,
+                 sigma=sigma, phi=phi)
+    }
+
+    fb = {
+        'A': NoFeedback("mass_inference-%s-a_truth_fall" % version),
+        'B': NoFeedback("mass_inference-%s-b_truth_fall" % version),
+        'C': Feedback("mass_inference-%s-b_truth_fall" % version),
+    }
+
+    return ipe, fb
+
+
+def load_all(version, data_path, human=None):
+    ipe, fb = load_model(version, data_path)
+
+    if human is None:
+        exp_all, human = load_human(version, data_path)
+
+    data = {
+        'human': human,
+        'ipe': ipe,
+        'fb': fb
+    }
+
+    return data
