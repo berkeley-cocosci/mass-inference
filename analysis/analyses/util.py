@@ -2,8 +2,7 @@ from path import path
 import pandas as pd
 
 from mass.analysis import load_human, load_model, load_all
-# from mental_rotation.analysis import beta, bootcorr, modtheta
-from mass.analysis import bootstrap_mean
+from mass.analysis import bootstrap_mean, bootcorr
 
 
 # def load_config(pth):
