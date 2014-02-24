@@ -8,7 +8,7 @@ import util
 def plot(results_path, fig_path):
 
     mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_responses.csv'))\
+        .read_csv(results_path.joinpath('mass_responses_only_learned.csv'))\
         .groupby('species')\
         .get_group('human')
 
@@ -32,7 +32,7 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("mass_accuracy.%s" % ext)
+    pths = [fig_path.joinpath("mass_accuracy_only_learned.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
