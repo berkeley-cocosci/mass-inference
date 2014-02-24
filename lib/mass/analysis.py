@@ -596,3 +596,16 @@ def load_all(version, data_path, human=None):
     }
 
     return data
+
+
+def bootstrap_mean(x, nsamples=1000):
+    arr = np.asarray(x)
+    n, = arr.shape
+    boot_idx = np.random.randint(0, n, n * nsamples)
+    boot_arr = arr[boot_idx].reshape((n, nsamples))
+    boot_mean = boot_arr.mean(axis=0)
+    stats = pd.Series(
+        np.percentile(boot_mean, [2.5, 50, 97.5]),
+        index=['lower', 'median', 'upper'],
+        name=x.name)
+    return stats
