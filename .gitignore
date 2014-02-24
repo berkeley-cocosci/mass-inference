@@ -9,3 +9,6 @@ experiment/deploy.sh
 experiment/participants.db
 old
 data/sim-raw
+results
+figures/mass_inference-G/
+analysis/.ipynb_checkpoints
