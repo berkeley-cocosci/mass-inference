@@ -5,6 +5,7 @@ import trial_order
 import fall_responses
 import fall_response_corrs
 import model_belief
+import model_belief_agg
 import mass_responses
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
 
     'trial_order',
     'model_belief',
+    'model_belief_agg',
     'mass_responses'
 ]

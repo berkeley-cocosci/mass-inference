@@ -3,14 +3,11 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import util
-import numpy as np
 
 
 def plot(results_path, fig_path):
 
-    belief = pd.read_csv(results_path.joinpath('model_belief.csv'))
-    belief['p'] = np.exp(belief['logp'])
-    belief = belief[belief['kappa0'] == belief['hypothesis']]
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
 

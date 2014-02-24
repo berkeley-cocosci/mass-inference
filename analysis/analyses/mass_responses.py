@@ -19,9 +19,7 @@ def run(data, results_path, seed):
     acc = correct.groupby(['kappa0', 'trial'])['correct']\
                  .apply(util.beta)
 
-    belief = pd.read_csv(results_path.joinpath('model_belief.csv'))
-    belief['p'] = np.exp(belief['logp'])
-    belief = belief[belief['kappa0'] == belief['hypothesis']]
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     avg_belief = belief\
         .groupby(['kappa0', 'trial'])['p']\
         .apply(util.bootstrap_mean)
