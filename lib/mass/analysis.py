@@ -639,3 +639,22 @@ def bootcorr(x, y, nsamples=10000, method='pearson'):
         index=['lower', 'median', 'upper'])
 
     return stats
+
+
+def beta(x, percentiles=None):
+    arr = np.asarray(x, dtype=int)
+    alpha = float((arr == 1).sum()) + 0.5
+    beta = float((arr == 0).sum()) + 0.5
+    if percentiles is None:
+        lower, mean, upper = scipy.special.btdtri(
+            alpha, beta, [0.025, 0.5, 0.975])
+        stats = pd.Series(
+            [lower, mean, upper],
+            index=['lower', 'median', 'upper'],
+            name=x.name)
+    else:
+        stats = pd.Series(
+            scipy.special.btdtri(alpha, beta, percentiles),
+            index=percentiles,
+            name=x.name)
+    return stats
