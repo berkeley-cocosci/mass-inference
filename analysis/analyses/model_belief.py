@@ -16,7 +16,7 @@ def run(data, results_path, seed):
 
     results = {}
     hyps = [-1.0, 1.0]
-    prior = np.zeros((1, len(hyps)))
+    prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
     for (kappa0, pid), df in data['human']['C'].groupby(['kappa0', 'pid']):
         order = trials[pid]
 
