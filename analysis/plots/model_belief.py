@@ -3,20 +3,19 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import util
-import numpy as np
 
 
 def plot_lhtype(lhtype, results_path, fig_path):
 
     belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     if lhtype == 'best':
-        llh = pd.read_csv(results_path.joinpath('model_log_lh.csv'))\
-                .set_index(['pid', 'trial'])\
-                .groupby(level='pid').sum()
-        best = llh.groupby(level='pid').apply(
-            lambda x: llh.columns[np.argmax(np.asarray(x).squeeze())])
-        belief = belief.set_index(['pid', 'likelihood']).groupby(
-            lambda x: best[x[0]] == x[1]).get_group(True).reset_index()
+        ranks = pd.read_csv(results_path.joinpath('participant_fits.csv'))
+        best = ranks.set_index('pid')['rank_1']
+        belief = belief\
+            .set_index(['pid', 'likelihood'])\
+            .groupby(lambda x: best[x[0]] == x[1])\
+            .get_group(True)\
+            .reset_index()
 
     else:
         belief = belief.groupby('likelihood').get_group(lhtype)
