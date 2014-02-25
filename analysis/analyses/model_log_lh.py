@@ -11,14 +11,24 @@ def run(data, results_path, seed):
     np.random.seed(seed)
     results = {}
 
-    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     h = data['human']['C'].pivot('pid', 'trial', 'mass? correct')
-    for lhtype, df in belief.groupby('likelihood'):
+
+    def llh(df):
         m = df.pivot('pid', 'trial', 'p')
         lh = np.log(((m * h) + ((1 - m) * (1 - h))).dropna(axis=1))
-        results[lhtype] = lh.stack()
+        lh = lh.stack()
+        lh.name = df.name
+        return lh
 
-    results = pd.DataFrame(results)
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
+    results = belief\
+        .groupby(['likelihood', 'model'])\
+        .apply(llh)\
+        .stack()\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'llh'})\
+        .set_index(['likelihood', 'model'])
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

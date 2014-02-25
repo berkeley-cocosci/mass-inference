@@ -15,7 +15,7 @@ def run(data, results_path, seed):
                .set_index(['mode', 'trial']).ix['experimentC']
 
     results = {}
-    for lhtype in ('empirical',):
+    for lhtype in ('empirical', 'ipe'):
         hyps = list(data[lhtype]['C'].P_fall_smooth.columns)
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         for (kappa0, pid), df in data['human']['C'].groupby(['kappa0', 'pid']):
@@ -37,7 +37,7 @@ def run(data, results_path, seed):
             res = res.reset_index('stimulus')\
                      .rename(columns={0: 'logp'})\
                      .stack()
-            results[(lhtype, kappa0, pid)] = res
+            results[(lhtype, 'learning', kappa0, pid)] = res
 
             res = pd.DataFrame(
                 posterior_ind, index=['prior'] + list(order), columns=hyps)
@@ -47,20 +47,21 @@ def run(data, results_path, seed):
             res = res.reset_index('stimulus')\
                      .rename(columns={0: 'logp'})\
                      .stack()
-            results[(lhtype + "_ind", kappa0, pid)] = res
+            results[(lhtype, 'static', kappa0, pid)] = res
 
             chance = res.copy().unstack(-1)
             chance.loc[:, 'logp'] = prior.flat[0]
-            results[("chance", kappa0, pid)] = chance.stack()
+            results[(lhtype, 'chance', kappa0, pid)] = chance.stack()
 
     results = pd.DataFrame.from_dict(results)
     results.columns = pd.MultiIndex.from_tuples(
-        results.columns, names=['likelihood', 'kappa0', 'pid'])
+        results.columns,
+        names=['likelihood', 'model', 'kappa0', 'pid'])
     results = results\
-        .stack(['likelihood', 'kappa0', 'pid'])\
+        .stack(['likelihood', 'model', 'kappa0', 'pid'])\
         .unstack(2)\
         .reorder_levels(
-            ['kappa0', 'pid', 'trial', 'hypothesis', 'likelihood'])\
+            ['model', 'likelihood', 'kappa0', 'pid', 'trial', 'hypothesis'])\
         .sortlevel()
 
     pth = results_path.joinpath(filename)

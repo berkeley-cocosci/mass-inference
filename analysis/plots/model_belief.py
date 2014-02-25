@@ -5,20 +5,21 @@ import pandas as pd
 import util
 
 
-def plot_lhtype(lhtype, results_path, fig_path):
+def plot_model(model, results_path, fig_path):
 
     belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
-    if lhtype == 'best':
+    belief = belief.groupby('likelihood').get_group('ipe')
+    if model == 'best':
         ranks = pd.read_csv(results_path.joinpath('participant_fits.csv'))
-        best = ranks.set_index('pid')['rank_1']
+        best = ranks.set_index('pid').groupby('rank')['model'].get_group(0)
         belief = belief\
-            .set_index(['pid', 'likelihood'])\
+            .set_index(['pid', 'model'])\
             .groupby(lambda x: best[x[0]] == x[1])\
             .get_group(True)\
             .reset_index()
 
     else:
-        belief = belief.groupby('likelihood').get_group(lhtype)
+        belief = belief.groupby('model').get_group(model)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
 
@@ -50,7 +51,7 @@ def plot_lhtype(lhtype, results_path, fig_path):
         ax.plot(
             agg['trial'][ix],
             agg['p'][ix],
-            'r-', lw=3)
+            'b-', lw=3)
         ax.set_title(r"$\kappa_0=%.1f$" % kappa0)
         ax.set_xlim(1, 20)
         ax.set_ylim(0, 1)
@@ -59,7 +60,7 @@ def plot_lhtype(lhtype, results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("model_belief_%s.%s" % (lhtype, ext))
+    pths = [fig_path.joinpath("model_belief_%s.%s" % (model, ext))
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
@@ -68,8 +69,10 @@ def plot_lhtype(lhtype, results_path, fig_path):
 
 def plot(results_path, fig_path):
     pths = []
-    for lhtype in ('empirical', 'ipe'):
-        pths.extend(plot_lhtype(lhtype, results_path, fig_path))
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
+    models = list(belief['model'].unique()) + ['best']
+    for model in models:
+        pths.extend(plot_model(model, results_path, fig_path))
     return pths
 
 

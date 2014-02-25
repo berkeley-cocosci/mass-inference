@@ -5,12 +5,12 @@ import pandas as pd
 import util
 
 
-def plot(results_path, fig_path):
+def plot_class(cls, results_path, fig_path):
 
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_responses.csv'))\
-        .groupby('species')\
-        .get_group('human')
+        .groupby(['class', 'species'])\
+        .get_group((cls, 'human'))
 
     fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
     for i, (kappa0, df) in enumerate(mass_responses.groupby('kappa0')):
@@ -32,10 +32,19 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("mass_accuracy.%s" % ext)
+    pths = [fig_path.joinpath("mass_accuracy_%s.%s" % (cls, ext))
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
+    return pths
+
+
+def plot(results_path, fig_path):
+    pths = []
+    responses = pd.read_csv(results_path.joinpath('mass_responses.csv'))
+    classes = list(responses['class'].unique())
+    for cls in classes:
+        pths.extend(plot_class(cls, results_path, fig_path))
     return pths
 
 

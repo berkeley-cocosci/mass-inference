@@ -11,26 +11,60 @@ def run(data, results_path, seed):
     np.random.seed(seed)
     results = []
 
-    acc = data['human']['C']\
-        .dropna(axis=0, subset=['mass? response'])\
-        .groupby(['kappa0', 'trial'])['mass? correct']\
-        .apply(util.beta)
+    models = pd.read_csv(results_path.joinpath("participant_fits.csv"))
+    models = models\
+        .set_index('pid')\
+        .groupby('rank')['model']\
+        .get_group(0)
 
-    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
-    avg_belief = belief\
-        .groupby(['kappa0', 'trial'])['p']\
-        .apply(util.bootstrap_mean)
+    model_belief = pd.read_csv(
+        results_path.joinpath('model_belief_agg.csv'))
 
-    results = pd.DataFrame({
-        'human': acc,
-        'model': avg_belief,
-    })
-    results.columns.name = 'species'
-    results = results\
-        .unstack(-1)\
-        .stack('species')\
-        .reorder_levels(['kappa0', 'species', 'trial'])\
-        .sortlevel()
+    for model in list(models.unique()) + ['best']:
+        if model == 'best':
+            human = data['human']['C']\
+                .dropna(axis=0, subset=['mass? response'])
+            belief = model_belief\
+                .set_index(['pid', 'model'])\
+                .groupby(lambda x: models[x[0]] == x[1])\
+                .get_group(True)\
+                .reset_index()
+
+        else:
+            human = data['human']['C']\
+                .dropna(axis=0, subset=['mass? response'])\
+                .set_index('pid')\
+                .ix[models.index[models == model]]\
+                .reset_index()
+            belief = model_belief\
+                .groupby('model')\
+                .get_group(model)
+
+        human = human\
+            .groupby(['kappa0', 'trial'])['mass? correct']\
+            .apply(util.beta)\
+            .unstack(-1)\
+            .reset_index()
+        human['class'] = model
+        human['species'] = 'human'
+        human = human\
+            .set_index(['species', 'class', 'kappa0', 'trial'])\
+            .stack()
+        results.append(human)
+
+        belief = belief\
+            .groupby(['likelihood', 'kappa0', 'trial'])['p']\
+            .apply(util.bootstrap_mean)\
+            .unstack(-1)\
+            .reset_index()\
+            .rename(columns={'likelihood': 'species'})
+        belief['class'] = model
+        belief = belief\
+            .set_index(['species', 'class', 'kappa0', 'trial'])\
+            .stack()
+        results.append(belief)
+
+    results = pd.concat(results).unstack().sortlevel()
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

@@ -21,10 +21,9 @@ __all__ = [
     'trial_order',
     'model_belief',
     'model_belief_agg',
-    'mass_responses',
-
     'model_log_lh',
     'participant_fits',
+    'mass_responses',
 
     'switchpoint',
     'num_learned_by_trial',
