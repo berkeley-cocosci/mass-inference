@@ -15,17 +15,13 @@ def run(data, results_path, seed):
         .read_csv(results_path.joinpath("switchpoint.csv"))
     bad_pids = sp['pid'][sp['20'] == 0]
 
-    correct = data['human']['C']\
+    acc = data['human']['C']\
         .set_index('pid')\
         .drop(bad_pids)\
-        .reset_index()
-    correct = correct[
-        ['kappa0', 'trial', 'mass? response', 'pid']].dropna()
-    correct.loc[:, 'mass? response'] = [
-        x * 2 - 1 for x in correct['mass? response'].copy()]
-    correct['correct'] = correct['kappa0'] == correct['mass? response']
-    acc = correct.groupby(['kappa0', 'trial'])['correct']\
-                 .apply(util.beta)
+        .reset_index()\
+        .dropna(axis=0, subset=['mass? response'])\
+        .groupby(['kappa0', 'trial'])['mass? correct']\
+        .apply(util.beta)
 
     belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     belief = belief.set_index('pid').drop(bad_pids).reset_index()

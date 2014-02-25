@@ -9,8 +9,7 @@ from statsmodels.stats.proportion import binom_test
 from statsmodels.stats.proportion import proportion_confint
 from statsmodels.stats.proportion import proportions_chisquare
 
-from mass.model import model_observer as mo
-from mass.model import IPE, NoFeedback, Feedback
+from mass.model import IPE, EmpiricalIPE, NoFeedback, Feedback
 
 from snippets.safemath import normalize
 from snippets import datapackage as dpkg
@@ -546,6 +545,12 @@ def load_human(version, data_path):
                 lambda x: x.startswith('experiment')))\
         .get_group(True)
 
+    # update mass responses
+    exp.loc[:, 'mass? response'] = exp['mass? response'] * 2 - 1
+    exp.loc[:, 'mass? correct'] = exp['mass? response'] == exp['kappa0']
+    isnan = np.isnan(exp['mass? response'])
+    exp.loc[:, 'mass? correct'][isnan] = np.nan
+
     # split into the three different blocks
     expA = exp.groupby('mode').get_group('experimentA')
     expB = exp.groupby('mode').get_group('experimentB')
@@ -592,7 +597,8 @@ def load_all(version, data_path, human=None):
     data = {
         'human': human,
         'ipe': ipe,
-        'fb': fb
+        'fb': fb,
+        'empirical': {'C': EmpiricalIPE(human['B'])}
     }
 
     return data

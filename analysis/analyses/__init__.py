@@ -10,6 +10,8 @@ import mass_responses
 import switchpoint
 import num_learned_by_trial
 import mass_responses_only_learned
+import model_log_lh
+import participant_fits
 
 __all__ = [
     'condition_counts',
@@ -21,6 +23,8 @@ __all__ = [
     'model_belief',
     'model_belief_agg',
     'mass_responses',
+    'model_log_lh',
+    'participant_fits',
 
     'switchpoint',
     'num_learned_by_trial',

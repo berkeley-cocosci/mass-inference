@@ -11,13 +11,10 @@ def run(data, results_path, seed):
     np.random.seed(seed)
     results = []
 
-    correct = data['human']['C'][
-        ['kappa0', 'trial', 'mass? response', 'pid']].dropna()
-    correct.loc[:, 'mass? response'] = [
-        x * 2 - 1 for x in correct['mass? response'].copy()]
-    correct['correct'] = correct['kappa0'] == correct['mass? response']
-    acc = correct.groupby(['kappa0', 'trial'])['correct']\
-                 .apply(util.beta)
+    acc = data['human']['C']\
+        .dropna(axis=0, subset=['mass? response'])\
+        .groupby(['kappa0', 'trial'])['mass? correct']\
+        .apply(util.beta)
 
     belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     avg_belief = belief\
