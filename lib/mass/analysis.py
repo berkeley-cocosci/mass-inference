@@ -543,13 +543,14 @@ def load_human(version, data_path):
         .groupby(
             exp_all['mode'].apply(
                 lambda x: x.startswith('experiment')))\
-        .get_group(True)
+        .get_group(True)\
+        .copy()
 
     # update mass responses
     exp.loc[:, 'mass? response'] = exp['mass? response'] * 2 - 1
     exp.loc[:, 'mass? correct'] = exp['mass? response'] == exp['kappa0']
     isnan = np.isnan(exp['mass? response'])
-    exp.loc[:, 'mass? correct'][isnan] = np.nan
+    exp.loc[isnan, 'mass? correct'] = np.nan
 
     # split into the three different blocks
     expA = exp.groupby('mode').get_group('experimentA')
