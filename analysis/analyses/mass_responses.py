@@ -41,26 +41,26 @@ def run(data, results_path, seed):
                 .get_group(model)
 
         human = human\
-            .groupby(['kappa0', 'trial'])['mass? correct']\
+            .groupby('trial')['mass? correct']\
             .apply(util.beta)\
             .unstack(-1)\
             .reset_index()
         human['class'] = model
         human['species'] = 'human'
         human = human\
-            .set_index(['species', 'class', 'kappa0', 'trial'])\
+            .set_index(['species', 'class', 'trial'])\
             .stack()
         results.append(human)
 
         belief = belief\
-            .groupby(['likelihood', 'kappa0', 'trial'])['p']\
+            .groupby(['likelihood', 'trial'])['p']\
             .apply(util.bootstrap_mean)\
             .unstack(-1)\
             .reset_index()\
             .rename(columns={'likelihood': 'species'})
         belief['class'] = model
         belief = belief\
-            .set_index(['species', 'class', 'kappa0', 'trial'])\
+            .set_index(['species', 'class', 'trial'])\
             .stack()
         results.append(belief)
 
