@@ -138,6 +138,9 @@ class ViewTowers(Viewer):
         alnp = self.lights.attachNewNode(alight)
         self.floor.setLight(alnp)
 
+    def optimize_camera(self):
+        pass
+
     def goto_sso(self, i):
         if self._blocktype_cache:
             self._blocktype_cache = None
