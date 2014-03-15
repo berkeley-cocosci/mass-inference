@@ -22,6 +22,8 @@ DATA_PATH = get_path("data-path")
 EGG_PATH = get_path("egg-path")
 TEXTURE_PATH = get_path("texture-path")
 BIN_PATH = get_path("bin-path")
+FIG_PATH = get_path("figures-path")
+RESULTS_PATH = get_path("results-path")
 
 p3d.getModelPath().appendDirectory(EGG_PATH)
 p3d.getModelPath().appendDirectory(TEXTURE_PATH)

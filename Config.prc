@@ -22,5 +22,7 @@ data-path data
 sim-path data/sim-raw
 experiment-path experiment
 bin-path bin
+figures-path figures
+results-path data/analysis-results
 
 loglevel info
