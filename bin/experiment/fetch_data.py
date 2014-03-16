@@ -42,11 +42,11 @@ def fetch(site_root, filename, experiment, force=False):
     """
 
     # get the url
-    url = path(site_root).joinpath("%s_all.csv" % filename)
+    url = path(site_root).joinpath(filename)
 
     # get the destination to save the data, and don't do anything if
     # it exists already
-    dest = DATA_PATH.joinpath("human-raw", experiment, url.name)
+    dest = DATA_PATH.joinpath("human-raw", experiment, ".csv" % url.name)
     if dest.exists() and not force:
         return
 

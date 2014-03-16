@@ -161,7 +161,7 @@ def load_meta(data_path):
     # load the data and pivot it, so the rows are uniqueid, columns
     # are keys, and values are, well, values
     meta = pd.read_csv(data_path.joinpath(
-        "questiondata_all.csv"), header=None)
+        "questiondata.csv"), header=None)
     meta = meta.pivot(index=0, columns=1, values=2)
 
     # extract condition information for all participants
@@ -195,7 +195,7 @@ def load_data(data_path, conds, fields):
     """
     # load the data
     data = pd.read_csv(data_path.joinpath(
-        "trialdata_all.csv"), header=None)
+        "trialdata.csv"), header=None)
     # set the column names
     data.columns = fields
     # split apart psiturk_id into pid and assignment
@@ -311,7 +311,7 @@ def load_events(data_path):
 
     """
     # load the data
-    events = pd.read_csv(data_path.joinpath("eventdata_all.csv"))
+    events = pd.read_csv(data_path.joinpath("eventdata.csv"))
     # split uniqueid into pid and assignment
     events = split_uniqueid(events, 'uniqueid')
     # parse timestamps
