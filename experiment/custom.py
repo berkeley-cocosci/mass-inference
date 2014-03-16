@@ -33,7 +33,7 @@ def list_my_data():
         abort(404)
 
 
-@custom_code.route('/data', methods=['GET'])
+@custom_code.route('/data/<name>', methods=['GET'])
 @myauth.requires_auth
 @nocache
 def download_datafiles(name):

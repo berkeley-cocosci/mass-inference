@@ -46,7 +46,7 @@ def fetch(site_root, filename, experiment, force=False):
 
     # get the destination to save the data, and don't do anything if
     # it exists already
-    dest = DATA_PATH.joinpath("human-raw", experiment, ".csv" % url.name)
+    dest = DATA_PATH.joinpath("human-raw", experiment, "%s.csv" % url.name)
     if dest.exists() and not force:
         return
 
