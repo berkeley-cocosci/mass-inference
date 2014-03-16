@@ -13,7 +13,7 @@ def convert(video, formats, force):
     for fmt in formats:
         newfile = path(video).splitext()[0] + "." + fmt
         if force or not newfile.exists():
-            cmd = ("ffmpeg -loglevel error -i %s "
+            cmd = ("ffmpeg -loglevel error -i %s -y "
                    "-r 30 -b 2048k -s 640x480 %s" % (
                        video, newfile))
             logging.info(cmd)
