@@ -112,8 +112,8 @@ var Instructions = function() {
         data.update(STATE.as_data());
         data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
-        psiTurk.recordTrialData(data.to_array());
-        debug(data.to_array());
+        psiTurk.recordTrialData(data);
+        debug(data);
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -419,8 +419,8 @@ var TestPhase = function() {
         });
 
         // Create the record we want to save
-        psiTurk.recordTrialData(data.to_array());
-        debug(data.to_array());
+        psiTurk.recordTrialData(data);
+        debug(data);
 
         // Tell the state to go to the next trial phase or trial
         if (STATE.trial_phase == (TRIAL.length - 1)) {

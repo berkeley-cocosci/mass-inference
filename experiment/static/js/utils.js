@@ -153,39 +153,8 @@ var State = function () {
 
 // Object to properly format rows of data
 var DataRecord = function () {
-    this.fields = [
-        "experiment_phase",
-        "instructions",
-        "index",
-        "trial_phase",
-        "feedback",
-        "ratio",
-        "counterbalance",
-        "stimulus",
-        "response",
-        "response_time",
-        "stable",
-        "nfell",
-        "color0",
-        "color1",
-        "label0",
-        "label1",
-        "camera_start",
-        "camera_spin",
-        "feedback_time",
-        "presentation_time"
-    ];
-
     this.update = function (other) {
         _.extend(this, other);
-    };
-
-    this.to_array = function () {
-        var arr = [];
-        for (i in this.fields) {
-            arr.push(this[this.fields[i]]);
-        }
-        return arr;
     };
 };
 

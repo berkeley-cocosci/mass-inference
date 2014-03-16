@@ -126,7 +126,6 @@ var Config = function (condition, counterbalance) {
         this.trials[EXPERIMENT.experimentC] = _.shuffle(data["experimentC"]);
         this.trials[EXPERIMENT.posttest] = _.shuffle(data["posttest"]);
 
-        console.log(data.unstable_example);
         this.instructions[EXPERIMENT.pretest].examples = [
             data.unstable_example,
             data.stable_example,
