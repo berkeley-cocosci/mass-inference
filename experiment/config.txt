@@ -1,0 +1,37 @@
+[HIT Configuration]
+title = Determine whether towers of building blocks will fall down or not
+description = You will be shown several short video clips of 3D towers of building blocks. Your task is to determine whether each tower will fall down or not. NOTE: you can only participate in ONE (1) experiment for credit.
+keywords = video rating, physics, perception, psychology
+lifetime = 24
+us_only = 1
+approve_requirement = 95
+contact_email_on_error = cocosci-turk@lists.berkeley.edu
+ad_group = Mass inference
+psiturk_keywords = intuitive physics
+organization_name = UC Berkeley
+browser_exclude_rule = MSIE, mobile, tablet
+using_sandbox = True
+
+[Database Parameters]
+database_url = sqlite:///participants.db
+table_name = mass-inference-H-test
+
+[Server Parameters]
+host = localhost
+port = 22362
+cutoff_time = 120
+logfile = server.log
+loglevel = 2
+debug = True
+login_username = admin
+login_pw = c0c0sc1
+threads = 4
+
+[Task Parameters]
+experiment_code_version = H
+num_conds = 4
+num_counters = 2
+
+[Shell Parameters]
+always_launch_in_sandbox = true
+
