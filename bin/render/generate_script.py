@@ -145,15 +145,15 @@ def make_options():
     # experiment C
     for r, cb in product(['0.1', '10'], [0, 1]):
         colordict = {
-            'blue': '#0571B0',
+            'blue': '#0000FF',
             'cyan': '#00FFFF',
-            'gray': '#808080',
+            'gray': '#408080',
             'green': '#008837',
             'orange': '#FF7000',
-            'purple': '#7B3294',
+            'purple': '#330099',
             'red': '#CA0020',
             'yellow': '#FFFF00',
-            'magenta': '#FF00FF'
+            'magenta': '#FF00FF',
         }
 
         labels = [
