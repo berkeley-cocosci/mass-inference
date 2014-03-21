@@ -60,8 +60,8 @@ KEYS[TRIAL.prefeedback] = {
 };
 KEYS[TRIAL.feedback] = {};
 KEYS[TRIAL.mass_response] = {
-    48: 0,  // 0
-    49: 1,  // 1
+    48: "A",  // 0
+    49: "B",  // 1
 };
 
 // Object to hold the experiment configuration. It takes as parameters

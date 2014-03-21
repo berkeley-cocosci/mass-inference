@@ -259,31 +259,55 @@ function make_player(elem, stims) {
 // Set background and button colors to reflect the different block
 // types
 function set_colors(trial) {
-    $(".color0").css("background-color", trial.color0);
-    $("span.color0").css("background-color", "inherit");
-    $("span.color0").css("color", trial.color0)
 
-    $(".color1").css("background-color", trial.color1);
-    $("span.color1").css("background-color", "inherit");
-    $("span.color1").css("color", trial.color1)
-
-    $("button.color0").html(trial.label0);
-    $("button.color1").html(trial.label1);
-
-    $(".color0-name").html(trial.label0);
-    $(".color1-name").html(trial.label1);
-
-    if (trial.kappa > 0) {
-        $(".color0-mass").html("light");
-        $(".color1-mass").html("heavy");
-        $(".color0-heavy").hide();
-        $(".color1-heavy").show();
-    } else if (trial.kappa < 0) {
-        $(".color0-mass").html("heavy");
-        $(".color1-mass").html("light");
-        $(".color0-heavy").show();
-        $(".color1-heavy").hide();
+    var flip = false;
+    if (ask_mass_query()) {
+        flip = _.sample([true false]);
     }
+
+    if (flip) {
+        colorA = trial.color1;
+        colorB = trial.color0;
+        labelA = trial.label1;
+        labelB = trial.label0;
+    } else {
+        colorA = trial.color0;
+        colorB = trial.color1;
+        labelA = trial.label0;
+        labelB = trial.label1;
+    }
+
+    $(".colorA").css("background-color", colorA);
+    $("span.colorA").css("background-color", "inherit");
+    $("span.colorA").css("color", colorA)
+
+    $(".colorB").css("background-color", colorB);
+    $("span.colorB").css("background-color", "inherit");
+    $("span.colorB").css("color", colorB)
+
+    $("button.colorA").html(labelA);
+    $("button.colorB").html(labelB);
+
+    $(".colorA-name").html(labelA);
+    $(".colorB-name").html(labelB);
+
+    // color B is heavy (color 1 is heavy and colors are not flipped,
+    // or color 0 is heavy and colors are flipped)
+    if ((!flip && trial.kappa > 0) || (flip && trial.kappa < 0)) {
+        $(".colorA-mass").html("light");
+        $(".colorB-mass").html("heavy");
+        $(".colorA-heavy").hide();
+        $(".colorB-heavy").show();
+    // color A is heavy (color 0 is heavy and colors are not flipped,
+    // or color 1 is heavy and colors are flipped)
+    } else if ((!flip && trial.kappa < 0) || (flip && trial.kappa > 0)) {
+        $(".colorA-mass").html("heavy");
+        $(".colorB-mass").html("light");
+        $(".colorA-heavy").show();
+        $(".colorB-heavy").hide();
+    }
+
+    return flip;
 }
 
 var Player = function () {
