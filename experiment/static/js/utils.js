@@ -262,7 +262,8 @@ function set_colors(trial) {
 
     var flip = false;
     if (ask_mass_query()) {
-        flip = _.sample([true false]);
+        flip = _.sample([true, false]);
+        debug("flip = " + flip);
     }
 
     if (flip) {
