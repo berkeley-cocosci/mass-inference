@@ -14,3 +14,4 @@ results
 figures/mass_inference-G/
 analysis/.ipynb_checkpoints
 experiment/.psiturk_history
+experiment/server.log
