@@ -3,6 +3,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from mass.render.build import build
 from itertools import product
+import re
 
 
 defaults = dict(
@@ -147,7 +148,8 @@ def make_options():
         colordict = {
             'blue': '#0000FF',
             'cyan': '#00FFFF',
-            'gray': '#408080',
+            'gray1': '#808080',  # more reddish
+            'gray2': '#508080',  # more bluish
             'green': '#008837',
             'orange': '#FF7000',
             'purple': '#330099',
@@ -160,16 +162,16 @@ def make_options():
             ['blue', 'green'],
             ['orange', 'blue'],
             ['blue', 'yellow'],
-            ['gray', 'cyan'],
+            ['gray1', 'cyan'],
             ['cyan', 'magenta'],
             ['orange', 'cyan'],
             ['cyan', 'purple'],
             ['red', 'cyan'],
             ['cyan', 'yellow'],
-            ['green', 'gray'],
-            ['gray', 'magenta'],
-            ['purple', 'gray'],
-            ['gray', 'red'],
+            ['green', 'gray1'],
+            ['gray2', 'magenta'],
+            ['purple', 'gray2'],
+            ['gray2', 'red'],
             ['magenta', 'green'],
             ['green', 'orange'],
             ['purple', 'green'],
@@ -179,6 +181,12 @@ def make_options():
             ['yellow', 'red']]
 
         colors = [[colordict[x[0]], colordict[x[1]]] for x in labels]
+
+        # strip off the number at the end of some of the labels (like "gray1")
+        expr = re.compile("([a-z]+)")
+        labels = [[re.match(expr, x[0]).groups()[0],
+                   re.match(expr, x[1]).groups()[0]]
+                  for x in labels]
 
         if cb == 1:
             labels = [x[::-1] for x in labels]
