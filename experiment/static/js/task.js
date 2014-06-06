@@ -15,7 +15,7 @@ var $f = flowplayer;
 var $c = new Config(condition, counterbalance);
 
 // Initalize psiturk object
-var psiTurk = new PsiTurk();
+var psiTurk = new PsiTurk(uniqueId, adServerLoc);
 
 // Preload the HTML template pages that we need for the experiment
 psiTurk.preloadPages($c.pages);
@@ -470,21 +470,6 @@ var TestPhase = function() {
         // phase and show the relevant instructions
         if (STATE.experiment_phase >= EXPERIMENT.length) {
 
-            // Send them to the debriefing form, but delay a bit, so
-            // they know what's happening
-            var debrief = function() {
-                setTimeout(function () {
-                    window.location = "/debrief?uniqueId=" + psiTurk.taskdata.id;
-                }, 2000);
-            };
-
-            // Prompt them to resubmit the HIT, because it failed the first time
-            var prompt_resubmit = function() {
-                $("#resubmit_slide").click(resubmit);
-                $(".slide").hide();
-                $("#submit_error_slide").fadeIn($c.fade);
-            };
-
             // Show a page saying that the HIT is resubmitting, and
             // show the error page again if it times out or error
             var resubmit = function() {
@@ -501,11 +486,17 @@ var TestPhase = function() {
                 });
             };
 
+            // Prompt them to resubmit the HIT, because it failed the first time
+            var prompt_resubmit = function() {
+                $("#resubmit_slide").click(resubmit);
+                $(".slide").hide();
+                $("#submit_error_slide").fadeIn($c.fade);
+            };
+
             // Render a page saying it's submitting
             psiTurk.showPage("submit.html")
-            psiTurk.teardownTask();
             psiTurk.saveData({
-                success: debrief, 
+                success: psiTurk.completeHIT, 
                 error: prompt_resubmit
             });
 
