@@ -278,6 +278,12 @@ function set_colors(trial) {
         labelB = trial.label1;
     }
 
+    if (labelA == 'gray') {
+        colorA = "#666666";
+    } else if (labelB == 'gray') {
+        colorB = "#666666";
+    }
+
     $(".colorA").css("background-color", colorA);
     $("span.colorA").css("background-color", "inherit");
     $("span.colorA").css("color", colorA)
