@@ -6,8 +6,9 @@ from jinja2 import TemplateNotFound
 from psiturk.psiturk_config import PsiturkConfig
 from psiturk.user_utils import PsiTurkAuthorization, nocache
 
-# # Database setup
+# Database setup
 from psiturk.models import Participant
+from sqlalchemy import or_
 
 # load the configuration options
 config = PsiturkConfig()
@@ -22,15 +23,29 @@ custom_code = Blueprint(
     template_folder='templates',
     static_folder='static')
 
+# Status codes
+NOT_ACCEPTED = 0
+ALLOCATED = 1
+STARTED = 2
+COMPLETED = 3
+SUBMITTED = 4
+CREDITED = 5
+QUITEARLY = 6
+BONUSED = 7
 
-@custom_code.route('/view_data')
-@myauth.requires_auth
-def list_my_data():
-    users = Participant.query.all()
-    try:
-        return render_template('list.html', participants=users)
-    except TemplateNotFound:
-        abort(404)
+
+def get_participants():
+    codeversion = config.get('Task Parameters', 'experiment_code_version')
+    participants = Participant\
+        .query\
+        .filter(Participant.codeversion == codeversion)\
+        .filter(or_(
+            Participant.status == COMPLETED,
+            Participant.status == CREDITED,
+            Participant.status == SUBMITTED,
+            Participant.status == BONUSED))\
+        .all()
+    return participants
 
 
 @custom_code.route('/data/<name>', methods=['GET'])
@@ -46,7 +61,7 @@ def download_datafiles(name):
     if name not in contents:
         abort(404)
 
-    query = Participant.query.all()
+    query = get_participants()
     ret = "".join([contents[name](p) for p in query])
     response = Response(
         ret,
