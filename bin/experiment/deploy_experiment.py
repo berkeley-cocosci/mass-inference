@@ -41,12 +41,14 @@ if __name__ == "__main__":
     src_paths = [
         str(EXP_PATH.joinpath("static").relpath()),
         str(EXP_PATH.joinpath("templates").relpath()),
-        str(EXP_PATH.joinpath("remote-config.txt").relpath())
+        str(EXP_PATH.joinpath("remote-config.txt").relpath()),
+        str(EXP_PATH.joinpath("custom.py").relpath())
     ]
     dst_paths = [
         deploy_path,
         deploy_path,
-        str(path(deploy_path).joinpath("config.txt"))
+        str(path(deploy_path).joinpath("config.txt")),
+        deploy_path
     ]
 
     cmd_template = ["rsync", "-av", "--delete-after", "--copy-links"]
