@@ -49,7 +49,7 @@ if __name__ == "__main__":
         str(path(deploy_path).joinpath("config.txt"))
     ]
 
-    cmd_template = ["rsync", "-av", "--delete-after"]
+    cmd_template = ["rsync", "-av", "--delete-after", "--copy-links"]
     if args.dry_run:
         cmd_template.append("-n")
     if args.bwlimit:
