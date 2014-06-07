@@ -12,6 +12,7 @@ data/sim-raw
 *.pyc
 results
 figures/mass_inference-G/
+figures/mass_inference/
 analysis/.ipynb_checkpoints
 experiment/.psiturk_history
 experiment/server.log
