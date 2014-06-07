@@ -11,10 +11,6 @@ if __name__ == "__main__":
         formatter_class=ArgumentDefaultsHelpFormatter)
 
     parser.add_argument(
-        "-c", "--config",
-        default="config.ini",
-        help="path to configuration file")
-    parser.add_argument(
         "-u", "--user",
         default="cocosci",
         help="Username to login to the server.")
@@ -54,7 +50,7 @@ if __name__ == "__main__":
     ]
 
     cmd_template = ["rsync", "-av", "--delete-after"]
-x    if args.dry_run:
+    if args.dry_run:
         cmd_template.append("-n")
     if args.bwlimit:
         cmd_template.append("--bwlimit=%d" % args.bwlimit)
