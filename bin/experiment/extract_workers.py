@@ -47,9 +47,9 @@ def save_stability(exp):
         parts = None
 
     # get the worker ids
-    if turk:
+    if turk is not None:
         workers = sorted(turk.reset_index()['WorkerId'].unique())
-    elif parts:
+    elif parts is not None:
         workers = sorted(parts['pid'].unique())
     else:
         logger.warning("'%s' is not a Mechanical Turk experiment", exp)
