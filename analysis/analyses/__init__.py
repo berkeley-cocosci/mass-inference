@@ -1,5 +1,6 @@
 import util
 
+import payrate
 import condition_counts
 import trial_order
 import fall_responses
@@ -13,6 +14,7 @@ import model_log_lh
 import participant_fits
 
 __all__ = [
+    'payrate',
     'condition_counts',
 
     'fall_responses',
