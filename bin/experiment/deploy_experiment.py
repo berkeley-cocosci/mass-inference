@@ -31,7 +31,7 @@ if __name__ == "__main__":
         help="Bandwidth limit for transfer")
     parser.add_argument(
         "dest",
-        default="cocosci-python.dreamhosters.com/MassInference/experiment",
+        default="cocosci-python.dreamhosters.com/experiment",
         nargs="?",
         help="Destination path on the experiment server.")
 
