@@ -44,12 +44,17 @@ werkzeug_logger.addHandler(handler)
 
 
 def application(environ, start_response):
-    method = environ['REQUEST_METHOD']
-    uri = environ['REQUEST_URI']
-    referer = environ['HTTP_REFERER']
-    user_agent = environ['HTTP_USER_AGENT']
+    method = environ.get('REQUEST_METHOD', '-')
+    uri = environ.get('REQUEST_URI', '-')
+    referer = environ.get('HTTP_REFERER', '-')
+    user_agent = environ.get('HTTP_USER_AGENT', '-')
     logger.info('"%s %s" "%s" "%s"', method, uri, referer, user_agent)
-    return app(environ, start_response)
+    try:
+        result = app(environ, start_response)
+    except Exception, e:
+        logger.error("%s", str(e))
+        raise
+    return result
 
 
 # Uncomment next two lines to enable debugging
