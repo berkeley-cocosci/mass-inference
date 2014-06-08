@@ -44,11 +44,12 @@ werkzeug_logger.addHandler(handler)
 
 
 def application(environ, start_response):
+    ip = environ.get('REMOTE_ADDR', '-')
     method = environ.get('REQUEST_METHOD', '-')
     uri = environ.get('REQUEST_URI', '-')
     referer = environ.get('HTTP_REFERER', '-')
     user_agent = environ.get('HTTP_USER_AGENT', '-')
-    logger.info('"%s %s" "%s" "%s"', method, uri, referer, user_agent)
+    logger.info('%s "%s %s" "%s" "%s"', ip, method, uri, referer, user_agent)
     try:
         result = app(environ, start_response)
     except Exception, e:
