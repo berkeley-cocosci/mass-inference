@@ -36,7 +36,9 @@ if __name__ == "__main__":
         help="Destination path on the experiment server.")
 
     args = parser.parse_args()
-    deploy_path = "%s@%s:%s" % (args.user, args.host, args.dest)
+    address = "%s@%s" % (args.user, args.host)
+    root_path = "%s:cocosci-python.dreamhosters.com/" % (address)
+    deploy_path = "%s:%s" % (address, args.dest)
 
     src_paths = [
         str(EXP_PATH.joinpath("passenger_wsgi.py").relpath()),
@@ -46,7 +48,7 @@ if __name__ == "__main__":
         str(EXP_PATH.joinpath("custom.py").relpath())
     ]
     dst_paths = [
-        str(path(deploy_path).dirname()),
+        root_path,
         deploy_path,
         deploy_path,
         str(path(deploy_path).joinpath("config.txt")),
@@ -67,3 +69,13 @@ if __name__ == "__main__":
         code = subprocess.call(cmd, shell=True)
         if code != 0:
             raise RuntimeError("rsync exited abnormally: %d" % code)
+
+    cmd = ("ssh %s "
+           "'rm cocosci-python.dreamhosters.com/tmp/restart.txt && "
+           "touch cocosci-python.dreamhosters.com/tmp/restart.txt'" % (
+               address))
+
+    print colored(cmd, 'blue')
+    code = subprocess.call(cmd, shell=True)
+    if code != 0:
+        raise RuntimeError("command exited abnormally: %s" % code)
