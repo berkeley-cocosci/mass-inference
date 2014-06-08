@@ -8,7 +8,6 @@ from psiturk.user_utils import PsiTurkAuthorization, nocache
 
 # Database setup
 from psiturk.models import Participant
-from sqlalchemy import or_
 
 # load the configuration options
 config = PsiturkConfig()
@@ -39,11 +38,6 @@ def get_participants():
     participants = Participant\
         .query\
         .filter(Participant.codeversion == codeversion)\
-        .filter(or_(
-            Participant.status == COMPLETED,
-            Participant.status == CREDITED,
-            Participant.status == SUBMITTED,
-            Participant.status == BONUSED))\
         .all()
     return participants
 

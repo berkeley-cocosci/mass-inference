@@ -39,12 +39,14 @@ if __name__ == "__main__":
     deploy_path = "%s@%s:%s" % (args.user, args.host, args.dest)
 
     src_paths = [
+        str(EXP_PATH.joinpath("passenger_wsgi.py").relpath()),
         str(EXP_PATH.joinpath("static").relpath()),
         str(EXP_PATH.joinpath("templates").relpath()),
         str(EXP_PATH.joinpath("remote-config.txt").relpath()),
         str(EXP_PATH.joinpath("custom.py").relpath())
     ]
     dst_paths = [
+        str(path(deploy_path).dirname()),
         deploy_path,
         deploy_path,
         str(path(deploy_path).joinpath("config.txt")),
