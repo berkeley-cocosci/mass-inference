@@ -5,10 +5,10 @@ import pandas as pd
 import util
 
 
-def plot(results_path, fig_path):
+def plot(results_path, fig_path, version):
 
     responses = pd\
-        .read_csv(results_path.joinpath('mass_responses.csv'))\
+        .read_csv(results_path.joinpath(version, 'mass_responses.csv'))\
         .groupby('class')
     classes = ['learning', 'static', 'chance', 'best']
 
@@ -45,7 +45,7 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("mass_accuracy_with_model.%s" % ext)
+    pths = [fig_path.joinpath(version, "mass_accuracy_with_model.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
