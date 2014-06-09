@@ -7,7 +7,7 @@ import numpy as np
 filename = "model_log_lh.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     np.random.seed(seed)
     results = {}
 
@@ -20,7 +20,8 @@ def run(data, results_path, seed):
         lh.name = df.name
         return lh
 
-    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
+    belief = pd.read_csv(results_path.joinpath(
+        version, 'model_belief_agg.csv'))
     results = belief\
         .groupby(['likelihood', 'model'])\
         .apply(llh)\
@@ -30,7 +31,7 @@ def run(data, results_path, seed):
         .rename(columns={0: 'llh'})\
         .set_index(['likelihood', 'model'])
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 

@@ -7,7 +7,7 @@ import numpy as np
 filename = "switchpoint.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     def find_switchpoint(df):
         kappa0, pid = df.name
         arr = np.asarray(df).copy().squeeze()
@@ -42,7 +42,7 @@ def run(data, results_path, seed):
         .groupby(level=['kappa0', 'pid'])\
         .apply(find_switchpoint)
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 

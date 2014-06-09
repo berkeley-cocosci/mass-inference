@@ -7,7 +7,7 @@ import numpy as np
 filename = "fall_responses.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     np.random.seed(seed)
     results = []
 
@@ -38,7 +38,7 @@ def run(data, results_path, seed):
                 .set_index(['block', 'species', 'kappa0', 'stimulus'])\
                 .sortlevel()
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 

@@ -5,7 +5,7 @@ import util
 filename = "condition_counts.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     # compute how many participants we have for each condition
     counts = data['human']['all']\
         .groupby(['condition', 'counterbalance'])['pid']\
@@ -14,7 +14,7 @@ def run(data, results_path, seed):
     counts.columns = ['condition', 'counterbalance', 'num_participants']
     counts = counts.set_index(['condition', 'counterbalance'])
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     counts.to_csv(pth)
     return pth
 

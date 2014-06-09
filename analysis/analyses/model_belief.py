@@ -7,11 +7,11 @@ import numpy as np
 filename = "model_belief.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     np.random.seed(seed)
     results = []
 
-    trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\
+    trials = pd.read_csv(results_path.joinpath(version, 'trial_order.csv'))\
                .set_index(['mode', 'trial']).ix['experimentC']
 
     results = {}
@@ -64,7 +64,7 @@ def run(data, results_path, seed):
             ['model', 'likelihood', 'kappa0', 'pid', 'trial', 'hypothesis'])\
         .sortlevel()
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 

@@ -5,12 +5,12 @@ import util
 filename = "trial_order.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     order = data['human']['all']\
         .set_index(['mode', 'trial', 'pid'])['stimulus']\
         .unstack('pid')
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     order.to_csv(pth)
     return pth
 

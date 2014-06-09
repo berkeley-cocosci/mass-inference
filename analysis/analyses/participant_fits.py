@@ -7,7 +7,7 @@ import numpy as np
 filename = "participant_fits.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     np.random.seed(seed)
 
     def rank(x):
@@ -18,7 +18,7 @@ def run(data, results_path, seed):
         ranks = pd.Series(cols, index=index)
         return ranks
 
-    llh = pd.read_csv(results_path.joinpath('model_log_lh.csv'))\
+    llh = pd.read_csv(results_path.joinpath(version, 'model_log_lh.csv'))\
             .groupby('likelihood')\
             .get_group('empirical')\
             .set_index(['pid', 'trial', 'model'])['llh']\
@@ -37,7 +37,7 @@ def run(data, results_path, seed):
         })\
         .set_index('pid')
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 

@@ -7,7 +7,7 @@ from datetime import timedelta
 filename = "payrate.csv"
 
 
-def run(data, results_path, seed):
+def run(data, results_path, version, seed):
     hdata = data['human']['all']
     starttime = hdata.groupby('pid').apply(
         lambda x: x.sort('timestamp')['timestamp'].min())
@@ -16,7 +16,12 @@ def run(data, results_path, seed):
     exptime = endtime - starttime
     medtime = timedelta(seconds=float(exptime.median()) / 1e9)
     meantime = timedelta(seconds=float(exptime.mean()) / 1e9)
-    payrate = (1.0 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
+    if version == "G":
+        payrate = (1.0 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
+    elif version == "H":
+        payrate = (1.25 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
+    else:
+        raise ValueError("unexpected version: %s" % version)
 
     results = pd.Series(
         [medtime, meantime, payrate],
@@ -25,7 +30,7 @@ def run(data, results_path, seed):
     results.columns = ['key', 'value']
     results = results.set_index('key')
 
-    pth = results_path.joinpath(filename)
+    pth = results_path.joinpath(version, filename)
     results.to_csv(pth)
     return pth
 
