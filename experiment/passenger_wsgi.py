@@ -1,6 +1,7 @@
 import sys
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 
 base_path = "/home/cocosci/cocosci-python.dreamhosters.com"
 INTERP = os.path.join(base_path, 'bin', 'python')
@@ -22,7 +23,7 @@ logging.basicConfig(
 
 # configure specific logger for passenger
 logger = logging.getLogger("passenger_wsgi")
-handler = logging.RotatingFileHandler(
+handler = RotatingFileHandler(
     logfilename, maxBytes=1048576, backupCount=5)
 handler.setLevel(loglevel)
 handler.setFormatter(logging.Formatter(logformat))
