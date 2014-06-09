@@ -22,7 +22,8 @@ logging.basicConfig(
 
 # configure specific logger for passenger
 logger = logging.getLogger("passenger_wsgi")
-handler = logging.FileHandler(logfilename)
+handler = logging.RotatingFileHandler(
+    logfilename, maxBytes=1048576, backupCount=5)
 handler.setLevel(loglevel)
 handler.setFormatter(logging.Formatter(logformat))
 logger.addHandler(handler)
