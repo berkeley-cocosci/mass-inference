@@ -15,7 +15,7 @@ def run(data, results_path, seed):
                .set_index(['mode', 'trial']).ix['experimentC']
 
     results = {}
-    for lhtype in ('empirical',):
+    for lhtype in ('empirical', 'ipe'):
         hyps = list(data[lhtype]['C'].P_fall_smooth.columns)
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])

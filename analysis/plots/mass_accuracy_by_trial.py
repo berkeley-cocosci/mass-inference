@@ -5,12 +5,12 @@ import pandas as pd
 import util
 
 
-def plot_class(cls, results_path, fig_path, version):
+def plot(results_path, fig_path):
 
     mass_responses = pd\
-        .read_csv(results_path.joinpath(version, 'mass_responses.csv'))\
-        .groupby(['class', 'species'])\
-        .get_group((cls, 'human'))
+        .read_csv(results_path.joinpath('mass_responses_by_trial.csv'))\
+        .groupby(['version', 'class', 'species'])\
+        .get_group(('G', 'chance', 'human'))
 
     fig, ax = plt.subplots()
     x = mass_responses['trial']
@@ -29,20 +29,10 @@ def plot_class(cls, results_path, fig_path, version):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath(version, "mass_accuracy_%s.%s" % (cls, ext))
+    pths = [fig_path.joinpath("mass_accuracy_by_trial.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
-    return pths
-
-
-def plot(results_path, fig_path, version):
-    pths = []
-    responses = pd.read_csv(results_path.joinpath(
-        version, 'mass_responses.csv'))
-    classes = list(responses['class'].unique())
-    for cls in classes:
-        pths.extend(plot_class(cls, results_path, fig_path, version))
     return pths
 
 
