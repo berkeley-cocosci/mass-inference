@@ -38,6 +38,7 @@ def get_participants():
     participants = Participant\
         .query\
         .filter(Participant.codeversion == codeversion)\
+        .filter(Participant.status > 2)\
         .all()
     return participants
 
