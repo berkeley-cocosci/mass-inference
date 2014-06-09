@@ -1,0 +1,77 @@
+{
+  "description": null, 
+  "last_modified": "2014-06-08 22:25:24.044221", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "tom_griffiths@berkeley.edu", 
+      "name": "Thomas L. Griffiths"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "4c0f58c1cbd85cb1d0f0e3748ab5e1b7", 
+      "name": "experiment.csv", 
+      "format": "csv", 
+      "bytes": 408607, 
+      "modified": "2014-06-08 22:25:23.978478", 
+      "mediaformat": "text/csv", 
+      "path": "./experiment.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "mass_choices": "\n      <div>\n        <div id=\"mass-choices\">\n          <div id=\"mass-choice-left\" class=\"colorB\">\n            <span>1 - <span class=\"colorB-name\"></span></span>\n          </div>\n          <div id=\"mass-choice-right\" class=\"colorA\">\n            <span>0 - <span class=\"colorA-name\"></span></span>\n          </div>\n          <div class=\"spacer\"></div>\n        </div>\n      </div>\n    ", 
+        "mass_question": "<b>Question:</b> Which is the <b>heavy</b> color?", 
+        "fall_question": "<b>Question:</b> On a scale from 1-7, how likely is the tower to fall down?", 
+        "fall_choices": "\n      <div>\n        <div id=\"fall-choices\">\n          <div>1</div>\n          <div>2</div>\n          <div>3</div>\n          <div>4</div>\n          <div>5</div>\n          <div>6</div>\n          <div>7</div>\n        </div>\n        <div id=\"fall-choice-descriptions\">\n          <div id=\"fall-no\">&#8592; UNLIKELY to fall</div>\n          <div id=\"fall-yes\">LIKELY to fall &#8594;</div>\n        </div>\n      </div>\n    "
+      }, 
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2014-06-08 22:25:24.029398"
+    }, 
+    {
+      "hash": "84368b6335201de9b12935f3f95b6b50", 
+      "name": "events.csv", 
+      "format": "csv", 
+      "bytes": 74966, 
+      "modified": "2014-06-08 22:25:24.029418", 
+      "mediaformat": "text/csv", 
+      "path": "./events.csv"
+    }, 
+    {
+      "hash": "99e8a076482f41ca1ce64b18ca660275", 
+      "name": "participants.csv", 
+      "format": "csv", 
+      "bytes": 3995, 
+      "modified": "2014-06-08 22:25:24.042915", 
+      "mediaformat": "text/csv", 
+      "path": "./participants.csv"
+    }
+  ], 
+  "name": "mass_inference-H.dpkg"
+}
