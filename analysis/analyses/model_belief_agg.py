@@ -7,17 +7,17 @@ import numpy as np
 filename = "model_belief_agg.csv"
 
 
-def run(data, results_path, version, seed):
+def run(data, results_path, seed):
     np.random.seed(seed)
 
     results = pd.read_csv(
-        results_path.joinpath(version, "model_belief.csv"))
+        results_path.joinpath("model_belief.csv"))
     results['p'] = np.exp(results['logp'])
 
     belief = results\
         .set_index(
-            ['model', 'likelihood', 'kappa0',
-             'trial', 'pid', 'hypothesis'])['p']\
+            ['model', 'likelihood', 'version', 'kappa0',
+             'stimulus', 'trial', 'pid', 'hypothesis'])['p']\
         .unstack('hypothesis')
 
     mask = np.zeros(len(belief.columns))
@@ -34,9 +34,10 @@ def run(data, results_path, version, seed):
     p[ix] = 1 - p[ix]
     belief.loc[:, 'p'] = p
     belief = belief.set_index(
-        ['model', 'likelihood', 'kappa0', 'trial', 'pid'])
+        ['model', 'likelihood', 'version', 'kappa0',
+         'stimulus', 'trial', 'pid'])
 
-    pth = results_path.joinpath(version, filename)
+    pth = results_path.joinpath(filename)
     belief.to_csv(pth)
 
     return pth

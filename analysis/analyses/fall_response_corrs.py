@@ -8,11 +8,11 @@ filename = "fall_response_corrs.csv"
 texname = "fall_response_corrs.tex"
 
 
-def run(data, results_path, version, seed):
+def run(data, results_path, seed):
     np.random.seed(seed)
 
     means = pd\
-        .read_csv(results_path.joinpath(version, "fall_responses.csv"))\
+        .read_csv(results_path.joinpath("fall_responses.csv"))\
         .set_index(['block', 'species', 'kappa0', 'stimulus'])['median']
 
     results = {}
@@ -39,10 +39,10 @@ def run(data, results_path, version, seed):
         results.index,
         names=['block', 'X', 'Y'])
 
-    pth = results_path.joinpath(version, filename)
+    pth = results_path.joinpath(filename)
     results.to_csv(pth)
 
-    with open(results_path.joinpath(version, texname), "w") as fh:
+    with open(results_path.joinpath(texname), "w") as fh:
         fh.write("%% AUTOMATICALLY GENERATED -- DO NOT EDIT!\n")
         for (block, X, Y), stats in results.iterrows():
             cmd = util.newcommand(

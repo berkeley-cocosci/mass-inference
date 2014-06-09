@@ -7,18 +7,19 @@ import numpy as np
 filename = "model_belief.csv"
 
 
-def run(data, results_path, version, seed):
+def run(data, results_path, seed):
     np.random.seed(seed)
     results = []
 
-    trials = pd.read_csv(results_path.joinpath(version, 'trial_order.csv'))\
+    trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\
                .set_index(['mode', 'trial']).ix['experimentC']
 
     results = {}
     for lhtype in ('empirical',):
         hyps = list(data[lhtype]['C'].P_fall_smooth.columns)
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
-        for (kappa0, pid), df in data['human']['C'].groupby(['kappa0', 'pid']):
+        groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
+        for (version, kappa0, pid), df in groups:
             order = trials[pid]
 
             pfall = np.asarray(data[lhtype]['C'].P_fall_smooth[hyps].ix[order])
@@ -37,7 +38,7 @@ def run(data, results_path, version, seed):
             res = res.reset_index('stimulus')\
                      .rename(columns={0: 'logp'})\
                      .stack()
-            results[(lhtype, 'learning', kappa0, pid)] = res
+            results[(lhtype, 'learning', version, kappa0, pid)] = res
 
             res = pd.DataFrame(
                 posterior_ind, index=['prior'] + list(order), columns=hyps)
@@ -47,24 +48,25 @@ def run(data, results_path, version, seed):
             res = res.reset_index('stimulus')\
                      .rename(columns={0: 'logp'})\
                      .stack()
-            results[(lhtype, 'static', kappa0, pid)] = res
+            results[(lhtype, 'static', version, kappa0, pid)] = res
 
             chance = res.copy().unstack(-1)
             chance.loc[:, 'logp'] = prior.flat[0]
-            results[(lhtype, 'chance', kappa0, pid)] = chance.stack()
+            results[(lhtype, 'chance', version, kappa0, pid)] = chance.stack()
 
     results = pd.DataFrame.from_dict(results)
     results.columns = pd.MultiIndex.from_tuples(
         results.columns,
-        names=['likelihood', 'model', 'kappa0', 'pid'])
+        names=['likelihood', 'model', 'version', 'kappa0', 'pid'])
     results = results\
-        .stack(['likelihood', 'model', 'kappa0', 'pid'])\
+        .stack(['likelihood', 'model', 'version', 'kappa0', 'pid'])\
         .unstack(2)\
         .reorder_levels(
-            ['model', 'likelihood', 'kappa0', 'pid', 'trial', 'hypothesis'])\
+            ['model', 'likelihood', 'version', 'kappa0',
+             'pid', 'trial', 'hypothesis'])\
         .sortlevel()
 
-    pth = results_path.joinpath(version, filename)
+    pth = results_path.joinpath(filename)
     results.to_csv(pth)
     return pth
 

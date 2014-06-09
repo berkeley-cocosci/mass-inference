@@ -5,9 +5,9 @@ import pandas as pd
 import util
 
 
-def plot_block(block, results_path, fig_path, version):
+def plot_block(block, results_path, fig_path):
 
-    results = pd.read_csv(results_path.joinpath(version, "fall_responses.csv"))
+    results = pd.read_csv(results_path.joinpath("fall_responses.csv"))
     groups = results.set_index(['stimulus', 'kappa0'])\
                     .groupby(['block', 'species'])
 
@@ -72,7 +72,7 @@ def plot_block(block, results_path, fig_path, version):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath(version, "fall_responses_%s.%s" % (block, ext))
+    pths = [fig_path.joinpath("fall_responses_%s.%s" % (block, ext))
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)

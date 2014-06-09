@@ -84,11 +84,12 @@ def normalize(logarr, axis=-1):
 
 
 def run_analysis(func):
-    version = 'G'
     data_path = path('../data')
     results_path = path('../results')
     seed = 923012
-    data = load_all(version, data_path)
+    exp_all, human = load_human("GH", data_path)
+    # G is the same as H
+    data = load_all('G', data_path, human=human)
     pth = func(data, results_path, seed)
     print pth
     if pth.ext == ".csv":
