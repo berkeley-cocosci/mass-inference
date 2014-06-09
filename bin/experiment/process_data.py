@@ -106,7 +106,7 @@ def find_bad_participants(exp, data):
             prestim = df\
                 .groupby(['trial_phase'])\
                 .get_group('prestim')
-        except KeyError:
+        except (KeyError, IndexError):
             pretest = None
             posttest = None
             incomplete = True
@@ -175,7 +175,8 @@ def load_meta(data_path):
 
     # make sure everyone saw the same questions/possible responses
     meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
-    assert len(meta) == 1
+    if len(meta) > 1:
+        print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
     # convert the metadata to a dictionary
     meta = meta.reset_index(drop=True).T.to_dict()[0]
@@ -259,10 +260,7 @@ def load_data(data_path, conds):
     # drop bad participants
     all_pids = p_info.set_index(['assignment', 'pid'])
     bad_pids = all_pids.dropna()
-    if 'failed_posttest' in bad_pids.groupby('note'):
-        n_failed = len(bad_pids.groupby('note').get_group('failed_posttest'))
-    else:
-        n_failed = 0
+    n_failed = (bad_pids['note'] == 'failed_posttest').sum()
     n_subj = len(all_pids)
     n_good = n_subj - len(bad_pids)
     n_completed = n_good + n_failed
@@ -314,6 +312,8 @@ def load_data(data_path, conds):
     data = data.groupby('pid').apply(add_condition)
 
     # create a column for the kappa value of the feedback they saw
+    if 'kappa' in data:
+        data = data.drop(['kappa'], axis=1)
     data['kappa0'] = np.log10(data['ratio'])
 
     return data, participants
