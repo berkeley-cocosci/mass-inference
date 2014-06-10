@@ -66,7 +66,7 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("mass_accuracy_by_stimulus_with_model.%s" % ext)
+    pths = [fig_path.joinpath("mass_responses_by_stimulus.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)

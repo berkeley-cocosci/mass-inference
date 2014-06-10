@@ -16,7 +16,7 @@ def run(data, results_path, seed):
 
     results = {}
     for lhtype in ('empirical', 'ipe'):
-        hyps = list(data[lhtype]['C'].P_fall_smooth.columns)
+        hyps = [-1.0, 1.0]
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
         for (version, kappa0, pid), df in groups:
@@ -29,6 +29,15 @@ def run(data, results_path, seed):
             prior_lh = np.vstack([prior, lh])
             posterior = util.normalize(prior_lh.cumsum(axis=0), axis=1)[1]
             posterior_ind = util.normalize(prior_lh, axis=1)[1]
+
+            # hack to handle rounding error
+            if (posterior == 0).any():
+                ix = np.argwhere(posterior == 0)
+                rows = ix[:, 0]
+                cols = ix[:, 1]
+                vals = posterior[rows][:, 1 - cols]
+                other = np.log(1 - np.exp(vals))
+                posterior[ix] = other
 
             res = pd.DataFrame(
                 posterior, index=['prior'] + list(order), columns=hyps)

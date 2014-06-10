@@ -5,10 +5,10 @@ import pandas as pd
 import util
 
 
-def plot(results_path, fig_path, version):
+def plot(results_path, fig_path):
 
     nlearned = pd.read_csv(
-        results_path.joinpath(version, 'num_learned_by_trial.csv'))
+        results_path.joinpath('num_learned_by_trial.csv'))
 
     colors = {
         -1.0: 'r',
@@ -40,7 +40,7 @@ def plot(results_path, fig_path, version):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath(version, "num_learned_by_trial.%s" % ext)
+    pths = [fig_path.joinpath("num_learned_by_trial.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)

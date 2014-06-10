@@ -8,7 +8,7 @@ import util
 def plot(results_path, fig_path):
 
     mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_responses_by_trial.csv'))\
+        .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
         .groupby(['version', 'class', 'species'])\
         .get_group(('G', 'chance', 'human'))
 

@@ -7,8 +7,11 @@ import fall_responses
 import fall_response_corrs
 import model_belief
 import model_belief_agg
-import mass_responses_by_trial
+import mass_accuracy
+import mass_accuracy_by_stimulus
+import mass_accuracy_by_trial
 import mass_responses_by_stimulus
+import mass_responses_by_stimulus_corrs
 import switchpoint
 import num_learned_by_trial
 import model_log_lh
@@ -24,8 +27,11 @@ __all__ = [
     'trial_order',
     'model_belief',
     'model_belief_agg',
-    'mass_responses_by_trial',
+    'mass_accuracy',
+    'mass_accuracy_by_stimulus',
     'mass_responses_by_stimulus',
+    'mass_responses_by_stimulus_corrs',
+    'mass_accuracy_by_trial',
 
     'model_log_lh',
     'participant_fits',

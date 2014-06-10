@@ -32,7 +32,7 @@ def run(data, results_path, seed):
     ix = belief['kappa0'] < 0
     p = belief['p'].copy()
     p[ix] = 1 - p[ix]
-    belief.loc[:, 'p'] = p
+    belief.loc[:, 'p correct'] = p
     belief = belief.set_index(
         ['model', 'likelihood', 'version', 'kappa0',
          'stimulus', 'trial', 'pid'])

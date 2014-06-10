@@ -9,7 +9,7 @@ import util
 def plot(results_path, fig_path):
 
     mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
+        .read_csv(results_path.joinpath('mass_accuracy_by_stimulus.csv'))\
         .groupby(['version', 'species'])\
         .get_group(('H', 'human'))
 

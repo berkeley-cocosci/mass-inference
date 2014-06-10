@@ -4,7 +4,7 @@ import util
 import pandas as pd
 import numpy as np
 
-filename = "mass_responses_by_trial.csv"
+filename = "mass_accuracy_by_trial.csv"
 
 
 def run(data, results_path, seed):
@@ -31,7 +31,7 @@ def run(data, results_path, seed):
         belief = model_belief\
             .groupby('model')\
             .get_group(model)\
-            .groupby(['likelihood', 'version', 'trial'])['p']\
+            .groupby(['likelihood', 'version', 'trial'])['p correct']\
             .apply(util.bootstrap_mean)\
             .unstack(-1)\
             .reset_index()\

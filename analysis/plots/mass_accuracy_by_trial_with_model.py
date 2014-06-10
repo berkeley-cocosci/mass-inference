@@ -5,27 +5,27 @@ import pandas as pd
 import util
 
 
-def plot(results_path, fig_path, version):
+def plot(results_path, fig_path):
 
     responses = pd\
-        .read_csv(results_path.joinpath(version, 'mass_responses.csv'))\
-        .groupby('class')
+        .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
+        .groupby('version')\
+        .get_group('G')
+
     classes = ['learning', 'static', 'chance', 'best']
 
     colors = {
         'human': 'k',
-        'model': 'r',
+        'empirical': 'r',
+        'ipe': 'b',
     }
 
     fig, axes = plt.subplots(1, len(classes))
     for i, cls in enumerate(classes):
-        df = responses.get_group(cls)
+        df = responses.groupby('class').get_group(cls)
         ax = axes[i]
 
         for species, sdf in df.groupby('species'):
-            if species == 'empirical':
-                species = 'model'
-
             x = sdf['trial']
             y = sdf['median']
             yl = sdf['lower']
@@ -45,7 +45,7 @@ def plot(results_path, fig_path, version):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath(version, "mass_accuracy_with_model.%s" % ext)
+    pths = [fig_path.joinpath("mass_accuracy_with_model.%s" % ext)
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)

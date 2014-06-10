@@ -6,10 +6,10 @@ import pandas as pd
 filename = "num_learned_by_trial.csv"
 
 
-def run(data, results_path, version, seed):
+def run(data, results_path, seed):
 
     sp = pd\
-        .read_csv(results_path.joinpath(version, 'switchpoint.csv'))\
+        .read_csv(results_path.joinpath('switchpoint.csv'))\
         .set_index(['kappa0', 'pid'])
     sp.columns.name = 'trial'
 
@@ -19,7 +19,7 @@ def run(data, results_path, version, seed):
         .apply(util.beta)\
         .unstack(-1)
 
-    pth = results_path.joinpath(version, filename)
+    pth = results_path.joinpath(filename)
     results.to_csv(pth)
     return pth
 
