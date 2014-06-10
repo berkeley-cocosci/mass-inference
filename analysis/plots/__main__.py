@@ -7,10 +7,8 @@ from . import *
 from . import util
 
 root = path("../")
-config = util.load_config(root.joinpath("config.ini"))
-version = config.get("global", "version")
-results_path = root.joinpath(config.get("paths", "results"), version)
-fig_path = root.joinpath(config.get("paths", "figures"), version)
+results_path = root.joinpath('results')
+fig_path = root.joinpath('figures/mass_inference-GH')
 
 for name in __all__:
     func = locals()[name]

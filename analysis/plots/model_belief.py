@@ -5,14 +5,12 @@ import pandas as pd
 import util
 
 
-def plot_model(model, results_path, fig_path, version):
+def plot_model(model, results_path, fig_path):
 
-    belief = pd.read_csv(results_path.joinpath(
-        version, 'model_belief_agg.csv'))
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     belief = belief.groupby('likelihood').get_group('ipe')
     if model == 'best':
-        ranks = pd.read_csv(results_path.joinpath(
-            version, 'participant_fits.csv'))
+        ranks = pd.read_csv(results_path.joinpath('participant_fits.csv'))
         best = ranks.set_index('pid').groupby('rank')['model'].get_group(0)
         belief = belief\
             .set_index(['pid', 'model'])\
@@ -62,20 +60,19 @@ def plot_model(model, results_path, fig_path, version):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath(version, "model_belief_%s.%s" % (model, ext))
+    pths = [fig_path.joinpath("model_belief_%s.%s" % (model, ext))
             for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
     return pths
 
 
-def plot(results_path, fig_path, version):
+def plot(results_path, fig_path):
     pths = []
-    belief = pd.read_csv(results_path.joinpath(
-        version, 'model_belief_agg.csv'))
+    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     models = list(belief['model'].unique()) + ['best']
     for model in models:
-        pths.extend(plot_model(model, results_path, fig_path, version))
+        pths.extend(plot_model(model, results_path, fig_path))
     return pths
 
 
