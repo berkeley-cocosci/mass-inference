@@ -178,13 +178,19 @@ def load_meta(data_path):
     if len(meta) > 1:
         print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
+    if 'fields' in meta:
+        fields = json.loads(meta['fields'][0])
+        meta = meta.drop(['fields'], axis=1)
+    else:
+        fields = None
+
     # convert the metadata to a dictionary
     meta = meta.reset_index(drop=True).T.to_dict()[0]
 
-    return meta, conds
+    return meta, conds, fields
 
 
-def load_data(data_path, conds):
+def load_data(data_path, conds, fields=None):
     """Load experiment trial data from the given path. Returns a pandas
     DataFrame.
 
@@ -198,7 +204,10 @@ def load_data(data_path, conds):
         psiturk_id = row[0]
         psiturk_currenttrial = row[1]
         psiturk_time = row[2]
-        datadict = json.loads(row[3])
+        if fields:
+            datadict = dict(zip(fields, row[3:]))
+        else:
+            datadict = json.loads(row[3])
         datadict['psiturk_id'] = psiturk_id
         datadict['psiturk_currenttrial'] = psiturk_currenttrial
         datadict['psiturk_time'] = psiturk_time
@@ -409,8 +418,8 @@ if __name__ == "__main__":
         dest_path.dirname().makedirs_p()
 
     # load the data
-    meta, conds = load_meta(data_path)
-    data, participants = load_data(data_path, conds)
+    meta, conds, fields = load_meta(data_path)
+    data, participants = load_data(data_path, conds, fields)
     events = load_events(data_path)
 
     # save it
