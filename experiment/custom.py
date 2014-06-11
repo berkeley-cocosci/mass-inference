@@ -1,12 +1,14 @@
 # this file imports custom routes into the experiment server
 
-from flask import Blueprint, render_template, Response, abort
+from flask import Blueprint, render_template, Response, abort, request
 from jinja2 import TemplateNotFound
 
 from psiturk.psiturk_config import PsiturkConfig
 from psiturk.user_utils import PsiTurkAuthorization, nocache
+from experiment_errors import ExperimentError
 
 # Database setup
+from db import db_session
 from psiturk.models import Participant
 
 # load the configuration options
@@ -31,6 +33,7 @@ SUBMITTED = 4
 CREDITED = 5
 QUITEARLY = 6
 BONUSED = 7
+BAD = 8
 
 
 def get_participants():
@@ -66,3 +69,20 @@ def download_datafiles(name):
         })
 
     return response
+
+
+@custom_code.route('/mark_bad', methods=['PUT'])
+@myauth.requires_auth
+@nocache
+def mark_bad():
+    if not 'uniqueId' in request.args:
+        raise ExperimentError('improper_inputs')
+    else:
+        uniqueId = request.args['uniqueId']
+        user = Participant\
+            .query.\
+            filter(Participant.uniqueid == uniqueId).\
+            one()
+        user.status = BAD
+        db_session.add(user)
+        db_session.commit()
