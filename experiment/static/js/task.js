@@ -40,8 +40,6 @@ var Instructions = function() {
     this.timestamp;
     // The flowplayer instance
     this.player;
-    // Whether to flip colors
-    this.flip;
 
     // Display a page of instructions, based on the current
     // STATE.index
@@ -70,7 +68,7 @@ var Instructions = function() {
 
         if (example) {
             // Set mass colors
-            this.flip = set_colors(example);
+            set_colors(example);
 
             if (player_elem.length > 0) {
                 // Load the video player
@@ -173,8 +171,6 @@ var TestPhase = function() {
     this.trialinfo;
     // The current stimulus name
     this.stimulus;
-    // Whether to flip colors
-    this.flip;
     
     // Handlers to setup each phase of a trial
     this.phases = new Object();
@@ -207,7 +203,7 @@ var TestPhase = function() {
         }
 
         // Set the stimulus colors
-        this.flip = set_colors(this.trialinfo);
+        set_colors(this.trialinfo);
 
         // Display the question prompt
         $(".question").hide();
@@ -411,23 +407,6 @@ var TestPhase = function() {
         var response = KEYS[STATE.trial_phase][key];
         if (response == undefined) return;
         this.listening = false;
-
-        // Unflip colors
-        if (STATE.trial_phase == TRIAL.mass_response) {
-            if (this.flip) {
-                if (response == "A") {
-                    response = 1;
-                } else if (response == "B") {
-                    response = 0;
-                }
-            } else {
-                if (response == "A") {
-                    response = 0;
-                } else if (response == "B") {
-                    response = 1;
-                }
-            }
-        }
 
         debug("Record response: " + response);
 
