@@ -106,7 +106,7 @@ def find_bad_participants(exp, data):
             prestim = df\
                 .groupby(['trial_phase'])\
                 .get_group('prestim')
-        except KeyError:
+        except (KeyError, IndexError):
             pretest = None
             posttest = None
             incomplete = True
@@ -124,7 +124,7 @@ def find_bad_participants(exp, data):
             continue
 
         # check to see if they passed the posttest
-        if posttest:
+        if posttest is not None:
             truth = (posttest['nfell'] > 0).astype(float)
             resp = (posttest['response'] > 4).astype(float)
             resp[posttest['response'] == 4] = np.nan
@@ -161,7 +161,7 @@ def load_meta(data_path):
     # load the data and pivot it, so the rows are uniqueid, columns
     # are keys, and values are, well, values
     meta = pd.read_csv(data_path.joinpath(
-        "questiondata_all.csv"), header=None)
+        "questiondata.csv"), header=None)
     meta = meta.pivot(index=0, columns=1, values=2)
 
     # extract condition information for all participants
@@ -175,31 +175,42 @@ def load_meta(data_path):
 
     # make sure everyone saw the same questions/possible responses
     meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
-    assert len(meta) == 1
+    if len(meta) > 1:
+        print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
-    # extract the field names
-    fields = ["psiturk_id", "psiturk_currenttrial", "psiturk_time"]
-    fields.extend(map(str, json.loads(meta['fields'][0])))
+    # convert the metadata to a dictionary
+    meta = meta.reset_index(drop=True).T.to_dict()[0]
 
-    # convert the remaining metadata to a dictionary and update it
-    # with the parsed conditions
-    meta = meta.drop(['fields'], axis=1).reset_index(drop=True).T.to_dict()[0]
-
-    return meta, conds, fields
+    return meta, conds
 
 
-def load_data(data_path, conds, fields):
+def load_data(data_path, conds):
     """Load experiment trial data from the given path. Returns a pandas
     DataFrame.
 
     """
     # load the data
-    data = pd.read_csv(data_path.joinpath(
-        "trialdata_all.csv"), header=None)
-    # set the column names
-    data.columns = fields
+    rawdata = pd.read_csv(data_path.joinpath(
+        "trialdata.csv"), header=None)
+
+    data = []
+    for i, row in rawdata.iterrows():
+        psiturk_id = row[0]
+        psiturk_currenttrial = row[1]
+        psiturk_time = row[2]
+        datadict = json.loads(row[3])
+        datadict['psiturk_id'] = psiturk_id
+        datadict['psiturk_currenttrial'] = psiturk_currenttrial
+        datadict['psiturk_time'] = psiturk_time
+        data.append(datadict)
+
+    data = pd.DataFrame(data)
+
     # split apart psiturk_id into pid and assignment
     data = split_uniqueid(data, 'psiturk_id')
+
+    # replace None and '' with np.nan
+    data = data.replace([None, ''], [np.nan, np.nan])
 
     # process other various fields to make sure they're in the right
     # data format
@@ -212,6 +223,7 @@ def load_data(data_path, conds, fields):
     data['camera_start'] = data['camera_start'].astype('float')
     data['camera_spin'] = data['camera_spin'].astype('float')
     data['response'] = data['response'].astype('float')
+    data['ratio'] = data['ratio'].astype('float')
     data['trial_phase'] = data['trial_phase'].fillna('prestim')
 
     # remove instructions rows
@@ -248,7 +260,7 @@ def load_data(data_path, conds, fields):
     # drop bad participants
     all_pids = p_info.set_index(['assignment', 'pid'])
     bad_pids = all_pids.dropna()
-    n_failed = len(bad_pids.groupby('note').get_group('failed_posttest'))
+    n_failed = (bad_pids['note'] == 'failed_posttest').sum()
     n_subj = len(all_pids)
     n_good = n_subj - len(bad_pids)
     n_completed = n_good + n_failed
@@ -300,6 +312,8 @@ def load_data(data_path, conds, fields):
     data = data.groupby('pid').apply(add_condition)
 
     # create a column for the kappa value of the feedback they saw
+    if 'kappa' in data:
+        data = data.drop(['kappa'], axis=1)
     data['kappa0'] = np.log10(data['ratio'])
 
     return data, participants
@@ -311,7 +325,9 @@ def load_events(data_path):
 
     """
     # load the data
-    events = pd.read_csv(data_path.joinpath("eventdata_all.csv"))
+    events = pd.read_csv(data_path.joinpath("eventdata.csv"))
+    events.columns = [
+        "uniqueid", "event_type", "interval", "value", "timestamp"]
     # split uniqueid into pid and assignment
     events = split_uniqueid(events, 'uniqueid')
     # parse timestamps
@@ -393,8 +409,8 @@ if __name__ == "__main__":
         dest_path.dirname().makedirs_p()
 
     # load the data
-    meta, conds, fields = load_meta(data_path)
-    data, participants = load_data(data_path, conds, fields)
+    meta, conds = load_meta(data_path)
+    data, participants = load_data(data_path, conds)
     events = load_events(data_path)
 
     # save it

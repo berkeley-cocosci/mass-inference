@@ -15,181 +15,313 @@
 Backbone.Notifications = {};
 _.extend(Backbone.Notifications, Backbone.Events);
 
-var startTask = function () {
-    // psiTurk.saveData();
-    
-    // $.ajax("inexp", {
-    // 	type: "POST",
-    // 	data: {uniqueId: uniqueId}
-    // });    
-};
-Backbone.Notifications.on('_psiturk_finishedinstructions', startTask);
-Backbone.Notifications.on('_psiturk_finishedtask', function(msg) { $(window).off("beforeunload"); });
-
-$(window).bind("beforeunload", function(){
-    Backbone.Notifications.trigger('_psiturk_refreshed');
-    psiTurk.saveData();
-    return "After refreshing, the experiment will resume where you left off.";
-});
-
-$(window).blur( function() {
-    Backbone.Notifications.trigger('_psiturk_lostfocus');
-});
-
-$(window).focus( function() {
-    Backbone.Notifications.trigger('_psiturk_gainedfocus');	
-});
-
-// track changes in window size
-triggerResize = function() {
-    Backbone.Notifications.trigger('_psiturk_windowresize', [window.innerWidth, window.innerHeight]);
-};
-
-var to = false;
-$(window).resize(function(){
-    if(to !== false)
-        clearTimeout(to);
-    to = setTimeout(triggerResize, 200);
-});
-
-
-
-/******************
- * VIEW FUNCTIONS *
- ***************/
-
-// To be fleshed out with backbone views in the future.
-var replaceBody = function(x) { $('body').html(x); };
-
-
-/****************
- * TASK DATA    *
- ***************/
-
-var TaskData = Backbone.Model.extend({
-    urlRoot: "/sync", // Save will PUT to /data, with mimetype 'application/JSON'
-    id: uniqueId,
-    
-    defaults: {
-	condition: 0,
-	counterbalance: 0,
-	assignmentId: 0,
-	workerId: 0,
-	hitId: 0,
-	currenttrial: 0,
-	bonus: 0,
-	data: "",
-	questiondata: {},
-	eventdata: [],
-	useragent: ""
-    },
-    
-    initialize: function() {
-	this.useragent = navigator.userAgent;
-	this.addEvent('initialized', null);
-	this.addEvent('window_resize', [window.innerWidth, window.innerHeight]);
-
-	this.listenTo(Backbone.Notifications, '_psiturk_lostfocus', function() { this.addEvent('focus', 'off'); });
-	this.listenTo(Backbone.Notifications, '_psiturk_gainedfocus', function() { this.addEvent('focus', 'on'); });
-	this.listenTo(Backbone.Notifications, '_psiturk_windowresize', function(newsize) { this.addEvent('window_resize', newsize); });
-	this.listenTo(Backbone.Notifications, '_psiturk_refreshed', function() { this.addEvent('refresh', ''); });
-    },
-
-    addTrialData: function(trialdata) {
-	trialdata = [this.id, this.get("currenttrial"), (new Date().getTime())].concat(trialdata);
-	this.set({"data": this.get("data").concat(trialdata, "\n")});
-	this.set({"currenttrial": this.get("currenttrial")+1});
-    },
-    
-    addUnstructuredData: function(field, response) {
-	qd = this.get("questiondata");
-	qd[field] = response;
-	this.set("questiondata", qd);
-    },
-
-    addEvent: function(eventtype, value) {
-	var interval,
-	ed = this.get('eventdata'),
-	timestamp = new Date().getTime();
-
-	if (eventtype == 'initialized') {
-	    interval = 0;
-	} else {
-	    interval = timestamp - ed[ed.length-1]['timestamp'];
-	}
-
-	ed.push({'eventtype': eventtype, 'value': value, 'timestamp': timestamp, 'interval': interval});
-	this.set('eventdata', ed);
-    }
-});
-
-
 
 /*******
  * API *
  ******/
-var PsiTurk = function() {
-    
-    /*  DATA: */
-    this.taskdata = new TaskData();
-    this.taskdata.fetch({async: false});
-    this.pages = {};
-    
-    /*  METHODS: */
+var PsiTurk = function(uniqueId, adServerLoc) {
+	var self = this;
+	
+	/****************
+	 * TASK DATA    *
+	 ***************/
+	var TaskData = Backbone.Model.extend({
+		urlRoot: "/sync", // Save will PUT to /data, with mimetype 'application/JSON'
+		id: uniqueId,
+		adServerLoc: adServerLoc,
+		
+		defaults: {
+			condition: 0,
+			counterbalance: 0,
+			assignmentId: 0,
+			workerId: 0,
+			hitId: 0,
+			currenttrial: 0,
+			bonus: 0,
+			data: [],
+			questiondata: {},
+			eventdata: [],
+			useragent: ""
+		},
+		
+		initialize: function() {
+			this.useragent = navigator.userAgent;
+			this.addEvent('initialized', null);
+			this.addEvent('window_resize', [window.innerWidth, window.innerHeight]);
 
-    // Preload images
-    this.preloadImages = function(imagenames) {
-	$(imagenames).each(function() {
-	    image = new Image();
-	    image.src = this;
+			this.listenTo(Backbone.Notifications, '_psiturk_lostfocus', function() { this.addEvent('focus', 'off'); });
+			this.listenTo(Backbone.Notifications, '_psiturk_gainedfocus', function() { this.addEvent('focus', 'on'); });
+			this.listenTo(Backbone.Notifications, '_psiturk_windowresize', function(newsize) { this.addEvent('window_resize', newsize); });
+		},
+
+		addTrialData: function(trialdata) {
+			trialdata = {"uniqueid":this.id, "current_trial":this.get("currenttrial"), "dateTime":(new Date().getTime()), "trialdata":trialdata};
+			var data = this.get('data');
+			data.push(trialdata);
+			this.set('data', data);
+			this.set({"currenttrial": this.get("currenttrial")+1});
+		},
+		
+		addUnstructuredData: function(field, response) {
+			var qd = this.get("questiondata");
+			qd[field] = response;
+			this.set("questiondata", qd);
+		},
+
+		addEvent: function(eventtype, value) {
+			var interval,
+			    ed = this.get('eventdata'),
+			    timestamp = new Date().getTime();
+
+			if (eventtype == 'initialized') {
+				interval = 0;
+			} else {
+				interval = timestamp - ed[ed.length-1]['timestamp'];
+			}
+
+			ed.push({'eventtype': eventtype, 'value': value, 'timestamp': timestamp, 'interval': interval});
+			this.set('eventdata', ed);
+		}
 	});
-    };
 
-    // Preload pages
-    this.preloadPages = function(pagenames) {
-        var that = this;
-	// Synchronously preload pages.
-	$(pagenames).each(function() {
-	    $.ajax({
-		url: this,
-		success: function(page_html) { 
-                    that.pages[this.url] = page_html;
-                },
-		dataType: "html",
-		async: false
-	    });
+
+	/*****************************************************
+	* INSTRUCTIONS 
+	*   - a simple, default instruction player
+	******************************************************/
+	var Instructions = function(parent, pages, callback) {
+
+		var self = this;
+		var psiturk = parent;
+		var currentscreen = 0, timestamp;
+		var instruction_pages = pages; 
+		var complete_fn = callback;
+
+		var loadPage = function() {
+
+			// show the page
+			psiTurk.showPage(instruction_pages[currentscreen]);
+
+			// connect event handler to previous button
+			if(currentscreen != 0) {  // can't do this if first page
+				$('.previous').bind('click.psiturk.instructionsnav.prev', function() {
+					prevPageButtonPress();
+				});
+			}
+
+			// connect event handler to continue button
+			$('.continue').bind('click.psiturk.instructionsnav.next', function() {
+				nextPageButtonPress();
+			});
+			
+			// Record the time that an instructions page is first presented
+			timestamp = new Date().getTime();
+
+		};
+
+		var prevPageButtonPress = function () {
+
+			// Record the response time
+			var rt = (new Date().getTime()) - timestamp;
+			viewedscreen = currentscreen;
+			currentscreen = currentscreen - 1;
+			if (currentscreen < 0) {
+				currentscreen = 0; // can't go back that far
+			} else {
+				psiturk.recordTrialData({"phase":"INSTRUCTIONS", "template":pages[viewedscreen], "indexOf":viewedscreen, "action":"PrevPage", "viewTime":rt});
+				loadPage(instruction_pages[currentscreen]);
+			}
+
+		}
+
+		var nextPageButtonPress = function() {
+
+			// Record the response time
+			var rt = (new Date().getTime()) - timestamp;
+			viewedscreen = currentscreen;
+			currentscreen = currentscreen + 1;
+
+			if (currentscreen == instruction_pages.length) {
+				psiturk.recordTrialData({"phase":"INSTRUCTIONS", "template":pages[viewedscreen], "indexOf":viewedscreen, "action":"FinishInstructions", "viewTime":rt});
+				finish();
+			} else {
+				psiturk.recordTrialData({"phase":"INSTRUCTIONS", "template":pages[viewedscreen], "indexOf":viewedscreen, "action":"NextPage", "viewTime":rt});
+				loadPage(instruction_pages[viewedscreen]);
+			}
+
+		};
+
+		var finish = function() {
+
+			// unbind all instruction related events
+			$('.continue').unbind('click.psiturk.instructionsnav.next');
+			$('.previous').unbind('click.psiturk.instructionsnav.prev');
+
+			// Record that the user has finished the instructions and 
+			// moved on to the experiment. This changes their status code
+			// in the database.
+			psiturk.finishInstructions();
+
+			// Move on to the experiment 
+			complete_fn();
+		};
+
+
+
+		/* public interface */
+		self.getIndicator = function() {
+			return {"currently_viewing":{"indexOf":currentscreen, "template":pages[currentscreen]}, "instruction_deck":{"total_pages":instruction_pages.length, "templates":instruction_pages}};
+		}
+
+		self.loadFirstPage = function () { loadPage(); }
+
+		// log instruction are starting
+		psiturk.recordTrialData({"phase":"INSTRUCTIONS", "templates":pages, "action":"Begin"});
+
+		return self;
+	};
+	
+	/*  PUBLIC METHODS: */
+	self.preloadImages = function(imagenames) {
+		$(imagenames).each(function() {
+			image = new Image();
+			image.src = this;
+		});
+	};
+	
+	self.preloadPages = function(pagenames) {
+		// Synchronously preload pages.
+		$(pagenames).each(function() {
+			$.ajax({
+				url: this,
+				success: function(page_html) { self.pages[this.url] = page_html;},
+				dataType: "html",
+				async: false
+			});
+		});
+	};
+	// Get HTML file from collection and pass on to a callback
+	self.getPage = function(pagename) {
+		return self.pages[pagename];
+	};
+	
+	
+	// Add a line of data with any number of columns
+	self.recordTrialData = function(trialdata) {
+		taskdata.addTrialData(trialdata);
+	};
+	
+	// Add data value for a named column. If a value already
+	// exists for that column, it will be overwritten
+	self.recordUnstructuredData = function(field, value) {
+		taskdata.addUnstructuredData(field, value);
+	};
+
+	// Add bonus to task data
+	self.computeBonus = function(url, callback) {
+		$.ajax(url, {
+                    type: "GET",
+                    data: {uniqueId: self.taskdata.id},
+                    success: callback
+                });
+	};
+	
+	// Save data to server
+	self.saveData = function(callbacks) {
+		taskdata.save(undefined, callbacks);
+	};
+
+	self.startTask = function () {
+		self.saveData();
+		
+		$.ajax("inexp", {
+				type: "POST",
+				data: {uniqueId: self.taskdata.id}
+		});
+		
+		// Provide opt-out 
+		$(window).on("beforeunload", function(){
+			self.saveData();
+			
+			$.ajax("quitter", {
+					type: "POST",
+					data: {uniqueId: self.taskdata.id}
+			});
+			//var optoutmessage = "By leaving this page, you opt out of the experiment.";
+			//alert(optoutmessage);
+			return "By leaving or reloading this page, you opt out of the experiment.  Are you sure you want to leave the experiment?";
+		});
+
+	};
+	
+	// Notify app that participant has begun main experiment
+	self.finishInstructions = function(optmessage) {
+		Backbone.Notifications.trigger('_psiturk_finishedinstructions', optmessage);
+	};
+	
+	self.teardownTask = function(optmessage) {
+		Backbone.Notifications.trigger('_psiturk_finishedtask', optmessage);
+	};
+
+	self.completeHIT = function() {
+		self.teardownTask();
+		// save data one last time here?
+		window.location= self.taskdata.adServerLoc + "?uniqueId=" + self.taskdata.id;
+	}
+
+	self.doInstructions = function(pages, callback) {
+		instructionController = new Instructions(self, pages, callback);
+		instructionController.loadFirstPage();
+	};
+
+	self.getInstructionIndicator = function() {
+		if (instructionController!=undefined) {
+			return instructionController.getIndicator();
+		}
+	}
+
+	// To be fleshed out with backbone views in the future.
+	var replaceBody = function(x) { $('body').html(x); };
+
+	self.showPage = _.compose(replaceBody, self.getPage);
+
+	/* initialized local variables */
+
+	var taskdata = new TaskData();
+	taskdata.fetch({async: false});
+	
+	/*  DATA: */
+	self.pages = {};
+	self.taskdata = taskdata;
+
+
+	/* Backbone stuff */
+	Backbone.Notifications.on('_psiturk_finishedinstructions', self.startTask);
+	Backbone.Notifications.on('_psiturk_finishedtask', function(msg) { $(window).off("beforeunload"); });
+
+
+	$(window).blur( function() {
+		Backbone.Notifications.trigger('_psiturk_lostfocus');
 	});
-    };
 
-    // Get HTML file from collection
-    this.getPage = function(pagename) {
-	return this.pages[pagename];
-    };
-    
-    // Add a line of data with any number of columns
-    this.recordTrialData = function(trialdata) {
-	this.taskdata.addTrialData(trialdata);
-    };
-    
-    // Add data value for a named column. If a value already
-    // exists for that column, it will be overwritten
-    this.recordUnstructuredData = function(field, value) {
-	this.taskdata.addUnstructuredData(field, value);
-    };
-    
-    // Save data to server
-    this.saveData = function(callbacks) {
-	console.log("Saving task data");
-	this.taskdata.save(undefined, callbacks);
-    };
-    
-    // Notify app that participant has begun main experiment
-    this.finishInstructions = function(optmessage) {
-	Backbone.Notifications.trigger('_psiturk_finishedinstructions', optmessage);
-    };
-    
-    this.teardownTask = function(optmessage) {
-	Backbone.Notifications.trigger('_psiturk_finishedtask', optmessage);
-    };
-    this.showPage = _.compose(replaceBody, this.getPage);
+	$(window).focus( function() {
+		Backbone.Notifications.trigger('_psiturk_gainedfocus');	
+	});
+
+	// track changes in window size
+	var triggerResize = function() {
+		Backbone.Notifications.trigger('_psiturk_windowresize', [window.innerWidth, window.innerHeight]);
+	};
+
+	// set up the window resize trigger
+	var to = false;
+	$(window).resize(function(){
+	 if(to !== false)
+	    clearTimeout(to);
+	 to = setTimeout(triggerResize, 200);
+	});
+
+	return self;
 };
+
+// vi: noexpandtab nosmartindent shiftwidth=4 tabstop=4

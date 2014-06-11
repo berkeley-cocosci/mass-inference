@@ -11,7 +11,8 @@ def get_rgb(color, rso):
     g = int(color[3:5], base=16) / 255.
     b = int(color[5:7], base=16) / 255.
     h, s, v = colorsys.rgb_to_hsv(r, g, b)
-    s = max(0, min(1, s + rso.randn() / 8.))
+    if s > 0:
+        s = max(0, min(1, s + rso.randn() / 8.))
     v = max(0, min(1, v + rso.randn() / 8.))
     r, g, b = colorsys.hsv_to_rgb(h, s, v)
     rgba = (r, g, b, 1)

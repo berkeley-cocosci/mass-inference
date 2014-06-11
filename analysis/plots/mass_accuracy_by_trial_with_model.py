@@ -8,24 +8,24 @@ import util
 def plot(results_path, fig_path):
 
     responses = pd\
-        .read_csv(results_path.joinpath('mass_responses.csv'))\
-        .groupby('class')
+        .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
+        .groupby('version')\
+        .get_group('G')
+
     classes = ['learning', 'static', 'chance', 'best']
 
     colors = {
         'human': 'k',
-        'model': 'r',
+        'empirical': 'r',
+        'ipe': 'b',
     }
 
     fig, axes = plt.subplots(1, len(classes))
     for i, cls in enumerate(classes):
-        df = responses.get_group(cls)
+        df = responses.groupby('class').get_group(cls)
         ax = axes[i]
 
         for species, sdf in df.groupby('species'):
-            if species == 'empirical':
-                species = 'model'
-
             x = sdf['trial']
             y = sdf['median']
             yl = sdf['lower']

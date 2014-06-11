@@ -34,6 +34,8 @@ def run(data, results_path, seed):
 
     np.random.seed(seed)
     results = data['human']['C']\
+        .groupby('version')\
+        .get_group('G')\
         .pivot_table(
             rows=['kappa0', 'pid'],
             cols='trial',

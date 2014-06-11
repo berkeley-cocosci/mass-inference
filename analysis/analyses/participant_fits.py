@@ -21,21 +21,21 @@ def run(data, results_path, seed):
     llh = pd.read_csv(results_path.joinpath('model_log_lh.csv'))\
             .groupby('likelihood')\
             .get_group('empirical')\
-            .set_index(['pid', 'trial', 'model'])['llh']\
+            .set_index(['version', 'pid', 'trial', 'model'])['llh']\
             .unstack('model')
 
     results = llh\
-        .groupby(level='pid')\
+        .groupby(level=['version', 'pid'])\
         .sum()\
-        .groupby(level='pid')\
+        .groupby(level=['version', 'pid'])\
         .apply(rank)\
         .stack()\
         .reset_index()\
         .rename(columns={
-            'level_1': 'rank',
+            'level_2': 'rank',
             0: 'model'
         })\
-        .set_index('pid')
+        .set_index(['version', 'pid'])
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

@@ -258,7 +258,6 @@ report_pearson = r"$r$ = {median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
 
 
 def make_plot(func):
-    version = 'G'
     results_path = path('../results')
-    fig_path = path('../figures/mass_inference-%s' % version)
+    fig_path = path('../figures/mass_inference-GH')
     print func(results_path, fig_path)

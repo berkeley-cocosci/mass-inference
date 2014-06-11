@@ -15,7 +15,7 @@ var $f = flowplayer;
 var $c = new Config(condition, counterbalance);
 
 // Initalize psiturk object
-var psiTurk = new PsiTurk();
+var psiTurk = new PsiTurk(uniqueId, adServerLoc);
 
 // Preload the HTML template pages that we need for the experiment
 psiTurk.preloadPages($c.pages);
@@ -40,6 +40,8 @@ var Instructions = function() {
     this.timestamp;
     // The flowplayer instance
     this.player;
+    // Whether to flip colors
+    this.flip;
 
     // Display a page of instructions, based on the current
     // STATE.index
@@ -68,7 +70,7 @@ var Instructions = function() {
 
         if (example) {
             // Set mass colors
-            set_colors(example);
+            this.flip = set_colors(example);
 
             if (player_elem.length > 0) {
                 // Load the video player
@@ -112,8 +114,8 @@ var Instructions = function() {
         data.update(STATE.as_data());
         data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
-        psiTurk.recordTrialData(data.to_array());
-        debug(data.to_array());
+        psiTurk.recordTrialData(data);
+        debug(data);
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -171,6 +173,8 @@ var TestPhase = function() {
     this.trialinfo;
     // The current stimulus name
     this.stimulus;
+    // Whether to flip colors
+    this.flip;
     
     // Handlers to setup each phase of a trial
     this.phases = new Object();
@@ -203,7 +207,7 @@ var TestPhase = function() {
         }
 
         // Set the stimulus colors
-        set_colors(this.trialinfo);
+        this.flip = set_colors(this.trialinfo);
 
         // Display the question prompt
         $(".question").hide();
@@ -408,6 +412,23 @@ var TestPhase = function() {
         if (response == undefined) return;
         this.listening = false;
 
+        // Unflip colors
+        if (STATE.trial_phase == TRIAL.mass_response) {
+            if (this.flip) {
+                if (response == "A") {
+                    response = 1;
+                } else if (response == "B") {
+                    response = 0;
+                }
+            } else {
+                if (response == "A") {
+                    response = 0;
+                } else if (response == "B") {
+                    response = 1;
+                }
+            }
+        }
+
         debug("Record response: " + response);
 
         var data = new DataRecord();
@@ -419,8 +440,8 @@ var TestPhase = function() {
         });
 
         // Create the record we want to save
-        psiTurk.recordTrialData(data.to_array());
-        debug(data.to_array());
+        psiTurk.recordTrialData(data);
+        debug(data);
 
         // Tell the state to go to the next trial phase or trial
         if (STATE.trial_phase == (TRIAL.length - 1)) {
@@ -449,21 +470,6 @@ var TestPhase = function() {
         // phase and show the relevant instructions
         if (STATE.experiment_phase >= EXPERIMENT.length) {
 
-            // Send them to the debriefing form, but delay a bit, so
-            // they know what's happening
-            var debrief = function() {
-                setTimeout(function () {
-                    window.location = "/debrief?uniqueId=" + psiTurk.taskdata.id;
-                }, 2000);
-            };
-
-            // Prompt them to resubmit the HIT, because it failed the first time
-            var prompt_resubmit = function() {
-                $("#resubmit_slide").click(resubmit);
-                $(".slide").hide();
-                $("#submit_error_slide").fadeIn($c.fade);
-            };
-
             // Show a page saying that the HIT is resubmitting, and
             // show the error page again if it times out or error
             var resubmit = function() {
@@ -480,11 +486,17 @@ var TestPhase = function() {
                 });
             };
 
+            // Prompt them to resubmit the HIT, because it failed the first time
+            var prompt_resubmit = function() {
+                $("#resubmit_slide").click(resubmit);
+                $(".slide").hide();
+                $("#submit_error_slide").fadeIn($c.fade);
+            };
+
             // Render a page saying it's submitting
             psiTurk.showPage("submit.html")
-            psiTurk.teardownTask();
             psiTurk.saveData({
-                success: debrief, 
+                success: psiTurk.completeHIT, 
                 error: prompt_resubmit
             });
 

@@ -539,6 +539,9 @@ def load_human(version, data_path):
         "human/mass_inference-%s.dpkg" % version))
     exp_all = exp_dp.load_resource("experiment.csv")
 
+    # convert timestamps into datetime objects
+    exp_all['timestamp'] = pd.to_datetime(exp_all['timestamp'])
+
     exp = exp_all\
         .groupby(
             exp_all['mode'].apply(

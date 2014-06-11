@@ -56,6 +56,12 @@ def build(exp, condition, tag, force, cpo_path, seed, **params):
     # Convert it to a dictionary, so we can dump it to JSON
     script = df.to_dict('list')
 
+    # Numpy bool types are not JSON-serializable, grumble
+    script['feedback'] = map(bool, script['feedback'])
+    script['finished'] = map(bool, script['finished'])
+    script['full_render'] = map(bool, script['full_render'])
+    script['occlude'] = map(bool, script['occlude'])
+
     # Save it
     if not script_root.exists():
         logger.debug("Creating directory %s", script_root)

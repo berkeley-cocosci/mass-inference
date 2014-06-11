@@ -16,8 +16,8 @@ def run(data, results_path, seed):
 
     belief = results\
         .set_index(
-            ['model', 'likelihood', 'kappa0',
-             'trial', 'pid', 'hypothesis'])['p']\
+            ['model', 'likelihood', 'version', 'kappa0',
+             'stimulus', 'trial', 'pid', 'hypothesis'])['p']\
         .unstack('hypothesis')
 
     mask = np.zeros(len(belief.columns))
@@ -32,9 +32,10 @@ def run(data, results_path, seed):
     ix = belief['kappa0'] < 0
     p = belief['p'].copy()
     p[ix] = 1 - p[ix]
-    belief.loc[:, 'p'] = p
+    belief.loc[:, 'p correct'] = p
     belief = belief.set_index(
-        ['model', 'likelihood', 'kappa0', 'trial', 'pid'])
+        ['model', 'likelihood', 'version', 'kappa0',
+         'stimulus', 'trial', 'pid'])
 
     pth = results_path.joinpath(filename)
     belief.to_csv(pth)

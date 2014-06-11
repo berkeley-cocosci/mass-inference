@@ -7,9 +7,9 @@ from . import *
 from . import util
 
 root = path("../")
-version = 'G'
 data_path = root.joinpath('data')
-data = util.load_all(version, data_path)
+exp_all, human = util.load_human('GH', data_path)
+data = util.load_all('G', data_path, human=human)
 results_path = root.joinpath('results')
 seed = 923012
 

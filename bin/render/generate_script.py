@@ -50,7 +50,7 @@ def make_options():
     options.append({
         'condition': 'shared',
         'tag': 'stable_example',
-        'cpo_path': 'mass-inference-stable-example-G',
+        'cpo_path': 'mass-inference-stable-example-H',
         'seed': 10239,
         'full_render': True
     })
@@ -59,7 +59,7 @@ def make_options():
     options.append({
         'condition': 'shared',
         'tag': 'unstable_example',
-        'cpo_path': 'mass-inference-unstable-example-G',
+        'cpo_path': 'mass-inference-unstable-example-H',
         'seed': 10240,
         'full_render': True
     })
@@ -68,7 +68,7 @@ def make_options():
     options.append({
         'condition': 'shared',
         'tag': 'pretest',
-        'cpo_path': 'mass-inference-training-G',
+        'cpo_path': 'mass-inference-training-H',
         'seed': 10241,
     })
 
@@ -83,7 +83,7 @@ def make_options():
         options.append({
             'condition': 'vfb-%s-cb%d' % (r, cb),
             'tag': 'mass_example',
-            'cpo_path': 'mass-inference-example-G',
+            'cpo_path': 'mass-inference-example-H',
             'seed': 10242,
             'label0': labels[0],
             'label1': labels[1],
@@ -108,7 +108,7 @@ def make_options():
         options.append({
             'condition': 'vfb-%s-cb%d' % (r, cb),
             'tag': 'experimentA',
-            'cpo_path': 'mass-inference-G-a',
+            'cpo_path': 'mass-inference-H-a',
             'seed': 10243,
             'label0': labels[0],
             'label1': labels[1],
@@ -132,7 +132,7 @@ def make_options():
         options.append({
             'condition': 'nfb-%s-cb%d' % (r, cb),
             'tag': 'experimentB',
-            'cpo_path': 'mass-inference-G-b',
+            'cpo_path': 'mass-inference-H-b',
             'seed': 10244,
             'label0': labels[0],
             'label1': labels[1],
@@ -144,25 +144,62 @@ def make_options():
 
     # experiment C
     for r, cb in product(['0.1', '10'], [0, 1]):
-        labels = ['purple', 'green']
-        colors = ['#7B3294', '#008837']
+        colordict = {
+            'blue': '#0000FF',
+            'cyan': '#00FFFF',
+            'gray': '#808080',
+            'green': '#008837',
+            'orange': '#FF7000',
+            'purple': '#330099',
+            'red': '#CA0020',
+            'yellow': '#FFFF00',
+            'magenta': '#FF00FF',
+        }
+
+        labels = [
+            ['blue', 'green'],
+            ['orange', 'blue'],
+            ['blue', 'yellow'],
+            ['gray', 'cyan'],
+            ['cyan', 'magenta'],
+            ['orange', 'cyan'],
+            ['cyan', 'purple'],
+            ['red', 'cyan'],
+            ['cyan', 'yellow'],
+            ['green', 'gray'],
+            ['gray', 'magenta'],
+            ['purple', 'gray'],
+            ['gray', 'red'],
+            ['magenta', 'green'],
+            ['green', 'orange'],
+            ['purple', 'green'],
+            ['magenta', 'yellow'],
+            ['orange', 'purple'],
+            ['yellow', 'purple'],
+            ['yellow', 'red']]
+
+        colors = [[colordict[x[0]], colordict[x[1]]] for x in labels]
+
         if cb == 1:
-            labels = labels[::-1]
-            colors = colors[::-1]
+            labels = [x[::-1] for x in labels]
+            colors = [x[::-1] for x in colors]
         if r == '0.1':
             kappa = -1.0
         elif r == '10':
             kappa = 1.0
 
+        label0, label1 = zip(*labels)
+        color0, color1 = zip(*colors)
+
         options.append({
             'condition': 'vfb-%s-cb%d' % (r, cb),
             'tag': 'experimentC',
-            'cpo_path': 'mass-inference-G-b',
+            'cpo_path': 'mass-inference-H-b',
             'seed': 10245,
-            'label0': labels[0],
-            'label1': labels[1],
-            'color0': colors[0],
-            'color1': colors[1],
+            'label0': label0,
+            'label1': label1,
+            'color0': color0,
+            'color1': color1,
             'kappa': kappa,
         })
 

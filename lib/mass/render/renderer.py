@@ -64,7 +64,7 @@ class RenderMovies(ViewTowers):
         self.camera_rot.setH(angle)
 
     def thunk(self, task):
-        if task.getElapsedFrames() > 1:
+        if task.getElapsedFrames() > 2:
             return task.done
         return task.cont
 

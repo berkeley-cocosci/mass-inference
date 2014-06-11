@@ -52,12 +52,18 @@ if __name__ == "__main__":
         action="store_true",
         default=False,
         help="extract worker ids")
+    group.add_argument(
+        "--merge",
+        action="store_true",
+        default=False,
+        help="merge versions G and H")
 
     args = parser.parse_args()
     required = [
         args.fetch,
         args.process,
         args.extract,
+        args.merge,
         args.all
     ]
 
@@ -94,5 +100,12 @@ if __name__ == "__main__":
         cmd = [
             "python", BIN_PATH.joinpath("experiment/extract_workers.py"),
             "-e", exp
+        ]
+        run_cmd(cmd)
+
+    # merge G and H
+    if args.merge or args.all:
+        cmd = [
+            "python", BIN_PATH.joinpath("experiment/merge_GH.py")
         ]
         run_cmd(cmd)
