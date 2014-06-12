@@ -38,7 +38,7 @@ var FALL_PHASES = [
 // The phases in which we will ask the "mass?" question
 var MASS_PHASES = [EXPERIMENT.experimentC];
 // The trials on which we will ask the "mass?" question
-var MASS_TRIALS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
+var MASS_TRIALS = [0, 1, 2, 3, 5, 8, 13, 19];
 
 // Enum-like object for representing key names.
 var KEYS = new Object();
@@ -60,8 +60,8 @@ KEYS[TRIAL.prefeedback] = {
 };
 KEYS[TRIAL.feedback] = {};
 KEYS[TRIAL.mass_response] = {
-    48: "A",  // 0
-    49: "B",  // 1
+    48: 0,  // 0
+    49: 1,  // 1
 };
 
 // Object to hold the experiment configuration. It takes as parameters
