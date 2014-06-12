@@ -205,9 +205,9 @@ def load_data(data_path, conds, fields=None):
         psiturk_currenttrial = row[1]
         psiturk_time = row[2]
         try:
-            datadict = dict(zip(fields, row[3:]))
-        except:
             datadict = json.loads(row[3])
+        except:
+            datadict = dict(zip(fields, row[3:]))
         datadict['psiturk_id'] = psiturk_id
         datadict['psiturk_currenttrial'] = psiturk_currenttrial
         datadict['psiturk_time'] = psiturk_time
