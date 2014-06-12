@@ -16,6 +16,7 @@ import switchpoint
 import num_learned_by_trial
 import model_log_lh
 import participant_fits
+import num_chance
 
 __all__ = [
     'payrate',
@@ -32,6 +33,7 @@ __all__ = [
     'mass_responses_by_stimulus',
     'mass_responses_by_stimulus_corrs',
     'mass_accuracy_by_trial',
+    'num_chance',
 
     'model_log_lh',
     'participant_fits',
