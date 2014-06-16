@@ -10,12 +10,12 @@ def run(data, results_path, seed):
 
     sp = pd\
         .read_csv(results_path.joinpath('switchpoint.csv'))\
-        .set_index(['kappa0', 'pid'])
+        .set_index(['version', 'kappa0', 'pid'])
     sp.columns.name = 'trial'
 
     results = sp\
         .stack()\
-        .groupby(level=['kappa0', 'trial'])\
+        .groupby(level=['version', 'kappa0', 'trial'])\
         .apply(util.beta)\
         .unstack(-1)
 

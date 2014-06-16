@@ -17,6 +17,7 @@ def run(data, results_path, seed):
     results = {}
     for lhtype in ('empirical', 'ipe'):
         hyps = [-1.0, 1.0]
+        #hyps = data[lhtype]['C'].P_fall_smooth.columns
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
         for (version, kappa0, pid), df in groups:
@@ -35,9 +36,9 @@ def run(data, results_path, seed):
                 ix = np.argwhere(posterior == 0)
                 rows = ix[:, 0]
                 cols = ix[:, 1]
-                vals = posterior[rows][:, 1 - cols]
+                vals = posterior[rows, 1 - cols]
                 other = np.log(1 - np.exp(vals))
-                posterior[ix] = other
+                posterior[tuple(ix.T)] = other
 
             res = pd.DataFrame(
                 posterior, index=['prior'] + list(order), columns=hyps)

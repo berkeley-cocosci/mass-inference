@@ -42,16 +42,22 @@ class EmpiricalIPE(object):
             ix = self.P_fall_smooth.index[ix]
 
         smooth = self.P_fall_smooth.ix[ix]
+        smooth_index = smooth.index
+        smooth = np.asarray(smooth)
+
         mean = self.P_fall_mean.ix[ix]
-        var = self.P_fall_var.ix[ix]
-        std = var.map(np.sqrt)
+        mean_index = mean.index
+        mean = np.asarray(mean)
+
+        var = np.asarray(self.P_fall_var.ix[ix])
+        std = np.sqrt(var)
 
         fig, ax = plt.subplots()
         ax.plot(
-            smooth.index, smooth,
+            smooth_index, smooth,
             lw=2, color='k')
         ax.errorbar(
-            mean.index, mean, yerr=std,
+            mean_index, mean, yerr=std,
             ls='', marker='o', color='b', ecolor='k')
 
         ax.set_xlabel("kappa")

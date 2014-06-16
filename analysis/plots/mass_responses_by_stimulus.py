@@ -18,7 +18,7 @@ def plot(results_path, fig_path):
         1.0: 'b'
     }
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
     for kappa0, df in responses.groupby('kappa0'):
         model = df.groupby('species').get_group('ipe')
@@ -53,14 +53,36 @@ def plot(results_path, fig_path):
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-    ax1.set_title("Human vs. IPE")
-    ax2.set_title("Human vs. Empirical IPE")
+        model1 = df.groupby('species').get_group('empirical')
+        model2 = df.groupby('species').get_group('ipe')
 
-    for ax in (ax1, ax2):
+        x = model1['median']
+        xl = x - model1['lower']
+        xu = model1['upper'] - x
+
+        y = model2['median']
+        yl = y - model2['lower']
+        yu = model2['upper'] - y
+
+        ax3.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
+                     marker='o', linestyle='',
+                     color=colors[kappa0], ecolor='k',
+                     label="kappa=%s" % kappa0)
+
+    ax1.set_title("IPE vs. Human")
+    ax2.set_title("Empirical IPE vs. Human")
+    ax3.set_title("Empirical IPE vs. IPE")
+
+    for ax in (ax1, ax2, ax3):
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
-        ax.set_xlabel("Model")
-        ax.set_ylabel("Human")
+
+    ax1.set_xlabel("IPE")
+    ax1.set_ylabel("Human")
+    ax2.set_xlabel("Empirical IPE")
+    ax2.set_ylabel("Human")
+    ax3.set_xlabel("Empirical IPE")
+    ax3.set_ylabel("IPE")
 
     fig.set_figwidth(10)
     plt.draw()
