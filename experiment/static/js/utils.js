@@ -392,7 +392,7 @@ function ask_fall_query() {
 // Whether to ask the "mass?" question
 function ask_mass_query() {
     return _.contains(MASS_PHASES, STATE.experiment_phase) &&
-        _.contains(MASS_TRIALS, STATE.index);
+        _.contains($c.mass_trials, STATE.index);
 }
 
 var reload_phase = function (hash) {

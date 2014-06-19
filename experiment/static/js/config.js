@@ -77,6 +77,8 @@ var Config = function (condition, counterbalance) {
     this.fade = 200;
     // List of trial information object for each experiment phase
     this.trials = new Object();
+    this.mass_trials = [];
+    this.num_mass_trials = 0;
 
     // Lists of pages and examples for each instruction page.  We know
     // the list of pages we want to display a priori.
