@@ -116,7 +116,7 @@ def find_bad_participants(exp, data):
                 np.isnan(posttest['response']).any(),
                 len(pretest) != 6,
                 len(posttest) != 6,
-                len(prestim) != 62
+                len(prestim) != 32
             ])
         if incomplete:
             logger.warning("%s is incomplete", pid)

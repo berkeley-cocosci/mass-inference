@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "--merge",
         action="store_true",
         default=False,
-        help="merge versions G and H")
+        help="merge versions G, H, and I")
 
     args = parser.parse_args()
     required = [
@@ -103,9 +103,9 @@ if __name__ == "__main__":
         ]
         run_cmd(cmd)
 
-    # merge G and H
+    # merge G, H, and I
     if args.merge or args.all:
         cmd = [
-            "python", BIN_PATH.joinpath("experiment/merge_GH.py")
+            "python", BIN_PATH.joinpath("experiment/merge_data.py")
         ]
         run_cmd(cmd)
