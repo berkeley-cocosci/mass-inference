@@ -119,31 +119,6 @@ def make_options():
 
     # experiment B
     for r, cb in product(['0.1', '10'], [0, 1]):
-        labels = ['red', 'blue']
-        colors = ['#CA0020', '#0571B0']
-        if cb == 1:
-            labels = labels[::-1]
-            colors = colors[::-1]
-        if r == '0.1':
-            kappa = -1.0
-        elif r == '10':
-            kappa = 1.0
-
-        options.append({
-            'condition': 'nfb-%s-cb%d' % (r, cb),
-            'tag': 'experimentB',
-            'cpo_path': 'mass-inference-G-b',
-            'seed': 10244,
-            'label0': labels[0],
-            'label1': labels[1],
-            'color0': colors[0],
-            'color1': colors[1],
-            'kappa': kappa,
-            'feedback': False
-        })
-
-    # experiment C
-    for r, cb in product(['0.1', '10'], [0, 1]):
         labels = ['purple', 'green']
         colors = ['#7B3294', '#008837']
         if cb == 1:
@@ -156,7 +131,7 @@ def make_options():
 
         options.append({
             'condition': 'vfb-%s-cb%d' % (r, cb),
-            'tag': 'experimentC',
+            'tag': 'experimentB',
             'cpo_path': 'mass-inference-G-b',
             'seed': 10245,
             'label0': labels[0],
