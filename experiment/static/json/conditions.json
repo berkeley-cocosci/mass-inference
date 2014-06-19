@@ -2,41 +2,91 @@
   "1": {
     "stable_example": "shared", 
     "experimentA": "vfb-0.1", 
-    "experimentB": "nfb-0.1", 
-    "experimentC": "vfb-10", 
+    "experimentB": "vfb-0.1", 
     "posttest": "shared", 
+    "mass_example": "vfb-0.1", 
     "unstable_example": "shared", 
-    "pretest": "shared", 
-    "mass_example": "vfb-0.1"
+    "pretest": "shared"
   }, 
   "0": {
     "stable_example": "shared", 
     "experimentA": "vfb-0.1", 
-    "experimentB": "nfb-0.1", 
-    "experimentC": "vfb-0.1", 
+    "experimentB": "vfb-0.1", 
     "posttest": "shared", 
+    "mass_example": "vfb-0.1", 
     "unstable_example": "shared", 
-    "pretest": "shared", 
-    "mass_example": "vfb-0.1"
+    "pretest": "shared"
   }, 
   "3": {
     "stable_example": "shared", 
-    "experimentA": "vfb-10", 
-    "experimentB": "nfb-10", 
-    "experimentC": "vfb-10", 
+    "experimentA": "vfb-0.1", 
+    "experimentB": "vfb-0.1", 
     "posttest": "shared", 
+    "mass_example": "vfb-0.1", 
     "unstable_example": "shared", 
-    "pretest": "shared", 
-    "mass_example": "vfb-10"
+    "pretest": "shared"
   }, 
   "2": {
     "stable_example": "shared", 
-    "experimentA": "vfb-10", 
-    "experimentB": "nfb-10", 
-    "experimentC": "vfb-0.1", 
+    "experimentA": "vfb-0.1", 
+    "experimentB": "vfb-0.1", 
     "posttest": "shared", 
+    "mass_example": "vfb-0.1", 
     "unstable_example": "shared", 
-    "pretest": "shared", 
-    "mass_example": "vfb-10"
+    "pretest": "shared"
+  }, 
+  "5": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-10", 
+    "experimentB": "vfb-10", 
+    "posttest": "shared", 
+    "mass_example": "vfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
+  }, 
+  "4": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-0.1", 
+    "experimentB": "vfb-0.1", 
+    "posttest": "shared", 
+    "mass_example": "vfb-0.1", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
+  }, 
+  "7": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-10", 
+    "experimentB": "vfb-10", 
+    "posttest": "shared", 
+    "mass_example": "vfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
+  }, 
+  "6": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-10", 
+    "experimentB": "vfb-10", 
+    "posttest": "shared", 
+    "mass_example": "vfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
+  }, 
+  "9": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-10", 
+    "experimentB": "vfb-10", 
+    "posttest": "shared", 
+    "mass_example": "vfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
+  }, 
+  "8": {
+    "stable_example": "shared", 
+    "experimentA": "vfb-10", 
+    "experimentB": "vfb-10", 
+    "posttest": "shared", 
+    "mass_example": "vfb-10", 
+    "unstable_example": "shared", 
+    "pretest": "shared"
   }
 }

@@ -767,9 +767,6 @@
     "occlude": false
   }, 
   "mass_trials": [
-    1, 
-    2, 
-    4, 
     9
   ], 
   "unstable_example": {
