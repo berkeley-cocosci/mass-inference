@@ -21,7 +21,7 @@ def run(data, results_path, seed):
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
         for (version, kappa0, pid), df in groups:
-            order = trials[pid]
+            order = trials[pid].dropna()
 
             pfall = np.asarray(data[lhtype]['C'].P_fall_smooth[hyps].ix[order])
             fall = np.asarray(data['fb']['C'].fall.ix[order][kappa0])[:, None]

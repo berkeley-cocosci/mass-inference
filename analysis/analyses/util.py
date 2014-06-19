@@ -87,7 +87,7 @@ def run_analysis(func):
     data_path = path('../data')
     results_path = path('../results')
     seed = 923012
-    exp_all, human = load_human("GH", data_path)
+    exp_all, human = load_human("merged", data_path)
     # G is the same as H
     data = load_all('G', data_path, human=human)
     pth = func(data, results_path, seed)

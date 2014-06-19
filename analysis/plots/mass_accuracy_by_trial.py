@@ -17,7 +17,7 @@ def plot(results_path, fig_path):
         1.0: 'b'
     }
 
-    fig, axes = plt.subplots(1, 2)
+    fig, axes = plt.subplots(1, 3)
 
     for i, (version, df) in enumerate(mass_responses.groupby('version')):
         for kappa0, df2 in df.groupby('kappa0'):
@@ -35,7 +35,7 @@ def plot(results_path, fig_path):
             ax.set_ylabel("Fraction correct")
             ax.set_title(version)
 
-    fig.set_figwidth(12)
+    fig.set_figwidth(15)
     plt.draw()
     plt.tight_layout()
 

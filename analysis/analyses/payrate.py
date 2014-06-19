@@ -12,10 +12,8 @@ def run(data, results_path, seed):
     results = {}
     for version in versions:
         hdata = data['human']['all'].groupby('version').get_group(version)
-        starttime = hdata.groupby('pid').apply(
-            lambda x: x.sort('timestamp')['timestamp'].min())
-        endtime = hdata.groupby('pid').apply(
-            lambda x: x.sort('timestamp')['timestamp'].max())
+        starttime = hdata.groupby('pid')['timestamp'].min()
+        endtime = hdata.groupby('pid')['timestamp'].max()
         exptime = endtime - starttime
         medtime = timedelta(seconds=float(exptime.median()) / 1e9)
         meantime = timedelta(seconds=float(exptime.mean()) / 1e9)
@@ -23,6 +21,8 @@ def run(data, results_path, seed):
             payrate = (1.0 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
         elif version == "H":
             payrate = (1.25 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
+        elif version == "I":
+            payrate = (0.75 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
         else:
             raise ValueError("unexpected version: %s" % version)
 
