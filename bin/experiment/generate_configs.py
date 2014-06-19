@@ -14,50 +14,41 @@ from termcolor import colored
 
 logger = logging.getLogger("mass.experiment")
 
-conditions = {
-    "0": {
+conditions = {}
+for cond in ["0", "1", "2", "3", "4"]:
+    conditions[cond] = {
         "pretest": "shared",
         "experimentA": "vfb-0.1",
-        "experimentB": "nfb-0.1",
-        "experimentC": "vfb-0.1",
+        "experimentB": "vfb-0.1",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "vfb-0.1"
-    },
+        "mass_example": "vfb-0.1",
+    }
 
-    "1": {
-        "pretest": "shared",
-        "experimentA": "vfb-0.1",
-        "experimentB": "nfb-0.1",
-        "experimentC": "vfb-10",
-        "posttest": "shared",
-        "unstable_example": "shared",
-        "stable_example": "shared",
-        "mass_example": "vfb-0.1"
-    },
-
-    "2": {
+for cond in ["5", "6", "7", "8", "9"]:
+    conditions[cond] = {
         "pretest": "shared",
         "experimentA": "vfb-10",
-        "experimentB": "nfb-10",
-        "experimentC": "vfb-0.1",
+        "experimentB": "vfb-10",
         "posttest": "shared",
         "unstable_example": "shared",
         "stable_example": "shared",
-        "mass_example": "vfb-10"
-    },
+        "mass_example": "vfb-10",
+    }
 
-    "3": {
-        "pretest": "shared",
-        "experimentA": "vfb-10",
-        "experimentB": "nfb-10",
-        "experimentC": "vfb-10",
-        "posttest": "shared",
-        "unstable_example": "shared",
-        "stable_example": "shared",
-        "mass_example": "vfb-10"
-    },
+num_mass_trials = 10
+mass_trials = {
+    "0": [0, 1, 2, 4, 9],
+    "1": [1, 2, 4, 9],
+    "2": [2, 4, 9],
+    "3": [4, 9],
+    "4": [9],
+    "5": [0, 1, 2, 4, 9],
+    "6": [1, 2, 4, 9],
+    "7": [2, 4, 9],
+    "8": [4, 9],
+    "9": [9]
 }
 
 
@@ -196,6 +187,9 @@ def save_config(exp, condition_num, cb, force=False):
     for phase in phases:
         cond = conditions[condition_num][phase]
         config[phase] = gen_config(exp, cond, phase, cb)
+
+    config["mass_trials"] = mass_trials[condition_num]
+    config["num_mass_trials"] = num_mass_trials
 
     if not config_path.dirname().exists():
         config_path.dirname().makedirs_p()
