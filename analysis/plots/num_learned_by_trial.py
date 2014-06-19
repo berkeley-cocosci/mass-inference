@@ -15,28 +15,32 @@ def plot(results_path, fig_path):
         1.0: 'b'
     }
 
-    fig, ax = plt.subplots()
-    for kappa0, df in nlearned.groupby('kappa0'):
-        x = df['trial']
-        y = df['median']
-        yl = df['lower']
-        yu = df['upper']
+    fig, axes = plt.subplots(1, 2)
+    for i, (version, df) in enumerate(nlearned.groupby('version')):
+        for kappa0, df2 in df.groupby('kappa0'):
+            x = df2['trial']
+            y = df2['median']
+            yl = df2['lower']
+            yu = df2['upper']
 
-        ax.fill_between(
-            x, yl, yu,
-            alpha=0.3,
-            color=colors[kappa0])
-        ax.plot(
-            x, y,
-            color=colors[kappa0],
-            lw=2,
-            label=r"$\kappa=%.1f$" % kappa0)
-        ax.set_xlim(1, 20)
-        ax.set_ylim(0, 1)
-        ax.set_xlabel("Trial")
-        ax.set_ylabel("Fraction of participants")
+            ax = axes[i]
+            ax.fill_between(
+                x, yl, yu,
+                alpha=0.3,
+                color=colors[kappa0])
+            ax.plot(
+                x, y,
+                color=colors[kappa0],
+                lw=2,
+                label=r"$\kappa=%.1f$" % kappa0)
+            ax.set_xlim(1, 20)
+            ax.set_ylim(0, 1)
+            ax.set_xlabel("Trial")
+            ax.set_ylabel("Fraction of participants")
+            ax.set_title(version)
+            ax.legend(loc='best')
 
-    ax.legend(loc='best')
+    fig.set_figwidth(12)
     plt.draw()
     plt.tight_layout()
 

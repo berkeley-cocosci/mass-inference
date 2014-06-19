@@ -9,7 +9,8 @@ filename = "switchpoint.csv"
 
 def run(data, results_path, seed):
     def find_switchpoint(df):
-        kappa0, pid = df.name
+        version, kappa0, pid = df.name
+        df = df.dropna(axis=1)
         arr = np.asarray(df).copy().squeeze()
 
         last = arr[-1]
@@ -34,14 +35,11 @@ def run(data, results_path, seed):
 
     np.random.seed(seed)
     results = data['human']['C']\
-        .groupby('version')\
-        .get_group('G')\
         .pivot_table(
-            rows=['kappa0', 'pid'],
+            rows=['version', 'kappa0', 'pid'],
             cols='trial',
             values='mass? response')\
-        .dropna(axis=1)\
-        .groupby(level=['kappa0', 'pid'])\
+        .groupby(level=['version', 'kappa0', 'pid'])\
         .apply(find_switchpoint)
 
     pth = results_path.joinpath(filename)

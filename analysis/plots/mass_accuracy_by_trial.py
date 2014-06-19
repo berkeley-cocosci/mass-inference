@@ -9,23 +9,33 @@ def plot(results_path, fig_path):
 
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
-        .groupby(['version', 'class', 'species'])\
-        .get_group(('G', 'chance', 'human'))
+        .groupby(['class', 'species'])\
+        .get_group(('chance', 'human'))
 
-    fig, ax = plt.subplots()
-    x = mass_responses['trial']
-    y = mass_responses['median']
-    yl = mass_responses['lower']
-    yu = mass_responses['upper']
+    colors = {
+        -1.0: 'r',
+        1.0: 'b'
+    }
 
-    ax.fill_between(x, yl, yu, alpha=0.3, color='k')
-    ax.plot(x, y, color='k', lw=2)
-    ax.set_xlim(1, 20)
-    ax.set_ylim(0, 1)
-    ax.set_xlabel("Trial")
-    ax.set_ylabel("Fraction correct")
+    fig, axes = plt.subplots(1, 2)
 
-    fig.set_figwidth(6)
+    for i, (version, df) in enumerate(mass_responses.groupby('version')):
+        for kappa0, df2 in df.groupby('kappa0'):
+            x = df2['trial']
+            y = df2['median']
+            yl = df2['lower']
+            yu = df2['upper']
+
+            ax = axes[i]
+            ax.fill_between(x, yl, yu, alpha=0.3, color=colors[kappa0])
+            ax.plot(x, y, color=colors[kappa0], lw=2)
+            ax.set_xlim(1, 20)
+            ax.set_ylim(0, 1)
+            ax.set_xlabel("Trial")
+            ax.set_ylabel("Fraction correct")
+            ax.set_title(version)
+
+    fig.set_figwidth(12)
     plt.draw()
     plt.tight_layout()
 
