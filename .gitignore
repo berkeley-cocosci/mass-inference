@@ -1,7 +1,6 @@
 analysis/images
 figures/*.png
 .DS_Store
-resources/sso/mass-all
 resources/render
 experiment/static/stimuli/
 experiment/config.txt
@@ -18,3 +17,4 @@ analysis/.ipynb_checkpoints
 experiment/.psiturk_history
 experiment/server.log
 .env
+*.cpo
