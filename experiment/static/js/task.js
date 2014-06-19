@@ -220,8 +220,6 @@ var TestPhase = function() {
             $(".question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
             $(".question-image-B").show();
-        } else if (STATE.experiment_phase == EXPERIMENT.experimentC) {
-            $(".question-image-C").show();
         }
 
         // Determine which feedback to show (stable or unstable)
