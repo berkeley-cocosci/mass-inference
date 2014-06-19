@@ -10,7 +10,6 @@ ad_group = Mass inference
 psiturk_keywords = intuitive physics
 organization_name = UC Berkeley
 browser_exclude_rule = MSIE, mobile, tablet
-using_sandbox = True
 
 [Database Parameters]
 database_url = sqlite:///participants.db
@@ -21,17 +20,16 @@ host = localhost
 port = 22362
 cutoff_time = 120
 logfile = server.log
-loglevel = 2
-debug = True
+loglevel = 0
 login_username = admin
 login_pw = c0c0sc1
 threads = 4
 
 [Task Parameters]
-experiment_code_version = H-test
-num_conds = 4
+experiment_code_version = I
+num_conds = 10
 num_counters = 2
 
 [Shell Parameters]
-always_launch_in_sandbox = true
+launch_in_sandbox_mode = true
 
