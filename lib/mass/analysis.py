@@ -564,7 +564,7 @@ def load_human(version, data_path):
         'A': expA,
         'B': expB,
         'C': expC,
-        'all': exp
+        'all': exp_all
     }
 
     return exp_all, exp_data
