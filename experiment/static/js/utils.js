@@ -82,6 +82,7 @@ var State = function () {
 
         var hash = parts.join("-");
         window.location.hash = hash;
+        psiTurk.recordUnstructuredData("hash", hash);
         return hash;
     };
 
@@ -200,8 +201,12 @@ function open_window(hitid, assignmentid, workerid) {
 // Set the background image on an element.
 function set_poster(elem, image, phase) {
     var path = $c.get_path(phase) + image + ".png";
-    $(elem).css("background", "#FFF url(" + path + ") no-repeat");
-    $(elem).css("background-size", "cover");
+    var img = new Image();
+    img.onload = function () {
+        $(elem).css("background", "#FFF url(" + path + ") no-repeat");
+        $(elem).css("background-size", "cover");
+    };
+    img.src = path;
 }
 
 // Update the progress bar based on the current trial and total number
@@ -367,13 +372,11 @@ var Player = function () {
 
         if (!that.playing) {
             debug("player ready, but not playing");
-            unset_reload($("#trial"));
             api.pause();
             return;
         }
 
         debug("player ready and about to play index " + api.video.index);
-        unset_reload($("#trial"));
         api.play();
         api.disable(true);
     };
@@ -393,23 +396,4 @@ function ask_fall_query() {
 function ask_mass_query() {
     return _.contains(MASS_PHASES, STATE.experiment_phase) &&
         _.contains($c.mass_trials, STATE.index);
-}
-
-var reload_phase = function (hash) {
-    debug("reloading state " + hash);
-    window.location.hash = hash;
-    STATE.load_hash();
-    CURRENTVIEW.show();
-}
-
-function set_reload(elem) {
-    var hash = STATE.set_hash();
-    elem.find(".reload").html(
-        "Loading error? <a href=\"#" + hash + "\" " +
-            "onClick=\"reload_phase('" + hash + "')\">Click here</a> " +
-            "to try again.");
-}
-
-function unset_reload(elem) {
-    elem.find(".reload").html("");
 }
