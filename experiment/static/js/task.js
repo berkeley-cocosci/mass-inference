@@ -56,7 +56,7 @@ var Instructions = function() {
         STATE.set_hash();
         
         // Save data
-        psiTurk.taskdata.save({async: false});
+        psiTurk.saveData();
 
         // Bind a handler to the "next" button. We have to wrap it in
         // an anonymous function to preserve the scope.
@@ -141,7 +141,7 @@ var Instructions = function() {
         STATE.set_hash();
 
         // Save data
-        psiTurk.taskdata.save({async: false});
+        psiTurk.saveData();
 
         // Start the test phase
         CURRENTVIEW = new TestPhase();
@@ -388,7 +388,7 @@ var TestPhase = function() {
         // Update the URL hash
         STATE.set_hash();
         // Save data
-        psiTurk.taskdata.save({async: false});
+        psiTurk.saveData();
         // Call the phase setup handler
         this.phases[STATE.trial_phase](this);
         // Record when this phase started
