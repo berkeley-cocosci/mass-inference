@@ -291,6 +291,20 @@ span.color0, span.color1 {
     top: 44%;
 }
 
+#loading {
+    width: 640px;
+    height: 480px;
+    position: absolute;
+}
+
+#loading-message {
+    position: absolute;
+    width: 100%;
+    font-size: 1.25em;
+    text-align: center;
+    top: 44%;
+}
+
 /* Stim */
 
 #stim {
