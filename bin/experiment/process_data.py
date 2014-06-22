@@ -87,52 +87,47 @@ def find_bad_participants(exp, data):
             datetime.fromtimestamp(times.irow(0) / 1e3))
         info['timestamp'] = start_time
 
+        # add condition/counterbalance
+        cond = int(df['condition'].unique())
+        cb = int(df['counterbalance'].unique())
+        info['condition'] = cond
+        info['counterbalance'] = cb
+
         # check for duplicated entries
         dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
                   .duplicated().any()
         if dupes:
-            logger.warning("%s has duplicate trials", pid)
+            logger.warning("%s (%s, %s) has duplicate trials", pid, cond, cb)
             info['note'] = "duplicate_trials"
             continue
 
         # check to make sure they actually finished
-        try:
-            pretest = df\
-                .groupby(['mode', 'trial_phase'])\
-                .get_group(('pretest', 'fall_response'))
-            posttest = df\
-                .groupby(['mode', 'trial_phase'])\
-                .get_group(('posttest', 'fall_response'))
-            prestim = df\
-                .groupby(['trial_phase'])\
-                .get_group('prestim')
-        except (KeyError, IndexError):
-            pretest = None
-            posttest = None
-            incomplete = True
-        else:
-            incomplete = any([
-                np.isnan(pretest['response']).any(),
-                np.isnan(posttest['response']).any(),
-                len(pretest) != 6,
-                len(posttest) != 6,
-                len(prestim) != 32
-            ])
+        prestim = df\
+            .set_index(['mode', 'trial', 'trial_phase'])\
+            .groupby(level='trial_phase')\
+            .get_group('prestim')
+
+        incomplete = len(prestim) != 32
         if incomplete:
-            logger.warning("%s is incomplete", pid)
+            logger.warning(
+                "%s (%s, %s) is incomplete (completed %d/32 trials [%.1f%%])",
+                pid, cond, cb, len(prestim), len(prestim) / 0.32)
             info['note'] = "incomplete"
             continue
 
         # check to see if they passed the posttest
-        if posttest is not None:
-            truth = (posttest['nfell'] > 0).astype(float)
-            resp = (posttest['response'] > 4).astype(float)
-            resp[posttest['response'] == 4] = np.nan
-            failed = (truth != resp).sum() > 1
-        else:
-            failed = True
+        posttest = df\
+            .set_index(['mode', 'trial', 'trial_phase'])\
+            .groupby(level=['mode', 'trial_phase'])\
+            .get_group(('posttest', 'fall_response'))
+
+        truth = (posttest['nfell'] > 0).astype(float)
+        resp = (posttest['response'] > 4).astype(float)
+        resp[posttest['response'] == 4] = np.nan
+        failed = (truth != resp).sum() > 1
+
         if failed:
-            logger.warning("%s failed posttest", pid)
+            logger.warning("%s (%s, %s) failed posttest", pid, cond, cb)
             info['note'] = "failed_posttest"
             continue
 
@@ -144,7 +139,7 @@ def find_bad_participants(exp, data):
         if exp in exps:
             exps.remove(exp)
         if len(exps) > 0:
-            logger.warning("%s is a repeat worker", pid)
+            logger.warning("%s (%s, %s) is a repeat worker", pid, cond, cb)
             info['note'] = "repeat_worker"
             continue
 
@@ -252,6 +247,18 @@ def load_data(data_path, conds, fields=None):
         'psiturk_currenttrial',
         'instructions'], axis=1)
 
+    def add_condition(df):
+        info = conds[df.name]
+        df['condition'] = info['condition']
+        # sanity check -- make sure assignment and counterbalance
+        # fields match
+        assert (df['assignment'] == info['assignment']).all()
+        assert (df['counterbalance'] == info['counterbalance']).all()
+        return df
+
+    # add a column for the condition code
+    data = data.groupby('pid').apply(add_condition)
+
     # construct a dataframe containing information about the
     # participants
     p_conds = pd\
@@ -307,18 +314,6 @@ def load_data(data_path, conds, fields=None):
         .drop_duplicates()\
         .sortlevel()\
         .reset_index()
-
-    def add_condition(df):
-        info = conds[df.name]
-        df['condition'] = info['condition']
-        # sanity check -- make sure assignment and counterbalance
-        # fields match
-        assert (df['assignment'] == info['assignment']).all()
-        assert (df['counterbalance'] == info['counterbalance']).all()
-        return df
-
-    # add a column for the condition code
-    data = data.groupby('pid').apply(add_condition)
 
     # create a column for the kappa value of the feedback they saw
     if 'kappa' in data:
