@@ -200,8 +200,8 @@ function open_window(hitid, assignmentid, workerid) {
 
 // Set the background image on an element.
 function set_poster(elem, image, phase) {
-    psiTurk.preloadImages([image]);
     var path = $c.get_path(phase) + image + ".png";
+    psiTurk.preloadImages([path]);
     $(elem).css("background", "#FFF url(" + path + ") no-repeat");
     $(elem).css("background-size", "cover");
 }
