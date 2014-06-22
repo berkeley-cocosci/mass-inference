@@ -112,8 +112,10 @@ var Instructions = function() {
         data.update(STATE.as_data());
         data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
-        psiTurk.recordTrialData(data);
+
         debug(data);
+        psiTurk.recordTrialData(data);
+        psiTurk.saveData();
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -131,13 +133,6 @@ var Instructions = function() {
     // Clean up the instructions phase and move on to the test phase
     this.finish = function() {
         debug("Done with instructions")
-
-        // Record that the user has finished the instructions and
-        // moved on to the experiment. This changes their status
-        // code in the database.
-        if (STATE.experiment_phase == EXPERIMENT.pretest) {
-	    psiTurk.finishInstructions();
-        }
 
         // Reset the state object for the test phase
         STATE.set_instructions(0);
@@ -417,8 +412,9 @@ var TestPhase = function() {
         });
 
         // Create the record we want to save
-        psiTurk.recordTrialData(data);
         debug(data);
+        psiTurk.recordTrialData(data);
+        psiTurk.saveData();
 
         // Tell the state to go to the next trial phase or trial
         if (STATE.trial_phase == (TRIAL.length - 1)) {
@@ -504,14 +500,14 @@ var TestPhase = function() {
  ******************/
 
 $(document).ready(function() { 
+    var hash = psiTurk.taskdata.attributes.questiondata.hash;
+    if (hash) {
+        window.location.hash = hash;
+    }
+    STATE = new State();
+
     // Load the HTML for the trials
     psiTurk.showPage("trial.html");
-
-    // Record field names for the data that we'll be collecting
-    var data = new DataRecord();
-    var fields = JSON.stringify(data.fields);
-    psiTurk.recordUnstructuredData("fields", fields);
-    debug(fields);
 
     // Record various unstructured data
     psiTurk.recordUnstructuredData("condition", condition);
@@ -520,9 +516,8 @@ $(document).ready(function() {
     psiTurk.recordUnstructuredData("fall_choices", $("#fall_response").html());
     psiTurk.recordUnstructuredData("mass_question", $("#mass-question").html());
     psiTurk.recordUnstructuredData("mass_choices", $("#mass_response").html());
-    
+
     // Start the experiment
-    STATE = new State();
     PLAYER = new Player();
 
     // Begin the experiment phase

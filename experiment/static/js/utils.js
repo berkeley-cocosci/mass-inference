@@ -82,6 +82,7 @@ var State = function () {
 
         var hash = parts.join("-");
         window.location.hash = hash;
+        psiTurk.recordUnstructuredData("hash", hash);
         return hash;
     };
 
