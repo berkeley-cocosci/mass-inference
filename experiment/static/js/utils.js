@@ -395,22 +395,3 @@ function ask_mass_query() {
     return _.contains(MASS_PHASES, STATE.experiment_phase) &&
         _.contains($c.mass_trials, STATE.index);
 }
-
-var reload_phase = function (hash) {
-    debug("reloading state " + hash);
-    window.location.hash = hash;
-    STATE.load_hash();
-    CURRENTVIEW.show();
-}
-
-function set_reload(elem) {
-    var hash = STATE.set_hash();
-    elem.find(".reload").html(
-        "Loading error? <a href=\"#" + hash + "\" " +
-            "onClick=\"reload_phase('" + hash + "')\">Click here</a> " +
-            "to try again.");
-}
-
-function unset_reload(elem) {
-    elem.find(".reload").html("");
-}

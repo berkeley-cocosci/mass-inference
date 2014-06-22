@@ -50,11 +50,13 @@ var Instructions = function() {
         // Load the next page of instructions
         $(".slide").hide();
         var slide = $("#" + this.pages[STATE.index]);
-        set_reload(slide);
         slide.fadeIn($c.fade);
 
         // Update the URL hash
         STATE.set_hash();
+        
+        // Save data
+        psiTurk.taskdata.save({async: false});
 
         // Bind a handler to the "next" button. We have to wrap it in
         // an anonymous function to preserve the scope.
@@ -79,7 +81,6 @@ var Instructions = function() {
 
                 // Start the video immediately
                 var on_ready = function (e, api) {
-                    unset_reload(slide);
                     api.play();
                 };
                 // Loop the player by restarting the current video
@@ -115,7 +116,6 @@ var Instructions = function() {
 
         debug(data);
         psiTurk.recordTrialData(data);
-        psiTurk.saveData();
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -138,6 +138,12 @@ var Instructions = function() {
         STATE.set_instructions(0);
         STATE.set_index();
         STATE.set_trial_phase();
+        STATE.set_hash();
+
+        // Save data
+        psiTurk.taskdata.save({async: false});
+
+        // Start the test phase
         CURRENTVIEW = new TestPhase();
     };
 
@@ -380,7 +386,9 @@ var TestPhase = function() {
     // Show the current trial at the currect phase
     this.show = function () {
         // Update the URL hash
-        set_reload($("#trial"));
+        STATE.set_hash();
+        // Save data
+        psiTurk.taskdata.save({async: false});
         // Call the phase setup handler
         this.phases[STATE.trial_phase](this);
         // Record when this phase started
@@ -414,7 +422,6 @@ var TestPhase = function() {
         // Create the record we want to save
         debug(data);
         psiTurk.recordTrialData(data);
-        psiTurk.saveData();
 
         // Tell the state to go to the next trial phase or trial
         if (STATE.trial_phase == (TRIAL.length - 1)) {
@@ -437,7 +444,8 @@ var TestPhase = function() {
         STATE.set_instructions();
         STATE.set_index();
         STATE.set_trial_phase();
-
+        STATE.set_hash();
+        
         // If we're at the end of the experiment, submit the data to
         // mechanical turk, otherwise go on to the next experiment
         // phase and show the relevant instructions
@@ -455,7 +463,7 @@ var TestPhase = function() {
                         clearInterval(reprompt); 
                         finish();
                     }, 
-                    error: prompt_resubmit
+                    error: prompt_resubmit,
                 });
             };
 
