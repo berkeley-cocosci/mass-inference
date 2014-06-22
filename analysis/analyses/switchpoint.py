@@ -11,23 +11,17 @@ def run(data, results_path, seed):
     def find_switchpoint(df):
         version, kappa0, pid = df.name
         df = df.dropna(axis=1)
-        arr = np.asarray(df).copy().squeeze()
+        arr = np.asarray(df).copy().ravel()
 
-        last = arr[-1]
-        if (kappa0 < 0 and last == 1) or (kappa0 > 0 and last == 0):
-            new_arr = np.zeros(arr.shape)
+        eq = np.nonzero(~(arr.astype('bool')))[0]
+        if eq.size == 0:
+            idx = 0
         else:
-            eq = np.nonzero(arr != last)[0]
-            if eq.size == 0:
-                idx = 0
-            elif eq[-1] == (arr.size - 2):
-                idx = arr.size
-            else:
-                idx = eq[-1] + 1
+            idx = eq[-1] + 1
 
-            new_arr = np.empty(arr.shape)
-            new_arr[:idx] = False
-            new_arr[idx:] = True
+        new_arr = np.empty(arr.shape)
+        new_arr[:idx] = False
+        new_arr[idx:] = True
 
         new_df = pd.DataFrame(
             new_arr[None], index=df.index, columns=df.columns)
@@ -38,7 +32,7 @@ def run(data, results_path, seed):
         .pivot_table(
             rows=['version', 'kappa0', 'pid'],
             cols='trial',
-            values='mass? response')\
+            values='mass? correct')\
         .groupby(level=['version', 'kappa0', 'pid'])\
         .apply(find_switchpoint)
 

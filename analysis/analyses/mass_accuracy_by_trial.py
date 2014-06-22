@@ -14,19 +14,26 @@ def run(data, results_path, seed):
     model_belief = pd.read_csv(
         results_path.joinpath('model_belief_agg.csv'))
 
-    human = data['human']['C']\
-        .dropna(axis=0, subset=['mass? response'])\
-        .set_index(['version', 'pid', 'trial'])['mass? correct']
-    #bad = ~(human.unstack('trial')[20]).astype('bool')
-    #bad = bad.index[np.asarray(bad)]
-    bad = []
+    def choose_first(x):
+        version, pid = x.name
+        if version == 'I':
+            ix = x['mass? response'].dropna().index[0]
+            y = x.copy()
+            y['mass? response'] = np.nan
+            y.loc[ix, 'mass? response'] = x['mass? response'].ix[ix]
+        else:
+            y = x.copy()
+        return y
+
+    responses = data['human']['C']\
+        .set_index(['version', 'pid', 'trial'])\
+        .groupby(level=['version', 'pid'])\
+        .apply(choose_first)\
+        .reset_index()\
+        .dropna(axis=0, subset=['mass? response'])
 
     for model in list(model_belief['model'].unique()):
-        human = data['human']['C']\
-            .dropna(axis=0, subset=['mass? response'])\
-            .set_index(['version', 'pid'])\
-            .drop(bad)\
-            .reset_index()\
+        human = responses\
             .groupby(['version', 'kappa0', 'trial'])['mass? correct']\
             .apply(util.beta)\
             .unstack(-1)\
@@ -41,9 +48,6 @@ def run(data, results_path, seed):
         belief = model_belief\
             .groupby('model')\
             .get_group(model)\
-            .set_index(['version', 'pid'])\
-            .drop(bad)\
-            .reset_index()\
             .groupby(['likelihood', 'version', 'kappa0', 'trial'])['p correct']\
             .apply(util.bootstrap_mean)\
             .unstack(-1)\
