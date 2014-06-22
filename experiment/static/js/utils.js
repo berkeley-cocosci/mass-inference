@@ -237,8 +237,7 @@ var get_video_formats = function (stim, phase) {
     var prefix = $c.get_path(phase) + stim;
     var formats = [
         { webm: prefix + ".webm" },
-        { mp4: prefix + ".mp4" },
-        { ogg: prefix + ".ogg" }
+        { mp4: prefix + ".mp4" }
     ];
     return formats;
 };
@@ -246,7 +245,7 @@ var get_video_formats = function (stim, phase) {
 // Create a flowplayer object in `elem`, load a playlist of `stims`,
 // and set the poster (background image) to `poster`.
 function make_player(elem, stims) {
-    return $f($(elem).flowplayer({
+    var player = $f($(elem).flowplayer({
         debug: $c.debug,
         fullscreen: false,
         keyboard: false,
@@ -259,6 +258,8 @@ function make_player(elem, stims) {
         loop: false,
         embed: false
     }));
+    $(elem).find("video").attr("preload", "auto");
+    return player;
 }
 
 // Set background and button colors to reflect the different block
