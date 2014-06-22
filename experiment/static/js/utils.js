@@ -237,8 +237,7 @@ var get_video_formats = function (stim, phase) {
     var prefix = $c.get_path(phase) + stim;
     var formats = [
         { webm: prefix + ".webm" },
-        { mp4: prefix + ".mp4" },
-        { ogg: prefix + ".ogg" }
+        { mp4: prefix + ".mp4" }
     ];
     return formats;
 };
