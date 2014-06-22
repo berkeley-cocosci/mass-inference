@@ -22,7 +22,7 @@ def run(data, results_path, seed):
         elif version == "H":
             payrate = (1.25 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
         elif version == "I":
-            payrate = (0.75 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
+            payrate = (0.70 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
         else:
             raise ValueError("unexpected version: %s" % version)
 
