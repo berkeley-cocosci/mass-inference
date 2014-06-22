@@ -1,6 +1,6 @@
 {
   "description": null, 
-  "last_modified": "2014-06-21 17:04:36.803419", 
+  "last_modified": "2014-06-21 19:54:21.595149", 
   "title": null, 
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
@@ -38,7 +38,7 @@
       "name": "events-G.csv", 
       "format": "csv", 
       "bytes": 148657, 
-      "modified": "2014-06-21 17:04:36.627741", 
+      "modified": "2014-06-21 19:54:21.389824", 
       "mediaformat": "text/csv", 
       "path": "./events-G.csv"
     }, 
@@ -47,16 +47,16 @@
       "name": "events-H.csv", 
       "format": "csv", 
       "bytes": 148320, 
-      "modified": "2014-06-21 17:04:36.638612", 
+      "modified": "2014-06-21 19:54:21.398670", 
       "mediaformat": "text/csv", 
       "path": "./events-H.csv"
     }, 
     {
-      "hash": "41b82aa3922dfcbd93f47ef64f6dd49a", 
+      "hash": "37bb73eef960c33c8e3294345a17e2fb", 
       "name": "events-I.csv", 
       "format": "csv", 
-      "bytes": 33236, 
-      "modified": "2014-06-21 17:04:36.645812", 
+      "bytes": 39424, 
+      "modified": "2014-06-21 19:54:21.407325", 
       "mediaformat": "text/csv", 
       "path": "./events-I.csv"
     }, 
@@ -65,7 +65,7 @@
       "name": "participants-G.csv", 
       "format": "csv", 
       "bytes": 10649, 
-      "modified": "2014-06-21 17:04:36.647884", 
+      "modified": "2014-06-21 19:54:21.409643", 
       "mediaformat": "text/csv", 
       "path": "./participants-G.csv"
     }, 
@@ -74,16 +74,16 @@
       "name": "participants-H.csv", 
       "format": "csv", 
       "bytes": 10029, 
-      "modified": "2014-06-21 17:04:36.650436", 
+      "modified": "2014-06-21 19:54:21.411996", 
       "mediaformat": "text/csv", 
       "path": "./participants-H.csv"
     }, 
     {
-      "hash": "4e8bd30f77a816b1240d414fe1bd59af", 
+      "hash": "b0e1ff2736b01c1355150c7bdb1777d4", 
       "name": "participants-I.csv", 
       "format": "csv", 
-      "bytes": 2092, 
-      "modified": "2014-06-21 17:04:36.652832", 
+      "bytes": 3126, 
+      "modified": "2014-06-21 19:54:21.414386", 
       "mediaformat": "text/csv", 
       "path": "./participants-I.csv"
     }, 
@@ -97,7 +97,7 @@
       }, 
       "name": "metadata-G", 
       "mediaformat": "application/json", 
-      "modified": "2014-06-21 17:04:36.653833"
+      "modified": "2014-06-21 19:54:21.416127"
     }, 
     {
       "format": "json", 
@@ -109,7 +109,7 @@
       }, 
       "name": "metadata-H", 
       "mediaformat": "application/json", 
-      "modified": "2014-06-21 17:04:36.653841"
+      "modified": "2014-06-21 19:54:21.416139"
     }, 
     {
       "format": "json", 
@@ -121,14 +121,14 @@
       }, 
       "name": "metadata-I", 
       "mediaformat": "application/json", 
-      "modified": "2014-06-21 17:04:36.653845"
+      "modified": "2014-06-21 19:54:21.416143"
     }, 
     {
-      "hash": "be8de935b618db509aa7c546678ac339", 
+      "hash": "d4621f12a2fb31c8e8022ac5dcd3d4a1", 
       "name": "experiment.csv", 
       "format": "csv", 
-      "bytes": 2361051, 
-      "modified": "2014-06-21 17:04:36.653849", 
+      "bytes": 2382026, 
+      "modified": "2014-06-21 19:54:21.416147", 
       "mediaformat": "text/csv", 
       "path": "./experiment.csv"
     }
