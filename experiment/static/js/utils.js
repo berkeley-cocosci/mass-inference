@@ -368,13 +368,11 @@ var Player = function () {
 
         if (!that.playing) {
             debug("player ready, but not playing");
-            unset_reload($("#trial"));
             api.pause();
             return;
         }
 
         debug("player ready and about to play index " + api.video.index);
-        unset_reload($("#trial"));
         api.play();
         api.disable(true);
     };

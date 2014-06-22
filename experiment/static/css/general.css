@@ -105,6 +105,7 @@ span.consent {
 /* don't show the player ui when the player is ready */
 .is-splash.flowplayer .fp-ui, .is-paused.flowplayer .fp-ui { background: none; }
 .flowplayer .fp-speed.fp-hilite { opacity: 0; }
+.flowplayer .fp-ui { cursor: default; }
 
 .flowplayer {
     background-size: cover !important;
