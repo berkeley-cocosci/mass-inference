@@ -201,9 +201,12 @@ function open_window(hitid, assignmentid, workerid) {
 // Set the background image on an element.
 function set_poster(elem, image, phase) {
     var path = $c.get_path(phase) + image + ".png";
-    psiTurk.preloadImages([path]);
-    $(elem).css("background", "#FFF url(" + path + ") no-repeat");
-    $(elem).css("background-size", "cover");
+    var img = new Image();
+    img.onload = function () {
+        $(elem).css("background", "#FFF url(" + path + ") no-repeat");
+        $(elem).css("background-size", "cover");
+    };
+    img.src = path;
 }
 
 // Update the progress bar based on the current trial and total number
