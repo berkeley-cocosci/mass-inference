@@ -15,7 +15,7 @@ sys.path.append(cwd)
 # logging configuration
 logfilename = os.path.join(cwd, 'passenger_wsgi.log')
 logformat = "[%(asctime)s] [%(levelname)s] [%(name)s] %(message)s"
-loglevel = logging.DEBUG
+loglevel = logging.INFO
 
 # configure global logging
 logging.basicConfig(
@@ -51,7 +51,7 @@ def application(environ, start_response):
     uri = environ.get('REQUEST_URI', '-')
     referer = environ.get('HTTP_REFERER', '-')
     user_agent = environ.get('HTTP_USER_AGENT', '-')
-    logger.info('%s "%s %s" "%s" "%s"', ip, method, uri, referer, user_agent)
+    logger.debug('%s "%s %s" "%s" "%s"', ip, method, uri, referer, user_agent)
     try:
         result = app(environ, start_response)
     except Exception, e:
