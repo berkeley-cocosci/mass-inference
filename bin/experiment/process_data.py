@@ -72,7 +72,8 @@ def find_bad_participants(exp, data):
             'pid': pid,
             'assignment': assignment,
             'note': None,
-            'timestamp': None
+            'timestamp': None,
+            'percent': 0.0
         }
 
         # go ahead and add this to our list now -- the dictionary is
@@ -108,6 +109,7 @@ def find_bad_participants(exp, data):
             .get_group('prestim')
 
         incomplete = len(prestim) != 32
+        info['percent'] = len(prestim) / 0.32
         if incomplete:
             logger.warning(
                 "%s (%s, %s) is incomplete (completed %d/32 trials [%.1f%%])",
@@ -169,7 +171,8 @@ def load_meta(data_path):
     conds = conds.T.to_dict()
 
     # make sure everyone saw the same questions/possible responses
-    meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
+    meta = meta.drop(
+        ['condition', 'counterbalance', 'hash'], axis=1).drop_duplicates()
     if len(meta) > 1:
         print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
