@@ -1,6 +1,6 @@
 {
   "description": null, 
-  "last_modified": "2014-06-23 16:46:37.697766", 
+  "last_modified": "2014-06-23 22:23:07.068045", 
   "title": null, 
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
@@ -34,11 +34,11 @@
   "homepage": null, 
   "resources": [
     {
-      "hash": "a55235eeb69748f8f501226e03d7b9d3", 
+      "hash": "5180abaacbe0b49129fe74ecd4bbb63e", 
       "name": "experiment.csv", 
       "format": "csv", 
-      "bytes": 546047, 
-      "modified": "2014-06-23 16:46:37.616108", 
+      "bytes": 819195, 
+      "modified": "2014-06-23 22:23:06.953395", 
       "mediaformat": "text/csv", 
       "path": "./experiment.csv"
     }, 
@@ -48,28 +48,27 @@
         "mass_choices": "\n      <div>\n        <div id=\"mass-choices\">\n          <div id=\"mass-choice-left\" class=\"color1\">\n            <span>1 - <span class=\"color1-name\"></span></span>\n          </div>\n          <div id=\"mass-choice-right\" class=\"color0\">\n            <span>0 - <span class=\"color0-name\"></span></span>\n          </div>\n          <div class=\"spacer\"></div>\n        </div>\n      </div>\n    ", 
         "mass_question": "<b>Question:</b> Which is the <b>heavy</b> color?", 
         "fall_question": "<b>Question:</b> On a scale from 1-7, how likely is the tower to fall down?", 
-        "hash": "4-1-0", 
         "fall_choices": "\n      <div>\n        <div id=\"fall-choices\">\n          <div>1</div>\n          <div>2</div>\n          <div>3</div>\n          <div>4</div>\n          <div>5</div>\n          <div>6</div>\n          <div>7</div>\n        </div>\n        <div id=\"fall-choice-descriptions\">\n          <div id=\"fall-no\">&#8592; UNLIKELY to fall</div>\n          <div id=\"fall-yes\">LIKELY to fall &#8594;</div>\n        </div>\n      </div>\n    "
       }, 
       "name": "metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-06-23 16:46:37.675073"
+      "modified": "2014-06-23 22:23:07.044335"
     }, 
     {
-      "hash": "864ce8e3dbef1eb73859030d2652f3f5", 
+      "hash": "a9872123dd7c368a48db212cde934668", 
       "name": "events.csv", 
       "format": "csv", 
-      "bytes": 124965, 
-      "modified": "2014-06-23 16:46:37.675091", 
+      "bytes": 148698, 
+      "modified": "2014-06-23 22:23:07.044368", 
       "mediaformat": "text/csv", 
       "path": "./events.csv"
     }, 
     {
-      "hash": "fbe2ad36ec7d82988ee1c04337187c8b", 
+      "hash": "0f30fb32fce5ba07f8f031be037a5f18", 
       "name": "participants.csv", 
       "format": "csv", 
-      "bytes": 9817, 
-      "modified": "2014-06-23 16:46:37.695650", 
+      "bytes": 16108, 
+      "modified": "2014-06-23 22:23:07.064824", 
       "mediaformat": "text/csv", 
       "path": "./participants.csv"
     }
