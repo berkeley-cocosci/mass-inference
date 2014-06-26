@@ -108,12 +108,21 @@ def find_bad_participants(exp, data):
             .groupby(level='trial_phase')\
             .get_group('prestim')
 
-        incomplete = len(prestim) != 32
-        info['percent'] = len(prestim) / 0.32
+        if exp == 'mass_inference-G':
+            num_trials = 62
+        elif exp == 'mass_inference-H':
+            num_trials = 62
+        elif exp == 'mass_inference-I':
+            num_trials = 32
+        else:
+            raise ValueError("unhandled experiment: %s" % exp)
+
+        incomplete = len(prestim) != num_trials
+        info['percent'] = 100 * len(prestim) / num_trials
         if incomplete:
             logger.warning(
                 "%s (%s, %s) is incomplete (completed %d/32 trials [%.1f%%])",
-                pid, cond, cb, len(prestim), len(prestim) / 0.32)
+                pid, cond, cb, len(prestim), info['percent'])
             info['note'] = "incomplete"
             continue
 
@@ -171,8 +180,11 @@ def load_meta(data_path):
     conds = conds.T.to_dict()
 
     # make sure everyone saw the same questions/possible responses
-    meta = meta.drop(
-        ['condition', 'counterbalance', 'hash'], axis=1).drop_duplicates()
+    if 'hash' in meta:
+        meta = meta.drop(
+            ['condition', 'counterbalance', 'hash'], axis=1).drop_duplicates()
+    else:
+        meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
     if len(meta) > 1:
         print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
@@ -292,6 +304,7 @@ def load_data(data_path, conds, fields=None):
     logger.info(
         "%d/%d (%.1f%%) completed participants OK",
         n_good, n_completed, n_good * 100. / n_completed)
+
     data = data\
         .set_index(['assignment', 'pid'])\
         .drop(bad_pids.index)\
