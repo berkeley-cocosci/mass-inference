@@ -5,11 +5,13 @@ import pandas as pd
 import util
 
 
-def plot_block(block, results_path, fig_path):
+def plot_version_block(version, block, results_path, fig_path):
 
     results = pd.read_csv(results_path.joinpath("fall_responses.csv"))
     groups = results.set_index(['stimulus', 'kappa0'])\
-                    .groupby(['block', 'species'])
+                    .groupby(['version', 'block'])\
+                    .get_group((version, block))\
+                    .groupby('species')
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
@@ -18,11 +20,11 @@ def plot_block(block, results_path, fig_path):
         1.0: 'b'
     }
 
-    x = groups.get_group((block, 'model'))['median'].unstack('kappa0')
-    y = groups.get_group((block, 'human'))['median']
-    y_lerr = (y - groups.get_group((block, 'human'))['lower'])\
+    x = groups.get_group('model')['median'].unstack('kappa0')
+    y = groups.get_group('human')['median']
+    y_lerr = (y - groups.get_group('human')['lower'])\
         .unstack('kappa0')
-    y_uerr = (groups.get_group((block, 'human'))['upper'] - y)\
+    y_uerr = (groups.get_group('human')['upper'] - y)\
         .unstack('kappa0')
     y = y.unstack('kappa0')
 
@@ -72,8 +74,8 @@ def plot_block(block, results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("fall_responses_%s.%s" % (block, ext))
-            for ext in ('png', 'pdf')]
+    pths = [fig_path.joinpath("fall_responses_%s_%s.%s" % (
+        version, block, ext)) for ext in ('png', 'pdf')]
     for pth in pths:
         util.save(pth, close=False)
     return pths
@@ -82,7 +84,13 @@ def plot_block(block, results_path, fig_path):
 def plot(results_path, fig_path):
     pths = []
     for block in ('A', 'B'):
-        pths.extend(plot_block(block, results_path, fig_path))
+        for version in ('G', 'H', 'I', 'all'):
+            try:
+                pths.extend(plot_version_block(
+                    version, block, results_path, fig_path))
+            except KeyError:
+                print "Warning: block %s and version %s does not exist" % (
+                    block, version)
     return pths
 
 

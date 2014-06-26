@@ -33,31 +33,41 @@ def run(data, results_path, seed):
         .dropna(axis=0, subset=['mass? response'])
 
     for model in list(model_belief['model'].unique()):
-        human = responses\
-            .groupby(['version', 'kappa0', 'trial'])['mass? correct']\
-            .apply(util.beta)\
-            .unstack(-1)\
-            .reset_index()
-        human['class'] = model
-        human['species'] = 'human'
-        human = human\
-            .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
-            .stack()
-        results.append(human)
+        for kappa in [-1.0, 1.0, 'all']:
+            if kappa == 'all':
+                human = responses
+                belief = model_belief
+            else:
+                human = responses.groupby('kappa0').get_group(kappa)
+                belief = model_belief.groupby('kappa0').get_group(kappa)
 
-        belief = model_belief\
-            .groupby('model')\
-            .get_group(model)\
-            .groupby(['likelihood', 'version', 'kappa0', 'trial'])['p correct']\
-            .apply(util.bootstrap_mean)\
-            .unstack(-1)\
-            .reset_index()\
-            .rename(columns={'likelihood': 'species'})
-        belief['class'] = model
-        belief = belief\
-            .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
-            .stack()
-        results.append(belief)
+            human = human\
+                .groupby(['version', 'trial'])['mass? correct']\
+                .apply(util.beta)\
+                .unstack(-1)\
+                .reset_index()
+            human['class'] = model
+            human['species'] = 'human'
+            human['kappa0'] = kappa
+            human = human\
+                .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
+                .stack()
+            results.append(human)
+
+            belief = belief\
+                .groupby('model')\
+                .get_group(model)\
+                .groupby(['likelihood', 'version', 'trial'])['p correct']\
+                .apply(util.bootstrap_mean)\
+                .unstack(-1)\
+                .reset_index()\
+                .rename(columns={'likelihood': 'species'})
+            belief['class'] = model
+            belief['kappa0'] = kappa
+            belief = belief\
+                .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
+                .stack()
+            results.append(belief)
 
     results = pd.concat(results).unstack().sortlevel()
 

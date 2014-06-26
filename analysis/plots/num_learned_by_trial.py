@@ -11,13 +11,23 @@ def plot(results_path, fig_path):
         results_path.joinpath('num_learned_by_trial.csv'))
 
     colors = {
-        -1.0: 'r',
-        1.0: 'b'
+        '-1.0': 'r',
+        '1.0': 'b',
+        'all': 'k',
+        'chance': 'k'
+    }
+
+    linestyles = {
+        'all': '-',
+        'chance': '--'
     }
 
     fig, axes = plt.subplots(1, 3)
     for i, (version, df) in enumerate(nlearned.groupby('version')):
         for kappa0, df2 in df.groupby('kappa0'):
+            if kappa0 not in linestyles:
+                continue
+
             x = df2['trial']
             y = df2['median']
             yl = df2['lower']
@@ -32,7 +42,8 @@ def plot(results_path, fig_path):
                 x, y,
                 color=colors[kappa0],
                 lw=2,
-                label=r"$\kappa=%.1f$" % kappa0)
+                label=kappa0,
+                linestyle=linestyles[kappa0])
             ax.set_xlim(1, 20)
             ax.set_ylim(0, 1)
             ax.set_xlabel("Trial")

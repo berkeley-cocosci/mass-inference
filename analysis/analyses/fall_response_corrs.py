@@ -13,7 +13,9 @@ def run(data, results_path, seed):
 
     means = pd\
         .read_csv(results_path.joinpath("fall_responses.csv"))\
-        .set_index(['block', 'species', 'kappa0', 'stimulus'])['median']
+        .set_index(['version', 'block', 'species', 'kappa0', 'stimulus'])['median']\
+        .groupby(level='version')\
+        .get_group('GH')
 
     results = {}
     for block, df in means.groupby(level='block'):
