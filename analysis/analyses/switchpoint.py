@@ -10,11 +10,16 @@ filename = "switchpoint.csv"
 def run(data, results_path, seed):
     def find_switchpoint(df):
         version, kappa0, pid = df.name
-        if np.isnan(float(df[df.columns[0]])):
+        # if np.isnan(float(df[df.columns[0]])):
+        #     df = df.dropna(axis=1)
+        #     arr = np.asarray(df).copy().ravel()
+        #     new_arr = np.empty(arr.shape)
+        #     new_arr[:] = np.nan
+        if version == 'I':
             df = df.dropna(axis=1)
-            arr = np.asarray(df).copy().ravel()
-            new_arr = np.empty(arr.shape)
+            new_arr = np.asarray(df).copy().ravel()
             new_arr[:] = np.nan
+            new_arr[0] = df.all(axis=1).all()
 
         else:
             df = df.dropna(axis=1)
