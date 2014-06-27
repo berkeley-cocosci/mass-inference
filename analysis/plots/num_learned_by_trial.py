@@ -22,8 +22,10 @@ def plot(results_path, fig_path):
         'chance': '--'
     }
 
+    versions = ['H', 'G', 'I']
+
     fig, axes = plt.subplots(1, 3)
-    for i, (version, df) in enumerate(nlearned.groupby('version')):
+    for version, df in nlearned.groupby('version'):
         for kappa0, df2 in df.groupby('kappa0'):
             if kappa0 not in linestyles:
                 continue
@@ -33,7 +35,7 @@ def plot(results_path, fig_path):
             yl = df2['lower']
             yu = df2['upper']
 
-            ax = axes[i]
+            ax = axes[versions.index(version)]
             ax.fill_between(
                 x, yl, yu,
                 alpha=0.3,
@@ -48,7 +50,7 @@ def plot(results_path, fig_path):
             ax.set_ylim(0, 1)
             ax.set_xlabel("Trial")
             ax.set_ylabel("Fraction of participants")
-            ax.set_title(version)
+            ax.set_title("Experiment %d" % (versions.index(version) + 1))
             ax.legend(loc='best')
 
     fig.set_figwidth(15)
