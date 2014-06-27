@@ -21,46 +21,38 @@ dp.add_contributor("Peter W. Battaglia", "pbatt@mit.edu")
 dp.add_contributor("Joshua B. Tenenbaum", "jbt@mit.edu")
 
 # add event data, and save it as csv
-r = dpkg.Resource(
-    name="events-G.csv", fmt="csv",
-    pth="./events-G.csv",
-    data=dp_G.load_resource("events.csv"))
-r['mediaformat'] = 'text/csv'
-dp.add_resource(r)
+events_G = dp_G.load_resource("events.csv")
+events_G['version'] = 'G'
+events_H = dp_H.load_resource("events.csv")
+events_H['version'] = 'H'
+events_I = dp_I.load_resource("events.csv")
+events_I['version'] = 'I'
+events = pd.concat([events_G, events_H, events_I])\
+           .set_index(['version', 'timestamp'])\
+           .sortlevel()
 
 r = dpkg.Resource(
-    name="events-H.csv", fmt="csv",
-    pth="./events-H.csv",
-    data=dp_H.load_resource("events.csv"))
-r['mediaformat'] = 'text/csv'
-dp.add_resource(r)
-
-r = dpkg.Resource(
-    name="events-I.csv", fmt="csv",
-    pth="./events-I.csv",
-    data=dp_I.load_resource("events.csv"))
+    name="events.csv", fmt="csv",
+    pth="./events.csv",
+    data=events)
 r['mediaformat'] = 'text/csv'
 dp.add_resource(r)
 
 # add participant info, and save it as csv
-r = dpkg.Resource(
-    name="participants-G.csv", fmt="csv",
-    pth="./participants-G.csv",
-    data=dp_G.load_resource("participants.csv"))
-r['mediaformat'] = 'text/csv'
-dp.add_resource(r)
+participants_G = dp_G.load_resource('participants.csv').reset_index()
+participants_G['version'] = 'G'
+participants_H = dp_H.load_resource('participants.csv').reset_index()
+participants_H['version'] = 'H'
+participants_I = dp_I.load_resource('participants.csv').reset_index()
+participants_I['version'] = 'I'
+participants = pd.concat([participants_G, participants_H, participants_I])\
+                 .set_index(['version', 'timestamp'])\
+                 .sortlevel()
 
 r = dpkg.Resource(
-    name="participants-H.csv", fmt="csv",
-    pth="./participants-H.csv",
-    data=dp_H.load_resource("participants.csv"))
-r['mediaformat'] = 'text/csv'
-dp.add_resource(r)
-
-r = dpkg.Resource(
-    name="participants-I.csv", fmt="csv",
-    pth="./participants-I.csv",
-    data=dp_I.load_resource("participants.csv"))
+    name="participants.csv", fmt="csv",
+    pth="./participants.csv",
+    data=participants)
 r['mediaformat'] = 'text/csv'
 dp.add_resource(r)
 
