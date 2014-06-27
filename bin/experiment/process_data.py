@@ -73,7 +73,8 @@ def find_bad_participants(exp, data):
             'assignment': assignment,
             'note': None,
             'timestamp': None,
-            'percent': 0.0
+            'percent': 0.0,
+            'num_failed': np.nan
         }
 
         # go ahead and add this to our list now -- the dictionary is
@@ -135,10 +136,13 @@ def find_bad_participants(exp, data):
         truth = (posttest['nfell'] > 0).astype(float)
         resp = (posttest['response'] > 4).astype(float)
         resp[posttest['response'] == 4] = np.nan
-        failed = (truth != resp).sum() > 1
+        failed = (truth != resp).sum()
+        info['num_failed'] = failed
 
-        if failed:
-            logger.warning("%s (%s, %s) failed posttest", pid, cond, cb)
+        if failed > 1:
+            logger.warning(
+                "%s (%s, %s) failed posttest (%d wrong)",
+                pid, cond, cb, failed)
             info['note'] = "failed_posttest"
             continue
 
@@ -290,7 +294,7 @@ def load_data(data_path, conds, fields=None):
 
     # drop bad participants
     all_pids = p_info.set_index(['assignment', 'pid'])
-    bad_pids = all_pids.dropna()
+    bad_pids = all_pids.dropna(subset=['note'])
     n_failed = (bad_pids['note'] == 'failed_posttest').sum()
     n_subj = len(all_pids)
     n_good = n_subj - len(bad_pids)
