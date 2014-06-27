@@ -17,13 +17,12 @@ def run(data, results_path, seed):
     results = {}
     for lhtype in ('empirical', 'ipe'):
         hyps = [-1.0, 1.0]
-        #hyps = data[lhtype]['C'].P_fall_smooth.columns
         prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
         groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
         for (version, kappa0, pid), df in groups:
             order = trials[pid].dropna()
 
-            pfall = np.asarray(data[lhtype]['C'].P_fall_smooth[hyps].ix[order])
+            pfall = np.asarray(data[lhtype]['C'].P_fall_mean[hyps].ix[order])
             fall = np.asarray(data['fb']['C'].fall.ix[order][kappa0])[:, None]
 
             lh = np.log((fall * pfall) + ((1 - fall) * (1 - pfall)))

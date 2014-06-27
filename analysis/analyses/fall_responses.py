@@ -40,7 +40,7 @@ def run(data, results_path, seed):
 
             kappas = list(human['kappa0'].unique()) + [0.0]
             model = data['ipe'][block]\
-                .P_fall_smooth[kappas]\
+                .P_fall_mean[kappas]\
                 .stack()\
                 .reset_index()\
                 .rename(columns={
