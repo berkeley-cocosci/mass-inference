@@ -96,12 +96,14 @@ def find_bad_participants(exp, data):
         info['counterbalance'] = cb
 
         # check for duplicated entries
-        dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
-                  .duplicated().any()
-        if dupes:
-            logger.warning("%s (%s, %s) has duplicate trials", pid, cond, cb)
-            info['note'] = "duplicate_trials"
-            continue
+        if exp == 'mass_inference-G':
+            dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
+                      .duplicated().any()
+            if dupes:
+                logger.warning(
+                    "%s (%s, %s) has duplicate trials", pid, cond, cb)
+                info['note'] = "duplicate_trials"
+                continue
 
         # check to make sure they actually finished
         prestim = df\
@@ -247,7 +249,6 @@ def load_data(data_path, conds, fields=None):
     data['camera_spin'] = data['camera_spin'].astype('float')
     data['response'] = data['response'].astype('float')
     data['ratio'] = data['ratio'].astype('float')
-    data['trial_phase'] = data['trial_phase'].fillna('prestim')
 
     # remove instructions rows
     data = data\
@@ -277,6 +278,51 @@ def load_data(data_path, conds, fields=None):
 
     # add a column for the condition code
     data = data.groupby('pid').apply(add_condition)
+
+    # hack to handle bug where the mode and trial phase don't get
+    # recorded somehow?
+    if data_path.namebase == 'mass_inference-I':
+        bad_trials = data.ix[data['mode'].isnull()]
+        for pid, df in bad_trials.groupby('pid'):
+            trials = df['trial']
+            inc = np.asarray(trials)
+            inc[1:] = inc[1:] < inc[:-1]
+            inc[0] = False
+            transitions, = np.nonzero(inc)
+            assert len(transitions) == 3
+            idx = np.arange(len(inc))
+
+            pretest_idx = df.index[idx < transitions[0]]
+            bad_trials.loc[pretest_idx, 'mode'] = 'pretest'
+            experimentA_idx = df.index[
+                (idx >= transitions[0]) & (idx < transitions[1])]
+            bad_trials.loc[experimentA_idx, 'mode'] = 'experimentA'
+            experimentB_idx = df.index[
+                (idx >= transitions[1]) & (idx < transitions[2])]
+            bad_trials.loc[experimentB_idx, 'mode'] = 'experimentB'
+            posttest_idx = df.index[idx >= transitions[2]]
+            bad_trials.loc[posttest_idx, 'mode'] = 'posttest'
+
+        data.loc[data['mode'].isnull(), 'mode'] = bad_trials['mode']
+
+        bad_trials = data.ix[data['trial_phase'].isnull()]
+        for pid, df in bad_trials.groupby('pid'):
+            prestim_idx = df[['mode', 'trial']].drop_duplicates().index
+
+            notB = df['mode'] != 'experimentB'
+            response = ~(df['response'].isnull())
+            fall_idx = df.index[notB & response]
+            bad_trials.loc[fall_idx, 'trial_phase'] = 'fall_response'
+
+            mass_idx = df.index[~notB & response]
+            bad_trials.loc[mass_idx, 'trial_phase'] = 'mass_response'
+
+            prefeedback_idx = df.index[~notB & ~response]
+            bad_trials.loc[prefeedback_idx, 'trial_phase'] = 'prefeedback'
+            bad_trials.loc[prestim_idx, 'trial_phase'] = 'prestim'
+
+        idx = data['trial_phase'].isnull()
+        data.loc[idx, 'trial_phase'] = bad_trials['trial_phase']
 
     # construct a dataframe containing information about the
     # participants
