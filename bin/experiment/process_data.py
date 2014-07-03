@@ -289,19 +289,21 @@ def load_data(data_path, conds, fields=None):
             inc[1:] = inc[1:] < inc[:-1]
             inc[0] = False
             transitions, = np.nonzero(inc)
-            assert len(transitions) == 3
             idx = np.arange(len(inc))
 
-            pretest_idx = df.index[idx < transitions[0]]
-            bad_trials.loc[pretest_idx, 'mode'] = 'pretest'
-            experimentA_idx = df.index[
-                (idx >= transitions[0]) & (idx < transitions[1])]
-            bad_trials.loc[experimentA_idx, 'mode'] = 'experimentA'
-            experimentB_idx = df.index[
-                (idx >= transitions[1]) & (idx < transitions[2])]
-            bad_trials.loc[experimentB_idx, 'mode'] = 'experimentB'
-            posttest_idx = df.index[idx >= transitions[2]]
-            bad_trials.loc[posttest_idx, 'mode'] = 'posttest'
+            if len(transitions) > 0:
+                pretest_idx = df.index[idx < transitions[0]]
+                bad_trials.loc[pretest_idx, 'mode'] = 'pretest'
+            if len(transitions) > 1:
+                experimentA_idx = df.index[
+                    (idx >= transitions[0]) & (idx < transitions[1])]
+                bad_trials.loc[experimentA_idx, 'mode'] = 'experimentA'
+            if len(transitions) > 2:
+                experimentB_idx = df.index[
+                    (idx >= transitions[1]) & (idx < transitions[2])]
+                bad_trials.loc[experimentB_idx, 'mode'] = 'experimentB'
+                posttest_idx = df.index[idx >= transitions[2]]
+                bad_trials.loc[posttest_idx, 'mode'] = 'posttest'
 
         data.loc[data['mode'].isnull(), 'mode'] = bad_trials['mode']
 
