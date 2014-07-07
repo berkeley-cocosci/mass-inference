@@ -223,6 +223,50 @@ def make_options():
         'phis': [0.2]
     })
 
+    # I-a-truth
+    options.append({
+        'exp': 'mass_inference-I-a',
+        'tag': 'truth',
+        'cpo_path': "mass-inference-I-a",
+        'num_samples': 1,
+        'sigmas': [0.0],
+        'phis': [0.0],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-a-ipe
+    options.append({
+        'exp': 'mass_inference-I-a',
+        'tag': 'ipe',
+        'cpo_path': "mass-inference-I-a",
+        'num_samples': 100,
+        'sigmas': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
+        'phis': [0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-b-truth
+    options.append({
+        'exp': 'mass_inference-I-b',
+        'tag': 'truth',
+        'cpo_path': "mass-inference-I-b",
+        'num_samples': 1,
+        'sigmas': [0.0],
+        'phis': [0.0],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-b-ipe
+    options.append({
+        'exp': 'mass_inference-I-b',
+        'tag': 'ipe',
+        'cpo_path': "mass-inference-I-b",
+        'num_samples': 100,
+        'sigmas': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
+        'phis': [0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
     return options
 
 
