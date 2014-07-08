@@ -1,3 +1,4 @@
+from ConfigParser import SafeConfigParser
 from path import path
 import pandas as pd
 import numpy as np
@@ -84,12 +85,19 @@ def normalize(logarr, axis=-1):
 
 
 def run_analysis(func):
-    data_path = path('../data')
-    results_path = path('../results')
-    seed = 923012
-    exp_all, human = load_human("merged", data_path)
-    # G is the same as H
-    data = load_all('G', data_path, human=human)
+    root = path("..")
+
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    model_version = config.get("analysis", "model_version")
+    human_version = config.get("analysis", "human_version")
+    seed = config.getint("analysis", "seed")
+
+    data_path = root.joinpath(config.get("analysis", "data_path"))
+    results_path = root.joinpath(config.get("analysis", "results_path"))
+
+    exp_all, human = load_human(human_version, data_path)
+    data = load_all(model_version, data_path, human=human)
     pth = func(data, results_path, seed)
     print pth
     if pth.ext == ".csv":

@@ -1,3 +1,4 @@
+from ConfigParser import SafeConfigParser
 from path import path
 from termcolor import colored
 import traceback
@@ -7,8 +8,12 @@ from . import *
 from . import util
 
 root = path("../")
-results_path = root.joinpath('results')
-fig_path = root.joinpath('figures/mass_inference-GH')
+
+config = SafeConfigParser()
+config.load(root.joinpath("config.ini"))
+
+results_path = root.joinpath(config.get("analysis", "results_path"))
+fig_path = root.joinpath(config.get("analysis", "figure_path"))
 
 for name in __all__:
     func = locals()[name]

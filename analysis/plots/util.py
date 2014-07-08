@@ -1,3 +1,4 @@
+from ConfigParser import SafeConfigParser
 import matplotlib.pyplot as plt
 import os
 import sys
@@ -258,6 +259,12 @@ report_pearson = r"$r$ = {median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
 
 
 def make_plot(func):
-    results_path = path('../results')
-    fig_path = path('../figures/mass_inference-GH')
+    root = path("..")
+
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+
+    results_path = root.joinpath(config.get("analysis", "results_path"))
+    fig_path = root.joinpath(config.get("analysis", "figure_path"))
+
     print func(results_path, fig_path)
