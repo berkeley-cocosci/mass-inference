@@ -534,6 +534,24 @@ PARAMS = ['sigma', 'phi', 'kappa']
 #     return pct_gt
 
 
+def get_num_mass_trials(x):
+    if x['version'] == 'G':
+        return 8
+    elif x['version'] == 'H':
+        return 20
+    elif x['version'] == 'I':
+        if x['condition'] in (0, 5):
+            return 5
+        elif x['condition'] in (1, 6):
+            return 4
+        elif x['condition'] in (2, 7):
+            return 3
+        elif x['condition'] in (3, 8):
+            return 2
+        elif x['condition'] in (4, 9):
+            return 1
+
+
 def load_human(version, data_path):
     exp_dp = dpkg.DataPackage.load(data_path.joinpath(
         "human/mass_inference-%s.dpkg" % version))
@@ -559,6 +577,13 @@ def load_human(version, data_path):
     expA = exp.groupby('mode').get_group('experimentA')
     expB = exp.groupby('mode').get_group('experimentB')
     expC = exp.groupby('mode').get_group('experimentC')
+
+    expA['num_mass_trials'] = 0
+    expB['num_mass_trials'] = 0
+    expC['num_mass_trials'] = expC.apply(get_num_mass_trials, axis=1)
+    expC_I = expC.groupby('version').get_group('I').copy()
+    expC_I.loc[:, 'num_mass_trials'] = -1
+    expC = pd.concat([expC, expC_I])
 
     exp_data = {
         'A': expA,
