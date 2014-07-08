@@ -14,11 +14,15 @@ ANALYSES := fall_responses\
 	    model_log_lh\
 	    participant_fits
 
-.PHONY: results $(ANALYSES)
+.PHONY: all list clean $(ANALYSES)
 
 all: $(ANALYSES)
 list:
 	@echo $(ANALYSES) | tr " " "\n"
+clean:
+	rm -f results/*
+	rm -f figures/*.pdf
+	rm -f figures/*.png
 
 num_learned_by_trial_targets := figures/num_learned_by_trial.pdf figures/num_learned_by_trial.png
 num_learned_by_trial: $(num_learned_by_trial_targets)
