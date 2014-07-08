@@ -84,7 +84,7 @@ def plot_version_block(version, block, results_path, fig_path):
 def plot(results_path, fig_path):
     pths = []
     for block in ('A', 'B'):
-        for version in ('G', 'H', 'I', 'all'):
+        for version in ('G', 'H', 'I', 'GH'):
             try:
                 pths.extend(plot_version_block(
                     version, block, results_path, fig_path))
