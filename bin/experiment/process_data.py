@@ -106,22 +106,29 @@ def find_bad_participants(exp, data):
                 continue
 
         # check to make sure they actually finished
-        prestim = df\
-            .set_index(['mode', 'trial', 'trial_phase'])\
-            .groupby(level='trial_phase')\
-            .get_group('prestim')
-
-        if exp == 'mass_inference-G':
-            num_trials = 62
-        elif exp == 'mass_inference-H':
-            num_trials = 62
-        elif exp == 'mass_inference-I':
-            num_trials = 32
+        try:
+            prestim = df\
+                .set_index(['mode', 'trial', 'trial_phase'])\
+                .groupby(level='trial_phase')\
+                .get_group('prestim')
+        except IndexError:
+            if df['trial_phase'].isnull().all():
+                incomplete = True
+            else:
+                raise
         else:
-            raise ValueError("unhandled experiment: %s" % exp)
+            if exp == 'mass_inference-G':
+                num_trials = 62
+            elif exp == 'mass_inference-H':
+                num_trials = 62
+            elif exp == 'mass_inference-I':
+                num_trials = 32
+            else:
+                raise ValueError("unhandled experiment: %s" % exp)
 
-        incomplete = len(prestim) != num_trials
-        info['percent'] = 100 * len(prestim) / num_trials
+            incomplete = len(prestim) != num_trials
+            info['percent'] = 100 * len(prestim) / num_trials
+
         if incomplete:
             logger.warning(
                 "%s (%s, %s) is incomplete (completed %d/32 trials [%.1f%%])",
@@ -237,6 +244,10 @@ def load_data(data_path, conds, fields=None):
     # replace None and '' with np.nan
     data = data.replace([None, ''], [np.nan, np.nan])
 
+    # set labels to NaN where the color is NaN
+    data.loc[data['color0'].isnull(), 'label0'] = np.nan
+    data.loc[data['color1'].isnull(), 'label1'] = np.nan
+
     # process other various fields to make sure they're in the right
     # data format
     data['instructions'] = map(str2bool, data['instructions'])
@@ -249,6 +260,8 @@ def load_data(data_path, conds, fields=None):
     data['camera_spin'] = data['camera_spin'].astype('float')
     data['response'] = data['response'].astype('float')
     data['ratio'] = data['ratio'].astype('float')
+    data['occlude'] = data['occlude'].astype('float')
+    data['full_render'] = data['full_render'].astype('float')
 
     # remove instructions rows
     data = data\
@@ -387,6 +400,21 @@ def load_data(data_path, conds, fields=None):
     if 'kappa' in data:
         data = data.drop(['kappa'], axis=1)
     data['kappa0'] = np.log10(data['ratio'])
+
+    # update mass responses
+    data.loc[:, 'mass? response'] = data['mass? response'] * 2 - 1
+    data.loc[:, 'mass? correct'] = data['mass? response'] == data['kappa0']
+    isnan = np.isnan(data['mass? response'])
+    data.loc[isnan, 'mass? correct'] = np.nan
+
+    # include number of mass trials
+    def get_num_mass_trials(x):
+        trials = x.set_index('trial')['mass? response']
+        num_mass_trials = (~trials.isnull()).sum()
+        x['num_mass_trials'] = num_mass_trials
+        return x
+
+    data = data.groupby(['mode', 'pid']).apply(get_num_mass_trials)
 
     return data, participants
 
