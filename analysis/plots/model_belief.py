@@ -10,13 +10,17 @@ def plot_model(model, results_path, fig_path):
     belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
     belief = belief.groupby('likelihood').get_group('ipe')
     if model == 'best':
-        ranks = pd.read_csv(results_path.joinpath('participant_fits.csv'))
-        best = ranks.set_index('pid').groupby('rank')['model'].get_group(0)
-        belief = belief\
-            .set_index(['pid', 'model'])\
-            .groupby(lambda x: best[x[0]] == x[1])\
-            .get_group(True)\
-            .reset_index()
+        pth = results_path.joinpath('participant_fits.csv')
+        if pth.exists():
+            ranks = pd.read_csv(pth)
+            best = ranks.set_index('pid').groupby('rank')['model'].get_group(0)
+            belief = belief\
+                .set_index(['pid', 'model'])\
+                .groupby(lambda x: best[x[0]] == x[1])\
+                .get_group(True)\
+                .reset_index()
+        else:
+            return []
 
     else:
         belief = belief.groupby('model').get_group(model)
@@ -69,8 +73,7 @@ def plot_model(model, results_path, fig_path):
 
 def plot(results_path, fig_path):
     pths = []
-    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
-    models = list(belief['model'].unique()) + ['best']
+    models = ['static', 'learning', 'chance', 'best']
     for model in models:
         pths.extend(plot_model(model, results_path, fig_path))
     return pths

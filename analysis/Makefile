@@ -1,18 +1,18 @@
-ANALYSES := fall_responses\
+ANALYSES := condition_counts\
+	    fall_response_corrs\
+	    fall_responses\
+	    mass_accuracy\
 	    mass_accuracy_by_stimulus\
+	    mass_accuracy_by_stimulus_corrs\
 	    mass_accuracy_by_trial\
 	    mass_responses_by_stimulus\
-	    model_belief\
-	    num_learned_by_trial\
-	    num_chance\
-	    fall_response_corrs\
-	    condition_counts\
-	    payrate\
-	    mass_accuracy\
 	    mass_responses_by_stimulus_corrs\
-	    mass_accuracy_by_stimulus_corrs\
+	    model_belief\
 	    model_log_lh\
-	    participant_fits
+	    num_chance\
+	    num_learned_by_trial\
+	    participant_fits\
+	    payrate
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -34,7 +34,7 @@ model_belief_pdf := $(addsuffix .pdf,$(addprefix figures/model_belief_,$(model_b
 model_belief_png := $(model_belief_pdf:%.pdf=%.png)
 model_belief_targets = $(model_belief_pdf) $(model_belief_png)
 model_belief: $(model_belief_targets)
-$(model_belief_targets): plots/model_belief.py results/model_belief_agg.csv
+$(model_belief_targets): plots/model_belief.py results/model_belief_agg.csv results/participant_fits.csv
 	python $<
 
 mass_responses_by_stimulus_targets := figures/mass_responses_by_stimulus.pdf figures/mass_responses_by_stimulus.png
