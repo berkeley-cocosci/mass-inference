@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "last_modified": "2014-07-07 19:33:07.154525", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "9b14be2ea1c5df078804e5a211b70cdf", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "bytes": 10847329, 
+      "modified": "2014-07-07 19:33:06.080882", 
+      "path": "./model.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/home/jhamrick/project/mass-inference/data/model-raw/mass_inference-I-b_ipe.dpkg"
+      }, 
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2014-07-07 19:33:07.154486"
+    }
+  ], 
+  "name": "mass_inference-I-b_ipe_fall.dpkg"
+}

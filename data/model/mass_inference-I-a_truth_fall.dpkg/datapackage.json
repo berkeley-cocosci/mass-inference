@@ -1,0 +1,53 @@
+{
+  "description": null, 
+  "last_modified": "2014-07-07 14:27:16.754266", 
+  "title": null, 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "contributors": [
+    {
+      "email": "jhamrick@berkeley.edu", 
+      "name": "Jessica B. Hamrick"
+    }, 
+    {
+      "email": "pbatt@mit.edu", 
+      "name": "Peter W. Battaglia"
+    }, 
+    {
+      "email": "jbt@mit.edu", 
+      "name": "Joshua B. Tenenbaum"
+    }
+  ], 
+  "version": "1.0.0", 
+  "keywords": null, 
+  "licenses": [
+    {
+      "url": "http://opendefinition.org/licenses/odc-by", 
+      "id": "odc-by"
+    }
+  ], 
+  "homepage": null, 
+  "resources": [
+    {
+      "hash": "0564421fe66737701663cd1033a00cf3", 
+      "name": "model.csv", 
+      "format": "csv", 
+      "bytes": 1359, 
+      "modified": "2014-07-07 14:27:16.753034", 
+      "path": "./model.csv"
+    }, 
+    {
+      "format": "json", 
+      "data": {
+        "nfell_min": 0, 
+        "nfell_max": 10, 
+        "source": "/home/jhamrick/project/mass-inference/data/model-raw/mass_inference-I-a_truth.dpkg"
+      }, 
+      "name": "metadata", 
+      "mediaformat": "application/json", 
+      "modified": "2014-07-07 14:27:16.754248"
+    }
+  ], 
+  "name": "mass_inference-I-a_truth_fall.dpkg"
+}
