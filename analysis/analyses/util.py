@@ -93,13 +93,15 @@ def run_analysis(func):
     human_version = config.get("analysis", "human_version")
     seed = config.getint("analysis", "seed")
 
-    data_path = root.joinpath(config.get("analysis", "data_path"))
-    results_path = root.joinpath(config.get("analysis", "results_path"))
+    data_path = root.joinpath(
+        config.get("analysis", "data_path")).relpath()
+    results_path = root.joinpath(
+        config.get("analysis", "results_path")).relpath()
+
+    if not results_path.exists():
+        results_path.makedirs()
 
     exp_all, human = load_human(human_version, data_path)
     data = load_all(model_version, data_path, human=human)
     pth = func(data, results_path, seed)
-    print pth
-    if pth.ext == ".csv":
-        df = pd.read_csv(pth)
-        print df
+    print "--> Saved to '{}'".format(pth)

@@ -267,4 +267,5 @@ def make_plot(func):
     results_path = root.joinpath(config.get("analysis", "results_path"))
     fig_path = root.joinpath(config.get("analysis", "figure_path"))
 
-    print func(results_path, fig_path)
+    for pth in func(results_path, fig_path):
+        print "--> Saved to '{}'".format(pth)
