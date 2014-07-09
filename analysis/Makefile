@@ -13,7 +13,8 @@ ANALYSES := condition_counts\
 	    num_learned_by_trial\
 	    participant_fits\
 	    payrate\
-	    num_participants
+	    num_participants\
+	    mass_accuracy_by_trial_corrs
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -125,4 +126,8 @@ results/condition_counts.csv: analyses/condition_counts.py
 
 num_participants: results/num_participants.csv
 results/num_participants.csv: analyses/num_participants.py
+	python $<
+
+mass_accuracy_by_trial_corrs: results/mass_accuracy_by_trial_corrs.csv
+results/mass_accuracy_by_trial_corrs.csv: analyses/mass_accuracy_by_trial_corrs.py results/mass_accuracy_by_trial.csv
 	python $<

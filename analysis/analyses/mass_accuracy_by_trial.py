@@ -26,7 +26,11 @@ def run(results_path, seed):
             y = x.copy()
         return y
 
-    responses = human['C']\
+    human_I = human['C'].groupby('version').get_group('I').copy()
+    human_I['num_mass_trials'] = -1
+    human_C = pd.concat([human['C'], human_I])
+
+    responses = human_C\
         .set_index(['version', 'num_mass_trials', 'pid', 'trial'])\
         .groupby(level=['version', 'num_mass_trials', 'pid'])\
         .apply(choose_first)\
