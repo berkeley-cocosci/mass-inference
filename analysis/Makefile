@@ -14,7 +14,8 @@ ANALYSES := condition_counts\
 	    participant_fits\
 	    payrate\
 	    num_participants\
-	    mass_accuracy_by_trial_corrs
+	    mass_accuracy_by_trial_corrs\
+	    fall_responses_best_parameters
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -25,6 +26,11 @@ clean:
 	rm -f results/*
 	rm -f figures/*.pdf
 	rm -f figures/*.png
+
+fall_responses_best_parameters_targets := figures/fall_responses_best_parameters.pdf figures/fall_responses_best_parameters.png
+fall_responses_best_parameters: $(fall_responses_best_parameters_targets)
+$(fall_responses_best_parameters_targets): plots/fall_responses_best_parameters.py results/fall_responses_best_parameters.csv
+	python $<
 
 num_learned_by_trial_targets := figures/num_learned_by_trial.pdf figures/num_learned_by_trial.png
 num_learned_by_trial: $(num_learned_by_trial_targets)
@@ -130,4 +136,7 @@ results/num_participants.csv: analyses/num_participants.py
 
 mass_accuracy_by_trial_corrs: results/mass_accuracy_by_trial_corrs.csv
 results/mass_accuracy_by_trial_corrs.csv: analyses/mass_accuracy_by_trial_corrs.py results/mass_accuracy_by_trial.csv
+	python $<
+
+results/fall_responses_best_parameters.csv: analyses/fall_responses_best_parameters.py
 	python $<
