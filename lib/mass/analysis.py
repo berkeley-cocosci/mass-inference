@@ -534,6 +534,14 @@ PARAMS = ['sigma', 'phi', 'kappa']
 #     return pct_gt
 
 
+def load_participants(version, data_path):
+    exp_dp = dpkg.DataPackage.load(data_path.joinpath(
+        "human/mass_inference-%s.dpkg" % version))
+    participants = exp_dp.load_resource("participants.csv")
+    participants = participants.reset_index()
+    return participants
+
+
 def load_human(version, data_path):
     exp_dp = dpkg.DataPackage.load(data_path.joinpath(
         "human/mass_inference-%s.dpkg" % version))

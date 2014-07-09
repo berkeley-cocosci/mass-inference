@@ -6,6 +6,7 @@ import sys
 from mass.analysis import load_human as _load_human
 from mass.analysis import load_model as _load_model
 from mass.analysis import load_all as _load_all
+from mass.analysis import load_participants as _load_participants
 from mass.analysis import bootstrap_mean, bootcorr, beta
 
 
@@ -96,6 +97,17 @@ def load_human():
     return human
 
 
+def load_participants():
+    root = path("..")
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    human_version = config.get("analysis", "human_version")
+    data_path = root.joinpath(
+        config.get("analysis", "data_path")).relpath()
+    human = _load_participants(human_version, data_path)
+    return human
+
+
 def load_model():
     root = path("..")
     config = SafeConfigParser()
@@ -103,7 +115,7 @@ def load_model():
     model_version = config.get("analysis", "model_version")
     data_path = root.joinpath(
         config.get("analysis", "data_path")).relpath()
-    ipe, fb = _load_human(model_version, data_path)
+    ipe, fb = _load_model(model_version, data_path)
     return ipe, fb
 
 

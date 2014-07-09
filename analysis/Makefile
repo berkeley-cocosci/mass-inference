@@ -12,7 +12,8 @@ ANALYSES := condition_counts\
 	    num_chance\
 	    num_learned_by_trial\
 	    participant_fits\
-	    payrate
+	    payrate\
+	    num_participants
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -120,4 +121,8 @@ results/fall_response_corrs.csv results/fall_response_corrs.tex: analyses/fall_r
 
 condition_counts: results/condition_counts.csv
 results/condition_counts.csv: analyses/condition_counts.py
+	python $<
+
+num_participants: results/num_participants.csv
+results/num_participants.csv: analyses/num_participants.py
 	python $<
