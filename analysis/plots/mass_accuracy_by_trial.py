@@ -26,7 +26,7 @@ def plot(results_path, fig_path):
 
     versions = ['H', 'G', 'I']
 
-    fig, axes = plt.subplots(1, 3)
+    fig, axes = plt.subplots(1, 3, sharey=True)
 
     for version, df in mass_responses.groupby('version'):
         for kappa0, df2 in df.groupby('kappa0'):
@@ -44,20 +44,30 @@ def plot(results_path, fig_path):
 
                 ax = axes[versions.index(version)]
                 ax.fill_between(x, yl, yu, alpha=0.3, color=colors[num])
-                ax.plot(x, y, color=colors[num], lw=2, label=num)
-                if version == 'H':
-                    ax.set_xticks([1, 5, 10, 15, 20])
-                    ax.set_xticklabels([1, 5, 10, 15, 20])
-                else:
-                    ax.set_xticks(x)
-                    ax.set_xticklabels(x)
-                ax.set_xlim(x.min(), x.max())
-                ax.set_ylim(0.5, 1)
-                ax.set_xlabel("Trial")
-                ax.set_ylabel("Fraction correct")
-                ax.set_title("Experiment %d" % (versions.index(version) + 1))
+                ax.plot(x, y, color=colors[num], lw=2, label=num,
+                        marker='o', markersize=4)
 
-    fig.set_figwidth(15)
+        x = np.sort(df['trial'].unique()).astype(int)
+        if version == 'H':
+            ax.set_xticks([1, 5, 10, 15, 20])
+            ax.set_xticklabels([1, 5, 10, 15, 20])
+        else:
+            ax.set_xticks(x)
+            ax.set_xticklabels(x)
+        ax.set_xlim(x.min(), x.max())
+        ax.set_xlabel("Trial")
+        ax.set_title("Experiment %d" % (versions.index(version) + 1))
+
+        util.clear_right(ax)
+        util.clear_top(ax)
+        util.outward_ticks(ax)
+
+    ax = axes[0]
+    ax.set_ylim(0.5, 1)
+    ax.set_ylabel("Fraction correct")
+
+    fig.set_figwidth(9)
+    fig.set_figheight(3)
     plt.draw()
     plt.tight_layout()
 

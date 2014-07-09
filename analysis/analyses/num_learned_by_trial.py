@@ -36,6 +36,7 @@ def run(results_path, seed):
     num = results['median']\
         .groupby(level='kappa0')\
         .get_group('all')
+
     num[:] = 1
     num = num.unstack(-1).T.cumsum()
     num = num.max() - num + 1
