@@ -5,9 +5,11 @@ import util
 filename = "condition_counts.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
+    human = util.load_human()
+
     # compute how many participants we have for each condition
-    counts = data['human']['all']\
+    counts = human['all']\
         .groupby(['version', 'condition', 'counterbalance'])['pid']\
         .apply(lambda x: len(x.unique()))\
         .reset_index()

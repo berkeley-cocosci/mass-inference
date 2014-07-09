@@ -7,8 +7,9 @@ import numpy as np
 filename = "model_belief.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    data = util.load_all()
     results = []
 
     trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\

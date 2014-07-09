@@ -264,8 +264,10 @@ def make_plot(func):
     config = SafeConfigParser()
     config.read(root.joinpath("config.ini"))
 
-    results_path = root.joinpath(config.get("analysis", "results_path"))
-    fig_path = root.joinpath(config.get("analysis", "figure_path"))
+    results_path = root.joinpath(
+        config.get("analysis", "results_path")).relpath()
+    fig_path = root.joinpath(
+        config.get("analysis", "figure_path")).relpath()
 
     for pth in func(results_path, fig_path):
-        print "--> Saved to '{}'".format(pth)
+        print "--> Saved figure to '{}'".format(pth)

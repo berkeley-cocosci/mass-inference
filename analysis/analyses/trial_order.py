@@ -5,8 +5,9 @@ import util
 filename = "trial_order.csv"
 
 
-def run(data, results_path, seed):
-    order = data['human']['all']\
+def run(results_path, seed):
+    human = util.load_human()
+    order = human['all']\
         .set_index(['mode', 'trial', 'pid'])['stimulus']\
         .unstack('pid')
 

@@ -7,7 +7,7 @@ import numpy as np
 filename = "mass_accuracy_by_stimulus_corrs.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
     results = []
 

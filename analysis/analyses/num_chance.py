@@ -12,11 +12,12 @@ words = [
 ]
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
     results = []
 
-    groups = data['human']['C']\
+    groups = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
         .groupby('version')\
         .get_group('H')\

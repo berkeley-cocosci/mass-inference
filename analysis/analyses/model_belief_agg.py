@@ -7,7 +7,7 @@ import numpy as np
 filename = "model_belief_agg.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
 
     results = pd.read_csv(

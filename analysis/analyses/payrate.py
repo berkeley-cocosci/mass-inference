@@ -7,11 +7,12 @@ from datetime import timedelta
 filename = "payrate.csv"
 
 
-def run(data, results_path, seed):
-    versions = list(data['human']['all']['version'].unique())
+def run(results_path, seed):
+    human = util.load_human()
+    versions = list(human['all']['version'].unique())
     results = {}
     for version in versions:
-        hdata = data['human']['all'].groupby('version').get_group(version)
+        hdata = human['all'].groupby('version').get_group(version)
         starttime = hdata.groupby('pid')['timestamp'].min()
         endtime = hdata.groupby('pid')['timestamp'].max()
         exptime = endtime - starttime

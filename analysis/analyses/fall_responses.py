@@ -7,8 +7,9 @@ import numpy as np
 filename = "fall_responses.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    data = util.load_all()
     results = []
 
     for block in ['A', 'B']:

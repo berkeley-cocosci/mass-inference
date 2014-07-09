@@ -7,16 +7,17 @@ import numpy as np
 filename = "mass_accuracy_by_trial.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
     results = []
 
     model_belief = pd.read_csv(
         results_path.joinpath('model_belief_agg.csv'))
 
     def choose_first(x):
-        version, pid = x.name
-        if version == 'I':
+        version, num, pid = x.name
+        if version == 'I' and num == -1:
             ix = x['mass? response'].dropna().index[0]
             y = x.copy()
             y['mass? response'] = np.nan
@@ -25,9 +26,9 @@ def run(data, results_path, seed):
             y = x.copy()
         return y
 
-    responses = data['human']['C']\
-        .set_index(['version', 'pid', 'trial'])\
-        .groupby(level=['version', 'pid'])\
+    responses = human['C']\
+        .set_index(['version', 'num_mass_trials', 'pid', 'trial'])\
+        .groupby(level=['version', 'num_mass_trials', 'pid'])\
         .apply(choose_first)\
         .reset_index()\
         .dropna(axis=0, subset=['mass? response'])
@@ -35,24 +36,26 @@ def run(data, results_path, seed):
     for model in list(model_belief['model'].unique()):
         for kappa in [-1.0, 1.0, 'all']:
             if kappa == 'all':
-                human = responses
+                correct = responses
                 belief = model_belief
             else:
-                human = responses.groupby('kappa0').get_group(kappa)
+                correct = responses.groupby('kappa0').get_group(kappa)
                 belief = model_belief.groupby('kappa0').get_group(kappa)
 
-            human = human\
-                .groupby(['version', 'trial'])['mass? correct']\
+            correct = correct\
+                .groupby(['version', 'num_mass_trials',
+                          'trial'])['mass? correct']\
                 .apply(util.beta)\
                 .unstack(-1)\
                 .reset_index()
-            human['class'] = model
-            human['species'] = 'human'
-            human['kappa0'] = kappa
-            human = human\
-                .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
+            correct['class'] = model
+            correct['species'] = 'human'
+            correct['kappa0'] = kappa
+            correct = correct\
+                .set_index(['species', 'class', 'version', 'kappa0',
+                            'num_mass_trials', 'trial'])\
                 .stack()
-            results.append(human)
+            results.append(correct)
 
             belief = belief\
                 .groupby('model')\
@@ -64,8 +67,9 @@ def run(data, results_path, seed):
                 .rename(columns={'likelihood': 'species'})
             belief['class'] = model
             belief['kappa0'] = kappa
+            belief['num_mass_trials'] = -1
             belief = belief\
-                .set_index(['species', 'class', 'version', 'kappa0', 'trial'])\
+                .set_index(['species', 'class', 'version', 'kappa0', 'num_mass_trials', 'trial'])\
                 .stack()
             results.append(belief)
 

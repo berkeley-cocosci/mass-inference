@@ -1,10 +1,11 @@
 from ConfigParser import SafeConfigParser
 from path import path
-import pandas as pd
 import numpy as np
 import sys
 
-from mass.analysis import load_human, load_model, load_all
+from mass.analysis import load_human as _load_human
+from mass.analysis import load_model as _load_model
+from mass.analysis import load_all as _load_all
 from mass.analysis import bootstrap_mean, bootcorr, beta
 
 
@@ -84,24 +85,53 @@ def normalize(logarr, axis=-1):
     return lognormconsts, lognormarr
 
 
-def run_analysis(func):
+def load_human():
     root = path("..")
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    human_version = config.get("analysis", "human_version")
+    data_path = root.joinpath(
+        config.get("analysis", "data_path")).relpath()
+    human = _load_human(human_version, data_path)
+    return human
 
+
+def load_model():
+    root = path("..")
     config = SafeConfigParser()
     config.read(root.joinpath("config.ini"))
     model_version = config.get("analysis", "model_version")
-    human_version = config.get("analysis", "human_version")
-    seed = config.getint("analysis", "seed")
-
     data_path = root.joinpath(
         config.get("analysis", "data_path")).relpath()
+    ipe, fb = _load_human(model_version, data_path)
+    return ipe, fb
+
+
+def load_all():
+    root = path("..")
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    human_version = config.get("analysis", "human_version")
+    model_version = config.get("analysis", "model_version")
+    data_path = root.joinpath(
+        config.get("analysis", "data_path")).relpath()
+    data = _load_all(
+        model_version=model_version,
+        human_version=human_version,
+        data_path=data_path)
+    return data
+
+
+def run_analysis(func):
+    root = path("..")
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    seed = config.getint("analysis", "seed")
+
     results_path = root.joinpath(
         config.get("analysis", "results_path")).relpath()
-
     if not results_path.exists():
         results_path.makedirs()
 
-    exp_all, human = load_human(human_version, data_path)
-    data = load_all(model_version, data_path, human=human)
-    pth = func(data, results_path, seed)
-    print "--> Saved to '{}'".format(pth)
+    pth = func(results_path, seed)
+    print "--> Saved results to '{}'".format(pth)

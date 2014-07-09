@@ -7,7 +7,7 @@ import numpy as np
 filename = "participant_fits.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
 
     def rank(x):

@@ -7,25 +7,26 @@ import numpy as np
 filename = "mass_accuracy_by_stimulus.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
     results = []
 
     model_belief = pd.read_csv(
         results_path.joinpath('model_belief_agg.csv'))
 
-    human = data['human']['C']\
+    correct = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
         .groupby(['version', 'kappa0', 'stimulus'])['mass? correct']\
         .apply(util.beta)\
         .unstack(-1)\
         .reset_index()
-    human['class'] = 'static'
-    human['species'] = 'human'
-    human = human\
+    correct['class'] = 'static'
+    correct['species'] = 'human'
+    correct = correct\
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
-    results.append(human)
+    results.append(correct)
 
     belief = model_belief\
         .groupby('model')\

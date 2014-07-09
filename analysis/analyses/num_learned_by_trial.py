@@ -7,7 +7,7 @@ import scipy.stats
 filename = "num_learned_by_trial.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
 
     sp = pd\
         .read_csv(results_path.joinpath('switchpoint.csv'))
@@ -16,11 +16,15 @@ def run(data, results_path, seed):
     sp_all['kappa0'] = 'all'
     sp = pd.concat([sp, sp_all])\
         .set_index(['version', 'kappa0', 'pid'])
+
+    num_mass_trials = (~sp.isnull()).sum(axis=1)
+    sp['num_mass_trials'] = num_mass_trials
+    sp = sp.set_index('num_mass_trials', append=True)
     sp.columns.name = 'trial'
 
     results = sp\
         .stack()\
-        .groupby(level=['version', 'kappa0', 'trial'])\
+        .groupby(level=['version', 'kappa0', 'num_mass_trials', 'trial'])\
         .apply(util.beta)\
         .unstack(-1)
 
@@ -40,7 +44,8 @@ def run(data, results_path, seed):
     chance = pd.DataFrame(chance, index=num.index, columns=num.columns)
     chance = pd.DataFrame(chance.T.stack(), columns=['median']).reset_index()
     chance['kappa0'] = 'chance'
-    chance = chance.set_index(['version', 'kappa0', 'trial'])
+    chance = chance.set_index(
+        ['version', 'kappa0', 'num_mass_trials', 'trial'])
 
     results = pd.concat([results, chance])
 

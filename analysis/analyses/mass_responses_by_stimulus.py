@@ -7,28 +7,29 @@ import numpy as np
 filename = "mass_responses_by_stimulus.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
     results = []
 
     model_belief = pd.read_csv(
         results_path.joinpath('model_belief_agg.csv'))
 
-    human_C = data['human']['C']\
+    human_C = human['C']\
         .dropna(axis=0, subset=['mass? response'])
     human_C.loc[:, 'mass? response'] = (human_C['mass? response'] + 1) / 2.0
 
-    human = human_C\
+    correct = human_C\
         .groupby(['version', 'kappa0', 'stimulus'])['mass? response']\
         .apply(util.beta)\
         .unstack(-1)\
         .reset_index()
-    human['class'] = 'static'
-    human['species'] = 'human'
-    human = human\
+    correct['class'] = 'static'
+    correct['species'] = 'human'
+    correct = correct\
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
-    results.append(human)
+    results.append(correct)
 
     belief = model_belief\
         .groupby('model')\

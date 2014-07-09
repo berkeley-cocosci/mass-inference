@@ -8,12 +8,13 @@ filename = "fall_response_corrs.csv"
 texname = "fall_response_corrs.tex"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
 
     means = pd\
         .read_csv(results_path.joinpath("fall_responses.csv"))\
-        .set_index(['version', 'block', 'species', 'kappa0', 'stimulus'])['median']\
+        .set_index(['version', 'block', 'species',
+                    'kappa0', 'stimulus'])['median']\
         .groupby(level='version')\
         .get_group('GH')
 

@@ -534,71 +534,30 @@ PARAMS = ['sigma', 'phi', 'kappa']
 #     return pct_gt
 
 
-def get_num_mass_trials(x):
-    if x['version'] == 'G':
-        return 8
-    elif x['version'] == 'H':
-        return 20
-    elif x['version'] == 'I':
-        if x['condition'] in (0, 5):
-            return 5
-        elif x['condition'] in (1, 6):
-            return 4
-        elif x['condition'] in (2, 7):
-            return 3
-        elif x['condition'] in (3, 8):
-            return 2
-        elif x['condition'] in (4, 9):
-            return 1
-
-
 def load_human(version, data_path):
     exp_dp = dpkg.DataPackage.load(data_path.joinpath(
         "human/mass_inference-%s.dpkg" % version))
-    exp_all = exp_dp.load_resource("experiment.csv")
+    exp = exp_dp.load_resource("experiment.csv")
 
     # convert timestamps into datetime objects
-    exp_all['timestamp'] = pd.to_datetime(exp_all['timestamp'])
-
-    exp = exp_all\
-        .groupby(
-            exp_all['mode'].apply(
-                lambda x: x.startswith('experiment')))\
-        .get_group(True)\
-        .copy()
-
-    # update mass responses
-    exp.loc[:, 'mass? response'] = exp['mass? response'] * 2 - 1
-    exp.loc[:, 'mass? correct'] = exp['mass? response'] == exp['kappa0']
-    isnan = np.isnan(exp['mass? response'])
-    exp.loc[isnan, 'mass? correct'] = np.nan
+    exp['timestamp'] = pd.to_datetime(exp['timestamp'])
 
     # split into the three different blocks
     expA = exp.groupby('mode').get_group('experimentA')
     expB = exp.groupby('mode').get_group('experimentB')
     expC = exp.groupby('mode').get_group('experimentC')
 
-    expA['num_mass_trials'] = 0
-    expB['num_mass_trials'] = 0
-    expC['num_mass_trials'] = expC.apply(get_num_mass_trials, axis=1)
-    expC_I = expC.groupby('version').get_group('I').copy()
-    expC_I.loc[:, 'num_mass_trials'] = -1
-    expC = pd.concat([expC, expC_I])
-
     exp_data = {
         'A': expA,
         'B': expB,
         'C': expC,
-        'all': exp_all
+        'all': exp
     }
 
-    return exp_all, exp_data
+    return exp_data
 
 
-def load_model(version, data_path):
-    sigma = 0.04
-    phi = 0.2
-
+def load_model(version, data_path, sigma=0.04, phi=0.2):
     ipe = {
         'A': IPE("mass_inference-%s-a_ipe_fall" % version,
                  sigma=sigma, phi=phi),
@@ -617,11 +576,13 @@ def load_model(version, data_path):
     return ipe, fb
 
 
-def load_all(version, data_path, human=None):
-    ipe, fb = load_model(version, data_path)
+def load_all(model_version=None, human_version=None, data_path=None,
+             human=None, ipe=None, fb=None):
+    if ipe is None or fb is None:
+        ipe, fb = load_model(model_version, data_path)
 
     if human is None:
-        exp_all, human = load_human(version, data_path)
+        human = load_human(human_version, data_path)
 
     data = {
         'human': human,

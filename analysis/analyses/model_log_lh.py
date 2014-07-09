@@ -7,11 +7,12 @@ import numpy as np
 filename = "model_log_lh.csv"
 
 
-def run(data, results_path, seed):
+def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
     results = {}
 
-    h = data['human']['C']\
+    h = human['C']\
         .set_index(['version', 'pid', 'trial'])['mass? correct']\
         .unstack('trial')
 
