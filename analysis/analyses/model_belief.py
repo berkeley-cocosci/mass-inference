@@ -3,8 +3,68 @@
 import util
 import pandas as pd
 import numpy as np
+from itertools import product as iproduct
 
 filename = "model_belief.csv"
+
+
+def make_belief(pfall, fall, hyps, index, prior):
+    lh = np.log((fall * pfall) + ((1 - fall) * (1 - pfall)))
+    shape = list(lh.shape)
+    shape[-2] += 1
+    prior_lh = np.empty(shape)
+    prior_lh[..., 0, :] = prior
+    prior_lh[..., 1:, :] = lh
+    posterior = util.normalize(prior_lh.cumsum(axis=-2), axis=-1)[1]
+    posterior = posterior.reshape((-1, len(hyps)))
+    posterior_ind = util.normalize(prior_lh, axis=-1)[1]
+    posterior_ind = posterior_ind.reshape((-1, len(hyps)))
+
+    # hack to handle rounding error
+    if (posterior == 0).any():
+        ix = np.argwhere(posterior == 0)
+        ix2 = ix.copy()
+        ix2[:, -1] = 1 - ix2[:, -1]
+        vals = posterior[tuple(ix2.T)]
+        other = np.log(1 - np.exp(vals))
+        posterior[tuple(ix.T)] = other
+
+    # make the list of trials
+    trials = np.empty(prior_lh.shape[:-1])
+    trials[..., :] = np.arange(prior_lh.shape[-2])
+    trials = trials.ravel()
+
+    # create the learning model
+    learning = pd.DataFrame(
+        posterior, index=index, columns=hyps)
+    learning['trial'] = trials
+    learning = learning.set_index('trial', append=True)
+    learning.columns.name = 'hypothesis'
+    learning = learning\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'logp'})
+    learning['model'] = 'learning'
+
+    # create the static model
+    static = pd.DataFrame(
+        posterior_ind, index=index, columns=hyps)
+    static['trial'] = trials
+    static = static.set_index('trial', append=True)
+    static.columns.name = 'hypothesis'
+    static = static\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'logp'})
+    static['model'] = 'static'
+
+    # create the chance model
+    chance = static.copy()
+    chance.loc[:, 'logp'] = prior.flat[0]
+    chance['model'] = 'chance'
+
+    models = pd.concat([learning, static, chance])
+    return models
 
 
 def run(results_path, seed):
@@ -15,66 +75,62 @@ def run(results_path, seed):
     trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\
                .set_index(['mode', 'trial']).ix['experimentC']
 
-    results = {}
-    for lhtype in ('empirical', 'ipe'):
-        hyps = [-1.0, 1.0]
-        prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
-        groups = data['human']['C'].groupby(['version', 'kappa0', 'pid'])
-        for (version, kappa0, pid), df in groups:
-            order = trials[pid].dropna()
+    human = data['human']['C']
+    participants = human[['version', 'kappa0', 'pid']]\
+        .drop_duplicates()\
+        .sort(['version', 'kappa0', 'pid'])
+    participants = np.asarray(participants)
 
-            pfall = np.asarray(data[lhtype]['C'].P_fall_mean[hyps].ix[order])
-            fall = np.asarray(data['fb']['C'].fall.ix[order][kappa0])[:, None]
+    hyps = [-1.0, 1.0]
+    prior = util.normalize(np.zeros((1, len(hyps))), axis=1)[1]
 
-            lh = np.log((fall * pfall) + ((1 - fall) * (1 - pfall)))
-            prior_lh = np.vstack([prior, lh])
-            posterior = util.normalize(prior_lh.cumsum(axis=0), axis=1)[1]
-            posterior_ind = util.normalize(prior_lh, axis=1)[1]
+    ipe = data['ipe']['C']\
+        .P_fall_mean_all[hyps]\
+        .reorder_levels(['stimulus', 'sigma', 'phi'])\
+        .sortlevel()\
+        .reset_index(['sigma', 'phi'])
+    empirical = data['empirical']['C'].P_fall_mean[hyps]
+    fb = data['fb']['C'].fall
 
-            # hack to handle rounding error
-            if (posterior == 0).any():
-                ix = np.argwhere(posterior == 0)
-                rows = ix[:, 0]
-                cols = ix[:, 1]
-                vals = posterior[rows, 1 - cols]
-                other = np.log(1 - np.exp(vals))
-                posterior[tuple(ix.T)] = other
+    results = []
+    for (version, kappa0, pid) in participants:
+        print version, kappa0, pid
+        order = trials[pid].dropna()
+        fall = np.asarray(fb.ix[order][kappa0])[:, None]
 
-            res = pd.DataFrame(
-                posterior, index=['prior'] + list(order), columns=hyps)
-            res['trial'] = np.arange(len(order) + 1)
-            res = res.set_index('trial', append=True).stack()
-            res.index.names = ['stimulus', 'trial', 'hypothesis']
-            res = res.reset_index('stimulus')\
-                     .rename(columns={0: 'logp'})\
-                     .stack()
-            results[(lhtype, 'learning', version, kappa0, pid)] = res
+        pfall = np.asarray(empirical.ix[order])
+        index = pd.Index(['prior'] + list(order), name='stimulus')
+        belief = make_belief(pfall, fall, hyps, index, prior)
+        belief['version'] = version
+        belief['kappa0'] = kappa0
+        belief['pid'] = pid
+        belief['likelihood'] = 'empirical'
+        belief['sigma'] = np.nan
+        belief['phi'] = np.nan
+        results.append(belief)
 
-            res = pd.DataFrame(
-                posterior_ind, index=['prior'] + list(order), columns=hyps)
-            res['trial'] = np.arange(len(order) + 1)
-            res = res.set_index('trial', append=True).stack()
-            res.index.names = ['stimulus', 'trial', 'hypothesis']
-            res = res.reset_index('stimulus')\
-                     .rename(columns={0: 'logp'})\
-                     .stack()
-            results[(lhtype, 'static', version, kappa0, pid)] = res
+        ipe_df = ipe\
+            .ix[order]\
+            .set_index(['sigma', 'phi'], append=True)
+        ipe_groups = ipe_df.groupby(level=['sigma', 'phi'])
+        keys, pfall = zip(*[(x[0], np.asarray(x[1])) for x in ipe_groups])
+        pfall = np.array(pfall)
 
-            chance = res.copy().unstack(-1)
-            chance.loc[:, 'logp'] = prior.flat[0]
-            results[(lhtype, 'chance', version, kappa0, pid)] = chance.stack()
+        index = list(iproduct(keys, ['prior'] + list(order)))
+        index = [(x[0][0], x[0][1], x[1]) for x in index]
+        index = pd.MultiIndex.from_tuples(index)
+        index.names = ['sigma', 'phi', 'stimulus']
+        belief = make_belief(pfall, fall, hyps, index, prior)
+        belief['version'] = version
+        belief['kappa0'] = kappa0
+        belief['pid'] = pid
+        belief['likelihood'] = 'ipe'
+        results.append(belief)
 
-    results = pd.DataFrame.from_dict(results)
-    results.columns = pd.MultiIndex.from_tuples(
-        results.columns,
-        names=['likelihood', 'model', 'version', 'kappa0', 'pid'])
-    results = results\
-        .stack(['likelihood', 'model', 'version', 'kappa0', 'pid'])\
-        .unstack(2)\
-        .reorder_levels(
-            ['model', 'likelihood', 'version', 'kappa0',
-             'pid', 'trial', 'hypothesis'])\
-        .sortlevel()
+    results = pd\
+        .concat(results)\
+        .set_index(['model', 'likelihood', 'version', 'kappa0',
+                    'pid', 'trial', 'hypothesis'])
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

@@ -19,8 +19,7 @@ class IPE(object):
     def unstable(self):
         data = self.data.copy().drop(['nfell'], axis=1)
         data['unstable'] = (self.data['nfell'] > 4).astype(float)
-        return data.set_index(['sigma', 'phi'])\
-                   .ix[(self.sigma, self.phi)]
+        return data.set_index(['sigma', 'phi', 'stimulus'])
 
     def _sample_kappa_mean(self, data):
         samps = data.pivot(
@@ -43,12 +42,24 @@ class IPE(object):
         return var
 
     @LazyProperty
+    def P_fall_mean_all(self):
+        return self.unstable\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_mean)
+
+    @LazyProperty
     def P_fall_mean(self):
-        return self.unstable.groupby('stimulus').apply(self._sample_kappa_mean)
+        return self.P_fall_mean_all.ix[(self.sigma, self.phi)]
+
+    @LazyProperty
+    def P_fall_var_all(self):
+        return self.unstable\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_var)
 
     @LazyProperty
     def P_fall_var(self):
-        return self.unstable.groupby('stimulus').apply(self._sample_kappa_var)
+        return self.P_fall_var_all.ix[(self.sigma, self.phi)]
 
     @LazyProperty
     def P_fall_smooth(self):

@@ -17,13 +17,7 @@ def run(results_path, seed):
         .mean()
 
     ipe = util.load_model()[0]['B']
-    model = ipe.data.copy().drop(['nfell'], axis=1)
-    model['unstable'] = (ipe.data['nfell'] > 4).astype(float)
-    model = model\
-        .set_index(['sigma', 'phi', 'stimulus'])\
-        .groupby(level=['sigma', 'phi', 'stimulus'])\
-        .apply(ipe._sample_kappa_mean)[[-1.0, 1.0]]\
-        .stack()
+    model = ipe.P_fall_mean_all[[-1.0, 1.0]].stack()
 
     results = {}
     for (sigma, phi), model_df in model.groupby(level=['sigma', 'phi']):
