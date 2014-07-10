@@ -242,7 +242,7 @@ def make_options():
         'cpo_path': "mass-inference-I-a",
         'num_samples': 100,
         'sigmas': np.linspace(0, 0.05, 11),
-        'phis': np.arange(0, 3, 11),
+        'phis': np.linspace(0, 3, 11),
         'kappas': [-1.0, 0.0, 1.0]
     })
 
@@ -264,7 +264,7 @@ def make_options():
         'cpo_path': "mass-inference-I-b",
         'num_samples': 100,
         'sigmas': np.linspace(0, 0.05, 11),
-        'phis': np.arange(0, 3, 11),
+        'phis': np.linspace(0, 3, 11),
         'kappas': [-1.0, 0.0, 1.0]
     })
 
