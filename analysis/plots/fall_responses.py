@@ -67,7 +67,7 @@ def plot_version_block(version, block, results_path, fig_path):
         util.clear_right(ax)
         util.clear_top(ax)
         util.outward_ticks(ax)
-        ax.set_axis_bgcolor('0.95')
+        ax.set_axis_bgcolor('0.9')
 
     fig.set_figheight(3.5)
     fig.set_figwidth(12)

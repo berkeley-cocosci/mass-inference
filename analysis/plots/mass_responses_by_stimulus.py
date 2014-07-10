@@ -73,10 +73,6 @@ def plot(results_path, fig_path):
     ax2.set_title("Empirical IPE vs. Human")
     ax3.set_title("Empirical IPE vs. IPE")
 
-    for ax in (ax1, ax2, ax3):
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
-
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
     ax2.set_xlabel("Empirical IPE")
@@ -84,7 +80,16 @@ def plot(results_path, fig_path):
     ax3.set_xlabel("Empirical IPE")
     ax3.set_ylabel("IPE")
 
-    fig.set_figwidth(10)
+    for ax in (ax1, ax2, ax3):
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        util.clear_right(ax)
+        util.clear_top(ax)
+        util.outward_ticks(ax)
+        ax.set_axis_bgcolor('0.9')
+
+    fig.set_figwidth(12)
+    fig.set_figheight(3.5)
     plt.draw()
     plt.tight_layout()
 

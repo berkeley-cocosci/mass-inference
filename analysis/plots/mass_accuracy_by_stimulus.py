@@ -21,7 +21,7 @@ def plot(results_path, fig_path):
     fig, ax = plt.subplots()
 
     for i, (kappa0, df) in enumerate(mass_responses.groupby('kappa0')):
-        x = i * 0.4 + np.arange(len(df['stimulus']))
+        x = i * 0.3 + np.arange(len(df['stimulus']))
         y = df['median']
         yl = y - df['lower']
         yu = df['upper'] - y
@@ -34,11 +34,16 @@ def plot(results_path, fig_path):
 
     ax.legend(loc='best')
     ax.set_xlim(1, 20)
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 1.01)
     ax.set_xlabel("Stimulus")
     ax.set_ylabel("Fraction correct")
 
+    util.clear_right(ax)
+    util.clear_top(ax)
+    util.outward_ticks(ax)
+
     fig.set_figwidth(8)
+    fig.set_figheight(4)
     plt.draw()
     plt.tight_layout()
 
