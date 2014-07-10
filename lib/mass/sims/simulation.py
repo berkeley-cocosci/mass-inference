@@ -239,8 +239,6 @@ class Simulation(Process):
                 # the floor
                 if (data[i][..., 2] < 0).any():
                     mp.util.info("Object z-positions are negative!")
-                    print data[i][..., :3]
-                    raise Warning("invalid cpo positions")
 
             self.cache.restore()
 
