@@ -14,7 +14,8 @@ def run(results_path, seed):
 
     h = human['C']\
         .set_index(['version', 'pid', 'trial'])['mass? correct']\
-        .unstack('trial')
+        .unstack('trial')\
+        .dropna(subset=[1], axis=0)
 
     def llh(df):
         m = df.reset_index(['likelihood', 'model'], drop=True)

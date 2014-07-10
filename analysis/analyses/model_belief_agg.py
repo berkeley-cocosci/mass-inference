@@ -24,7 +24,9 @@ def run(results_path, seed):
         .get_group(('ipe', sigma, phi))\
         .drop(['sigma', 'phi'], axis=1)
 
-    results = pd.concat([empirical, ipe])
+    results = pd\
+        .concat([empirical, ipe])\
+        .set_index(['model', 'likelihood', 'version'])
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

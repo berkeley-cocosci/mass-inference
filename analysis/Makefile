@@ -5,9 +5,9 @@ ANALYSES := condition_counts\
 	    mass_accuracy_by_stimulus\
 	    mass_accuracy_by_stimulus_corrs\
 	    mass_accuracy_by_trial\
+	    mass_accuracy_by_trial_with_model\
 	    mass_responses_by_stimulus\
 	    mass_responses_by_stimulus_corrs\
-	    model_belief\
 	    model_log_lh\
 	    num_chance\
 	    num_learned_by_trial\
@@ -43,17 +43,14 @@ num_learned_by_trial: $(num_learned_by_trial_targets)
 $(num_learned_by_trial_targets): plots/num_learned_by_trial.py results/num_learned_by_trial.csv
 	python $<
 
-model_belief_versions := static learning chance best
-model_belief_pdf := $(addsuffix .pdf,$(addprefix figures/model_belief_,$(model_belief_versions)))
-model_belief_png := $(model_belief_pdf:%.pdf=%.png)
-model_belief_targets = $(model_belief_pdf) $(model_belief_png)
-model_belief: $(model_belief_targets)
-$(model_belief_targets): plots/model_belief.py results/model_belief_agg.csv results/participant_fits.csv
-	python $<
-
 mass_responses_by_stimulus_targets := figures/mass_responses_by_stimulus.pdf figures/mass_responses_by_stimulus.png
 mass_responses_by_stimulus: $(mass_responses_by_stimulus_targets)
 $(mass_responses_by_stimulus_targets): plots/mass_responses_by_stimulus.py results/mass_responses_by_stimulus.csv
+	python $<
+
+mass_accuracy_by_trial_with_model_targets := figures/mass_accuracy_by_trial_with_model.pdf figures/mass_accuracy_by_trial_with_model.png
+mass_accuracy_by_trial_with_model: $(mass_accuracy_by_trial_with_model_targets)
+$(mass_accuracy_by_trial_with_model_targets): plots/mass_accuracy_by_trial_with_model.py results/mass_accuracy_by_trial.csv
 	python $<
 
 mass_accuracy_by_trial_targets := figures/mass_accuracy_by_trial.pdf figures/mass_accuracy_by_trial.png
