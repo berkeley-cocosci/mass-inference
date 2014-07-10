@@ -16,7 +16,8 @@ ANALYSES := condition_counts\
 	    num_participants\
 	    mass_accuracy_by_trial_corrs\
 	    fall_responses_best_parameters\
-	    mass_accuracy_best_parameters
+	    mass_accuracy_best_parameters\
+	    fit_mass_responses
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -27,6 +28,11 @@ clean:
 	rm -f results/*
 	rm -f figures/*.pdf
 	rm -f figures/*.png
+
+fit_mass_responses_targets := figures/fit_mass_responses.pdf figures/fit_mass_responses.png
+fit_mass_responses: $(fit_mass_responses_targets)
+$(fit_mass_responses_targets): plots/fit_mass_responses.py results/mass_responses_by_stimulus.csv results/fit_mass_responses.csv
+	python $<
 
 mass_accuracy_best_parameters_targets := figures/mass_accuracy_best_parameters.pdf figures/mass_accuracy_best_parameters.png
 mass_accuracy_best_parameters: $(mass_accuracy_best_parameters_targets)
@@ -148,4 +154,7 @@ results/fall_responses_best_parameters.csv: analyses/fall_responses_best_paramet
 	python $<
 
 results/mass_accuracy_best_parameters.csv: analyses/mass_accuracy_best_parameters.py results/model_belief_agg_all_params.csv
+	python $<
+
+results/fit_mass_responses.csv: analyses/fit_mass_responses.py results/mass_responses_by_stimulus.csv
 	python $<

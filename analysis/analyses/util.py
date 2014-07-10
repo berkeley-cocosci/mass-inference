@@ -7,7 +7,7 @@ from mass.analysis import load_human as _load_human
 from mass.analysis import load_model as _load_model
 from mass.analysis import load_all as _load_all
 from mass.analysis import load_participants as _load_participants
-from mass.analysis import bootstrap_mean, bootcorr, beta
+from mass.analysis import bootstrap_mean, bootcorr, beta, sigmoid
 
 
 MAX_LOG = np.log(sys.float_info.max)

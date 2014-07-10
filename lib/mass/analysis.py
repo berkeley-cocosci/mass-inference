@@ -662,3 +662,8 @@ def beta(x, percentiles=None):
             index=percentiles,
             name=x.name)
     return stats
+
+
+def sigmoid(x, k):
+    y = 1.0 / (1 + np.exp(-k * (x - 0.5)))
+    return y

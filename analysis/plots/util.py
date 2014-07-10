@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import sys
 from path import path
+from mass.analysis import sigmoid
 
 
 def clear_right(ax=None):
