@@ -3,6 +3,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from mass.sims.build import build
 from copy import deepcopy
+import numpy as np
 
 defaults = dict(
     # maximum number of conditions per simulation task
@@ -240,8 +241,8 @@ def make_options():
         'tag': 'ipe',
         'cpo_path': "mass-inference-I-a",
         'num_samples': 100,
-        'sigmas': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
-        'phis': [0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        'sigmas': np.linspace(0, 0.05, 11),
+        'phis': np.arange(0, 3, 11),
         'kappas': [-1.0, 0.0, 1.0]
     })
 
@@ -262,8 +263,8 @@ def make_options():
         'tag': 'ipe',
         'cpo_path': "mass-inference-I-b",
         'num_samples': 100,
-        'sigmas': [0.01, 0.02, 0.03, 0.04, 0.05, 0.06],
-        'phis': [0.05, 0.1, 0.15, 0.2, 0.25, 0.3],
+        'sigmas': np.linspace(0, 0.05, 11),
+        'phis': np.arange(0, 3, 11),
         'kappas': [-1.0, 0.0, 1.0]
     })
 
