@@ -15,7 +15,8 @@ ANALYSES := condition_counts\
 	    payrate\
 	    num_participants\
 	    mass_accuracy_by_trial_corrs\
-	    fall_responses_best_parameters
+	    fall_responses_best_parameters\
+	    mass_responses_best_parameters
 
 .PHONY: all list clean $(ANALYSES)
 
@@ -26,6 +27,11 @@ clean:
 	rm -f results/*
 	rm -f figures/*.pdf
 	rm -f figures/*.png
+
+mass_accuracy_best_parameters_targets := figures/mass_accuracy_best_parameters.pdf figures/mass_accuracy_best_parameters.png
+mass_accuracy_best_parameters: $(mass_accuracy_best_parameters_targets)
+$(mass_accuracy_best_parameters_targets): plots/mass_accuracy_best_parameters.py results/mass_accuracy_best_parameters.csv
+	python $<
 
 fall_responses_best_parameters_targets := figures/fall_responses_best_parameters.pdf figures/fall_responses_best_parameters.png
 fall_responses_best_parameters: $(fall_responses_best_parameters_targets)
@@ -92,7 +98,10 @@ model_log_lh: results/model_log_lh.csv
 results/model_log_lh.csv: analyses/model_log_lh.py results/model_belief_agg.csv
 	python $<
 
-results/model_belief_agg.csv: analyses/model_belief_agg.py results/model_belief.csv
+results/model_belief_agg_all_params.csv: analyses/model_belief_agg_all_params.py results/model_belief.csv
+	python $<
+
+results/model_belief_agg.csv: analyses/model_belief_agg.py results/model_belief_agg_all_params.csv
 	python $<
 
 results/model_belief.csv: analyses/model_belief.py results/trial_order.csv
@@ -139,4 +148,7 @@ results/mass_accuracy_by_trial_corrs.csv: analyses/mass_accuracy_by_trial_corrs.
 	python $<
 
 results/fall_responses_best_parameters.csv: analyses/fall_responses_best_parameters.py
+	python $<
+
+results/mass_accuracy_best_parameters.csv: analyses/mass_accuracy_best_parameters.py results/model_belief_agg_all_params.csv
 	python $<

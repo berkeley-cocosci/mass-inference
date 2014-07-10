@@ -585,9 +585,9 @@ def load_model(version, data_path, sigma=0.04, phi=0.2):
 
 
 def load_all(model_version=None, human_version=None, data_path=None,
-             human=None, ipe=None, fb=None):
+             human=None, ipe=None, fb=None, sigma=0.04, phi=0.2):
     if ipe is None or fb is None:
-        ipe, fb = load_model(model_version, data_path)
+        ipe, fb = load_model(model_version, data_path, sigma=sigma, phi=phi)
 
     if human is None:
         human = load_human(human_version, data_path)
