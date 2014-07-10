@@ -16,7 +16,7 @@ ANALYSES := condition_counts\
 	    num_participants\
 	    mass_accuracy_by_trial_corrs\
 	    fall_responses_best_parameters\
-	    mass_responses_best_parameters
+	    mass_accuracy_best_parameters
 
 .PHONY: all list clean $(ANALYSES)
 
