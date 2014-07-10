@@ -241,8 +241,10 @@ def make_options():
         'tag': 'ipe',
         'cpo_path': "mass-inference-I-a",
         'num_samples': 100,
-        'sigmas': map(float, np.linspace(0, 0.05, 11)),
-        'phis': map(float, np.linspace(0, 3, 11)),
+        'sigmas': [0.0, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03,
+                   0.035, 0.04, 0.045, 0.05],
+        'phis': [0.0, 0.03, 0.06, 0.09, 0.12, 0.15, 0.18,
+                 0.21, 0.24, 0.27, 0.30],
         'kappas': [-1.0, 0.0, 1.0]
     })
 
@@ -263,8 +265,10 @@ def make_options():
         'tag': 'ipe',
         'cpo_path': "mass-inference-I-b",
         'num_samples': 100,
-        'sigmas': map(float, np.linspace(0, 0.05, 11)),
-        'phis': map(float, np.linspace(0, 3, 11)),
+        'sigmas': [0.0, 0.005, 0.01, 0.015, 0.02, 0.025, 0.03,
+                   0.035, 0.04, 0.045, 0.05],
+        'phis': [0.0, 0.03, 0.06, 0.09, 0.12, 0.15, 0.18,
+                 0.21, 0.24, 0.27, 0.30],
         'kappas': [-1.0, 0.0, 1.0]
     })
 
