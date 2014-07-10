@@ -240,7 +240,7 @@ class Simulation(Process):
                 if (data[i][..., 2] < 0).any():
                     mp.util.info("Object z-positions are negative!")
                     print data[i][..., :3]
-                    raise RuntimeError("invalid cpo positions")
+                    raise Warning("invalid cpo positions")
 
             self.cache.restore()
 
