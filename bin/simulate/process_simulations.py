@@ -71,7 +71,7 @@ def load(exp, tag):
         str(path(x).namebase) for x in index_levels['stimulus']]
 
     data = np.concatenate(
-        [data_by_key[key] for key in sorted(data_by_key.keys())],
+        [data_by_key[key] for key in index_levels['stimulus']],
         axis=stim_axis)
 
     return params, data
