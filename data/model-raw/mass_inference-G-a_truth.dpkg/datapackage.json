@@ -1,10 +1,5 @@
 {
   "description": null, 
-  "last_modified": "2013-11-13 15:21:51.397215", 
-  "title": null, 
-  "image": null, 
-  "datapackage_version": "1.0-beta.5", 
-  "sources": [], 
   "contributors": [
     {
       "email": "jhamrick@berkeley.edu", 
@@ -19,7 +14,10 @@
       "name": "Joshua B. Tenenbaum"
     }
   ], 
-  "version": "1.0.0", 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2014-07-11 14:08:39.730367", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,6 +25,9 @@
       "id": "odc-by"
     }
   ], 
+  "name": "mass_inference-G-a_truth.dpkg", 
+  "title": null, 
+  "version": "1.1.0", 
   "homepage": null, 
   "resources": [
     {
@@ -34,7 +35,7 @@
       "name": "simulations.npy", 
       "format": "npy", 
       "bytes": 453696, 
-      "modified": "2013-11-13 15:21:51.386060", 
+      "modified": "2014-07-11 14:08:39.721884", 
       "path": "./simulations.npy"
     }, 
     {
@@ -42,7 +43,7 @@
       "name": "forces.npy", 
       "format": "npy", 
       "bytes": 272, 
-      "modified": "2013-11-13 15:21:51.395974", 
+      "modified": "2014-07-11 14:08:39.729529", 
       "path": "./forces.npy"
     }, 
     {
@@ -50,7 +51,7 @@
       "name": "noises.npy", 
       "format": "npy", 
       "bytes": 2496, 
-      "modified": "2013-11-13 15:21:51.396498", 
+      "modified": "2014-07-11 14:08:39.730027", 
       "path": "./noises.npy"
     }, 
     {
@@ -162,7 +163,7 @@
       }, 
       "name": "simulation_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 15:21:51.397175"
+      "modified": "2014-07-11 14:08:39.730350"
     }, 
     {
       "format": "json", 
@@ -195,7 +196,7 @@
       }, 
       "name": "force_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 15:21:51.397190"
+      "modified": "2014-07-11 14:08:39.730358"
     }, 
     {
       "format": "json", 
@@ -247,8 +248,7 @@
       }, 
       "name": "noise_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 15:21:51.397205"
+      "modified": "2014-07-11 14:08:39.730362"
     }
-  ], 
-  "name": "mass_inference-G-a_truth.dpkg"
+  ]
 }
