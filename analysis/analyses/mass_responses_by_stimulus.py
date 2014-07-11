@@ -10,13 +10,13 @@ filename = "mass_responses_by_stimulus.csv"
 def run(results_path, seed):
     np.random.seed(seed)
     human = util.load_human()
-    results = []
 
     model_belief = pd.read_csv(
         results_path.joinpath('model_belief_agg.csv'))
 
     human_C = human['C']\
-        .dropna(axis=0, subset=['mass? response'])
+        .dropna(axis=0, subset=['mass? response'])\
+        .copy()
     human_C.loc[:, 'mass? response'] = (human_C['mass? response'] + 1) / 2.0
 
     correct = human_C\
@@ -29,7 +29,6 @@ def run(results_path, seed):
     correct = correct\
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
-    results.append(correct)
 
     belief = model_belief\
         .groupby('model')\
@@ -43,9 +42,11 @@ def run(results_path, seed):
     belief = belief\
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
-    results.append(belief)
 
-    results = pd.concat(results).unstack().sortlevel()
+    results = pd\
+        .concat([correct, belief])\
+        .unstack()\
+        .sortlevel()
 
     pth = results_path.joinpath(filename)
     results.to_csv(pth)

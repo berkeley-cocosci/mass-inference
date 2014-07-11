@@ -49,7 +49,10 @@ class IPE(object):
 
     @LazyProperty
     def P_fall_mean(self):
-        return self.P_fall_mean_all.ix[(self.sigma, self.phi)]
+        return self.P_fall_mean_all\
+                   .groupby(level=['sigma', 'phi'])\
+                   .get_group((self.sigma, self.phi))\
+                   .reset_index(['sigma', 'phi'], drop=True)
 
     @LazyProperty
     def P_fall_var_all(self):
@@ -59,7 +62,10 @@ class IPE(object):
 
     @LazyProperty
     def P_fall_var(self):
-        return self.P_fall_var_all.ix[(self.sigma, self.phi)]
+        return self.P_fall_var_all\
+                   .groupby(level=['sigma', 'phi'])\
+                   .get_group((self.sigma, self.phi))\
+                   .reset_index(['sigma', 'phi'], drop=True)
 
     @LazyProperty
     def P_fall_smooth(self):

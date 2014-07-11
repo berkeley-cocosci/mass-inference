@@ -73,7 +73,9 @@ def run(results_path, seed):
     results = []
 
     trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\
-               .set_index(['mode', 'trial']).ix['experimentC']
+               .set_index(['mode', 'trial'])\
+               .groupby(level='mode')\
+               .get_group('experimentC')
 
     human = data['human']['C']
     participants = human[['version', 'kappa0', 'pid']]\

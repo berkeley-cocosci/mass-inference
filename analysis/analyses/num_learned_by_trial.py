@@ -31,7 +31,8 @@ def run(results_path, seed):
     p = pd\
         .read_csv(results_path.joinpath('mass_accuracy.csv'))\
         .set_index(['species', 'class', 'version', 'kappa0'])\
-        .ix[('human', 'static', 'H', 'all')]['median']
+        .groupby(level=['species', 'class', 'version', 'kappa0'])\
+        .get_group(('human', 'static', 'H', 'all'))['median']
 
     num = results['median']\
         .groupby(level='kappa0')\

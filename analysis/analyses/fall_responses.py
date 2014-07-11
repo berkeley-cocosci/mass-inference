@@ -54,7 +54,8 @@ def run(results_path, seed):
             results.append(model)
 
     results = pd.concat(results)\
-                .set_index(['block', 'species', 'kappa0', 'stimulus'])\
+                .set_index(['version', 'block', 'species',
+                            'kappa0', 'stimulus'])\
                 .sortlevel()
 
     pth = results_path.joinpath(filename)
