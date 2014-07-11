@@ -1,10 +1,5 @@
 {
   "description": null, 
-  "last_modified": "2014-07-07 15:52:53.367590", 
-  "title": null, 
-  "image": null, 
-  "datapackage_version": "1.0-beta.5", 
-  "sources": [], 
   "contributors": [
     {
       "email": "jhamrick@berkeley.edu", 
@@ -19,7 +14,10 @@
       "name": "Joshua B. Tenenbaum"
     }
   ], 
-  "version": "1.0.0", 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2014-07-11 03:24:06.399430", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,30 +25,33 @@
       "id": "odc-by"
     }
   ], 
+  "name": "mass_inference-I-a_ipe.dpkg", 
+  "title": null, 
+  "version": "1.1.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "3d69b7cf21e9dffe869bb3ecdaf39486", 
+      "hash": "c549847b9dd1076627756acdc18ef21c", 
       "name": "simulations.npy", 
       "format": "npy", 
-      "bytes": 181440096, 
-      "modified": "2014-07-07 15:52:51.181117", 
+      "bytes": 609840096, 
+      "modified": "2014-07-11 03:23:56.243369", 
       "path": "./simulations.npy"
     }, 
     {
-      "hash": "558e94c2066e98860e12f93ed1c79f15", 
+      "hash": "4cf8f41f34a47fcf10e1276e0da882ae", 
       "name": "forces.npy", 
       "format": "npy", 
-      "bytes": 96112, 
-      "modified": "2014-07-07 15:52:53.348407", 
+      "bytes": 176112, 
+      "modified": "2014-07-11 03:24:06.361969", 
       "path": "./forces.npy"
     }, 
     {
-      "hash": "8980fb31bc9fbb136420a1e8d42f4d14", 
+      "hash": "de484deff007e00511ebc0606b445b70", 
       "name": "noises.npy", 
       "format": "npy", 
-      "bytes": 1440096, 
-      "modified": "2014-07-07 15:52:53.350299", 
+      "bytes": 2640096, 
+      "modified": "2014-07-11 03:24:06.365060", 
       "path": "./noises.npy"
     }, 
     {
@@ -76,11 +77,16 @@
         }, 
         "index_levels": {
           "phi": [
-            0.05, 
-            0.1, 
+            0.0, 
+            0.03, 
+            0.06, 
+            0.09, 
+            0.12, 
             0.15, 
-            0.2, 
-            0.25, 
+            0.18, 
+            0.21, 
+            0.24, 
+            0.27, 
             0.3
           ], 
           "kappa": [
@@ -89,16 +95,16 @@
             1.0
           ], 
           "stimulus": [
-            "tower_00087_0011010101", 
-            "tower_00196_1001100101", 
-            "tower_00265_0101010011", 
-            "tower_00309_1001111000", 
             "tower_00416_1001100011", 
-            "tower_00454_1100001011", 
-            "tower_00484_0111011000", 
+            "tower_00265_0101010011", 
+            "tower_00196_1001100101", 
             "tower_00495_0111001001", 
+            "tower_00815_0011011001", 
             "tower_00629_0111100010", 
-            "tower_00815_0011011001"
+            "tower_00087_0011010101", 
+            "tower_00484_0111011000", 
+            "tower_00309_1001111000", 
+            "tower_00454_1100001011"
           ], 
           "object": [
             "block0-physics", 
@@ -229,12 +235,17 @@
             "2.0"
           ], 
           "sigma": [
+            0.0, 
+            0.005, 
             0.01, 
+            0.015, 
             0.02, 
+            0.025, 
             0.03, 
+            0.035, 
             0.04, 
-            0.05, 
-            0.06
+            0.045, 
+            0.05
           ]
         }, 
         "simulations": {
@@ -247,7 +258,7 @@
       }, 
       "name": "simulation_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 15:52:53.367553"
+      "modified": "2014-07-11 03:24:06.399391"
     }, 
     {
       "format": "json", 
@@ -259,16 +270,16 @@
         ], 
         "index_levels": {
           "stimulus": [
-            "tower_00087_0011010101", 
-            "tower_00196_1001100101", 
-            "tower_00265_0101010011", 
-            "tower_00309_1001111000", 
             "tower_00416_1001100011", 
-            "tower_00454_1100001011", 
-            "tower_00484_0111011000", 
+            "tower_00265_0101010011", 
+            "tower_00196_1001100101", 
             "tower_00495_0111001001", 
+            "tower_00815_0011011001", 
             "tower_00629_0111100010", 
-            "tower_00815_0011011001"
+            "tower_00087_0011010101", 
+            "tower_00484_0111011000", 
+            "tower_00309_1001111000", 
+            "tower_00454_1100001011"
           ], 
           "sample": [
             0, 
@@ -373,18 +384,23 @@
             99
           ], 
           "phi": [
-            0.05, 
-            0.1, 
+            0.0, 
+            0.03, 
+            0.06, 
+            0.09, 
+            0.12, 
             0.15, 
-            0.2, 
-            0.25, 
+            0.18, 
+            0.21, 
+            0.24, 
+            0.27, 
             0.3
           ]
         }
       }, 
       "name": "force_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 15:52:53.367570"
+      "modified": "2014-07-11 03:24:06.399410"
     }, 
     {
       "format": "json", 
@@ -398,16 +414,16 @@
         ], 
         "index_levels": {
           "stimulus": [
-            "tower_00087_0011010101", 
-            "tower_00196_1001100101", 
-            "tower_00265_0101010011", 
-            "tower_00309_1001111000", 
             "tower_00416_1001100011", 
-            "tower_00454_1100001011", 
-            "tower_00484_0111011000", 
+            "tower_00265_0101010011", 
+            "tower_00196_1001100101", 
             "tower_00495_0111001001", 
+            "tower_00815_0011011001", 
             "tower_00629_0111100010", 
-            "tower_00815_0011011001"
+            "tower_00087_0011010101", 
+            "tower_00484_0111011000", 
+            "tower_00309_1001111000", 
+            "tower_00454_1100001011"
           ], 
           "sample": [
             0, 
@@ -524,12 +540,17 @@
             "block9-physics"
           ], 
           "sigma": [
+            0.0, 
+            0.005, 
             0.01, 
+            0.015, 
             0.02, 
+            0.025, 
             0.03, 
+            0.035, 
             0.04, 
-            0.05, 
-            0.06
+            0.045, 
+            0.05
           ], 
           "position": [
             "x", 
@@ -540,8 +561,7 @@
       }, 
       "name": "noise_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 15:52:53.367579"
+      "modified": "2014-07-11 03:24:06.399419"
     }
-  ], 
-  "name": "mass_inference-I-a_ipe.dpkg"
+  ]
 }

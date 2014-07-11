@@ -1,10 +1,5 @@
 {
   "description": null, 
-  "last_modified": "2014-07-07 15:53:20.082233", 
-  "title": null, 
-  "image": null, 
-  "datapackage_version": "1.0-beta.5", 
-  "sources": [], 
   "contributors": [
     {
       "email": "jhamrick@berkeley.edu", 
@@ -19,7 +14,10 @@
       "name": "Joshua B. Tenenbaum"
     }
   ], 
-  "version": "1.0.0", 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2014-07-11 03:25:33.970616", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,27 +25,29 @@
       "id": "odc-by"
     }
   ], 
+  "name": "mass_inference-I-a_ipe_fall.dpkg", 
+  "title": null, 
+  "version": "1.1.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "5096b1e0aedc094ee697500dc04830f8", 
+      "hash": "1c1d445c6e6a1545224d1f1f365b38cb", 
       "name": "model.csv", 
       "format": "csv", 
-      "bytes": 5368142, 
-      "modified": "2014-07-07 15:53:19.525541", 
-      "path": "./model.csv"
+      "path": "./model.csv", 
+      "bytes": 18552650, 
+      "modified": "2014-07-11 03:25:31.991161"
     }, 
     {
+      "name": "metadata", 
+      "mediaformat": "application/json", 
       "format": "json", 
       "data": {
         "nfell_min": 0, 
         "nfell_max": 10, 
         "source": "/home/jhamrick/project/mass-inference/data/model-raw/mass_inference-I-a_ipe.dpkg"
       }, 
-      "name": "metadata", 
-      "mediaformat": "application/json", 
-      "modified": "2014-07-07 15:53:20.082195"
+      "modified": "2014-07-11 03:25:33.970566"
     }
-  ], 
-  "name": "mass_inference-I-a_ipe_fall.dpkg"
+  ]
 }
