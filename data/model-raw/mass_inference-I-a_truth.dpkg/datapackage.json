@@ -17,7 +17,7 @@
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
   "sources": [], 
-  "last_modified": "2014-07-07 14:26:56.173557", 
+  "last_modified": "2014-07-10 10:43:14.941202", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,15 +27,15 @@
   ], 
   "name": "mass_inference-I-a_truth.dpkg", 
   "title": null, 
-  "version": "1.1.0", 
+  "version": "1.2.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "b3475668bd676be266338f21d5481d19", 
+      "hash": "abdb0e12b3985ba102aec1f68a592c48", 
       "name": "simulations.npy", 
       "format": "npy", 
       "bytes": 50496, 
-      "modified": "2014-07-07 14:26:56.171459", 
+      "modified": "2014-07-10 10:43:14.938996", 
       "path": "./simulations.npy"
     }, 
     {
@@ -43,7 +43,7 @@
       "name": "forces.npy", 
       "format": "npy", 
       "bytes": 272, 
-      "modified": "2014-07-07 14:26:56.172623", 
+      "modified": "2014-07-10 10:43:14.940220", 
       "path": "./forces.npy"
     }, 
     {
@@ -51,7 +51,7 @@
       "name": "noises.npy", 
       "format": "npy", 
       "bytes": 2496, 
-      "modified": "2014-07-07 14:26:56.173085", 
+      "modified": "2014-07-10 10:43:14.940701", 
       "path": "./noises.npy"
     }, 
     {
@@ -139,7 +139,7 @@
       }, 
       "name": "simulation_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 14:26:56.173526"
+      "modified": "2014-07-10 10:43:14.941169"
     }, 
     {
       "format": "json", 
@@ -172,7 +172,7 @@
       }, 
       "name": "force_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 14:26:56.173541"
+      "modified": "2014-07-10 10:43:14.941185"
     }, 
     {
       "format": "json", 
@@ -224,7 +224,7 @@
       }, 
       "name": "noise_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-07 14:26:56.173548"
+      "modified": "2014-07-10 10:43:14.941192"
     }
   ]
 }
