@@ -19,7 +19,9 @@ def load(exp, tag):
     params = get_params(exp, tag)
     tasks = Tasks.load(params['tasks_path'])
 
+    # first load in all the data
     data_by_key = {}
+    conditions = {}
     for taskname in sorted(tasks.keys()):
         task = tasks[taskname]
         data = np.load(task['data_path'])
@@ -28,7 +30,13 @@ def load(exp, tag):
         key = stim
         if key not in data_by_key:
             data_by_key[key] = []
+            conditions[key] = []
         data_by_key[key].append(data)
+        # the conditions are the actual indexes and values of all the
+        # simulations that were run in this chunk. we want to read
+        # those in, too, so we can make sure we concatenate the data
+        # in the correct order
+        conditions[key].append(np.array(task['conditions']))
 
     index_names = params['index_names']
     index_levels = params['index_levels']
@@ -42,7 +50,14 @@ def load(exp, tag):
     time_idx = [0, 1, -1]
 
     for key in data_by_key:
-        all_data = np.vstack(data_by_key[key]).reshape(shape)
+        # get the simulation indices, and sort by them, so we can
+        # correctly order the data
+        all_conditions = np.vstack(conditions[key])
+        keys = all_conditions[:, :, 0][:, ::-1].T
+        order = np.lexsort(keys)
+        # concatenate the data, reorder it, and reshape it to have the
+        # correct shape, and index into the time axis
+        all_data = np.vstack(data_by_key[key])[order].reshape(shape)
         data_by_key[key] = all_data.take(time_idx, axis=time_axis)
 
     step_size = params['simulation']['step_size']
