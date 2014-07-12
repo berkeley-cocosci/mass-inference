@@ -1,9 +1,10 @@
 import os
 env = Environment(ENV=os.environ)
 analysis = Builder(action="python $SOURCE $TARGET")
-python = Builder(action="python $SOURCE")
-builders = {"Python": python, "Analysis": analysis}
+plot = Builder(action="python $SOURCE $TARGETS")
+builders = {"Plot": plot, "Analysis": analysis}
 env.Append(BUILDERS=builders)
+
 
 def make_analysis(name, additional_dependencies=None, alias=False):
     dependencies = ["analyses/{}.py".format(name), "analyses/util.py"]
@@ -13,13 +14,33 @@ def make_analysis(name, additional_dependencies=None, alias=False):
     if alias:
         env.Alias(name, "results/{}.csv".format(name))
 
-def plot(name, additional_dependencies):
+
+def make_plot(name, additional_dependencies):
     targets = ["figures/{}.pdf".format(name), "figures/{}.png".format(name)]
     dependencies = ["plots/{}.py".format(name), "plots/util.py"]
     if additional_dependencies:
         dependencies.extend(additional_dependencies)
-    env.Python(targets, dependencies)
+    env.Plot(targets, dependencies)
     env.Alias(name, targets)
+
+
+def make_fall_response_plots():
+    all_filenames = []
+    params = [('G', 'A'), ('G', 'B'), 
+              ('H', 'A'), ('H', 'B'),
+              ('GH', 'A'), ('GH', 'B'),
+              ('I', 'A')]
+
+    for version, block in params:
+        filename = "figures/fall_responses_{}_{}".format(version, block)
+        filenames = ["{}.{}".format(filename, ext) for ext in ["pdf", "png"]]
+        all_filenames.extend(filenames)
+        env.Command(
+            filenames, 
+            "plots/fall_responses.py",
+            "python $SOURCE {} {} $TARGETS".format(version, block))
+
+    env.Alias("fall_responses", all_filenames)
 
 
 ## Load in configuration
@@ -56,9 +77,10 @@ make_analysis("trial_order", ["human"])
 make_analysis("num_chance", ["human"], alias=True)
 
 make_analysis("fall_responses", ["human", "model"])
+make_fall_response_plots()
 make_analysis("fall_response_corrs", ["results/fall_responses.csv"], alias=True)
 make_analysis("fall_responses_best_parameters", ["human", "model"])
-plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
+make_plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
 
 make_analysis("model_belief", ["human", "model", "results/trial_order.csv"])
 make_analysis("model_belief_agg_all_params", ["results/model_belief.csv"])
@@ -67,21 +89,21 @@ make_analysis("model_log_lh", ["human", "results/model_belief_agg.csv"], alias=T
 
 make_analysis("mass_accuracy", ["human", "results/model_belief_agg.csv"], alias=True)
 make_analysis("mass_accuracy_best_parameters", ["human", "results/model_belief_agg_all_params.csv"])
-plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
+make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
 make_analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief_agg.csv"])
-plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
+make_plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
 make_analysis("mass_accuracy_by_stimulus_corrs", ["results/mass_accuracy_by_stimulus.csv"], alias=True)
 make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief_agg.csv"])
-plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
-plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv"])
+make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
+make_plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv"])
 make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"], alias=True)
 make_analysis("mass_responses_by_stimulus", ["human", "results/model_belief_agg.csv"])
-plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
+make_plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
 make_analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_stimulus.csv"], alias=True)
 make_analysis("fit_mass_responses", ["results/mass_responses_by_stimulus.csv"])
-plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
+make_plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
 
 make_analysis("switchpoint", ["human"])
 make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
-plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
+make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
 make_analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)

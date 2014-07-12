@@ -259,7 +259,7 @@ def sync_ylabel_coords(axes, x, y=0.5):
 report_pearson = r"$r$ = {median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
 
 
-def make_plot(func):
+def make_plot(func, fig_paths):
     root = path("..")
 
     config = SafeConfigParser()
@@ -267,8 +267,5 @@ def make_plot(func):
 
     results_path = root.joinpath(
         config.get("analysis", "results_path")).relpath()
-    fig_path = root.joinpath(
-        config.get("analysis", "figure_path")).relpath()
 
-    for pth in func(results_path, fig_path):
-        print "--> Saved figure to '{}'".format(pth)
+    func(results_path, fig_paths)
