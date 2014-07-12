@@ -7,15 +7,23 @@ import util
 
 
 def plot(results_path, fig_paths):
-    corrs = pd.read_csv(
+    mass_corrs = pd.read_csv(
         results_path.joinpath("mass_accuracy_best_parameters.csv"))
-    corrs = corrs\
+    mass_corrs = mass_corrs\
         .set_index(['sigma', 'phi'])\
         .unstack('sigma')
 
+    fall_corrs = pd.read_csv(
+        results_path.joinpath("fall_responses_best_parameters.csv"))
+    fall_corrs = fall_corrs\
+        .set_index(['sigma', 'phi'])\
+        .unstack('sigma')
+
+    corrs = (mass_corrs + fall_corrs) / 2.0
+
     fig, ax = plt.subplots()
     cax = ax.imshow(
-        corrs, cmap='gray', interpolation='nearest', vmin=-0.2, vmax=0.4,
+        corrs, cmap='gray', interpolation='nearest', vmin=0.2, vmax=0.6,
         origin='lower')
     ax.set_xlabel(r"Perceptual uncertainty ($\sigma$)")
     ax.set_ylabel(r"Force uncertainty ($\phi$)")
@@ -23,9 +31,9 @@ def plot(results_path, fig_paths):
     ax.set_yticks(range(len(corrs.index))[::2])
     ax.set_xticklabels(corrs['pearsonr'].columns[::2])
     ax.set_yticklabels(corrs.index[::2])
-    ax.set_title("Correlations for \"which is heavier?\"")
+    ax.set_title("Average correlations")
 
-    fig.colorbar(cax, ticks=[-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4])
+    fig.colorbar(cax, ticks=[0.2, 0.3, 0.4, 0.5, 0.6])
 
     fig.set_figwidth(5)
     fig.set_figheight(4)

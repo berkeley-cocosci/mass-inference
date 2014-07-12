@@ -1,9 +1,14 @@
+from ConfigParser import SafeConfigParser
+from path import path
 import os
+
 env = Environment(ENV=os.environ)
 analysis = Builder(action="python $SOURCE $TARGET")
 plot = Builder(action="python $SOURCE $TARGETS")
 builders = {"Plot": plot, "Analysis": analysis}
 env.Append(BUILDERS=builders)
+
+ROOT = path("..")
 
 
 def make_analysis(name, additional_dependencies=None, alias=False):
@@ -44,15 +49,11 @@ def make_fall_response_plots():
 
 
 ## Load in configuration
-from ConfigParser import SafeConfigParser
-from path import path
-root = path("..")
-
 config = SafeConfigParser()
-config.read(root.joinpath("config.ini"))
+config.read(ROOT.joinpath("config.ini"))
 human_version = config.get("analysis", "human_version")
 model_version = config.get("analysis", "model_version")
-data_path = root.joinpath(config.get("analysis", "data_path")).relpath()
+data_path = ROOT.joinpath(config.get("analysis", "data_path")).relpath()
 
 ## Data dependencies
 human_dpkg = data_path.joinpath("human/mass_inference-{}.dpkg".format(human_version))
@@ -107,3 +108,5 @@ make_analysis("switchpoint", ["human"])
 make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
 make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
 make_analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)
+
+make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
