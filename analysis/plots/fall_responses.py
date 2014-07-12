@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import util
 
 
-def plot_version_block(version, block, results_path, fig_path):
+def plot(results_path, fig_paths):
+
+    version, block = fig_paths[:2]
+    fig_paths = fig_paths[2:]
 
     results = pd.read_csv(results_path.joinpath("fall_responses.csv"))
     groups = results.set_index(['stimulus', 'kappa0'])\
@@ -74,25 +78,9 @@ def plot_version_block(version, block, results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("fall_responses_%s_%s.%s" % (
-        version, block, ext)) for ext in ('png', 'pdf')]
-    for pth in pths:
+    for pth in fig_paths:
         util.save(pth, close=False)
-    return pths
-
-
-def plot(results_path, fig_path):
-    pths = []
-    for block in ('A', 'B'):
-        for version in ('G', 'H', 'I', 'GH'):
-            try:
-                pths.extend(plot_version_block(
-                    version, block, results_path, fig_path))
-            except KeyError:
-                print "Warning: block %s and version %s does not exist" % (
-                    block, version)
-    return pths
 
 
 if __name__ == "__main__":
-    util.make_plot(plot)
+    util.make_plot(plot, sys.argv[1:])

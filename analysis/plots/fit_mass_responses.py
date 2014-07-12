@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import util
 
 
-def plot(results_path, fig_path):
+def plot(results_path, fig_paths):
 
     responses = pd\
         .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
@@ -43,7 +44,8 @@ def plot(results_path, fig_path):
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
-        ax1.plot(xspace, util.sigmoid(xspace, params['ipe']), 'r-')
+        ax1.plot(xspace, util.sigmoid(xspace, params['ipe']),
+                 'k--', linewidth=2)
 
         ax2.errorbar(util.sigmoid(x, params['ipe']),
                      y, xerr=[xl, xu], yerr=[yl, yu],
@@ -66,7 +68,8 @@ def plot(results_path, fig_path):
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
-        ax3.plot(xspace, util.sigmoid(xspace, params['empirical']), 'r-')
+        ax3.plot(xspace, util.sigmoid(xspace, params['empirical']),
+                 'k--', linewidth=2)
 
         ax4.errorbar(util.sigmoid(x, params['empirical']),
                      y, xerr=[xl, xu], yerr=[yl, yu],
@@ -93,12 +96,9 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("fit_mass_responses.%s" % ext)
-            for ext in ('png', 'pdf')]
-    for pth in pths:
+    for pth in fig_paths:
         util.save(pth, close=False)
-    return pths
 
 
 if __name__ == "__main__":
-    util.make_plot(plot)
+    util.make_plot(plot, sys.argv[1:])

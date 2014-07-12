@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "model_log_lh.csv"
+from path import path
 
 
 def run(results_path, seed):
@@ -24,7 +24,8 @@ def run(results_path, seed):
         lh.name = df.name
         return lh
 
-    belief = pd.read_csv(results_path.joinpath('model_belief_agg.csv'))
+    belief = pd.read_csv(path(results_path).dirname().joinpath(
+        'model_belief_agg.csv'))
     results = belief\
         .set_index([
             'likelihood', 'model', 'version', 'pid', 'trial'])['p correct']\
@@ -40,10 +41,8 @@ def run(results_path, seed):
         .set_index(['version', 'likelihood', 'model', 'pid'])\
         .sort()
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

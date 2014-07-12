@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
 import scipy.stats
-
-filename = "fall_responses_best_parameters.csv"
 
 
 def run(results_path, seed):
@@ -31,10 +30,8 @@ def run(results_path, seed):
         .reset_index(['phi'])\
         .rename(columns={0: 'pearsonr'})
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

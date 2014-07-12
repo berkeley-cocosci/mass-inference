@@ -1,25 +1,14 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "switchpoint.csv"
 
 
 def run(results_path, seed):
     def find_switchpoint(df):
         version, kappa0, pid = df.name
-        # if np.isnan(float(df[df.columns[0]])):
-        #     df = df.dropna(axis=1)
-        #     arr = np.asarray(df).copy().ravel()
-        #     new_arr = np.empty(arr.shape)
-        #     new_arr[:] = np.nan
-        # if version == 'I':
-        #     df = df.dropna(axis=1)
-        #     new_arr = np.asarray(df).copy().ravel()
-        #     new_arr[:] = np.nan
-        #     new_arr[0] = df.all(axis=1).all()
 
         df = df.dropna(axis=1)
         arr = np.asarray(df).copy().ravel()
@@ -50,10 +39,8 @@ def run(results_path, seed):
         .apply(find_switchpoint)\
         .dropna(axis=0, how='all')
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

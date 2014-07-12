@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "mass_accuracy_by_stimulus_corrs.csv"
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
     results = []
 
-    accuracy = pd\
-        .read_csv(results_path.joinpath('mass_accuracy_by_stimulus.csv'))\
-        .set_index(['version', 'species', 'kappa0', 'stimulus'])['median']
+    accuracy = pd.read_csv(path(results_path).dirname().joinpath(
+        'mass_accuracy_by_stimulus.csv'))
+    accuracy = accuracy.set_index(
+        ['version', 'species', 'kappa0', 'stimulus'])['median']
 
     results = {}
     for version, df in accuracy.groupby(level='version'):
@@ -32,10 +33,8 @@ def run(results_path, seed):
         results.index,
         names=['version', 'X', 'Y'])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

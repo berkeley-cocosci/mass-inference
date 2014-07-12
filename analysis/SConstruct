@@ -1,0 +1,109 @@
+import os
+env = Environment(ENV=os.environ)
+analysis = Builder(action="python $SOURCE $TARGET")
+plot = Builder(action="python $SOURCE $TARGETS")
+builders = {"Plot": plot, "Analysis": analysis}
+env.Append(BUILDERS=builders)
+
+
+def make_analysis(name, additional_dependencies=None, alias=False):
+    dependencies = ["analyses/{}.py".format(name), "analyses/util.py"]
+    if additional_dependencies:
+        dependencies.extend(additional_dependencies)
+    env.Analysis("results/{}.csv".format(name), dependencies)
+    if alias:
+        env.Alias(name, "results/{}.csv".format(name))
+
+
+def make_plot(name, additional_dependencies):
+    targets = ["figures/{}.pdf".format(name), "figures/{}.png".format(name)]
+    dependencies = ["plots/{}.py".format(name), "plots/util.py"]
+    if additional_dependencies:
+        dependencies.extend(additional_dependencies)
+    env.Plot(targets, dependencies)
+    env.Alias(name, targets)
+
+
+def make_fall_response_plots():
+    all_filenames = []
+    params = [('G', 'A'), ('G', 'B'), 
+              ('H', 'A'), ('H', 'B'),
+              ('GH', 'A'), ('GH', 'B'),
+              ('I', 'A')]
+
+    for version, block in params:
+        filename = "figures/fall_responses_{}_{}".format(version, block)
+        filenames = ["{}.{}".format(filename, ext) for ext in ["pdf", "png"]]
+        all_filenames.extend(filenames)
+        env.Command(
+            filenames, 
+            "plots/fall_responses.py",
+            "python $SOURCE {} {} $TARGETS".format(version, block))
+
+    env.Alias("fall_responses", all_filenames)
+
+
+## Load in configuration
+from ConfigParser import SafeConfigParser
+from path import path
+root = path("..")
+
+config = SafeConfigParser()
+config.read(root.joinpath("config.ini"))
+human_version = config.get("analysis", "human_version")
+model_version = config.get("analysis", "model_version")
+data_path = root.joinpath(config.get("analysis", "data_path")).relpath()
+
+## Data dependencies
+human_dpkg = data_path.joinpath("human/mass_inference-{}.dpkg".format(human_version))
+env.Alias("human", human_dpkg.joinpath("experiment.csv"))
+env.Alias("participants", human_dpkg.joinpath("participants.csv"))
+
+ipe_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_ipe_fall.dpkg".format(model_version))
+ipe_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_ipe_fall.dpkg".format(model_version))
+env.Alias("ipe", [ipe_dpkg_A.joinpath("model.csv"), ipe_dpkg_B.joinpath("model.csv")])
+
+fb_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_truth_fall.dpkg".format(model_version))
+fb_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_truth_fall.dpkg".format(model_version))
+env.Alias("fb", [fb_dpkg_A.joinpath("model.csv"), fb_dpkg_B.joinpath("model.csv")])
+
+env.Alias("model", ["ipe", "fb"])
+
+## Analyses and plots
+make_analysis("num_participants", ["participants"], alias=True)
+make_analysis("condition_counts", ["human"], alias=True)
+make_analysis("payrate", ["human"], alias=True)
+make_analysis("trial_order", ["human"])
+make_analysis("num_chance", ["human"], alias=True)
+
+make_analysis("fall_responses", ["human", "model"])
+make_fall_response_plots()
+make_analysis("fall_response_corrs", ["results/fall_responses.csv"], alias=True)
+make_analysis("fall_responses_best_parameters", ["human", "model"])
+make_plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
+
+make_analysis("model_belief", ["human", "model", "results/trial_order.csv"])
+make_analysis("model_belief_agg_all_params", ["results/model_belief.csv"])
+make_analysis("model_belief_agg", ["results/model_belief_agg_all_params.csv"])
+make_analysis("model_log_lh", ["human", "results/model_belief_agg.csv"], alias=True)
+
+make_analysis("mass_accuracy", ["human", "results/model_belief_agg.csv"], alias=True)
+make_analysis("mass_accuracy_best_parameters", ["human", "results/model_belief_agg_all_params.csv"])
+make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
+make_analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief_agg.csv"])
+make_plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
+make_analysis("mass_accuracy_by_stimulus_corrs", ["results/mass_accuracy_by_stimulus.csv"], alias=True)
+make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief_agg.csv"])
+make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
+make_plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv"])
+make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"], alias=True)
+make_analysis("mass_responses_by_stimulus", ["human", "results/model_belief_agg.csv"])
+make_plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
+make_analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_stimulus.csv"], alias=True)
+make_analysis("fit_mass_responses", ["results/mass_responses_by_stimulus.csv"])
+make_plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
+
+make_analysis("switchpoint", ["human"])
+make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
+make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
+make_analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)

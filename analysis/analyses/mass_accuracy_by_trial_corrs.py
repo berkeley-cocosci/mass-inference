@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
 import scipy.stats
-
-filename = "mass_accuracy_by_trial_corrs.csv"
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
 
     cols = ['version', 'kappa0', 'num_mass_trials']
-    means = pd\
-        .read_csv(results_path.joinpath("mass_accuracy_by_trial.csv"))\
+    means = pd.read_csv(path(results_path).dirname().joinpath(
+        "mass_accuracy_by_trial.csv"))
+    means = means\
         .groupby(['species', 'class'])\
         .get_group(('human', 'chance'))\
         .set_index(cols)[['trial', 'median']]
@@ -32,10 +33,8 @@ def run(results_path, seed):
 
     results = means.groupby(level=cols).apply(corr)
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
+    results.to_csv(results_path)
 
-    return pth
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

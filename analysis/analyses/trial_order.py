@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
+import sys
 import util
-
-filename = "trial_order.csv"
 
 
 def run(results_path, seed):
@@ -11,10 +10,8 @@ def run(results_path, seed):
         .set_index(['mode', 'trial', 'pid'])['stimulus']\
         .unstack('pid')
 
-    pth = results_path.joinpath(filename)
-    order.to_csv(pth)
-    return pth
+    order.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import util
 
 
-def plot(results_path, fig_path):
+def plot(results_path, fig_paths):
 
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
@@ -71,12 +72,9 @@ def plot(results_path, fig_path):
     plt.draw()
     plt.tight_layout()
 
-    pths = [fig_path.joinpath("mass_accuracy_by_trial.%s" % ext)
-            for ext in ('png', 'pdf')]
-    for pth in pths:
+    for pth in fig_paths:
         util.save(pth, close=False)
-    return pths
 
 
 if __name__ == "__main__":
-    util.make_plot(plot)
+    util.make_plot(plot, sys.argv[1:])

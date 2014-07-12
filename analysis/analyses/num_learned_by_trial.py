@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import scipy.stats
-
-filename = "num_learned_by_trial.csv"
+from path import path
 
 
 def run(results_path, seed):
 
-    sp = pd\
-        .read_csv(results_path.joinpath('switchpoint.csv'))
+    sp = pd.read_csv(path(results_path).dirname().joinpath(
+        'switchpoint.csv'))
 
     sp_all = sp.copy()
     sp_all['kappa0'] = 'all'
@@ -29,7 +29,7 @@ def run(results_path, seed):
         .unstack(-1)
 
     p = pd\
-        .read_csv(results_path.joinpath('mass_accuracy.csv'))\
+        .read_csv(path(results_path).dirname().joinpath('mass_accuracy.csv'))\
         .set_index(['species', 'class', 'version', 'kappa0'])\
         .groupby(level=['species', 'class', 'version', 'kappa0'])\
         .get_group(('human', 'static', 'H', 'all'))['median']
@@ -51,10 +51,8 @@ def run(results_path, seed):
 
     results = pd.concat([results, chance])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

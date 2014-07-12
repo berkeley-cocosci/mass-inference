@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import numpy as np
 
 filename = "num_chance.csv"
-texname = "num_chance.tex"
-
-words = [
-    'zero', 'one', 'two', 'three', 'four',
-    'five', 'six', 'seven', 'eight', 'nine', 'ten'
-]
 
 
 def run(results_path, seed):
@@ -27,19 +22,8 @@ def run(results_path, seed):
         .apply(util.beta, [alpha])\
         .unstack(-1) <= 0.5
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-
-    with open(results_path.joinpath(texname), "w") as fh:
-        fh.write("%% AUTOMATICALLY GENERATED -- DO NOT EDIT!\n")
-        num = results[alpha].sum()
-        if num < len(words):
-            num = words[num]
-        cmd = util.newcommand("NumChance", num)
-        fh.write(cmd)
-
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])
