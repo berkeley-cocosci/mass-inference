@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "participant_fits.csv"
+from path import path
 
 
 def run(results_path, seed):
@@ -18,11 +18,13 @@ def run(results_path, seed):
         ranks = pd.Series(cols, index=index)
         return ranks
 
-    llh = pd.read_csv(results_path.joinpath('model_log_lh.csv'))\
-            .groupby('likelihood')\
-            .get_group('empirical')\
-            .set_index(['version', 'pid', 'trial', 'model'])['llh']\
-            .unstack('model')
+    llh = pd.read_csv(path(results_path).dirname().joinpath(
+        'model_log_lh.csv'))
+    llh = llh\
+        .groupby('likelihood')\
+        .get_group('empirical')\
+        .set_index(['version', 'pid', 'trial', 'model'])['llh']\
+        .unstack('model')
 
     results = llh\
         .groupby(level=['version', 'pid'])\
@@ -37,10 +39,8 @@ def run(results_path, seed):
         })\
         .set_index(['version', 'pid'])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

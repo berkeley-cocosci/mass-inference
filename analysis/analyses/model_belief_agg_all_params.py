@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "model_belief_agg_all_params.csv"
+from path import path
 
 
 def agg_belief(df):
@@ -38,7 +38,7 @@ def run(results_path, seed):
     np.random.seed(seed)
 
     results = pd.read_csv(
-        results_path.joinpath("model_belief.csv"))
+        path(results_path).dirname().joinpath("model_belief.csv"))
     results['p'] = np.exp(results['logp'])
 
     all_belief = []
@@ -67,11 +67,8 @@ def run(results_path, seed):
         .set_index(['model', 'likelihood', 'version', 'kappa0',
                     'pid', 'stimulus', 'trial'])
 
-    pth = results_path.joinpath(filename)
-    belief.to_csv(pth)
-
-    return pth
+    belief.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

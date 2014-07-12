@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "fall_responses.csv"
 
 
 def run(results_path, seed):
@@ -58,10 +57,8 @@ def run(results_path, seed):
                             'kappa0', 'stimulus'])\
                 .sortlevel()
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

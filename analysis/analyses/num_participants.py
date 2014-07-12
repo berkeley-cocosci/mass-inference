@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
+import sys
 import util
-
-filename = "num_participants.csv"
 
 
 def run(results_path, seed):
@@ -20,10 +19,9 @@ def run(results_path, seed):
         counts['ok'] +
         counts['repeat_worker'])
 
-    pth = results_path.joinpath(filename)
-    counts.to_csv(pth)
-    return pth
+    counts.to_csv(results_path)
+    return results_path
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

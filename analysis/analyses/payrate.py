@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 from datetime import timedelta
-
-filename = "payrate.csv"
 
 
 def run(results_path, seed):
@@ -36,10 +35,8 @@ def run(results_path, seed):
     results = pd.DataFrame.from_dict(results).T
     results.index.name = "version"
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

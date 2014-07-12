@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "mass_accuracy_by_stimulus.csv"
+from path import path
 
 
 def run(results_path, seed):
@@ -12,8 +12,8 @@ def run(results_path, seed):
     human = util.load_human()
     results = []
 
-    model_belief = pd.read_csv(
-        results_path.joinpath('model_belief_agg.csv'))
+    model_belief = pd.read_csv(path(results_path).dirname().joinpath(
+        'model_belief_agg.csv'))
 
     correct = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
@@ -44,10 +44,8 @@ def run(results_path, seed):
 
     results = pd.concat(results).unstack().sortlevel()
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

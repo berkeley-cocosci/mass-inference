@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
-
-filename = "model_belief_agg.csv"
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
 
-    belief = pd.read_csv(
-        results_path.joinpath("model_belief_agg_all_params.csv"))
+    belief = pd.read_csv(path(results_path).dirname().joinpath(
+        "model_belief_agg_all_params.csv"))
 
     sigma, phi = util.get_params()
 
@@ -28,11 +28,8 @@ def run(results_path, seed):
         .concat([empirical, ipe])\
         .set_index(['model', 'likelihood', 'version'])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

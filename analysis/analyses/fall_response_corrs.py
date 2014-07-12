@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
+import sys
 import pandas as pd
 import numpy as np
 import util
-
-filename = "fall_response_corrs.csv"
-texname = "fall_response_corrs.tex"
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
 
+    pth = path(results_path).dirname().joinpath("fall_responses.csv")
     means = pd\
-        .read_csv(results_path.joinpath("fall_responses.csv"))\
+        .read_csv(pth)\
         .set_index(['version', 'block', 'species',
                     'kappa0', 'stimulus'])['median']\
         .groupby(level='version')\
@@ -42,19 +42,8 @@ def run(results_path, seed):
         results.index,
         names=['block', 'X', 'Y'])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-
-    with open(results_path.joinpath(texname), "w") as fh:
-        fh.write("%% AUTOMATICALLY GENERATED -- DO NOT EDIT!\n")
-        for (block, X, Y), stats in results.iterrows():
-            cmd = util.newcommand(
-                "%sv%sFallCorr%s" % (X, Y, block),
-                util.latex_pearson.format(**dict(stats)))
-            fh.write(cmd)
-
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

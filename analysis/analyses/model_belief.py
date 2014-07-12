@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
 from itertools import product as iproduct
-
-filename = "model_belief.csv"
+from path import path
 
 
 def make_belief(pfall, fall, hyps, index, prior):
@@ -72,7 +72,8 @@ def run(results_path, seed):
     data = util.load_all()
     results = []
 
-    trials = pd.read_csv(results_path.joinpath('trial_order.csv'))\
+    pth = path(results_path).dirname().joinpath("trial_order.csv")
+    trials = pd.read_csv(pth)\
                .set_index(['mode', 'trial'])\
                .groupby(level='mode')\
                .get_group('experimentC')
@@ -134,10 +135,8 @@ def run(results_path, seed):
         .set_index(['model', 'likelihood', 'version', 'kappa0',
                     'pid', 'trial', 'hypothesis'])
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])

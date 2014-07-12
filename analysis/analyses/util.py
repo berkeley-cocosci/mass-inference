@@ -140,19 +140,13 @@ def load_all():
     return data
 
 
-def run_analysis(func):
+def run_analysis(func, filename):
     root = path("..")
     config = SafeConfigParser()
     config.read(root.joinpath("config.ini"))
     seed = config.getint("analysis", "seed")
 
-    results_path = root.joinpath(
-        config.get("analysis", "results_path")).relpath()
-    if not results_path.exists():
-        results_path.makedirs()
-
-    pth = func(results_path, seed)
-    print "--> Saved results to '{}'".format(pth)
+    func(filename, seed)
 
 
 def get_params():

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
+import sys
 import util
 import pandas as pd
 import numpy as np
 import scipy.stats
-
-filename = "mass_accuracy_best_parameters.csv"
+from path import path
 
 
 def run(results_path, seed):
@@ -19,8 +19,8 @@ def run(results_path, seed):
         .groupby(['kappa0', 'stimulus'])['mass? correct']\
         .mean()\
 
-    model_belief = pd.read_csv(
-        results_path.joinpath('model_belief_agg_all_params.csv'))
+    model_belief = pd.read_csv(path(results_path).dirname().joinpath(
+        'model_belief_agg_all_params.csv'))
 
     model = model_belief\
         .groupby(['likelihood', 'model', 'version'])\
@@ -42,10 +42,8 @@ def run(results_path, seed):
         .reset_index(['phi'])\
         .rename(columns={0: 'pearsonr'})
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results.to_csv(results_path)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    util.run_analysis(run, sys.argv[1])
