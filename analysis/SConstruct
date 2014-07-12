@@ -20,39 +20,67 @@ def plot(name, additional_dependencies):
     env.Python(targets, dependencies)
     env.Alias(name, targets)
 
-analysis("num_participants", alias=True)
-analysis("condition_counts", alias=True)
-analysis("payrate", alias=True)
-analysis("trial_order")
-analysis("num_chance", alias=True)
 
-analysis("fall_responses")
+## Load in configuration
+from ConfigParser import SafeConfigParser
+from path import path
+root = path("..")
+
+config = SafeConfigParser()
+config.read(root.joinpath("config.ini"))
+human_version = config.get("analysis", "human_version")
+model_version = config.get("analysis", "model_version")
+data_path = root.joinpath(config.get("analysis", "data_path")).relpath()
+
+## Data dependencies
+human_dpkg = data_path.joinpath("human/mass_inference-{}.dpkg".format(human_version))
+env.Alias("human", human_dpkg.joinpath("experiment.csv"))
+env.Alias("participants", human_dpkg.joinpath("participants.csv"))
+
+ipe_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_ipe_fall.dpkg".format(model_version))
+ipe_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_ipe_fall.dpkg".format(model_version))
+env.Alias("ipe", [ipe_dpkg_A.joinpath("model.csv"), ipe_dpkg_B.joinpath("model.csv")])
+
+fb_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_truth_fall.dpkg".format(model_version))
+fb_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_truth_fall.dpkg".format(model_version))
+env.Alias("fb", [fb_dpkg_A.joinpath("model.csv"), fb_dpkg_B.joinpath("model.csv")])
+
+env.Alias("model", ["ipe", "fb"])
+
+## Analyses and plots
+analysis("num_participants", ["participants"], alias=True)
+analysis("condition_counts", ["human"], alias=True)
+analysis("payrate", ["human"], alias=True)
+analysis("trial_order", ["human"])
+analysis("num_chance", ["human"], alias=True)
+
+analysis("fall_responses", ["human", "model"])
 analysis("fall_response_corrs", ["results/fall_responses.csv"], alias=True)
-analysis("fall_responses_best_parameters")
+analysis("fall_responses_best_parameters", ["human", "model"])
 plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
 
-analysis("model_belief", ["results/trial_order.csv"])
+analysis("model_belief", ["human", "model", "results/trial_order.csv"])
 analysis("model_belief_agg_all_params", ["results/model_belief.csv"])
 analysis("model_belief_agg", ["results/model_belief_agg_all_params.csv"])
-analysis("model_log_lh", ["results/model_belief_agg.csv"], alias=True)
+analysis("model_log_lh", ["human", "results/model_belief_agg.csv"], alias=True)
 
-analysis("mass_accuracy", ["results/model_belief_agg.csv"], alias=True)
-analysis("mass_accuracy_best_parameters")
+analysis("mass_accuracy", ["human", "results/model_belief_agg.csv"], alias=True)
+analysis("mass_accuracy_best_parameters", ["human"])
 plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
-analysis("mass_accuracy_by_stimulus", ["results/model_belief_agg.csv"])
+analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief_agg.csv"])
 plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
 analysis("mass_accuracy_by_stimulus_corrs", ["results/mass_accuracy_by_stimulus.csv"], alias=True)
-analysis("mass_accuracy_by_trial", ["results/model_belief_agg.csv"])
+analysis("mass_accuracy_by_trial", ["human", "results/model_belief_agg.csv"])
 plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
 plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv"])
 analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"], alias=True)
-analysis("mass_responses_by_stimulus", ["results/model_belief_agg.csv"])
+analysis("mass_responses_by_stimulus", ["human", "results/model_belief_agg.csv"])
 plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
 analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_stimulus.csv"], alias=True)
 analysis("fit_mass_responses", ["results/mass_responses_by_stimulus.csv"])
 plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
 
-analysis("switchpoint")
+analysis("switchpoint", ["human"])
 analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
 plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
 analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)

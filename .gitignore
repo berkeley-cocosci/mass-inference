@@ -16,3 +16,4 @@ experiment/.psiturk_history
 experiment/server.log
 .env
 *.cpo
+/analysis/.sconsign.dblite
