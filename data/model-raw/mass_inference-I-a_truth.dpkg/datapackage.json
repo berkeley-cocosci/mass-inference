@@ -17,7 +17,7 @@
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
   "sources": [], 
-  "last_modified": "2014-07-11 15:49:46.834705", 
+  "last_modified": "2014-07-11 16:26:25.097768", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,15 +27,15 @@
   ], 
   "name": "mass_inference-I-a_truth.dpkg", 
   "title": null, 
-  "version": "1.5.0", 
+  "version": "1.6.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "eecaa1a71ec68a55d65c78c84087be9d", 
+      "hash": "051be7b563f4655764711886abc4514d", 
       "name": "simulations.npy", 
       "format": "npy", 
       "bytes": 50496, 
-      "modified": "2014-07-11 15:49:46.832599", 
+      "modified": "2014-07-11 16:26:25.095589", 
       "path": "./simulations.npy"
     }, 
     {
@@ -43,7 +43,7 @@
       "name": "forces.npy", 
       "format": "npy", 
       "bytes": 272, 
-      "modified": "2014-07-11 15:49:46.833751", 
+      "modified": "2014-07-11 16:26:25.096800", 
       "path": "./forces.npy"
     }, 
     {
@@ -51,7 +51,7 @@
       "name": "noises.npy", 
       "format": "npy", 
       "bytes": 2496, 
-      "modified": "2014-07-11 15:49:46.834224", 
+      "modified": "2014-07-11 16:26:25.097280", 
       "path": "./noises.npy"
     }, 
     {
@@ -85,16 +85,16 @@
             1.0
           ], 
           "stimulus": [
-            "tower_00416_1001100011", 
-            "tower_00265_0101010011", 
-            "tower_00196_1001100101", 
-            "tower_00495_0111001001", 
-            "tower_00815_0011011001", 
-            "tower_00629_0111100010", 
             "tower_00087_0011010101", 
-            "tower_00484_0111011000", 
+            "tower_00196_1001100101", 
+            "tower_00265_0101010011", 
             "tower_00309_1001111000", 
-            "tower_00454_1100001011"
+            "tower_00416_1001100011", 
+            "tower_00454_1100001011", 
+            "tower_00484_0111011000", 
+            "tower_00495_0111001001", 
+            "tower_00629_0111100010", 
+            "tower_00815_0011011001"
           ], 
           "object": [
             "block0-physics", 
@@ -139,7 +139,7 @@
       }, 
       "name": "simulation_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-11 15:49:46.834673"
+      "modified": "2014-07-11 16:26:25.097737"
     }, 
     {
       "format": "json", 
@@ -151,16 +151,16 @@
         ], 
         "index_levels": {
           "stimulus": [
-            "tower_00416_1001100011", 
-            "tower_00265_0101010011", 
-            "tower_00196_1001100101", 
-            "tower_00495_0111001001", 
-            "tower_00815_0011011001", 
-            "tower_00629_0111100010", 
             "tower_00087_0011010101", 
-            "tower_00484_0111011000", 
+            "tower_00196_1001100101", 
+            "tower_00265_0101010011", 
             "tower_00309_1001111000", 
-            "tower_00454_1100001011"
+            "tower_00416_1001100011", 
+            "tower_00454_1100001011", 
+            "tower_00484_0111011000", 
+            "tower_00495_0111001001", 
+            "tower_00629_0111100010", 
+            "tower_00815_0011011001"
           ], 
           "sample": [
             0
@@ -172,7 +172,7 @@
       }, 
       "name": "force_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-11 15:49:46.834688"
+      "modified": "2014-07-11 16:26:25.097752"
     }, 
     {
       "format": "json", 
@@ -186,16 +186,16 @@
         ], 
         "index_levels": {
           "stimulus": [
-            "tower_00416_1001100011", 
-            "tower_00265_0101010011", 
-            "tower_00196_1001100101", 
-            "tower_00495_0111001001", 
-            "tower_00815_0011011001", 
-            "tower_00629_0111100010", 
             "tower_00087_0011010101", 
-            "tower_00484_0111011000", 
+            "tower_00196_1001100101", 
+            "tower_00265_0101010011", 
             "tower_00309_1001111000", 
-            "tower_00454_1100001011"
+            "tower_00416_1001100011", 
+            "tower_00454_1100001011", 
+            "tower_00484_0111011000", 
+            "tower_00495_0111001001", 
+            "tower_00629_0111100010", 
+            "tower_00815_0011011001"
           ], 
           "sample": [
             0
@@ -224,7 +224,7 @@
       }, 
       "name": "noise_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-11 15:49:46.834695"
+      "modified": "2014-07-11 16:26:25.097759"
     }
   ]
 }
