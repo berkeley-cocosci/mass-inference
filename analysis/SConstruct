@@ -42,7 +42,7 @@ def make_fall_response_plots():
         all_filenames.extend(filenames)
         env.Command(
             filenames, 
-            "plots/fall_responses.py",
+            ["plots/fall_responses.py", "results/fall_responses.csv"],
             "python $SOURCE {} {} $TARGETS".format(version, block))
 
     env.Alias("fall_responses", all_filenames)
