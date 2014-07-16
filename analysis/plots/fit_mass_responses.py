@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import util
+from util import exponentiated_luce_choice as elc
 
 
 def plot(results_path, fig_paths):
@@ -44,10 +45,10 @@ def plot(results_path, fig_paths):
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
-        ax1.plot(xspace, util.sigmoid(xspace, params['ipe']),
+        ax1.plot(xspace, elc(xspace, params['ipe']),
                  'k--', linewidth=2)
 
-        ax2.errorbar(util.sigmoid(x, params['ipe']),
+        ax2.errorbar(elc(x, params['ipe']),
                      y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
@@ -68,10 +69,10 @@ def plot(results_path, fig_paths):
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
-        ax3.plot(xspace, util.sigmoid(xspace, params['empirical']),
+        ax3.plot(xspace, elc(xspace, params['empirical']),
                  'k--', linewidth=2)
 
-        ax4.errorbar(util.sigmoid(x, params['empirical']),
+        ax4.errorbar(elc(x, params['empirical']),
                      y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',

@@ -667,3 +667,10 @@ def beta(x, percentiles=None):
 def sigmoid(x, k):
     y = 1.0 / (1 + np.exp(-k * (x - 0.5)))
     return y
+
+
+def exponentiated_luce_choice(x, gamma):
+    p0 = x ** gamma
+    p1 = (1 - x) ** gamma
+    p = p0 / (p0 + p1)
+    return p

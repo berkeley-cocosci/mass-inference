@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
 from path import path
+from util import exponentiated_luce_choice as elc
 
 
 def run(results_path, seed):
@@ -28,9 +29,9 @@ def run(results_path, seed):
     samps = samps.mean(axis=1)
 
     empirical_params = np.array([
-        curve_fit(util.sigmoid, empirical, y)[0] for y in samps])
+        curve_fit(elc, empirical, y)[0] for y in samps])
     ipe_params = np.array([
-        curve_fit(util.sigmoid, ipe, y)[0] for y in samps])
+        curve_fit(elc, ipe, y)[0] for y in samps])
 
     results = pd.DataFrame(
         np.array([
