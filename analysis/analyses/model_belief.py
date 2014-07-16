@@ -8,7 +8,7 @@ from itertools import product as iproduct
 from path import path
 
 
-def make_belief(pfall, fall, hyps, index, prior):
+def make_belief(pfall, fall, hyps, index, prior, trial_nums):
     lh = np.log((fall * pfall) + ((1 - fall) * (1 - pfall)))
     shape = list(lh.shape)
     shape[-2] += 1
@@ -31,7 +31,8 @@ def make_belief(pfall, fall, hyps, index, prior):
 
     # make the list of trials
     trials = np.empty(prior_lh.shape[:-1])
-    trials[..., :] = np.arange(prior_lh.shape[-2])
+    trials[..., 0] = 0
+    trials[..., 1:] = trial_nums
     trials = trials.ravel()
 
     # create the learning model
@@ -99,11 +100,13 @@ def run(results_path, seed):
     for (version, kappa0, pid) in participants:
         print version, kappa0, pid
         order = trials[pid].dropna()
+        trial_nums = np.asarray(
+            order.index.get_level_values('trial'), dtype=float)
         fall = np.asarray(fb.ix[order][kappa0])[:, None]
 
         pfall = np.asarray(empirical.ix[order])
         index = pd.Index(['prior'] + list(order), name='stimulus')
-        belief = make_belief(pfall, fall, hyps, index, prior)
+        belief = make_belief(pfall, fall, hyps, index, prior, trial_nums)
         belief['version'] = version
         belief['kappa0'] = kappa0
         belief['pid'] = pid
@@ -123,7 +126,7 @@ def run(results_path, seed):
         index = [(x[0][0], x[0][1], x[1]) for x in index]
         index = pd.MultiIndex.from_tuples(index)
         index.names = ['sigma', 'phi', 'stimulus']
-        belief = make_belief(pfall, fall, hyps, index, prior)
+        belief = make_belief(pfall, fall, hyps, index, prior, trial_nums)
         belief['version'] = version
         belief['kappa0'] = kappa0
         belief['pid'] = pid
