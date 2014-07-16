@@ -4,6 +4,7 @@ import os
 import sys
 from path import path
 from mass.analysis import sigmoid
+from mass.analysis import exponentiated_luce_choice
 
 
 def clear_right(ax=None):
