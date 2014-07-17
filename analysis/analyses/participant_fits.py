@@ -26,9 +26,9 @@ def run(results_path, seed):
         .set_index(['version', 'pid', 'trial', 'model'])['llh']\
         .unstack('model')
 
-    results = llh\
-        .groupby(level=['version', 'pid'])\
-        .sum()\
+    llh_sum = llh.groupby(level=['version', 'pid']).sum()
+
+    results = llh_sum\
         .groupby(level=['version', 'pid'])\
         .apply(rank)\
         .stack()\
@@ -37,7 +37,10 @@ def run(results_path, seed):
             'level_2': 'rank',
             0: 'model'
         })\
-        .set_index(['version', 'pid'])
+        .set_index(['version', 'pid', 'model'])\
+        .sortlevel()
+
+    results.loc[:, 'llh'] = llh_sum.stack()
 
     results.to_csv(results_path)
 
