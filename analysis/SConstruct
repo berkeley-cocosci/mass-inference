@@ -86,7 +86,6 @@ make_plot("fall_responses_best_parameters", ["results/fall_responses_best_parame
 make_analysis("model_belief", ["human", "model", "results/trial_order.csv"])
 make_analysis("model_belief_agg_all_params", ["results/model_belief.csv"])
 make_analysis("model_belief_agg", ["results/model_belief_agg_all_params.csv"])
-make_analysis("model_log_lh", ["human", "results/model_belief_agg.csv"], alias=True)
 
 make_analysis("mass_accuracy_best_parameters", ["human", "results/model_belief_agg_all_params.csv"])
 make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
@@ -105,10 +104,11 @@ make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief_fit.csv"
 make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
 make_plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv"])
 make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"], alias=True)
+make_analysis("model_log_lh", ["human", "results/model_belief_fit.csv"], alias=True)
+make_analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)
 
 make_analysis("switchpoint", ["human"])
 make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
 make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
-make_analysis("participant_fits", ["results/model_log_lh.csv"], alias=True)
 
 make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
