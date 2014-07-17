@@ -26,7 +26,7 @@ def run(results_path, seed):
 
         x = m['empirical']
         y = m['human']
-        results[(version, 'Empirical IPE', 'Human')] = util.bootcorr(x, y)
+        results[(version, 'Empirical', 'Human')] = util.bootcorr(x, y)
 
     results = pd.DataFrame.from_dict(results, orient='index')
     results.index = pd.MultiIndex.from_tuples(
