@@ -88,7 +88,8 @@ make_analysis("num_chance", ["human"], alias=True)
 
 make_analysis("fall_responses", ["human", "model"])
 make_fall_response_plots()
-make_analysis("fall_response_corrs", ["results/fall_responses.csv"], alias=True)
+make_analysis("fall_response_corrs", ["results/fall_responses.csv"])
+make_latex("fall_response_corrs")
 make_analysis("fall_responses_best_parameters", ["human", "model"])
 make_plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
 
