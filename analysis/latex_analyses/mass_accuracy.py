@@ -17,8 +17,8 @@ def run(latex_path, results_path):
         'H': 'One',
         'G': 'Two',
         'I': 'Three',
-        -1.0: 'KappaLow',
-        1.0: 'KappaHigh',
+        '-1.0': 'KappaLow',
+        '1.0': 'KappaHigh',
         'all': ''
     }
 
