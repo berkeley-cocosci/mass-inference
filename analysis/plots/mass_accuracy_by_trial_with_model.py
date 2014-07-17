@@ -13,9 +13,9 @@ def plot(results_path, fig_paths):
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))
 
     colors = {
-        'human': 'k',
-        'empirical': 'r',
-        'ipe': 'b',
+        'static': 'b',
+        'learning': 'r',
+        'chance': 'g'
     }
 
     versions = ['H', 'G', 'I']
@@ -24,6 +24,18 @@ def plot(results_path, fig_paths):
 
     groups = mass_responses.groupby(['version', 'class', 'species'])
     for (version, cls, species), df in groups:
+        if species == 'ipe':
+            continue
+
+        if species == 'human':
+            color = 'k'
+            label = 'human'
+        elif cls not in colors:
+            continue
+        else:
+            color = colors[cls]
+            label = cls
+
         for kappa0, df2 in df.groupby('kappa0'):
             if kappa0 != 'all':
                 continue
@@ -38,8 +50,8 @@ def plot(results_path, fig_paths):
                 yu = df3['upper']
 
                 ax = axes[versions.index(version)]
-                ax.fill_between(x, yl, yu, alpha=0.3, color=colors[species])
-                ax.plot(x, y, color=colors[species], lw=2, label=num,
+                ax.fill_between(x, yl, yu, alpha=0.3, color=color)
+                ax.plot(x, y, color=color, lw=2, label=label,
                         marker='o', markersize=4)
 
         x = np.sort(df['trial'].unique()).astype(int)
@@ -60,6 +72,8 @@ def plot(results_path, fig_paths):
     ax = axes[0]
     ax.set_ylim(0.5, 1)
     ax.set_ylabel("Fraction correct")
+
+    axes[-1].legend(loc='lower right', fontsize=10)
 
     fig.set_figwidth(9)
     fig.set_figheight(3)
