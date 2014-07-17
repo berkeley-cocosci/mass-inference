@@ -18,5 +18,5 @@ def run_analysis(func, filename):
 
 latex_spearman = r"$\rho={median:.2f}$, 95\% CI $[{lower:.2f}, {upper:.2f}]$"
 latex_pearson = r"$r={median:.2f}$, 95\% CI $[{lower:.2f}, {upper:.2f}]$"
-latex_percent = r"$M={median:.1%}$, 95\% CI $[{lower:.1%}, {upper:.1%}]$"
+latex_percent = r"$M={median:.1f}\%$, 95\% CI $[{lower:.1f}\%, {upper:.1f}\%]$"
 latex_mean = r"$M={median:.1f}$, 95\% CI $[{lower:.1f}, {upper:.1f}]$"

@@ -11,7 +11,7 @@ def run(latex_path, results_path):
 
     results = results\
         .set_index(['species', 'class', 'version', 'kappa0'])\
-        .ix[('human', 'static')]
+        .ix[('human', 'static')] * 100
 
     replace = {
         'H': 'One',
