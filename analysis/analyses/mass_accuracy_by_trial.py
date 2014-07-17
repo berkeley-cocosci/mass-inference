@@ -13,7 +13,7 @@ def run(results_path, seed):
     results = []
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_belief_agg.csv'))
+        'model_belief_fit.csv'))
 
     def choose_first(x):
         version, num, pid = x.name
