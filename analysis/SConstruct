@@ -20,6 +20,14 @@ def make_analysis(name, additional_dependencies=None, alias=False):
         env.Alias(name, "results/{}.csv".format(name))
 
 
+def make_latex(name, additional_dependencies=None):
+    dependencies = ["latex_analyses/{}.py".format(name), "latex_analyses/util.py", "results/{}.csv".format(name)]
+    if additional_dependencies:
+        dependencies.extend(additional_dependencies)
+    env.Analysis("latex_results/{}.tex".format(name), dependencies)
+    env.Alias(name, "latex_results/{}.tex".format(name))
+
+
 def make_plot(name, additional_dependencies):
     targets = ["figures/{}.pdf".format(name), "figures/{}.png".format(name)]
     dependencies = ["plots/{}.py".format(name), "plots/util.py"]
@@ -71,7 +79,8 @@ env.Alias("fb", [fb_dpkg_A.joinpath("model.csv"), fb_dpkg_B.joinpath("model.csv"
 env.Alias("model", ["ipe", "fb"])
 
 ## Analyses and plots
-make_analysis("num_participants", ["participants"], alias=True)
+make_analysis("num_participants", ["participants"])
+make_latex("num_participants")
 make_analysis("condition_counts", ["human"], alias=True)
 make_analysis("payrate", ["human"], alias=True)
 make_analysis("trial_order", ["human"])

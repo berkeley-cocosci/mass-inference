@@ -17,3 +17,4 @@ experiment/server.log
 .env
 *.cpo
 /analysis/.sconsign.dblite
+/analysis/latex_results/

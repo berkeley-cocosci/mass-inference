@@ -17,7 +17,13 @@ def run(results_path, seed):
     counts['complete'] = (
         counts['failed_posttest'] +
         counts['ok'] +
-        counts['repeat_worker'])
+        counts['repeat_worker'] +
+        counts['duplicate_trials'])
+
+    counts['excluded'] = (
+        counts['failed_posttest'] +
+        counts['repeat_worker'] +
+        counts['duplicate_trials'])
 
     counts.to_csv(results_path)
     return results_path
