@@ -12,15 +12,18 @@ def run(results_path, seed):
     human = util.load_human()
     results = []
 
-    groups = human['C']\
+    def num_chance(df):
+        groups = df.groupby(['kappa0', 'stimulus'])['mass? correct']
+        alpha = 0.05 / len(groups.groups)
+        results = groups\
+            .apply(util.beta, [alpha])\
+            .unstack(-1) <= 0.5
+        return results
+
+    results = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
         .groupby('version')\
-        .get_group('H')\
-        .groupby(['kappa0', 'stimulus'])['mass? correct']
-    alpha = 0.05 / len(groups.groups)
-    results = groups\
-        .apply(util.beta, [alpha])\
-        .unstack(-1) <= 0.5
+        .apply(num_chance)
 
     results.to_csv(results_path)
 
