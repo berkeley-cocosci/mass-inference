@@ -11,13 +11,22 @@ def run(latex_path, results_path):
 
     alpha = results.columns[-1]
     results = results\
-        .pivot('stimulus', 'kappa0', alpha)\
-        .sum()\
-        .sum()
+        .groupby('version')\
+        .sum()[alpha]
+
+    replace = {
+        'H': 'One',
+        'G': 'Two',
+        'I': 'Three'
+    }
 
     fh = open(latex_path, "w")
-    fh.write(util.newcommand("MassAccNumChance", results))
-    fh.write(util.newcommand("MassAccNumChanceCorrection", alpha))
+
+    for version, num in results.iteritems():
+        name = "MassAccNumChanceExp{}".format(replace[version])
+        fh.write(util.newcommand(name, int(num)))
+        fh.write(util.newcommand("{}Correction".format(name), alpha))
+
     fh.close()
 
     return latex_path
