@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 from path import path
+from util import exponentiated_luce_choice as elc
+from scipy.optimize import curve_fit
 
 
 def run(results_path, seed):
@@ -32,7 +34,11 @@ def run(results_path, seed):
 
     results = {}
     for (sigma, phi), model_df in model.groupby(level=['sigma', 'phi']):
-        corr = scipy.stats.pearsonr(model_df, human)[0]
+        x0 = np.asarray(model_df)
+        y = np.asarray(human)
+        g = curve_fit(elc, x0, y)[0]
+        x = elc(x0, g)
+        corr = scipy.stats.pearsonr(x, y)[0]
         results[(sigma, phi)] = corr
 
     results = pd.Series(results)
