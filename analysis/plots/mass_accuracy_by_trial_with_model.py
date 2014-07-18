@@ -9,6 +9,9 @@ import util
 
 def plot(results_path, fig_paths):
 
+    model = fig_paths[0]
+    fig_paths = fig_paths[1:]
+
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))
 
@@ -24,7 +27,7 @@ def plot(results_path, fig_paths):
 
     groups = mass_responses.groupby(['version', 'class', 'species'])
     for (version, cls, species), df in groups:
-        if species == 'ipe':
+        if species not in (model, 'human'):
             continue
 
         if species == 'human':
