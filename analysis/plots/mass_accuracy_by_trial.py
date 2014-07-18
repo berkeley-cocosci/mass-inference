@@ -46,7 +46,8 @@ def plot(results_path, fig_paths):
                 yu = df3['upper']
 
                 ax.fill_between(x, yl, yu, alpha=0.3, color=colors[num])
-                ax.plot(x, y, color=colors[num], lw=2, label=num,
+                ax.plot(x, y, color=colors[num], lw=2,
+                        label="%d trials" % num,
                         marker='o', markersize=4)
 
     for i, ax in enumerate(axes):
@@ -74,6 +75,8 @@ def plot(results_path, fig_paths):
     ax = axes[0]
     ax.set_ylim(0.5, 1)
     ax.set_ylabel("Fraction correct")
+
+    axes[-1].legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
 
     fig.set_figwidth(9)
     fig.set_figheight(3)
