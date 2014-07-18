@@ -47,10 +47,6 @@ def make_belief(pfall, fall, hyps, index, prior, trial_nums):
         .rename(columns={0: 'logp'})
     learning['model'] = 'learning'
 
-    reverse_learning = learning.copy()
-    reverse_learning.loc[:, 'logp'] = np.log(1 - np.exp(learning['logp']))
-    reverse_learning.loc[:, 'model'] = 'reverse_learning'
-
     # create the static model
     static = pd.DataFrame(
         posterior_ind, index=index, columns=hyps)
@@ -63,17 +59,12 @@ def make_belief(pfall, fall, hyps, index, prior, trial_nums):
         .rename(columns={0: 'logp'})
     static['model'] = 'static'
 
-    reverse_static = static.copy()
-    reverse_static.loc[:, 'logp'] = np.log(1 - np.exp(static['logp']))
-    reverse_static.loc[:, 'model'] = 'reverse_static'
-
     # create the chance model
     chance = static.copy()
     chance.loc[:, 'logp'] = prior.flat[0]
     chance['model'] = 'chance'
 
-    models = pd.concat([
-        learning, reverse_learning, static, reverse_static, chance])
+    models = pd.concat([learning, static, chance])
 
     return models
 
