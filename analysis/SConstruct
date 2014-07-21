@@ -141,6 +141,7 @@ make_analysis("model_log_lh", ["results/model_log_lh_all.csv", "results/particip
 make_analysis("model_log_lh_ratio_by_participant", ["results/model_log_lh.csv"], alias=True)
 make_analysis("model_log_lh_ratio_by_trial", ["results/model_log_lh.csv"])
 make_plot("model_log_lh_ratio_by_trial", ["results/model_log_lh_ratio_by_trial.csv"])
+make_analysis("model_log_lh_ratios", ["results/model_log_lh_ratio_by_trial.csv", "results/model_log_lh_ratio_by_participant.csv"], alias=True)
 
 make_analysis("switchpoint", ["human"])
 make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])

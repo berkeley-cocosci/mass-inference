@@ -46,12 +46,12 @@ def run(results_path, seed):
     llr_GI.loc[llr_GI['llhr'] > 0, 'model'] = 'learning'
 
     llr = pd.concat([llr_H, llr_GI])
-    llr.loc[:, 'llhr'] = np.abs(llr['llhr'])
+    llr.loc[:, 'llhr'] = llr['llhr']
     llr['evidence'] = 'equal'
-    llr.loc[llr['llhr'] > 0, 'evidence'] = 'weak'
-    llr.loc[llr['llhr'] > 1, 'evidence'] = 'positive'
-    llr.loc[llr['llhr'] > 3, 'evidence'] = 'strong'
-    llr.loc[llr['llhr'] > 5, 'evidence'] = 'very strong'
+    llr.loc[np.abs(llr['llhr'] > 0), 'evidence'] = 'weak'
+    llr.loc[np.abs(llr['llhr'] > 1), 'evidence'] = 'positive'
+    llr.loc[np.abs(llr['llhr'] > 3), 'evidence'] = 'strong'
+    llr.loc[np.abs(llr['llhr'] > 5), 'evidence'] = 'very strong'
 
     results = llr.set_index(['version', 'num_trials', 'pid', 'model'])
 
