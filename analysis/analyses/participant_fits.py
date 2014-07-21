@@ -19,7 +19,7 @@ def run(results_path, seed):
         return ranks
 
     llh = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh.csv'))
+        'model_log_lh_all.csv'))
     llh = llh\
         .groupby('likelihood')\
         .get_group('empirical')\
