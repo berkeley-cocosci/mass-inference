@@ -17,7 +17,7 @@ def run(results_path, seed):
         df['num_trials'] = len(df['trial'].unique())
         return df
 
-    llh = llh\
+    llh = 2 * llh\
         .groupby('pid')\
         .apply(add_num_trials)\
         .groupby('likelihood')\
@@ -49,9 +49,9 @@ def run(results_path, seed):
     llr.loc[:, 'llhr'] = llr['llhr']
     llr['evidence'] = 'equal'
     llr.loc[np.abs(llr['llhr'] > 0), 'evidence'] = 'weak'
-    llr.loc[np.abs(llr['llhr'] > 1), 'evidence'] = 'positive'
-    llr.loc[np.abs(llr['llhr'] > 3), 'evidence'] = 'strong'
-    llr.loc[np.abs(llr['llhr'] > 5), 'evidence'] = 'very strong'
+    llr.loc[np.abs(llr['llhr'] > 2), 'evidence'] = 'positive'
+    llr.loc[np.abs(llr['llhr'] > 6), 'evidence'] = 'strong'
+    llr.loc[np.abs(llr['llhr'] > 10), 'evidence'] = 'very strong'
 
     results = llr.set_index(['version', 'num_trials', 'pid', 'model'])
 

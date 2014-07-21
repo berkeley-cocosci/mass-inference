@@ -42,8 +42,8 @@ def plot(results_path, fig_paths):
     ax.hlines([0], 1, 20, color='k', linestyle='dotted')
     ax.legend(loc='lower left', fontsize=10, frameon=False)
     ax.set_xlim(1, 20)
-    ax.set_ylim(-60, 40)
-    ax.set_ylabel("Cumulative evidence")
+    ax.set_ylim(-125, 75)
+    ax.set_ylabel("Cumulative evidence ($D$)")
     ax.set_xlabel("Trial")
     ax.set_xticks([1, 5, 10, 15, 20])
     ax.set_xticklabels([1, 5, 10, 15, 20])
@@ -53,7 +53,7 @@ def plot(results_path, fig_paths):
     util.clear_top(ax)
 
     fig.set_figwidth(4)
-    fig.set_figheight(3)
+    fig.set_figheight(3.5)
 
     plt.draw()
     plt.tight_layout()
