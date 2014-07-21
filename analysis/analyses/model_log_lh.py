@@ -16,13 +16,16 @@ def run(results_path, seed):
         'participant_fits.csv'))
 
     learning_fits = fits[fits['version'] != 'H']
-    bad_pids = learning_fits\
-        .groupby(("rank", "model"))\
-        .get_group((0, "chance"))['pid']
+    models = learning_fits.pivot('pid', 'model', 'llh')
+    llr = models['chance'] - models['static']
+    # only mark pids as bad if there is positive non-negligible
+    # evidence for chance... that is, don't exclude pids if they are
+    # only very slightly in favor of chance
+    bad_pids = list(llr[llr > 1].index)
 
     results = llh\
         .set_index('pid')\
-        .drop(list(bad_pids))\
+        .drop(bad_pids)\
         .reset_index()\
         .set_index(['version', 'likelihood', 'model'])
 
