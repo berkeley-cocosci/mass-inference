@@ -15,7 +15,7 @@ def plot(results_path, fig_paths):
 
     fig, ax = plt.subplots()
     cax = ax.imshow(
-        corrs, cmap='gray', interpolation='nearest', vmin=-0.2, vmax=0.4,
+        corrs, cmap='gray', interpolation='nearest', vmin=-0.3, vmax=0.3,
         origin='lower')
     ax.set_xlabel(r"Perceptual uncertainty ($\sigma$)")
     ax.set_ylabel(r"Force uncertainty ($\phi$)")
@@ -25,7 +25,7 @@ def plot(results_path, fig_paths):
     ax.set_yticklabels(corrs.index[::2])
     ax.set_title("Correlations for \"which is heavier?\"")
 
-    fig.colorbar(cax, ticks=[-0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.4])
+    fig.colorbar(cax, ticks=[-0.3, -0.2, -0.1, 0.0, 0.1, 0.2, 0.3, 0.3])
 
     fig.set_figwidth(5)
     fig.set_figheight(4)

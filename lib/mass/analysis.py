@@ -670,6 +670,8 @@ def sigmoid(x, k):
 
 
 def exponentiated_luce_choice(x, gamma):
+    if gamma < 0:
+        return np.nan
     p0 = x ** gamma
     p1 = (1 - x) ** gamma
     p = p0 / (p0 + p1)

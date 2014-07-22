@@ -16,7 +16,7 @@ def run(results_path, seed):
         groups = df.groupby(['kappa0', 'stimulus'])['mass? correct']
         alpha = 0.05 / len(groups.groups)
         results = groups\
-            .apply(util.beta, [alpha])\
+            .apply(lambda x: util.beta(x, 1, [alpha]))\
             .unstack(-1) <= 0.5
         return results
 

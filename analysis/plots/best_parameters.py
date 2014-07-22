@@ -23,7 +23,7 @@ def plot(results_path, fig_paths):
 
     fig, ax = plt.subplots()
     cax = ax.imshow(
-        corrs, cmap='gray', interpolation='nearest', vmin=0.2, vmax=0.6,
+        corrs, cmap='gray', interpolation='nearest', vmin=0.0, vmax=0.5,
         origin='lower')
     ax.set_xlabel(r"Perceptual uncertainty ($\sigma$)")
     ax.set_ylabel(r"Force uncertainty ($\phi$)")
@@ -33,7 +33,7 @@ def plot(results_path, fig_paths):
     ax.set_yticklabels(corrs.index[::2])
     ax.set_title("Average correlations")
 
-    fig.colorbar(cax, ticks=[0.2, 0.3, 0.4, 0.5, 0.6])
+    fig.colorbar(cax, ticks=[0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
 
     fig.set_figwidth(5)
     fig.set_figheight(4)
