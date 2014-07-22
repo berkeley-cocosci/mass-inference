@@ -7,23 +7,27 @@ from .util import LazyProperty
 class EmpiricalIPE(object):
     def __init__(self, data):
         self.data = data.copy().rename(columns={'kappa0': 'kappa'})
-        self.data['fall? response'] = (self.data['fall? response'] - 1) / 6.
+        self.data['fall? response'] = self.data['fall? response'] - 1
 
     def _sample_kappa_mean(self, data):
         samps = data.pivot(
             index='pid',
             columns='kappa',
             values='fall? response')
-        return samps.mean()
+        alpha = samps.sum() + 0.5
+        beta = (6 - samps).sum() + 0.5
+        mean = alpha / (alpha + beta)
+        return mean
 
     def _sample_kappa_var(self, data):
         samps = data.pivot(
             index='pid',
             columns='kappa',
             values='fall? response')
-        var = samps.var()
-        n = samps.count()
-        return var / n
+        alpha = samps.sum() + 0.5
+        beta = (6 - samps).sum() + 0.5
+        var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
+        return var
 
     @LazyProperty
     def P_fall_mean(self):

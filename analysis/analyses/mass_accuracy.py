@@ -41,8 +41,9 @@ def run(results_path, seed):
             .groupby('model')\
             .get_group('static')\
             .groupby(['likelihood', 'version'])['p correct']\
-            .apply(util.bootstrap_mean)\
-            .unstack(-1)\
+            .median()
+        belief.name = 'median'
+        belief = belief\
             .reset_index()\
             .rename(columns={'likelihood': 'species'})
         belief['class'] = 'static'

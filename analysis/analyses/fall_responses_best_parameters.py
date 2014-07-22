@@ -5,15 +5,18 @@ import util
 import pandas as pd
 import numpy as np
 import scipy.stats
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
-    human = util\
-        .load_human()['B']\
-        .set_index(['version', 'stimulus', 'kappa0', 'pid'])['fall? response']\
-        .groupby(level=['stimulus', 'kappa0'])\
-        .mean()
+    human = pd.read_csv(path(results_path).dirname().joinpath(
+        "fall_responses.csv"))
+
+    human = human\
+        .set_index(['version', 'block', 'species', 'stimulus', 'kappa0'])\
+        .ix[('GH', 'B', 'human')]['median']\
+        .sortlevel()
 
     ipe = util.load_model()[0]['B']
     model = ipe.P_fall_mean_all[[-1.0, 1.0]].stack()

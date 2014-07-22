@@ -37,8 +37,8 @@ def plot(results_path, fig_paths):
         xerr=[y_lerr[-1.0], y_uerr[-1.0]],
         yerr=[y_lerr[1.0], y_uerr[1.0]],
         marker='o', color='k', ls='', ms=8)
-    ax1.set_xlim(1, 7)
-    ax1.set_ylim(1, 7)
+    ax1.set_xlim(0, 1)
+    ax1.set_ylim(0, 1)
     ax1.set_xlabel(r"Human ($r_0=0.1$)")
     ax1.set_ylabel(r"Human ($r_0=10.0$)")
 
@@ -64,7 +64,7 @@ def plot(results_path, fig_paths):
 
     for ax in (ax2, ax3):
         ax.set_xlim(0, 1)
-        ax.set_ylim(1, 7)
+        ax.set_ylim(0, 1)
         ax.set_ylabel("Human")
 
     for ax in (ax1, ax2, ax3):

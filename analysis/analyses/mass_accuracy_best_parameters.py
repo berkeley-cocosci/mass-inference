@@ -13,13 +13,13 @@ from scipy.optimize import curve_fit
 def run(results_path, seed):
     np.random.seed(seed)
 
-    human = util\
-        .load_human()['C']\
-        .groupby('version')\
-        .get_group('H')\
-        .dropna(axis=0, subset=['mass? response'])\
-        .groupby(['kappa0', 'stimulus'])['mass? correct']\
-        .mean()\
+    human = pd.read_csv(path(results_path).dirname().joinpath(
+        "mass_responses_by_stimulus.csv"))
+
+    human = human\
+        .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
+        .ix[('human', 'static', 'H')]['median']\
+        .sortlevel()
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
         'model_belief_agg_all_params.csv'))

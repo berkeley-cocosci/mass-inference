@@ -645,10 +645,10 @@ def bootcorr(x, y, nsamples=10000, method='pearson'):
     return stats
 
 
-def beta(x, percentiles=None):
+def beta(x, n=1, percentiles=None):
     arr = np.asarray(x, dtype=int)
-    alpha = float((arr == 1).sum()) + 0.5
-    beta = float((arr == 0).sum()) + 0.5
+    alpha = arr.sum() + 0.5
+    beta = (n - arr).sum() + 0.5
     if percentiles is None:
         lower, mean, upper = scipy.special.btdtri(
             alpha, beta, [0.025, 0.5, 0.975])

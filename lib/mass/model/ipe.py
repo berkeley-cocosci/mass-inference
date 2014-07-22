@@ -11,23 +11,19 @@ class IPE(object):
     def __init__(self, name, sigma, phi):
         self.path = DATA_PATH.joinpath("model/%s.dpkg" % name)
         self.dp = dpkg.DataPackage.load(self.path)
-        self.data = self.dp.load_resource("model.csv")
+        self.data = self.dp\
+                        .load_resource("model.csv")\
+                        .set_index(['sigma', 'phi', 'stimulus'])
         self.sigma = float(sigma)
         self.phi = float(phi)
-
-    @LazyProperty
-    def unstable(self):
-        data = self.data.copy().drop(['nfell'], axis=1)
-        data['unstable'] = (self.data['nfell'] > 4).astype(float)
-        return data.set_index(['sigma', 'phi', 'stimulus'])
 
     def _sample_kappa_mean(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
-            values='unstable')
+            values='nfell')
         alpha = samps.sum() + 0.5
-        beta = (1 - samps).sum() + 0.5
+        beta = (10 - samps).sum() + 0.5
         mean = alpha / (alpha + beta)
         return mean
 
@@ -35,15 +31,15 @@ class IPE(object):
         samps = data.pivot(
             index='sample',
             columns='kappa',
-            values='unstable')
+            values='nfell')
         alpha = samps.sum() + 0.5
-        beta = (1 - samps).sum() + 0.5
+        beta = (10 - samps).sum() + 0.5
         var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
         return var
 
     @LazyProperty
     def P_fall_mean_all(self):
-        return self.unstable\
+        return self.data\
                    .groupby(level=['sigma', 'phi', 'stimulus'])\
                    .apply(self._sample_kappa_mean)
 
@@ -56,7 +52,7 @@ class IPE(object):
 
     @LazyProperty
     def P_fall_var_all(self):
-        return self.unstable\
+        return self.data\
                    .groupby(level=['sigma', 'phi', 'stimulus'])\
                    .apply(self._sample_kappa_var)
 

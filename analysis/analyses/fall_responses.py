@@ -30,7 +30,7 @@ def run(results_path, seed):
 
             human = human_all\
                 .groupby(['kappa0', 'stimulus'])['fall? response']\
-                .apply(util.bootstrap_mean)\
+                .apply(lambda x: util.beta(x - 1, n=6))\
                 .unstack(-1)\
                 .reset_index()
             human['species'] = 'human'
