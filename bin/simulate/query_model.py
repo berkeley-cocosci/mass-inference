@@ -21,7 +21,7 @@ def block_moved(x, mthresh):
     return moved
 
 
-def process_model_nmoved(dp, mthresh=0.095):
+def process_model_nmoved(dp, mthresh=0.0025):
     simulation_metadata = dp.load_resource('simulation_metadata')
     simulations = dp.load_resource('simulations.npy')
 
@@ -40,7 +40,7 @@ def process_model_nmoved(dp, mthresh=0.095):
         [x for x in product(*levels)],
         names=names)
 
-    nmoved_dict = {}
+    stats_dict = {}
     for ip, p in izip(product(*iparams), product(*params)):
         logger.info("Processing: %s", zip(param_names, p))
         model = pd.Series(
@@ -55,15 +55,22 @@ def process_model_nmoved(dp, mthresh=0.095):
             posT = xyz.xs('2.0', level='time')
         movement = ((posT - pos0) ** 2).sum(axis=1).unstack('object')
         moved = movement.apply(block_moved, args=[mthresh])
-        nmoved_dict[p] = moved.apply(np.nansum, axis=1)
-        assert not (nmoved_dict[p] == 10).all()
+        n_moved = moved.apply(np.nansum, axis=1)
+        amt_moved = movement.apply(np.nansum, axis=1)
+        med_moved = movement.apply(np.median, axis=1)
+        stats_dict[p] = pd.DataFrame({
+            'nfell': n_moved,
+            'total movement': amt_moved,
+            'median movement': med_moved
+        }).stack()
 
-    nmoved = pd.DataFrame.from_dict(nmoved_dict).T
-    nmoved.index = pd.MultiIndex.from_tuples(nmoved.index, names=param_names)
-    nmoved = nmoved.stack('sample').stack('stimulus').reset_index('stimulus')
-    nmoved.columns = ['stimulus', 'nfell']
-    nmoved = nmoved.reset_index()
-    return nmoved
+    stats = pd.DataFrame.from_dict(stats_dict).T
+    stats.index = pd.MultiIndex.from_tuples(stats.index, names=param_names)
+    stats = stats\
+        .stack('sample')\
+        .stack('stimulus')\
+        .reset_index()
+    return stats
 
 
 def process_model_fall(exp, tag, force=False):
