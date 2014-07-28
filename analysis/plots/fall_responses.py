@@ -43,7 +43,9 @@ def plot(results_path, fig_paths):
     ax1.set_ylabel(r"Human ($r_0=10.0$)")
 
     ax2.plot([x[-1.0], x[1.0]], [y[-1.0], y[1.0]], 'k-')
+    ax2.plot([0, 1], [0, 1], 'k--', alpha=0.5)
     ax3.plot([x[0.0], x[0.0]], [y[-1.0], y[1.0]], 'k-')
+    ax3.plot([0, 1], [0, 1], 'k--', alpha=0.5)
 
     for kappa0 in (-1.0, 1.0):
         ax2.errorbar(
