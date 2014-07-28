@@ -11,27 +11,24 @@ class Feedback(object):
         self.data = self.dp.load_resource("model.csv")
 
     @LazyProperty
-    def unstable(self):
-        data = self.data.copy().drop(['nfell'], axis=1)
-        data['unstable'] = (self.data['nfell'] > 0).astype(float)
-        return data.set_index(['sigma', 'phi', 'sample'])\
-                   .ix[(0.0, 0.0, 0)]
-
-    @LazyProperty
     def fall(self):
-        # make sure there's only one sample
-        fall = self.unstable.pivot(
-            index='stimulus',
-            columns='kappa',
-            values='unstable')
+        nfell = self\
+            .data\
+            .groupby(['sigma', 'phi', 'sample'])\
+            .get_group((0.0, 0.0, 0))\
+            .pivot('stimulus', 'kappa', 'nfell')
+        fall = (nfell > 1).astype('float')
         return fall
 
 
 class NoFeedback(Feedback):
 
     @LazyProperty
-    def unstable(self):
-        data = self.data.copy().drop(['nfell'], axis=1)
-        data['unstable'] = np.nan
-        return data.set_index(['sigma', 'phi', 'sample'])\
-                   .ix[(0.0, 0.0, 0)]
+    def fall(self):
+        fall = self\
+            .data\
+            .groupby(['sigma', 'phi', 'sample'])\
+            .get_group((0.0, 0.0, 0))\
+            .pivot('stimulus', 'kappa', 'nfell')
+        fall[:] = np.nan
+        return fall
