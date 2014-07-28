@@ -17,7 +17,7 @@
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
   "sources": [], 
-  "last_modified": "2014-07-11 14:09:00.120677", 
+  "last_modified": "2014-07-28 11:45:18.788743", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,16 +27,16 @@
   ], 
   "name": "mass_inference-G-a_ipe_fall.dpkg", 
   "title": null, 
-  "version": "1.1.0", 
+  "version": "1.5.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "a9399dad7974a8aac552e7b66667271d", 
+      "hash": "17edf41b35150372535d93e24bcde328", 
       "name": "model.csv", 
       "format": "csv", 
       "path": "./model.csv", 
-      "bytes": 1322230, 
-      "modified": "2014-07-11 14:08:59.988498"
+      "bytes": 2378661, 
+      "modified": "2014-07-28 11:45:18.558384"
     }, 
     {
       "name": "metadata", 
@@ -47,7 +47,7 @@
         "nfell_max": 10, 
         "source": "/Users/jhamrick/project/research/mass-inference/data/model-raw/mass_inference-G-a_ipe.dpkg"
       }, 
-      "modified": "2014-07-11 14:09:00.120657"
+      "modified": "2014-07-28 11:45:18.788721"
     }
   ]
 }
