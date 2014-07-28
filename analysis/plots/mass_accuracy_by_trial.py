@@ -25,11 +25,14 @@ def plot(results_path, fig_paths):
         1: 'm'
     }
 
-    versions = ['H', 'G', 'I', 'I-all']
+    versions = ['G', 'I', 'I-all']
 
-    fig, axes = plt.subplots(1, 4, sharey=True)
+    fig, axes = plt.subplots(1, 3, sharey=True)
 
     for version, df in mass_responses.groupby('version'):
+        if version not in versions:
+            continue
+
         for kappa0, df2 in df.groupby('kappa0'):
             if kappa0 != 'all':
                 continue
@@ -54,6 +57,11 @@ def plot(results_path, fig_paths):
         version = versions[i]
         if version == 'I-all':
             version = 'I'
+            title = "Experiment 3\n(within subjects)"
+        elif version == "I":
+            title = "Experiment 3\n(across subjects)"
+        elif version == "G":
+            title = "Experiment 2\n"
 
         df = mass_responses.groupby('version').get_group(version)
         x = np.sort(df['trial'].unique()).astype(int)
@@ -66,7 +74,7 @@ def plot(results_path, fig_paths):
 
         ax.set_xlim(x.min(), x.max())
         ax.set_xlabel("Trial")
-        ax.set_title("Experiment %d" % (versions.index(version) + 1))
+        ax.set_title(title)
 
         util.clear_right(ax)
         util.clear_top(ax)
@@ -79,7 +87,7 @@ def plot(results_path, fig_paths):
     axes[-1].legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
 
     fig.set_figwidth(9)
-    fig.set_figheight(3)
+    fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
 
