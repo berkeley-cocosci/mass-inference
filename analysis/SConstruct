@@ -130,6 +130,8 @@ make_analysis("model_belief_fit", ["results/model_belief_agg.csv", "results/fit_
 
 make_analysis("mass_accuracy", ["human", "results/model_belief_fit.csv"])
 make_latex("mass_accuracy")
+make_analysis("mass_accuracy_by_participant", ["human"])
+make_latex("mass_accuracy_by_participant")
 make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief_fit.csv"])
 make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
 make_mass_accuracy_by_trial_with_model_plots()
