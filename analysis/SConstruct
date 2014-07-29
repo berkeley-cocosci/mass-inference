@@ -126,6 +126,7 @@ make_analysis("mass_accuracy_best_parameters", ["results/mass_responses_by_stimu
 make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
 make_analysis("fit_mass_responses", ["results/mass_responses_by_stimulus.csv"])
 make_plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
+make_latex("fit_mass_responses")
 make_analysis("model_belief_fit", ["results/model_belief_agg.csv", "results/fit_mass_responses.csv"])
 
 make_analysis("mass_accuracy", ["human", "results/model_belief_fit.csv"])
