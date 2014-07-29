@@ -4,6 +4,8 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import util
+import numpy as np
+from util import exponentiated_luce_choice as elc
 
 
 def plot(results_path, fig_paths):
@@ -46,18 +48,32 @@ def plot(results_path, fig_paths):
 
     mass_corrs = pd\
         .read_csv(results_path.joinpath(
-            "mass_accuracy_by_stimulus_corrs.csv"))\
+            "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['version', 'X', 'Y'])
 
-    corrstr = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    pearson = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    spearman = r"$\rho$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
     corrs = []
-    corrs.append(corrstr.format(**dict(fall_corrs)))
-    corrs.append(corrstr.format(**dict(
+    corrs.append(pearson.format(**dict(fall_corrs)))
+    corrs.append(spearman.format(**dict(
         mass_corrs.ix[('H', 'Empirical', 'Human')])))
-    corrs.append(corrstr.format(**dict(
+    corrs.append(spearman.format(**dict(
         mass_corrs.ix[('H', 'IPE', 'Human')])))
 
+    xmin = -0.05
+    xmax = 1.05
+    ymin = -0.05
+    ymax = 1.05
+
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
+
+    params = pd\
+        .read_csv(results_path.joinpath("fit_mass_responses.csv"))\
+        .set_index('model')
+    X = np.linspace(0, 1, 1000)
+    ax1.plot([0, 1], [0, 1], 'k--', alpha=0.8)
+    ax2.plot(X, elc(X, params['median']['empirical']), 'k--', alpha=0.8)
+    ax3.plot(X, elc(X, params['median']['ipe']), 'k--', alpha=0.8)
 
     colors = {
         -1.0: 'r',
@@ -84,7 +100,7 @@ def plot(results_path, fig_paths):
 
         ax1.errorbar(
             x, y, yerr=[y_lerr, y_uerr],
-            marker='o', color=colors[kappa0], ms=8, ls='',
+            marker='o', color=colors[kappa0], ms=6, ls='',
             label=r"$r_0=%.1f$" % 10 ** kappa0)
 
         # middle subplot (empirical ipe mass responses)
@@ -97,7 +113,7 @@ def plot(results_path, fig_paths):
 
         ax2.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='', ms=8,
+                     marker='o', linestyle='', ms=6,
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
@@ -111,26 +127,29 @@ def plot(results_path, fig_paths):
 
         ax3.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='', ms=8,
+                     marker='o', linestyle='', ms=6,
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-    xmin = -0.05
-    xmax = 1.05
-    ymin = -0.05
-    ymax = 1.05
-
     for corr, ax in zip(corrs, (ax1, ax2, ax3)):
         ax.text(xmax - 0.01, ymin + 0.025, corr,
-                horizontalalignment='right', fontsize=10)
+                horizontalalignment='right', fontsize=9)
+
+    gamma = r"$\gamma$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    ax2.text(xmax - 0.01, ymin + 0.125,
+             gamma.format(**dict(params.ix['empirical'])),
+             horizontalalignment='right', fontsize=9)
+    ax3.text(xmax - 0.01, ymin + 0.125,
+             gamma.format(**dict(params.ix['ipe'])),
+             horizontalalignment='right', fontsize=9)
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
-    ax1.set_title("Will it fall?")
+    ax1.set_title("Will it fall? (Exp 1+2)")
     ax2.set_xlabel("Empirical")
-    ax2.set_title("Which is heavier?")
+    ax2.set_title("Which is heavier? (Exp 1)")
     ax3.set_xlabel("IPE")
-    ax3.set_title("Which is heavier?")
+    ax3.set_title("Which is heavier? (Exp 1)")
 
     for ax in (ax1, ax2, ax3):
         ax.set_xlim(xmin, xmax)
@@ -140,8 +159,6 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
         ax.set_axis_bgcolor('0.9')
-
-        ax.plot([xmin, xmax], [ymin, ymax], 'k--', alpha=0.5)
 
     fig.set_figheight(3.5)
     fig.set_figwidth(12)

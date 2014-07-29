@@ -152,4 +152,4 @@ make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
 
 make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
 
-make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv"])
+make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv", "results/mass_responses_by_stimulus_corrs.csv", "results/fit_mass_responses.csv"])
