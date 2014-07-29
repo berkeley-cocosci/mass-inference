@@ -97,7 +97,7 @@ def plot(results_path, fig_paths):
 
         ax2.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='',
+                     marker='o', linestyle='', ms=8,
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
@@ -111,7 +111,7 @@ def plot(results_path, fig_paths):
 
         ax3.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='',
+                     marker='o', linestyle='', ms=8,
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
