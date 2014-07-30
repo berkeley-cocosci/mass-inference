@@ -22,11 +22,13 @@ def run(results_path, seed):
 
         x = m['ipe']
         y = m['human']
-        results[(version, 'IPE', 'Human')] = util.bootcorr(x, y)
+        results[(version, 'IPE', 'Human')] = util.bootcorr(
+            x, y, method='spearman')
 
         x = m['empirical']
         y = m['human']
-        results[(version, 'Empirical', 'Human')] = util.bootcorr(x, y)
+        results[(version, 'Empirical', 'Human')] = util.bootcorr(
+            x, y, method='spearman')
 
     results = pd.DataFrame.from_dict(results, orient='index')
     results.index = pd.MultiIndex.from_tuples(

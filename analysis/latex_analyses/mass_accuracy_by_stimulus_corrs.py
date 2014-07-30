@@ -22,7 +22,7 @@ def run(latex_path, results_path):
     for (version, x, y), corrs in results.iterrows():
         cmdname = "Exp{}MassAccStimCorr{}".format(
             replace[version], x)
-        cmd = util.latex_pearson.format(**corrs)
+        cmd = util.latex_spearman.format(**corrs)
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
