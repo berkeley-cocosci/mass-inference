@@ -41,7 +41,7 @@ class EmpiricalIPE(object):
     def P_fall_smooth(self):
         return self.P_fall_mean
 
-    def plot(self, ix):
+    def plot_fall(self, ax, ix):
         if isinstance(ix, int):
             ix = self.P_fall_smooth.index[ix]
 
@@ -56,7 +56,6 @@ class EmpiricalIPE(object):
         var = np.asarray(self.P_fall_var.ix[ix])
         std = np.sqrt(var)
 
-        fig, ax = plt.subplots()
         ax.plot(
             smooth_index, smooth,
             lw=2, color='k')

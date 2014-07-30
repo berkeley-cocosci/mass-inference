@@ -143,7 +143,7 @@ class IPE(object):
 
         return smooth
 
-    def plot_fall(self, ix):
+    def plot_fall(self, ax, ix):
         if isinstance(ix, int):
             ix = self.P_fall_smooth.index[ix]
 
@@ -152,7 +152,6 @@ class IPE(object):
         var = self.P_fall_var.ix[ix]
         std = var.map(np.sqrt)
 
-        fig, ax = plt.subplots()
         ax.plot(
             smooth.index, smooth,
             lw=2, color='k')
@@ -162,11 +161,11 @@ class IPE(object):
 
         ax.set_xlabel("kappa")
         ax.set_ylabel("P(fall | kappa)")
-        ax.set_title(r"$\sigma$=%.2f, $\phi$=%.2f, stim=%s" % (
-            self.sigma, self.phi, ix))
+        ax.set_title(r"$\sigma$=%.2f, $\phi$=%.2f" % (self.sigma, self.phi)
+                     + "\nstim=%s" % ix)
         ax.set_ylim(0, 1)
 
-    def plot_direction(self, ix, kappa):
+    def plot_direction(self, ax, ix, kappa, r=1, color='b'):
         if isinstance(ix, int):
             ix = self.P_dir_mean.index[ix]
 
@@ -182,13 +181,17 @@ class IPE(object):
             .ix[ix]\
             .dropna()
 
-        r = 0.5
         X = np.linspace(0, 2 * np.pi, 1000)
         Y = cs.vmpdf(X, mean, var) + r
 
-        ax = plt.subplot(111, polar=True)
-        ax.plot(X, Y, lw=2, color='k')
-        ax.plot(points, np.ones(points.size) * r, 'ro')
+        ax.plot(X, Y, lw=2, color=color)
+        ax.plot(X, np.ones(X.size) * r, 'k-')
+        ax.plot(points, np.ones(points.size) * r, 'o', color=color)
 
-        ax.set_title(r"$\sigma$=%.2f, $\phi$=%.2f, $\kappa$=%.2f, stim=%s" % (
-            self.sigma, self.phi, kappa, ix))
+        ax.set_title(
+            r"$\sigma$=%.2f, $\phi$=%.2f, $\kappa$=%.2f" % (
+                self.sigma, self.phi, kappa)
+            + "\nstim=%s" % ix)
+
+        ax.spines['polar'].set_color('none')
+        ax.grid('off', axis='y')
