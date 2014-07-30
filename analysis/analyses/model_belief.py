@@ -17,16 +17,17 @@ def compute_llh_fall(pfall_df, fall_df):
 
 
 def compute_llh_dir(vmpar_df, direction_df):
-    direction = np.asarray(direction_df)
+    stims = vmpar_df['mean'].index.get_level_values('stimulus')
+    direction = np.asarray(direction_df.ix[stims])
     bc = np.ones(direction.shape)
-    mean = np.asarray(vmpar_df['mean'].ix[direction_df.index])[:, None] * bc
-    var = np.asarray(vmpar_df['var'].ix[direction_df.index])[:, None] * bc
+    mean = np.asarray(vmpar_df['mean'].ix[stims])[:, None] * bc
+    var = np.asarray(vmpar_df['var'].ix[stims])[:, None] * bc
     ix = ~np.isnan(direction)
     llh = np.zeros(mean.shape)
     llh[ix] = cs.vmlogpdf(direction[ix], mean[ix], var[ix])
     llh_df = pd.DataFrame(
         llh,
-        index=vmpar_df['mean'].index,
+        index=vmpar_df['mean'].ix[stims].index,
         columns=direction_df.columns)
     return llh_df
 
