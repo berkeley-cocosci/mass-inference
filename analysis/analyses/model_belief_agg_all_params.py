@@ -38,34 +38,44 @@ def run(results_path, seed):
     np.random.seed(seed)
 
     results = pd.read_csv(
-        path(results_path).dirname().joinpath("model_belief.csv"))
+        path(results_path).dirname().joinpath("model_belief_by_trial.csv"))
     results['p'] = np.exp(results['logp'])
 
     all_belief = []
 
-    for likelihood, df in results.groupby('likelihood'):
-        cols = ['model', 'likelihood', 'version', 'kappa0']
-        assert likelihood in ['ipe', 'empirical']
-        if likelihood == 'ipe':
-            cols.extend(['sigma', 'phi'])
-
+    cols = ['model', 'likelihood', 'query', 'sigma', 'phi', 'kappa0']
+    for key, df in results.groupby(cols):
+        print key
+        model, lh, query, sigma, phi, kappa0 = key
         belief = df\
-            .set_index(cols + ['pid', 'stimulus', 'trial', 'hypothesis'])\
-            .groupby(level=cols)\
-            .apply(agg_belief)\
-            .reset_index(-1, drop=True)\
-            .reset_index()
+            .set_index(
+                ['version', 'pid', 'stimulus', 'trial', 'hypothesis'])['p']\
+            .unstack('hypothesis')
 
-        if likelihood == 'empirical':
-            belief['sigma'] = np.nan
-            belief['phi'] = np.nan
+        mask = np.zeros(len(belief.columns))
+        mask[belief.columns > 0] = 1
+        mask[belief.columns == 0] = 0.5
+
+        belief = (belief * mask)\
+            .sum(axis=1)\
+            .reset_index()\
+            .rename(columns={0: 'p'})
+
+        p = belief['p'].copy()
+        if kappa0 < 0:
+            p = 1 - p
+        belief.loc[:, 'p correct'] = p
+
+        for col, val in zip(cols, key):
+            belief[col] = val
 
         all_belief.append(belief)
 
     belief = pd\
         .concat(all_belief)\
-        .set_index(['model', 'likelihood', 'version', 'kappa0',
-                    'pid', 'stimulus', 'trial'])
+        .set_index([
+            'model', 'likelihood', 'query', 'version', 'kappa0', 'pid'])\
+        .sortlevel()
 
     belief.to_csv(results_path)
 

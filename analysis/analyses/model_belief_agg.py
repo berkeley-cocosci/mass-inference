@@ -26,7 +26,8 @@ def run(results_path, seed):
 
     results = pd\
         .concat([empirical, ipe])\
-        .set_index(['model', 'likelihood', 'version', 'trial'])\
+        .set_index([
+            'model', 'likelihood', 'query', 'version', 'kappa0', 'pid'])\
         .sortlevel()
 
     results.to_csv(results_path)

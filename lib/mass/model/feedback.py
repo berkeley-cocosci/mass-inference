@@ -27,6 +27,8 @@ class Feedback(object):
             .groupby(['sigma', 'phi', 'sample'])\
             .get_group((0.0, 0.0, 0))\
             .pivot('stimulus', 'kappa', 'direction')
+        fell = self.fall
+        direction[fell == 0] = np.nan
         return direction
 
 
