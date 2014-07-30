@@ -74,12 +74,24 @@ def process_model_nmoved(dp, mthresh=0.0025):
         block_movement = movement\
             .groupby(level='stimulus')\
             .apply(block_type_movement)
+
+        nanmoved = moved.copy()
+        nanmoved[nanmoved == 0] = np.nan
+        nanmoved = nanmoved.stack().index
+        avgpos0 = pos0.ix[nanmoved].groupby(
+            level=['stimulus', 'sample']).mean()
+        avgposT = posT.ix[nanmoved].groupby(
+            level=['stimulus', 'sample']).mean()
+        diff = avgposT - avgpos0
+        direction = np.arctan2(diff['y'], diff['x'])
+
         stats_dict[p] = pd.DataFrame({
             'nfell': n_moved,
             'total movement': amt_moved,
             'median movement': med_moved,
             'block0': block_movement['block0'],
-            'block1': block_movement['block1']
+            'block1': block_movement['block1'],
+            'direction': direction
         }).stack()
 
     stats = pd.DataFrame.from_dict(stats_dict).T
