@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import snippets.datapackage as dpkg
+import snippets.circstats as cs
 
 from mass import DATA_PATH
 from .util import LazyProperty
@@ -17,7 +18,7 @@ class IPE(object):
         self.sigma = float(sigma)
         self.phi = float(phi)
 
-    def _sample_kappa_mean(self, data):
+    def _sample_kappa_fall_mean(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
@@ -27,7 +28,7 @@ class IPE(object):
         mean = alpha / (alpha + beta)
         return mean
 
-    def _sample_kappa_var(self, data):
+    def _sample_kappa_fall_var(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
@@ -37,11 +38,33 @@ class IPE(object):
         var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
         return var
 
+    def _sample_kappa_dir_mean(self, data):
+        samps = data.pivot(
+            index='sample',
+            columns='kappa',
+            values='direction')
+        mean = pd.Series(
+            cs.nanmean(np.asarray(samps), axis=0),
+            index=samps.columns)
+        mean.name = data.name
+        return mean
+
+    def _sample_kappa_dir_var(self, data):
+        samps = data.pivot(
+            index='sample',
+            columns='kappa',
+            values='direction')
+        var = pd.Series(
+            cs.nankappa(np.asarray(samps), axis=0),
+            index=samps.columns)
+        var.name = data.name
+        return var
+
     @LazyProperty
     def P_fall_mean_all(self):
         return self.data\
                    .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_mean)
+                   .apply(self._sample_kappa_fall_mean)
 
     @LazyProperty
     def P_fall_mean(self):
@@ -54,7 +77,7 @@ class IPE(object):
     def P_fall_var_all(self):
         return self.data\
                    .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_var)
+                   .apply(self._sample_kappa_fall_var)
 
     @LazyProperty
     def P_fall_var(self):
@@ -62,6 +85,32 @@ class IPE(object):
                    .groupby(level=['sigma', 'phi'])\
                    .get_group((self.sigma, self.phi))\
                    .reset_index(['sigma', 'phi'], drop=True)
+
+    @LazyProperty
+    def P_dir_mean_all(self):
+        return self.data\
+            .groupby(level=['sigma', 'phi', 'stimulus'])\
+            .apply(self._sample_kappa_dir_mean)
+
+    @LazyProperty
+    def P_dir_mean(self):
+        return self.P_dir_mean_all\
+            .groupby(level=['sigma', 'phi'])\
+            .get_group((self.sigma, self.phi))\
+            .reset_index(['sigma', 'phi'], drop=True)
+
+    @LazyProperty
+    def P_dir_var_all(self):
+        return self.data\
+            .groupby(level=['sigma', 'phi', 'stimulus'])\
+            .apply(self._sample_kappa_dir_var)
+
+    @LazyProperty
+    def P_dir_var(self):
+        return self.P_dir_var_all\
+            .groupby(level=['sigma', 'phi'])\
+            .get_group((self.sigma, self.phi))\
+            .reset_index(['sigma', 'phi'], drop=True)
 
     @LazyProperty
     def P_fall_smooth(self):
@@ -94,7 +143,7 @@ class IPE(object):
 
         return smooth
 
-    def plot(self, ix):
+    def plot_fall(self, ix):
         if isinstance(ix, int):
             ix = self.P_fall_smooth.index[ix]
 
@@ -116,3 +165,30 @@ class IPE(object):
         ax.set_title(r"$\sigma$=%.2f, $\phi$=%.2f, stim=%s" % (
             self.sigma, self.phi, ix))
         ax.set_ylim(0, 1)
+
+    def plot_direction(self, ix, kappa):
+        if isinstance(ix, int):
+            ix = self.P_dir_mean.index[ix]
+
+        mean = self.P_dir_mean.ix[ix][kappa]
+        var = self.P_dir_var.ix[ix][kappa]
+
+        points = self\
+            .data\
+            .reset_index()\
+            .groupby(['sigma', 'phi', 'kappa'])\
+            .get_group((self.sigma, self.phi, kappa))\
+            .pivot('stimulus', 'sample', 'direction')\
+            .ix[ix]\
+            .dropna()
+
+        r = 0.5
+        X = np.linspace(0, 2 * np.pi, 1000)
+        Y = cs.vmpdf(X, mean, var) + r
+
+        ax = plt.subplot(111, polar=True)
+        ax.plot(X, Y, lw=2, color='k')
+        ax.plot(points, np.ones(points.size) * r, 'ro')
+
+        ax.set_title(r"$\sigma$=%.2f, $\phi$=%.2f, $\kappa$=%.2f, stim=%s" % (
+            self.sigma, self.phi, kappa, ix))
