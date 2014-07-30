@@ -17,7 +17,7 @@
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
   "sources": [], 
-  "last_modified": "2014-07-28 11:44:52.453975", 
+  "last_modified": "2014-07-30 11:48:52.221830", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,16 +27,16 @@
   ], 
   "name": "mass_inference-G-b_truth_fall.dpkg", 
   "title": null, 
-  "version": "1.5.0", 
+  "version": "1.6.0", 
   "homepage": null, 
   "resources": [
     {
-      "hash": "c56fb2a58457cfe58cc755a54c6405b3", 
+      "hash": "1f973b273f5e4462f04c52de8d55ffad", 
       "name": "model.csv", 
       "format": "csv", 
       "path": "./model.csv", 
-      "bytes": 47107, 
-      "modified": "2014-07-28 11:44:52.445864"
+      "bytes": 74805, 
+      "modified": "2014-07-30 11:48:52.211973"
     }, 
     {
       "name": "metadata", 
@@ -47,7 +47,7 @@
         "nfell_max": 10, 
         "source": "/Users/jhamrick/project/research/mass-inference/data/model-raw/mass_inference-G-b_truth.dpkg"
       }, 
-      "modified": "2014-07-28 11:44:52.453934"
+      "modified": "2014-07-30 11:48:52.221818"
     }
   ]
 }
