@@ -21,6 +21,19 @@ def block_moved(x, mthresh):
     return moved
 
 
+def block_type_movement(x):
+    stim = x.name
+    blocks = np.array([int(b) for b in stim.split("_")[2]])
+    block0 = np.nonzero(1 - blocks)[0]
+    block1 = np.nonzero(blocks)[0]
+    block0_movement = x[block0].sum(axis=1)
+    block1_movement = x[block1].sum(axis=1)
+    return pd.DataFrame({
+        'block0': block0_movement,
+        'block1': block1_movement
+    })
+
+
 def process_model_nmoved(dp, mthresh=0.0025):
     simulation_metadata = dp.load_resource('simulation_metadata')
     simulations = dp.load_resource('simulations.npy')
@@ -58,10 +71,15 @@ def process_model_nmoved(dp, mthresh=0.0025):
         n_moved = moved.apply(np.nansum, axis=1)
         amt_moved = movement.apply(np.nansum, axis=1)
         med_moved = movement.apply(np.median, axis=1)
+        block_movement = movement\
+            .groupby(level='stimulus')\
+            .apply(block_type_movement)
         stats_dict[p] = pd.DataFrame({
             'nfell': n_moved,
             'total movement': amt_moved,
-            'median movement': med_moved
+            'median movement': med_moved,
+            'block0': block_movement['block0'],
+            'block1': block_movement['block1']
         }).stack()
 
     stats = pd.DataFrame.from_dict(stats_dict).T
