@@ -31,6 +31,12 @@ def compute_llh_dir(vmpar_df, direction_df):
     return llh_df
 
 
+def normalize(df, axis=1):
+    normed = df.copy()
+    normed[:] = util.normalize(np.asarray(df), axis=axis)[1]
+    return normed
+
+
 def run(results_path, seed):
     np.random.seed(seed)
     data = util.load_all()
@@ -63,7 +69,10 @@ def run(results_path, seed):
     pfall = empirical_fall
     llh_fall_empirical = pfall\
         .groupby(level='kappa')\
-        .apply(compute_llh_fall, fall)
+        .apply(compute_llh_fall, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_fall_empirical = normalize(llh_fall_empirical)
     llh_empirical = llh_fall_empirical.copy()
 
     # compute ipe likelihoods
@@ -71,7 +80,10 @@ def run(results_path, seed):
     pfall = ipe_fall
     llh_fall_ipe = pfall\
         .groupby(level=['sigma', 'phi', 'kappa'])\
-        .apply(compute_llh_fall, fall)
+        .apply(compute_llh_fall, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_fall_ipe = normalize(llh_fall_ipe)
 
     direction = fb_direction
     vmpar = pd.DataFrame({
@@ -81,9 +93,12 @@ def run(results_path, seed):
     vmpar.columns.name = 'param'
     llh_dir_ipe = vmpar\
         .groupby(level=['sigma', 'phi', 'kappa'])\
-        .apply(compute_llh_dir, direction)
+        .apply(compute_llh_dir, direction)\
+        .stack()\
+        .unstack('kappa')
+    llh_dir_ipe = normalize(llh_dir_ipe)
 
-    llh_ipe = llh_fall_ipe + llh_dir_ipe
+    llh_ipe = normalize(llh_fall_ipe + llh_dir_ipe)
 
     # put it all together
     # empirical likelihood -- will it fall?
