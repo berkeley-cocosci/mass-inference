@@ -43,9 +43,17 @@ class IPE(object):
             index='sample',
             columns='kappa',
             values='direction')
+        samps_arr = np.asarray(samps)
+        # Note, nanmean prints the following warning: "FutureWarning:
+        # In Numpy 1.9 the sum along empty slices will be zero." This
+        # happens when there is a column in samps_arr that is entirely
+        # NaNs. So we check for that and explicitly set it to NaN, for
+        # future compatibility.
         mean = pd.Series(
-            cs.nanmean(np.asarray(samps), axis=0),
+            cs.nanmean(samps_arr, axis=0),
             index=samps.columns)
+        isnan = np.isnan(samps_arr).all(axis=0)
+        mean[isnan] = np.nan
         mean.name = data.name
         return mean
 
@@ -54,9 +62,17 @@ class IPE(object):
             index='sample',
             columns='kappa',
             values='direction')
+        samps_arr = np.asarray(samps)
+        # Note, nankappa prints the following warning: "FutureWarning:
+        # In Numpy 1.9 the sum along empty slices will be zero." This
+        # happens when there is a column in samps_arr that is entirely
+        # NaNs. So we check for that and explicitly set it to NaN, for
+        # future compatibility.
         var = pd.Series(
-            cs.nankappa(np.asarray(samps), axis=0),
+            cs.nankappa(samps_arr, axis=0),
             index=samps.columns)
+        isnan = np.isnan(samps_arr).all(axis=0)
+        var[isnan] = np.nan
         var.name = data.name
         return var
 
