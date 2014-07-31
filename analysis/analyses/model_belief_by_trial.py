@@ -9,6 +9,7 @@ from path import path
 
 def make_model_df(name, df, arr, trials):
     new_df = df.copy()
+    new_df[:] = arr
     new_df['trial'] = trials
     new_df = new_df.set_index('trial', append=True)
     new_df.columns.name = 'hypothesis'
@@ -61,7 +62,7 @@ def run(results_path, seed):
         trial_nums.sort()
         trial_nums = np.asarray(
             trial_nums.index.get_level_values('trial'), dtype=int) - 1
-        trial_nums = trial_nums[df.index.labels[0]]
+        trial_nums = trial_nums[df.index.labels[0]] + 1
 
         # static model
         static = util.normalize(np.asarray(df), axis=1)[1]
