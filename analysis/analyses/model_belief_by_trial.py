@@ -7,21 +7,17 @@ import numpy as np
 from path import path
 
 
-def make_model_df(name, arr, rows, cols, trials):
-    df = pd.DataFrame(
-        arr, index=rows, columns=cols)
-    df['trial'] = trials
-    df = df.set_index('trial', append=True)
-    df.columns.name = cols.name
-    df = df\
+def make_model_df(name, df, arr, trials):
+    new_df = df.copy()
+    new_df['trial'] = trials
+    new_df = new_df.set_index('trial', append=True)
+    new_df.columns.name = 'hypothesis'
+    new_df = new_df\
         .stack()\
         .reset_index()\
-        .rename(columns={
-            0: 'logp',
-            'kappa': 'hypothesis'
-        })
-    df['model'] = name
-    return df
+        .rename(columns={0: 'logp'})
+    new_df['model'] = name
+    return new_df
 
 
 def run(results_path, seed):
@@ -31,6 +27,7 @@ def run(results_path, seed):
 
     llh = pd.read_csv(
         path(results_path).dirname().joinpath("model_belief.csv"))
+    llh = llh.set_index('kappa0')
 
     pth = path(results_path).dirname().joinpath("trial_order.csv")
     trials = pd.read_csv(pth)\
@@ -45,53 +42,49 @@ def run(results_path, seed):
     participants = np.asarray(participants)
 
     results = []
-    for key, df in llh.groupby(['likelihood', 'query', 'sigma', 'phi']):
-        print key
-        (lh, query, sigma, phi) = key
-        belief = df\
-            .set_index(['kappa0', 'stimulus', 'kappa'])['llh']\
-            .unstack('kappa')
+    for (version, kappa0, pid) in participants:
+        print version, kappa0, pid
 
-        for (version, kappa0, pid) in participants:
-            sys.stdout.write('.')
-            sys.stdout.flush()
+        order = trials[pid].dropna()
 
-            # put the array in the correct trial order
-            order = trials[pid].dropna()
-            trial_nums = np.asarray(
-                order.index.get_level_values('trial'), dtype=float)
-            pbelief_df = belief.ix[kappa0].ix[order]
-            rows = pbelief_df.index
-            rows.name = 'stimulus'
-            cols = pbelief_df.columns
-            pbelief = np.asarray(pbelief_df)
+        df = llh\
+            .ix[kappa0]\
+            .set_index(['stimulus', 'likelihood', 'query',
+                        'sigma', 'phi', 'kappa'])['llh']\
+            .unstack('kappa')\
+            .reset_index()\
+            .set_index('stimulus')\
+            .ix[order]\
+            .set_index(['likelihood', 'query', 'sigma', 'phi'], append=True)
 
-            # learning model
-            learning = util.normalize(np.cumsum(pbelief, axis=0), axis=1)[1]
-            learning_df = make_model_df(
-                'learning', learning, rows, cols, trial_nums)
+        trial_nums = order.copy()
+        trial_nums.sort()
+        trial_nums = np.asarray(
+            trial_nums.index.get_level_values('trial'), dtype=int) - 1
+        trial_nums = trial_nums[df.index.labels[0]]
 
-            # static model
-            static = util.normalize(pbelief, axis=1)[1]
-            static_df = make_model_df('static', static, rows, cols, trial_nums)
+        # static model
+        static = util.normalize(np.asarray(df), axis=1)[1]
+        static_df = make_model_df('static', df, static, trial_nums)
 
-            # chance model
-            chance = util.normalize(np.zeros(learning.shape), axis=1)[1]
-            chance_df = make_model_df('chance', chance, rows, cols, trial_nums)
+        # chance model
+        chance = util.normalize(np.zeros(df.shape), axis=1)[1]
+        chance_df = make_model_df('chance', df, chance, trial_nums)
 
-            # put them all together
-            models = pd.concat([static_df, learning_df, chance_df])
-            models['version'] = version
-            models['kappa0'] = kappa0
-            models['pid'] = pid
-            models['likelihood'] = lh
-            models['query'] = query
-            models['sigma'] = sigma
-            models['phi'] = phi
+        # learning model
+        cumsum = df\
+            .groupby(level=['likelihood', 'query', 'sigma', 'phi'])\
+            .apply(np.cumsum)
+        learning = util.normalize(np.asarray(cumsum), axis=1)[1]
+        learning_df = make_model_df('learning', df, learning, trial_nums)
 
-            results.append(models)
+        # put them all together
+        models = pd.concat([static_df, chance_df, learning_df])
+        models['version'] = version
+        models['kappa0'] = kappa0
+        models['pid'] = pid
 
-        sys.stdout.write('\n')
+        results.append(models)
 
     results = pd\
         .concat(results)\
