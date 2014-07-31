@@ -4,10 +4,8 @@ import sys
 import util
 import pandas as pd
 import numpy as np
-import scipy.stats
 from path import path
 from util import exponentiated_luce_choice as elc
-from scipy.optimize import curve_fit
 
 
 def run(results_path, seed):
@@ -17,36 +15,34 @@ def run(results_path, seed):
         "mass_responses_by_stimulus.csv"))
 
     human = human\
-        .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
-        .ix[('human', 'static', 'H')]['median']\
+        .set_index(['species', 'class', 'query',
+                    'version', 'kappa0', 'stimulus'])\
+        .ix[('human', 'static', 'all', 'H')]['median']\
         .sortlevel()
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
         'model_belief_agg_all_params.csv'))
 
     model = model_belief\
-        .groupby(['likelihood', 'model', 'version'])\
-        .get_group(('ipe', 'static', 'H'))\
+        .groupby(['likelihood', 'model', 'query', 'version'])\
+        .get_group(('ipe', 'static', 'all', 'H'))\
         .groupby(['sigma', 'phi', 'kappa0', 'stimulus'])['p correct']\
-        .mean()\
-        .groupby(lambda x: x[-1] == 'prior')\
-        .get_group(False)
+        .mean()
 
-    results = {}
+    results = []
     for (sigma, phi), model_df in model.groupby(level=['sigma', 'phi']):
+        index = model_df.reset_index(['sigma', 'phi'], drop=True).index
         x0 = np.asarray(model_df)
-        y = np.asarray(human)
-        g = curve_fit(elc, x0, y)[0]
+        y = np.asarray(human.ix[index])
+        g = 2.85
         x = elc(x0, g)
-        corr = scipy.stats.pearsonr(x, y)[0]
-        results[(sigma, phi)] = corr
+        err = pd.Series((x - y) ** 2, index=model_df.index)
+        results.append(err)
 
-    results = pd.Series(results)
-    results.index = pd.MultiIndex.from_tuples(results.index)
-    results.index.names = ['sigma', 'phi']
-    results = results\
-        .reset_index(['phi'])\
-        .rename(columns={0: 'pearsonr'})
+    results = pd\
+        .concat(results)\
+        .reset_index(['sigma', 'phi'])\
+        .rename(columns={0: 'sqerr'})
 
     results.to_csv(results_path)
 
