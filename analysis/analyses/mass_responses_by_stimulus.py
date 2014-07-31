@@ -26,14 +26,17 @@ def run(results_path, seed):
         .reset_index()
     correct['class'] = 'static'
     correct['species'] = 'human'
+    correct['query'] = 'all'
     correct = correct\
-        .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
+        .set_index(['species', 'query', 'class',
+                    'version', 'kappa0', 'stimulus'])\
         .stack()
 
     belief = model_belief\
         .groupby('model')\
         .get_group('static')\
-        .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p']\
+        .groupby(['likelihood', 'query', 'version',
+                  'kappa0', 'stimulus'])['p']\
         .median()
     belief.name = 'median'
     belief = belief\
@@ -41,7 +44,8 @@ def run(results_path, seed):
         .rename(columns={'likelihood': 'species'})
     belief['class'] = 'static'
     belief = belief\
-        .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
+        .set_index(['species', 'query', 'class',
+                    'version', 'kappa0', 'stimulus'])\
         .stack()
 
     results = pd\
