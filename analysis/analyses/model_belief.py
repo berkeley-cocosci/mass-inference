@@ -74,7 +74,6 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_empirical = normalize(llh_fall_empirical)
-    llh_empirical = llh_fall_empirical.copy()
 
     # compute ipe likelihoods
     fall = fb_fall
@@ -96,7 +95,9 @@ def run(results_path, seed):
         .groupby(level=['sigma', 'phi', 'kappa'])\
         .apply(compute_llh_dir, direction)\
         .stack()\
-        .unstack('kappa')
+        .unstack('kappa')\
+        .fillna(0)
+    llh_dir_ipe[np.isinf(llh_dir_ipe)] = 0.0
     llh_dir_ipe = normalize(llh_dir_ipe)
 
     llh_ipe = normalize(llh_fall_ipe + llh_dir_ipe)
@@ -112,16 +113,6 @@ def run(results_path, seed):
     llh_fall_empirical['sigma'] = 0.0
     llh_fall_empirical['phi'] = 0.0
 
-    # empirical likelihood -- all queries
-    llh_empirical = llh_empirical\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_empirical['likelihood'] = 'empirical'
-    llh_empirical['query'] = 'all'
-    llh_empirical['sigma'] = 0.0
-    llh_empirical['phi'] = 0.0
-
     # ipe likelihood -- will it fall?
     llh_fall_ipe = llh_fall_ipe\
         .stack()\
@@ -129,14 +120,6 @@ def run(results_path, seed):
         .rename(columns={0: 'llh'})
     llh_fall_ipe['likelihood'] = 'ipe'
     llh_fall_ipe['query'] = 'fall'
-
-    # ipe likelihood -- which direction?
-    llh_dir_ipe = llh_dir_ipe\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_dir_ipe['likelihood'] = 'ipe'
-    llh_dir_ipe['query'] = 'direction'
 
     # ipe likelihood -- all queries
     llh_ipe = llh_ipe\
@@ -148,9 +131,7 @@ def run(results_path, seed):
 
     llh = pd.concat([
         llh_fall_empirical,
-        llh_empirical,
         llh_fall_ipe,
-        llh_dir_ipe,
         llh_ipe
     ])
     llh = llh.set_index(['likelihood', 'query', 'stimulus', 'kappa'])
