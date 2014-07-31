@@ -26,7 +26,6 @@ def plot(results_path, fig_paths):
         .groupby('version')\
         .get_group('H')
     mass_responses = mass_responses\
-        .ix[mass_responses['stimulus'] != 'prior']\
         .set_index(['species', 'kappa0', 'stimulus'])[cols]\
         .sortlevel()\
         .stack()

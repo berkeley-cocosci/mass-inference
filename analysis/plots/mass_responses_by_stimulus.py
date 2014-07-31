@@ -12,7 +12,6 @@ def plot(results_path, fig_paths):
         .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
         .groupby('version')\
         .get_group('H')
-    responses = responses.ix[responses['stimulus'] != 'prior']
 
     colors = {
         -1.0: 'r',
@@ -23,11 +22,11 @@ def plot(results_path, fig_paths):
 
     for kappa0, df in responses.groupby('kappa0'):
         empirical = df\
-            .groupby(['species', 'query'])\
-            .get_group(('empirical', 'fall'))
+            .groupby('species')\
+            .get_group('empirical')
         ipe = df\
-            .groupby(['species', 'query'])\
-            .get_group(('ipe', 'all'))
+            .groupby('species')\
+            .get_group('ipe')
         human = df\
             .groupby('species')\
             .get_group('human')

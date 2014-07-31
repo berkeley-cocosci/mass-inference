@@ -15,9 +15,8 @@ def run(results_path, seed):
         "mass_responses_by_stimulus.csv"))
 
     human = human\
-        .set_index(['species', 'class', 'query',
-                    'version', 'kappa0', 'stimulus'])\
-        .ix[('human', 'static', 'all', 'H')]['median']\
+        .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
+        .ix[('human', 'static', 'H')]['median']\
         .sortlevel()
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
@@ -25,7 +24,7 @@ def run(results_path, seed):
 
     model = model_belief\
         .groupby(['likelihood', 'model', 'query', 'version'])\
-        .get_group(('ipe', 'static', 'all', 'H'))\
+        .get_group(('ipe', 'static', 'fall', 'H'))\
         .groupby(['sigma', 'phi', 'kappa0', 'stimulus'])['p correct']\
         .mean()
 

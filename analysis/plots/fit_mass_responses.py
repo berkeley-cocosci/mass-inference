@@ -14,7 +14,6 @@ def plot(results_path, fig_paths):
         .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
         .groupby('version')\
         .get_group('H')
-    responses = responses.ix[responses['stimulus'] != 'prior']
 
     params = pd\
         .read_csv(results_path.joinpath("fit_mass_responses.csv"))\
@@ -30,12 +29,19 @@ def plot(results_path, fig_paths):
     xspace = np.linspace(0, 1, 100)
 
     for kappa0, df in responses.groupby('kappa0'):
-        model = df.groupby('species').get_group('ipe')
-        human = df.groupby('species').get_group('human')
+        empirical = df\
+            .groupby('species')\
+            .get_group('empirical')
+        ipe = df\
+            .groupby('species')\
+            .get_group('ipe')
+        human = df\
+            .groupby('species')\
+            .get_group('human')
 
-        x = model['median']
-        xl = x - model['lower']
-        xu = model['upper'] - x
+        x = ipe['median']
+        xl = x - ipe['lower']
+        xu = ipe['upper'] - x
 
         y = human['median']
         yl = y - human['lower']
@@ -54,12 +60,9 @@ def plot(results_path, fig_paths):
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-        model = df.groupby('species').get_group('empirical')
-        human = df.groupby('species').get_group('human')
-
-        x = model['median']
-        xl = x - model['lower']
-        xu = model['upper'] - x
+        x = empirical['median']
+        xl = x - empirical['lower']
+        xu = empirical['upper'] - x
 
         y = human['median']
         yl = y - human['lower']

@@ -18,8 +18,7 @@ def run(results_path, seed):
         .groupby(['version', 'class'])\
         .get_group(('H', 'static'))\
         .set_index(['species', 'kappa0', 'stimulus'])['median']\
-        .unstack('species')\
-        .drop('prior', level='stimulus')
+        .unstack('species')
 
     empirical = np.asarray(responses['empirical'])
     human = np.asarray(responses['human'])
