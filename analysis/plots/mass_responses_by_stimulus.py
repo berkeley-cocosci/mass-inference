@@ -22,12 +22,19 @@ def plot(results_path, fig_paths):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
     for kappa0, df in responses.groupby('kappa0'):
-        model = df.groupby('species').get_group('ipe')
-        human = df.groupby('species').get_group('human')
+        empirical = df\
+            .groupby(['species', 'query'])\
+            .get_group(('empirical', 'fall'))
+        ipe = df\
+            .groupby(['species', 'query'])\
+            .get_group(('ipe', 'all'))
+        human = df\
+            .groupby('species')\
+            .get_group('human')
 
-        x = model['median']
-        xl = x - model['lower']
-        xu = model['upper'] - x
+        x = ipe['median']
+        xl = x - ipe['lower']
+        xu = ipe['upper'] - x
 
         y = human['median']
         yl = y - human['lower']
@@ -38,12 +45,9 @@ def plot(results_path, fig_paths):
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-        model = df.groupby('species').get_group('empirical')
-        human = df.groupby('species').get_group('human')
-
-        x = model['median']
-        xl = x - model['lower']
-        xu = model['upper'] - x
+        x = empirical['median']
+        xl = x - empirical['lower']
+        xu = empirical['upper'] - x
 
         y = human['median']
         yl = y - human['lower']
@@ -54,16 +58,13 @@ def plot(results_path, fig_paths):
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-        model1 = df.groupby('species').get_group('empirical')
-        model2 = df.groupby('species').get_group('ipe')
+        x = empirical['median']
+        xl = x - empirical['lower']
+        xu = empirical['upper'] - x
 
-        x = model1['median']
-        xl = x - model1['lower']
-        xu = model1['upper'] - x
-
-        y = model2['median']
-        yl = y - model2['lower']
-        yu = model2['upper'] - y
+        y = ipe['median']
+        yl = y - ipe['lower']
+        yu = ipe['upper'] - y
 
         ax3.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
