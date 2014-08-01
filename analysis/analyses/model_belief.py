@@ -5,9 +5,14 @@ import util
 import pandas as pd
 import numpy as np
 from snippets import circstats as cs
+from scipy.special import binom
 
 
 def compute_llh_fall(pfall_df, fall_df):
+    """Computes the log likelihood that the tower fell (or not), given the
+    probability of falling.
+
+    """
     pfall = np.asarray(pfall_df.ix[fall_df.index])[:, None]
     fall = np.asarray(fall_df)
     llh = np.log((pfall * fall) + ((1 - pfall) * (1 - fall)))
@@ -16,7 +21,43 @@ def compute_llh_fall(pfall_df, fall_df):
     return llh_df
 
 
+def compute_llh_nfell(pfall_df, nfell_df):
+    """Compute the log likelihood that n blocks fell, given the
+    probability of a block falling.
+
+    """
+    pfall = np.asarray(pfall_df.ix[nfell_df.index])[:, None]
+    nfell = np.asarray(nfell_df)
+    logcoef = np.log(binom(10, nfell))
+    p0 = np.log(pfall) * nfell
+    p1 = np.log(1 - pfall) * (10 - nfell)
+    llh = logcoef + p0 + p1
+    llh_df = pd.DataFrame(
+        llh, index=pfall_df.index, columns=nfell_df.columns)
+    return llh_df
+
+
+def compute_llh_nfell_raw(p_nfell_df, nfell_df):
+    """Compute the log likelihood that n blocks fell, given the
+    probability for each of 0-10 blocks falling.
+
+    """
+    p_nfell_df = p_nfell_df.unstack('nfell')
+    p_nfell = np.asarray(p_nfell_df.ix[nfell_df.index])[:, None]
+    nfell = np.asarray(nfell_df, dtype=int)
+    shape = nfell.shape + p_nfell.shape[-1:]
+    idx = np.concatenate([np.mgrid[:shape[0], :shape[1]], nfell[None]], axis=0)
+    llh = np.log((p_nfell * np.ones(shape))[list(idx)])
+    llh_df = pd.DataFrame(
+        llh, index=nfell_df.index, columns=nfell_df.columns)
+    return llh_df
+
+
 def compute_llh_dir(vmpar_df, direction_df):
+    """Compute the log likelihood of falling in a particular direction,
+    given the von mises distribution over directions.
+
+    """
     stims = vmpar_df['mean'].index.get_level_values('stimulus')
     direction = np.asarray(direction_df.ix[stims])
     bc = np.ones(direction.shape)
