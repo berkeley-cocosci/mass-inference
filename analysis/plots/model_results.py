@@ -87,18 +87,22 @@ def plot(results_path, fig_paths):
         'k-')
 
     for kappa0, df in responses.groupby(level='kappa0'):
-        empirical = df['empirical']
+        empirical = df['ipe']
         ipe = df['ipe']
         human = df['human']
 
         # left subplot (fall responses)
         x = ipe['fall', 'median']
+        x_lerr = x - ipe['fall', 'lower']
+        x_uerr = ipe['fall', 'upper'] - x
         y = human['fall', 'median']
-        y_lerr = human['fall', 'median'] - human['fall', 'lower']
-        y_uerr = human['fall', 'upper'] - human['fall', 'median']
+        y_lerr = y - human['fall', 'lower']
+        y_uerr = human['fall', 'upper'] - y
 
         ax1.errorbar(
-            x, y, yerr=[y_lerr, y_uerr],
+            x, y,
+            xerr=[x_lerr, x_uerr],
+            yerr=[y_lerr, y_uerr],
             marker='o', color=colors[kappa0], ms=6, ls='',
             label=r"$r_0=%.1f$" % 10 ** kappa0)
 

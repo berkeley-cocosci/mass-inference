@@ -40,11 +40,11 @@ def run(results_path, seed):
 
             kappas = list(human['kappa0'].unique()) + [0.0]
             model = data['ipe'][block]\
-                .P_fall_mean[kappas]\
+                .P_fall_stats[kappas]\
                 .stack()\
+                .unstack('stat')\
                 .reset_index()\
                 .rename(columns={
-                    0: 'median',
                     'kappa': 'kappa0'
                 })
             model['species'] = 'model'

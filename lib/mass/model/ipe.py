@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import snippets.datapackage as dpkg
 import snippets.circstats as cs
+import scipy.special
 
 from mass import DATA_PATH
 from .util import LazyProperty
@@ -18,25 +18,37 @@ class IPE(object):
         self.sigma = float(sigma)
         self.phi = float(phi)
 
-    def _sample_kappa_fall_mean(self, data):
+    def _sample_kappa_alpha(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
             values='nfell')
         alpha = samps.sum() + 0.5
-        beta = (10 - samps).sum() + 0.5
-        mean = alpha / (alpha + beta)
-        return mean
+        return alpha
 
-    def _sample_kappa_fall_var(self, data):
+    def _sample_kappa_beta(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
             values='nfell')
-        alpha = samps.sum() + 0.5
         beta = (10 - samps).sum() + 0.5
-        var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
-        return var
+        return beta
+
+    def _bincount(self, x):
+        counts = np.bincount(np.asarray(x, dtype=int))
+        all_counts = np.zeros(11)
+        all_counts[:len(counts)] = counts
+        return pd.Series(all_counts, index=np.arange(0, 11), name=x.name)
+
+    def _sample_kappa_nfell(self, data):
+        samps = data.pivot(
+            index='sample',
+            columns='kappa',
+            values='nfell')
+        counts = samps.apply(self._bincount, axis=0) + 1
+        counts = counts / counts.sum(axis=0)
+        counts.index.name = 'nfell'
+        return counts
 
     def _sample_kappa_dir_mean(self, data):
         samps = data.pivot(
@@ -77,10 +89,23 @@ class IPE(object):
         return var
 
     @LazyProperty
-    def P_fall_mean_all(self):
+    def alpha(self):
         return self.data\
                    .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_fall_mean)
+                   .apply(self._sample_kappa_alpha)
+
+    @LazyProperty
+    def beta(self):
+        return self.data\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_beta)
+
+    @LazyProperty
+    def P_fall_mean_all(self):
+        alpha = self.alpha
+        beta = self.beta
+        mean = alpha / (alpha + beta)
+        return mean
 
     @LazyProperty
     def P_fall_mean(self):
@@ -90,14 +115,46 @@ class IPE(object):
                    .reset_index(['sigma', 'phi'], drop=True)
 
     @LazyProperty
+    def P_fall_stats(self):
+        alpha = self.alpha.stack()
+        beta = self.beta.stack()
+        stats = scipy.special.btdtri(
+            np.asarray(alpha)[:, None],
+            np.asarray(beta)[:, None],
+            [0.025, 0.5, 0.975])
+        stats = pd.DataFrame(
+            stats,
+            index=alpha.index,
+            columns=['lower', 'median', 'upper'])
+        stats.columns.name = 'stat'
+        stats = stats\
+            .stack()\
+            .unstack('kappa')
+        return stats
+
+    @LazyProperty
     def P_fall_var_all(self):
-        return self.data\
-                   .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_fall_var)
+        alpha = self.alpha
+        beta = self.beta
+        var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
+        return var
 
     @LazyProperty
     def P_fall_var(self):
         return self.P_fall_var_all\
+                   .groupby(level=['sigma', 'phi'])\
+                   .get_group((self.sigma, self.phi))\
+                   .reset_index(['sigma', 'phi'], drop=True)
+
+    @LazyProperty
+    def P_nfell_all(self):
+        return self.data\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_nfell)
+
+    @LazyProperty
+    def P_nfell(self):
+        return self.P_nfell_all\
                    .groupby(level=['sigma', 'phi'])\
                    .get_group((self.sigma, self.phi))\
                    .reset_index(['sigma', 'phi'], drop=True)

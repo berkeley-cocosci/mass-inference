@@ -21,6 +21,15 @@ class Feedback(object):
         return fall
 
     @LazyProperty
+    def nfell(self):
+        nfell = self\
+            .data\
+            .groupby(['sigma', 'phi', 'sample'])\
+            .get_group((0.0, 0.0, 0))\
+            .pivot('stimulus', 'kappa', 'nfell')
+        return nfell
+
+    @LazyProperty
     def direction(self):
         direction = self\
             .data\
@@ -43,6 +52,16 @@ class NoFeedback(Feedback):
             .pivot('stimulus', 'kappa', 'nfell')
         fall[:] = np.nan
         return fall
+
+    @LazyProperty
+    def nfell(self):
+        nfell = self\
+            .data\
+            .groupby(['sigma', 'phi', 'sample'])\
+            .get_group((0.0, 0.0, 0))\
+            .pivot('stimulus', 'kappa', 'nfell')
+        nfell[:] = np.nan
+        return nfell
 
     @LazyProperty
     def direction(self):

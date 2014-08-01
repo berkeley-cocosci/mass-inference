@@ -24,7 +24,13 @@ def plot(results_path, fig_paths):
         1.0: 'b'
     }
 
-    x = groups.get_group('model')['median'].unstack('kappa0')
+    x = groups.get_group('model')['median']
+    x_lerr = (x - groups.get_group('model')['lower'])\
+        .unstack('kappa0')
+    x_uerr = (groups.get_group('model')['upper'] - x)\
+        .unstack('kappa0')
+    x = x.unstack('kappa0')
+
     y = groups.get_group('human')['median']
     y_lerr = (y - groups.get_group('human')['lower'])\
         .unstack('kappa0')
@@ -50,11 +56,13 @@ def plot(results_path, fig_paths):
     for kappa0 in (-1.0, 1.0):
         ax2.errorbar(
             x[kappa0], y[kappa0],
+            xerr=[x_lerr[kappa0], x_uerr[kappa0]],
             yerr=[y_lerr[kappa0], y_uerr[kappa0]],
             marker='o', color=colors[kappa0], ms=8, ls='',
             label=r"$r_0=%.1f$" % 10 ** kappa0)
         ax3.errorbar(
             x[0.0], y[kappa0],
+            xerr=[x_lerr[kappa0], x_uerr[kappa0]],
             yerr=[y_lerr[kappa0], y_uerr[kappa0]],
             marker='o', color=colors[kappa0], ms=8, ls='',
             label=r"$r_0=%.1f$" % 10 ** kappa0)
