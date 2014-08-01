@@ -97,7 +97,7 @@ def run(results_path, seed):
                 .get_group(model)\
                 .groupby(['likelihood', 'version', 'num_mass_trials',
                           'trial'])['p correct']\
-                .median()
+                .mean()
             belief.name = 'median'
             belief = belief\
                 .reset_index()\

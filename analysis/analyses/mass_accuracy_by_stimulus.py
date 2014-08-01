@@ -33,7 +33,7 @@ def run(results_path, seed):
         .groupby(['model', 'query'])\
         .get_group(('static', query))\
         .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p correct']\
-        .median()
+        .mean()
     belief.name = 'median'
     belief = belief\
         .reset_index()\

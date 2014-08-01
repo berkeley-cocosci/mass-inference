@@ -41,7 +41,7 @@ def run(results_path, seed):
             .groupby('model')\
             .get_group('static')\
             .groupby(['likelihood', 'version'])['p correct']\
-            .median()
+            .mean()
         belief.name = 'median'
         belief = belief\
             .reset_index()\
