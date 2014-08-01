@@ -47,16 +47,16 @@ def plot(results_path, fig_paths):
 
     mass_corrs = pd\
         .read_csv(results_path.joinpath(
-            "mass_responses_by_stimulus_corrs.csv"))\
+            "mass_accuracy_by_stimulus_corrs.csv"))\
         .set_index(['version', 'X', 'Y'])
 
     pearson = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
     spearman = r"$\rho$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
     corrs = []
     corrs.append(pearson.format(**dict(fall_corrs)))
-    corrs.append(spearman.format(**dict(
+    corrs.append(pearson.format(**dict(
         mass_corrs.ix[('H', 'Empirical', 'Human')])))
-    corrs.append(spearman.format(**dict(
+    corrs.append(pearson.format(**dict(
         mass_corrs.ix[('H', 'IPE', 'Human')])))
 
     xmin = -0.05
@@ -71,8 +71,10 @@ def plot(results_path, fig_paths):
         .set_index('model')
     X = np.linspace(0, 1, 1000)
     ax1.plot([0, 1], [0, 1], 'k--', alpha=0.8)
-    ax2.plot(X, elc(X, params['median']['empirical']), 'k--', alpha=0.8)
-    ax3.plot(X, elc(X, params['median']['ipe']), 'k--', alpha=0.8)
+    ax2.plot([0, 1], [0, 1], 'k--', alpha=0.8)
+    ax3.plot([0, 1], [0, 1], 'k--', alpha=0.8)
+    # ax2.plot(X, elc(X, params['median']['empirical']), 'k--', alpha=0.8)
+    # ax3.plot(X, elc(X, params['median']['ipe']), 'k--', alpha=0.8)
 
     colors = {
         -1.0: 'r',
@@ -87,7 +89,7 @@ def plot(results_path, fig_paths):
         'k-')
 
     for kappa0, df in responses.groupby(level='kappa0'):
-        empirical = df['ipe']
+        empirical = df['empirical']
         ipe = df['ipe']
         human = df['human']
 
@@ -138,13 +140,13 @@ def plot(results_path, fig_paths):
         ax.text(xmax - 0.01, ymin + 0.025, corr,
                 horizontalalignment='right', fontsize=9)
 
-    gamma = r"$\gamma$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
-    ax2.text(xmax - 0.01, ymin + 0.125,
-             gamma.format(**dict(params.ix['empirical'])),
-             horizontalalignment='right', fontsize=9)
-    ax3.text(xmax - 0.01, ymin + 0.125,
-             gamma.format(**dict(params.ix['ipe'])),
-             horizontalalignment='right', fontsize=9)
+    # gamma = r"$\gamma$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    # ax2.text(xmax - 0.01, ymin + 0.125,
+    #          gamma.format(**dict(params.ix['empirical'])),
+    #          horizontalalignment='right', fontsize=9)
+    # ax3.text(xmax - 0.01, ymin + 0.125,
+    #          gamma.format(**dict(params.ix['ipe'])),
+    #          horizontalalignment='right', fontsize=9)
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
