@@ -4,8 +4,6 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import util
-import numpy as np
-from util import exponentiated_luce_choice as elc
 
 
 def plot(results_path, fig_paths):
@@ -51,7 +49,6 @@ def plot(results_path, fig_paths):
         .set_index(['version', 'X', 'Y'])
 
     pearson = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
-    spearman = r"$\rho$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
     corrs = []
     corrs.append(pearson.format(**dict(fall_corrs)))
     corrs.append(pearson.format(**dict(
@@ -66,15 +63,8 @@ def plot(results_path, fig_paths):
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
-    params = pd\
-        .read_csv(results_path.joinpath("fit_mass_responses.csv"))\
-        .set_index('model')
-    X = np.linspace(0, 1, 1000)
-    ax1.plot([0, 1], [0, 1], 'k--', alpha=0.8)
-    ax2.plot([0, 1], [0, 1], 'k--', alpha=0.8)
-    ax3.plot([0, 1], [0, 1], 'k--', alpha=0.8)
-    # ax2.plot(X, elc(X, params['median']['empirical']), 'k--', alpha=0.8)
-    # ax3.plot(X, elc(X, params['median']['ipe']), 'k--', alpha=0.8)
+    for ax in (ax1, ax2, ax3):
+        ax.plot([0, 1], [0, 1], 'k--', alpha=0.8)
 
     colors = {
         -1.0: 'r',
@@ -139,14 +129,6 @@ def plot(results_path, fig_paths):
     for corr, ax in zip(corrs, (ax1, ax2, ax3)):
         ax.text(xmax - 0.01, ymin + 0.025, corr,
                 horizontalalignment='right', fontsize=9)
-
-    # gamma = r"$\gamma$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
-    # ax2.text(xmax - 0.01, ymin + 0.125,
-    #          gamma.format(**dict(params.ix['empirical'])),
-    #          horizontalalignment='right', fontsize=9)
-    # ax3.text(xmax - 0.01, ymin + 0.125,
-    #          gamma.format(**dict(params.ix['ipe'])),
-    #          horizontalalignment='right', fontsize=9)
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
