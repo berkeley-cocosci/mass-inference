@@ -134,3 +134,11 @@ def get_params():
     sigma = config.getfloat("analysis", "sigma")
     phi = config.getfloat("analysis", "phi")
     return sigma, phi
+
+
+def get_query():
+    root = path("..")
+    config = SafeConfigParser()
+    config.read(root.joinpath("config.ini"))
+    query = config.get("analysis", "query")
+    return query

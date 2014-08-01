@@ -11,9 +11,10 @@ from util import exponentiated_luce_choice as elc
 def run(results_path, seed):
     np.random.seed(seed)
 
+    query = util.get_query()
     belief = pd.read_csv(path(results_path).dirname().joinpath(
         "model_belief_agg.csv"))
-    belief = belief.set_index('query').ix['fall']
+    belief = belief.set_index('query').ix[query]
 
     p = pd.read_csv(path(results_path).dirname().joinpath(
         "fit_mass_responses.csv")).set_index('model')['median']

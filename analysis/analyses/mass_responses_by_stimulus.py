@@ -30,9 +30,10 @@ def run(results_path, seed):
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
 
+    query = util.get_query()
     belief = model_belief\
         .groupby(['model', 'query'])\
-        .get_group(('static', 'fall'))\
+        .get_group(('static', query))\
         .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p']\
         .median()
     belief.name = 'median'

@@ -22,9 +22,10 @@ def run(results_path, seed):
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
         'model_belief_agg_all_params.csv'))
 
+    query = util.get_query()
     model = model_belief\
         .groupby(['likelihood', 'model', 'query', 'version'])\
-        .get_group(('ipe', 'static', 'fall', 'H'))\
+        .get_group(('ipe', 'static', query, 'H'))\
         .groupby(['sigma', 'phi', 'kappa0', 'stimulus'])['p correct']\
         .mean()
 

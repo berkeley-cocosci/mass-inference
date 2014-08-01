@@ -28,9 +28,10 @@ def run(results_path, seed):
         .stack()
     results.append(correct)
 
+    query = util.get_query()
     belief = model_belief\
         .groupby(['model', 'query'])\
-        .get_group(('static', 'fall'))\
+        .get_group(('static', query))\
         .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p correct']\
         .median()
     belief.name = 'median'

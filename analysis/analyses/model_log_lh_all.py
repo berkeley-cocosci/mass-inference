@@ -23,11 +23,12 @@ def run(results_path, seed):
         lh.name = df.name
         return lh
 
+    query = util.get_query()
     belief = pd.read_csv(path(results_path).dirname().joinpath(
         'model_belief_agg.csv'))
     results = belief\
         .set_index('query')\
-        .ix['fall']\
+        .ix[query]\
         .set_index([
             'likelihood', 'model', 'version', 'pid', 'trial'])['p correct']\
         .unstack('trial')
