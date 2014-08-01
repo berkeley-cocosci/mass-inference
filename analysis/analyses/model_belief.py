@@ -8,6 +8,24 @@ from snippets import circstats as cs
 from scipy.special import binom
 
 
+def compute_llh_fall_counterfactual(pfall_df, fall_df):
+    """Computes the log likelihood that the tower fell (or not), given the
+    probability of falling.
+
+    """
+    pfall = np.asarray(pfall_df.unstack('kappa'))
+    p0 = pfall[:, 0]
+    p1 = pfall[:, 1]
+    p = p0 * (1 - p1) / ((p0 * (1 - p1)) + ((1 - p0) * p1))
+    p = np.hstack([p[:, None], p[:, None]])
+    p = np.hstack([p[:, None], 1 - p[:, None]])
+    fall = np.asarray(fall_df)[:, None]
+    llh = np.log((p * fall) + ((1 - p) * (1 - fall))).reshape((-1, 2))
+    llh_df = pd.DataFrame(
+        llh, index=pfall_df.index, columns=fall_df.columns)
+    return llh_df
+
+
 def compute_llh_fall(pfall_df, fall_df):
     """Computes the log likelihood that the tower fell (or not), given the
     probability of falling.
@@ -21,9 +39,10 @@ def compute_llh_fall(pfall_df, fall_df):
     return llh_df
 
 
-def compute_llh_nfell(pfall_df, nfell_df):
+def compute_llh_nfell_binomial(pfall_df, nfell_df):
     """Compute the log likelihood that n blocks fell, given the
-    probability of a block falling.
+    probability of a block falling, under the assumption of a binomial
+    distribution.
 
     """
     pfall = np.asarray(pfall_df.ix[nfell_df.index])[:, None]
@@ -37,9 +56,10 @@ def compute_llh_nfell(pfall_df, nfell_df):
     return llh_df
 
 
-def compute_llh_nfell_raw(p_nfell_df, nfell_df):
+def compute_llh_nfell_multinomial(p_nfell_df, nfell_df):
     """Compute the log likelihood that n blocks fell, given the
-    probability for each of 0-10 blocks falling.
+    probability for each of 0-10 blocks falling, under the assumption
+    of a multinomial distribution.
 
     """
     p_nfell_df = p_nfell_df.unstack('nfell')
@@ -90,6 +110,11 @@ def run(results_path, seed):
         .reorder_levels(['stimulus', 'sigma', 'phi'])\
         .stack()\
         .sortlevel()
+    ipe_nfell = data['ipe']['C']\
+        .P_nfell_all[hyps]\
+        .reorder_levels(['stimulus', 'sigma', 'phi', 'nfell'])\
+        .stack()\
+        .sortlevel()
     ipe_direction_mean = data['ipe']['C']\
         .P_dir_mean_all[hyps]\
         .reorder_levels(['stimulus', 'sigma', 'phi'])\
@@ -103,6 +128,8 @@ def run(results_path, seed):
     empirical_fall = data['empirical']['C'].P_fall_mean[hyps].stack()
     fb_fall = data['fb']['C'].fall[hyps]
     fb_fall.columns.name = 'kappa0'
+    fb_nfell = data['fb']['C'].nfell[hyps]
+    fb_nfell.columns.name = 'kappa0'
     fb_direction = data['fb']['C'].direction[hyps]
     fb_direction.columns.name = 'kappa0'
 
@@ -116,6 +143,11 @@ def run(results_path, seed):
         .unstack('kappa')
     llh_fall_empirical = normalize(llh_fall_empirical)
 
+    llh_fall_empirical_cf = compute_llh_fall_counterfactual(pfall, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_fall_empirical_cf = normalize(llh_fall_empirical_cf)
+
     # compute ipe likelihoods
     fall = fb_fall
     pfall = ipe_fall
@@ -125,6 +157,31 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_ipe = normalize(llh_fall_ipe)
+
+    llh_fall_ipe_cf = pfall\
+        .groupby(level=['sigma', 'phi'])\
+        .apply(compute_llh_fall_counterfactual, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_fall_ipe_cf = normalize(llh_fall_ipe_cf)
+
+    # fall = fb_nfell
+    # pfall = ipe_fall
+    # llh_nfell_ipe = pfall\
+    #     .groupby(level=['sigma', 'phi', 'kappa'])\
+    #     .apply(compute_llh_nfell_binomial, fall)\
+    #     .stack()\
+    #     .unstack('kappa')
+    # llh_nfell_ipe_binomial = normalize(llh_nfell_ipe)
+
+    fall = fb_nfell
+    pfall = ipe_nfell
+    llh_nfell_ipe = pfall\
+        .groupby(level=['sigma', 'phi', 'kappa'])\
+        .apply(compute_llh_nfell_multinomial, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_nfell_ipe_multinomial = normalize(llh_nfell_ipe)
 
     direction = fb_direction
     vmpar = pd.DataFrame({
@@ -141,8 +198,6 @@ def run(results_path, seed):
     llh_dir_ipe[np.isinf(llh_dir_ipe)] = 0.0
     llh_dir_ipe = normalize(llh_dir_ipe)
 
-    llh_ipe = normalize(llh_fall_ipe + llh_dir_ipe)
-
     # put it all together
     # empirical likelihood -- will it fall?
     llh_fall_empirical = llh_fall_empirical\
@@ -154,6 +209,15 @@ def run(results_path, seed):
     llh_fall_empirical['sigma'] = 0.0
     llh_fall_empirical['phi'] = 0.0
 
+    llh_fall_empirical_cf = llh_fall_empirical_cf\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'llh'})
+    llh_fall_empirical_cf['likelihood'] = 'empirical'
+    llh_fall_empirical_cf['query'] = 'fall cf'
+    llh_fall_empirical_cf['sigma'] = 0.0
+    llh_fall_empirical_cf['phi'] = 0.0
+
     # ipe likelihood -- will it fall?
     llh_fall_ipe = llh_fall_ipe\
         .stack()\
@@ -162,18 +226,45 @@ def run(results_path, seed):
     llh_fall_ipe['likelihood'] = 'ipe'
     llh_fall_ipe['query'] = 'fall'
 
-    # ipe likelihood -- all queries
-    llh_ipe = llh_ipe\
+    llh_fall_ipe_cf = llh_fall_ipe_cf\
         .stack()\
         .reset_index()\
         .rename(columns={0: 'llh'})
-    llh_ipe['likelihood'] = 'ipe'
-    llh_ipe['query'] = 'all'
+    llh_fall_ipe_cf['likelihood'] = 'ipe'
+    llh_fall_ipe_cf['query'] = 'fall cf'
+
+    # # ipe likelihood -- will it fall?
+    # llh_nfell_ipe_binomial = llh_nfell_ipe_binomial\
+    #     .stack()\
+    #     .reset_index()\
+    #     .rename(columns={0: 'llh'})
+    # llh_nfell_ipe_binomial['likelihood'] = 'ipe'
+    # llh_nfell_ipe_binomial['query'] = 'nfell binomial'
+
+    # ipe likelihood -- will it fall?
+    llh_nfell_ipe_multinomial = llh_nfell_ipe_multinomial\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'llh'})
+    llh_nfell_ipe_multinomial['likelihood'] = 'ipe'
+    llh_nfell_ipe_multinomial['query'] = 'nfell multinomial'
+
+    # ipe likelihood -- which direction?
+    llh_dir_ipe = llh_dir_ipe\
+        .stack()\
+        .reset_index()\
+        .rename(columns={0: 'llh'})
+    llh_dir_ipe['likelihood'] = 'ipe'
+    llh_dir_ipe['query'] = 'direction'
 
     llh = pd.concat([
         llh_fall_empirical,
         llh_fall_ipe,
-        llh_ipe
+        llh_fall_empirical_cf,
+        llh_fall_ipe_cf,
+        # llh_nfell_ipe_binomial,
+        llh_nfell_ipe_multinomial,
+        llh_dir_ipe
     ])
     llh = llh.set_index(['likelihood', 'query', 'stimulus', 'kappa'])
 
