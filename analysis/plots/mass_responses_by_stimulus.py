@@ -71,14 +71,14 @@ def plot(results_path, fig_paths):
                      label="kappa=%s" % kappa0)
 
     ax1.set_title("IPE vs. Human")
-    ax2.set_title("Empirical IPE vs. Human")
-    ax3.set_title("Empirical IPE vs. IPE")
+    ax2.set_title("Empirical vs. Human")
+    ax3.set_title("Empirical vs. IPE")
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
-    ax2.set_xlabel("Empirical IPE")
+    ax2.set_xlabel("Empirical")
     ax2.set_ylabel("Human")
-    ax3.set_xlabel("Empirical IPE")
+    ax3.set_xlabel("Empirical")
     ax3.set_ylabel("IPE")
 
     for ax in (ax1, ax2, ax3):
