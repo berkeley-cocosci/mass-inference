@@ -8,7 +8,6 @@ from mass.analysis import load_model as _load_model
 from mass.analysis import load_all as _load_all
 from mass.analysis import load_participants as _load_participants
 from mass.analysis import bootcorr, beta, sigmoid
-from mass.analysis import exponentiated_luce_choice
 
 
 MAX_LOG = np.log(sys.float_info.max)

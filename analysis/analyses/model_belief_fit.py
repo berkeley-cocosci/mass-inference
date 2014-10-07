@@ -5,7 +5,6 @@ import util
 import pandas as pd
 import numpy as np
 from path import path
-from util import exponentiated_luce_choice as elc
 
 
 def run(results_path, seed):
@@ -16,18 +15,12 @@ def run(results_path, seed):
         "model_belief_agg.csv"))
     belief = belief.set_index('query').ix[query]
 
-    p = pd.read_csv(path(results_path).dirname().joinpath(
-        "fit_mass_responses.csv")).set_index('model')['median']
-
     empirical = belief\
         .groupby('likelihood')\
         .get_group('empirical')\
         .set_index(['model', 'likelihood', 'version', 'pid',
                     'kappa0', 'stimulus', 'trial'])\
         .copy()
-    empirical.loc[:, 'p'] = elc(empirical['p'], p['empirical'])
-    empirical.loc[:, 'p correct'] = elc(
-        empirical['p correct'], p['empirical'])
 
     ipe = belief\
         .groupby('likelihood')\
@@ -35,8 +28,6 @@ def run(results_path, seed):
         .set_index(['model', 'likelihood', 'version', 'pid',
                     'kappa0', 'stimulus', 'trial'])\
         .copy()
-    ipe.loc[:, 'p'] = elc(ipe['p'], p['ipe'])
-    ipe.loc[:, 'p correct'] = elc(ipe['p correct'], p['ipe'])
 
     results = pd\
         .concat([empirical, ipe])\

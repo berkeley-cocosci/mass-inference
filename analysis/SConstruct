@@ -125,10 +125,8 @@ make_analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_st
 make_latex("mass_responses_by_stimulus_corrs")
 make_analysis("mass_accuracy_best_parameters", ["results/mass_responses_by_stimulus.csv", "results/model_belief_agg_all_params.csv"])
 make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
-make_analysis("fit_mass_responses", ["results/mass_responses_by_stimulus.csv"])
-make_plot("fit_mass_responses", ["results/mass_responses_by_stimulus.csv", "results/fit_mass_responses.csv"])
-make_latex("fit_mass_responses")
-make_analysis("model_belief_fit", ["results/model_belief_agg.csv", "results/fit_mass_responses.csv"])
+
+make_analysis("model_belief_fit", ["results/model_belief_agg.csv"])
 
 make_analysis("mass_accuracy", ["human", "results/model_belief_fit.csv"])
 make_latex("mass_accuracy")
@@ -154,4 +152,4 @@ make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
 
 make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
 
-make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv", "results/mass_responses_by_stimulus_corrs.csv", "results/fit_mass_responses.csv"])
+make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv", "results/mass_accuracy_by_stimulus_corrs.csv"])
