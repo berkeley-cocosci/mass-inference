@@ -5,7 +5,6 @@ import util
 import pandas as pd
 import numpy as np
 from path import path
-from util import exponentiated_luce_choice as elc
 
 
 def run(results_path, seed):
@@ -32,10 +31,8 @@ def run(results_path, seed):
     results = []
     for (sigma, phi), model_df in model.groupby(level=['sigma', 'phi']):
         index = model_df.reset_index(['sigma', 'phi'], drop=True).index
-        x0 = np.asarray(model_df)
+        x = np.asarray(model_df)
         y = np.asarray(human.ix[index])
-        g = 2.85
-        x = elc(x0, g)
         err = pd.Series((x - y) ** 2, index=model_df.index)
         results.append(err)
 
