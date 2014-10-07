@@ -30,7 +30,7 @@ def run(results_path, seed):
         results[(version, 'Empirical', 'Human')] = util.bootcorr(
             x, y, method='pearson')
 
-    results = pd.DataFrame.from_dict(results, orient='index')
+    results = pd.DataFrame.from_dict(results).T
     results.index = pd.MultiIndex.from_tuples(
         results.index,
         names=['version', 'X', 'Y'])

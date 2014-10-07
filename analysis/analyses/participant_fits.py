@@ -13,8 +13,8 @@ def run(results_path, seed):
     def rank(x):
         y = np.asarray(x).squeeze()
         i = np.argsort(y)[::-1]
-        cols = x.columns[i]
-        index = np.arange(len(cols), dtype=int)
+        index = x.columns[i]
+        cols = np.arange(len(index), dtype=int)
         ranks = pd.Series(cols, index=index)
         return ranks
 
@@ -30,13 +30,10 @@ def run(results_path, seed):
 
     results = llh_sum\
         .groupby(level=['version', 'pid'])\
-        .apply(rank)\
-        .stack()\
+        .apply(rank)
+    results.name = 'rank'
+    results = results\
         .reset_index()\
-        .rename(columns={
-            'level_2': 'rank',
-            0: 'model'
-        })\
         .set_index(['version', 'pid', 'model'])\
         .sortlevel()
 

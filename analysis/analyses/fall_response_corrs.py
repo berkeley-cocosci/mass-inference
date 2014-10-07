@@ -37,7 +37,7 @@ def run(results_path, seed):
         y = pd.concat([m[('human', -1.0)], m[('human', 1.0)]])
         results[(block, 'ModelIS', 'Human')] = util.bootcorr(x, y)
 
-    results = pd.DataFrame.from_dict(results, orient='index')
+    results = pd.DataFrame.from_dict(results).T
     results.index = pd.MultiIndex.from_tuples(
         results.index,
         names=['block', 'X', 'Y'])

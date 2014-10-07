@@ -42,8 +42,8 @@ def run(results_path, seed):
     llh_trial = 2 * llh\
         .groupby('likelihood')\
         .get_group('empirical')\
-        .pivot_table(rows=['version', 'model'],
-                     cols='trial', values='llh',
+        .pivot_table(index=['version', 'model'],
+                     columns='trial', values='llh',
                      aggfunc=np.sum)\
         .stack()\
         .unstack('model')

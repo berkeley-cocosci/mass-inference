@@ -32,8 +32,8 @@ def run(results_path, seed):
     human = util.load_human()
     results = human['C']\
         .pivot_table(
-            rows=['version', 'kappa0', 'pid'],
-            cols='trial',
+            index=['version', 'kappa0', 'pid'],
+            columns='trial',
             values='mass? correct')\
         .groupby(level=['version', 'kappa0', 'pid'])\
         .apply(find_switchpoint)\

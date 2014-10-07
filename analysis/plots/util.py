@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('AGG')
+
 from ConfigParser import SafeConfigParser
 import matplotlib.pyplot as plt
 import os
@@ -5,7 +8,6 @@ import sys
 from path import path
 from mass.analysis import sigmoid
 from mass.analysis import exponentiated_luce_choice
-
 
 def clear_right(ax=None):
     """Remove the right edge of the axis bounding box.

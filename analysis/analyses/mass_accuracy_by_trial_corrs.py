@@ -22,12 +22,17 @@ def run(results_path, seed):
     def corr(df):
         x = np.asarray(df['trial'])
         y = np.asarray(df['median'])
-        samps = np.random.rand(10000, 80, y.size) < y
-        samps = samps.mean(axis=1)
-        corrs = np.array([scipy.stats.spearmanr(x, s)[0] for s in samps])
-        stats = pd.Series(
-            np.percentile(corrs, [2.5, 50, 97.5]),
-            index=['lower', 'median', 'upper'])
+        if y.size == 1:
+            stats = pd.Series(
+                [np.nan, np.nan, np.nan],
+                index=['lower', 'median', 'upper'])
+        else:
+            samps = np.random.rand(10000, 80, y.size) < y
+            samps = samps.mean(axis=1)
+            corrs = np.array([scipy.stats.spearmanr(x, s)[0] for s in samps])
+            stats = pd.Series(
+                np.percentile(corrs, [2.5, 50, 97.5]),
+                index=['lower', 'median', 'upper'])
         stats.name = df.name
         return stats
 

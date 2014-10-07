@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+import util
+
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
-import util
 import numpy as np
 
 

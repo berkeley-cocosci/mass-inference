@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
+import util
+
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
-import util
 
 
 def plot(results_path, fig_paths):
@@ -16,8 +17,8 @@ def plot(results_path, fig_paths):
         .get_group(('GH', 'B'))\
         .replace({'species': {'model': 'ipe'}})\
         .set_index(['species', 'kappa0', 'stimulus'])[cols]\
-        .sortlevel()\
-        .stack()
+        .sortlevel()
+    fall_responses['query'] = 'fall'
 
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
@@ -25,19 +26,17 @@ def plot(results_path, fig_paths):
         .get_group('H')
     mass_responses = mass_responses\
         .set_index(['species', 'kappa0', 'stimulus'])[cols]\
-        .sortlevel()\
-        .stack()
+        .sortlevel()
+    mass_responses['query'] = 'mass'
 
-    responses = pd.DataFrame({
-        'fall': fall_responses,
-        'mass': mass_responses
-    })
+    responses = pd.concat([fall_responses, mass_responses]).reset_index()
+    responses['kappa0'] = responses['kappa0'].astype(str)
     responses = responses\
-        .unstack()\
-        .unstack('species')\
-        .reorder_levels((2, 0, 1), axis=1)\
-        .ix[[-1.0, 1.0]]
-
+        .set_index(['species', 'kappa0', 'stimulus', 'query'])\
+        .unstack(['species', 'query'])\
+        .reorder_levels((1, 2, 0), axis=1)\
+        .ix[['-1.0', '1.0']]
+    
     fall_corrs = pd\
         .read_csv(results_path.joinpath("fall_response_corrs.csv"))\
         .set_index(['block', 'X', 'Y'])\
@@ -67,15 +66,15 @@ def plot(results_path, fig_paths):
         ax.plot([0, 1], [0, 1], 'k--', alpha=0.8)
 
     colors = {
-        -1.0: 'r',
-        1.0: 'b'
+        '-1.0': 'r',
+        '1.0': 'b'
     }
 
     ax1.plot(
-        [responses.ix[-1.0]['ipe', 'fall', 'median'],
-         responses.ix[1.0]['ipe', 'fall', 'median']],
-        [responses.ix[-1.0]['human', 'fall', 'median'],
-         responses.ix[1.0]['human', 'fall', 'median']],
+        [responses.ix['-1.0']['ipe', 'fall', 'median'],
+         responses.ix['1.0']['ipe', 'fall', 'median']],
+        [responses.ix['-1.0']['human', 'fall', 'median'],
+         responses.ix['1.0']['human', 'fall', 'median']],
         'k-')
 
     for kappa0, df in responses.groupby(level='kappa0'):
@@ -96,7 +95,7 @@ def plot(results_path, fig_paths):
             xerr=[x_lerr, x_uerr],
             yerr=[y_lerr, y_uerr],
             marker='o', color=colors[kappa0], ms=6, ls='',
-            label=r"$r_0=%.1f$" % 10 ** kappa0)
+            label=r"$r_0=%.1f$" % 10 ** float(kappa0))
 
         # middle subplot (empirical ipe mass responses)
         x = empirical['mass', 'median']

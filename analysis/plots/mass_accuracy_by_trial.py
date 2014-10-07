@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
+import util
+
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import util
 
 
 def plot(results_path, fig_paths):
