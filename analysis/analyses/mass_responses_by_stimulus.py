@@ -30,10 +30,9 @@ def run(results_path, seed):
         .set_index(['species', 'class', 'version', 'kappa0', 'stimulus'])\
         .stack()
 
-    query = util.get_query()
     belief = model_belief\
-        .groupby(['model', 'query'])\
-        .get_group(('static', query))\
+        .groupby('model')\
+        .get_group('static')\
         .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p']\
         .mean()
 

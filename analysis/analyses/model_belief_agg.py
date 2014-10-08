@@ -14,20 +14,21 @@ def run(results_path, seed):
         "model_belief_agg_all_params.csv"))
 
     sigma, phi = util.get_params()
+    query = util.get_query()
 
     empirical = belief\
-        .groupby('likelihood')\
-        .get_group('empirical')\
+        .groupby(['likelihood', 'query'])\
+        .get_group(('empirical', query))\
         .drop(['sigma', 'phi'], axis=1)
     ipe = belief\
-        .groupby(['likelihood', 'sigma', 'phi'])\
-        .get_group(('ipe', sigma, phi))\
+        .groupby(['likelihood', 'query', 'sigma', 'phi'])\
+        .get_group(('ipe', query, sigma, phi))\
         .drop(['sigma', 'phi'], axis=1)
 
     results = pd\
         .concat([empirical, ipe])\
         .set_index([
-            'model', 'likelihood', 'query', 'version', 'kappa0', 'pid'])\
+            'model', 'likelihood', 'version', 'trial'])\
         .sortlevel()
 
     results.to_csv(results_path)

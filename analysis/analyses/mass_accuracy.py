@@ -13,7 +13,7 @@ def run(results_path, seed):
     results = []
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_belief_fit.csv'))
+        'model_belief_agg.csv'))
 
     for kappa in [-1.0, 1.0, 'all']:
         if kappa == 'all':
@@ -56,7 +56,6 @@ def run(results_path, seed):
     results = pd.concat(results).unstack().sortlevel()
 
     results.to_csv(results_path)
-
 
 if __name__ == "__main__":
     util.run_analysis(run, sys.argv[1])
