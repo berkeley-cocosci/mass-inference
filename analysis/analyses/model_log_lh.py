@@ -9,25 +9,37 @@ from path import path
 
 def run(results_path, seed):
     np.random.seed(seed)
+    human = util.load_human()
+    results = {}
 
-    llh = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh_all.csv'))
-    fits = pd.read_csv(path(results_path).dirname().joinpath(
-        'participant_fits.csv'))
+    h = human['C']\
+        .set_index(['version', 'pid', 'trial'])['mass? correct']\
+        .unstack('trial')
 
-    learning_fits = fits[fits['version'] != 'H']
-    models = learning_fits.pivot('pid', 'model', 'llh')
-    llr = models['chance'] - models['static']
-    # only mark pids as bad if there is positive non-negligible
-    # evidence for chance... that is, don't exclude pids if they are
-    # only very slightly in favor of chance
-    bad_pids = list(llr[llr > 1].index)
+    def llh(df):
+        m = df.reset_index(['likelihood', 'model'], drop=True)
+        lh = np.log(((m * h) + ((1 - m) * (1 - h))))
+        lh = lh.stack()
+        lh.name = df.name
+        return lh
 
-    results = llh\
-        .set_index('pid')\
-        .drop(bad_pids)\
+    query = util.get_query()
+    belief = pd.read_csv(path(results_path).dirname().joinpath(
+        'model_belief_agg.csv'))
+    results = belief\
+        .set_index([
+            'likelihood', 'model', 'version', 'pid', 'trial'])['p correct']\
+        .unstack('trial')
+    results = results\
+        .groupby(level=['likelihood', 'model'])\
+        .apply(llh)\
+        .stack()\
+        .stack()\
+        .stack()\
         .reset_index()\
-        .set_index(['version', 'likelihood', 'model'])
+        .rename(columns={0: 'llh'})\
+        .set_index(['version', 'likelihood', 'model', 'pid'])\
+        .sort()
 
     results.to_csv(results_path)
 
