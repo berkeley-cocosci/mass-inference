@@ -4,6 +4,7 @@ import sys
 import util
 import pandas as pd
 import numpy as np
+import re
 from path import path
 
 
@@ -18,13 +19,27 @@ def run(results_path, seed):
         .ix[('human', 'static', 'H')]['median']\
         .sortlevel()
 
-    model_belief = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_belief_agg_all_params.csv'))
-
+    store = pd.HDFStore(path(results_path).dirname().joinpath(
+        'model_belief_fit.h5'))
     query = util.get_query()
-    model = model_belief\
-        .groupby(['likelihood', 'model', 'query', 'version'])\
-        .get_group(('ipe', 'static', query, 'H'))\
+    params = store["/{}/ipe/param_ref".format(query)]
+    store_pth = r"/{}/ipe/(params_[0-9]+)/static/belief".format(query)
+    model_belief = []
+    for key in store.keys():
+        matches = re.match(store_pth, key)
+        if not matches:
+            continue
+        df = store[key]\
+            .reset_index()\
+            .groupby('version')\
+            .get_group('H')\
+            .drop('version', axis=1)
+        sigma, phi = params.ix[matches.group(1)]
+        df['sigma'] = sigma
+        df['phi'] = phi
+        model_belief.append(df)
+
+    model = pd.concat(model_belief)\
         .groupby(['sigma', 'phi', 'kappa0', 'stimulus'])['p correct']\
         .mean()
 
