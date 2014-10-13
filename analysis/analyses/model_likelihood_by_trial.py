@@ -27,7 +27,8 @@ def run(results_path, seed):
     np.random.seed(seed)
     data = util.load_human()
 
-    old_store = pd.HDFStore('results/model_likelihood.h5')
+    old_store = pd.HDFStore(path(results_path).dirname().joinpath(
+        'model_likelihood.h5'))
     store = pd.HDFStore(results_path, mode='w')
 
     pth = path(results_path).dirname().joinpath("trial_order.csv")
@@ -75,6 +76,7 @@ def run(results_path, seed):
                 store.append(key, model)
 
     store.close()
+    old_store.close()
 
 if __name__ == "__main__":
     util.run_analysis(run, sys.argv[1])

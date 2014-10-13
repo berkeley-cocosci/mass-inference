@@ -4,12 +4,14 @@ import sys
 import util
 import pandas as pd
 import numpy as np
+from path import path
 
 
 def run(results_path, seed):
     np.random.seed(seed)
 
-    old_store = pd.HDFStore('results/model_likelihood_by_trial.h5')
+    old_store = pd.HDFStore(path(results_path).dirname().joinpath(
+        'model_likelihood_by_trial.h5'))
     store = pd.HDFStore(results_path, mode='w')
 
     for key in old_store.keys():
@@ -61,6 +63,7 @@ def run(results_path, seed):
         store.append("{}/learning".format(key), learning_df)
 
     store.close()
+    old_store.close()
 
 if __name__ == "__main__":
     util.run_analysis(run, sys.argv[1])

@@ -4,6 +4,7 @@ import sys
 import util
 import pandas as pd
 import numpy as np
+from path import path
 from scipy.optimize import minimize
 
 def log_laplace(x, mu=0, b=1):
@@ -74,7 +75,8 @@ def run(results_path, seed):
     responses['mass? response'] = (responses['mass? response'] + 1) / 2
 
     # load in raw model belief
-    old_store = pd.HDFStore('results/model_belief_by_trial.h5')
+    old_store = pd.HDFStore(path(results_path).dirname().joinpath(
+        'model_belief_by_trial.h5'))
     store = pd.HDFStore(results_path, mode='w')
 
     # L2 regularization is equivalent to using a laplace prior
@@ -143,7 +145,9 @@ def run(results_path, seed):
         store.append("{}/belief".format(key), results)
         store.append("{}/params".format(key), params)
 
-    results.to_csv(results_path)
+    store.close()
+    old_store.close()
+
 
 if __name__ == "__main__":
     util.run_analysis(run, sys.argv[1])
