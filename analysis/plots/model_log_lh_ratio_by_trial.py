@@ -13,18 +13,16 @@ def plot(results_path, fig_paths):
     llr = llr.pivot('trial', 'version', 'llhr').cumsum()
 
     linestyles = {
-        'G': '--',
         'I (across)': '-',
         'I (within)': ':'
     }
 
     labels = {
-        'G': 'Experiment 2',
-        'I (across)': 'Experiment 3 (across subjects)',
-        'I (within)': 'Experiment 3 (within subjects)'
+        'I (across)': 'Across subjects',
+        'I (within)': 'Within subjects'
     }
 
-    order = ['G', 'I (within)', 'I (across)']
+    order = ['I (within)', 'I (across)']
 
     fig, ax = plt.subplots()
 
@@ -41,13 +39,13 @@ def plot(results_path, fig_paths):
             lw=lw, color='k', ls=ls)
 
     ax.hlines([0], 1, 20, color='k', linestyle='dotted')
-    ax.legend(loc='lower left', fontsize=10, frameon=False)
-    ax.set_xlim(1, 20)
-    ax.set_ylim(-125, 75)
+    ax.legend(loc='upper left', fontsize=10, frameon=False)
+    ax.set_xlim(1, 10)
     ax.set_ylabel("Cumulative evidence ($D$)")
     ax.set_xlabel("Trial")
-    ax.set_xticks([1, 5, 10, 15, 20])
-    ax.set_xticklabels([1, 5, 10, 15, 20])
+    ax.set_xticks([1, 2, 3, 5, 10])
+    ax.set_xticklabels([1, 2, 3, 5, 10])
+    ax.set_title("Likelihoods in Experiment 3")
 
     util.outward_ticks(ax)
     util.clear_right(ax)
