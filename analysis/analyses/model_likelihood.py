@@ -99,6 +99,17 @@ def normalize(df, axis=1):
     return normed
 
 
+def save(data, pth, store):
+    params = ['sigma', 'phi']
+    all_params = {}
+    for i, (p, df) in enumerate(data.groupby(level=params)):
+        df2 = df.reset_index(params).drop(params, axis=1)
+        store.append('{}/params_{}'.format(pth, i), df2)
+        all_params['params_{}'.format(i)] = p
+    all_params = pd.DataFrame(all_params, index=params).T
+    store.append('{}/param_ref'.format(pth), all_params)
+
+
 def run(results_path, seed):
     np.random.seed(seed)
     data = util.load_all()
@@ -133,6 +144,8 @@ def run(results_path, seed):
     fb_direction = data['fb']['C'].direction[hyps]
     fb_direction.columns.name = 'kappa0'
 
+    store = pd.HDFStore(results_path, mode='w')
+
     # compute empirical likelihoods
     fall = fb_fall
     pfall = empirical_fall
@@ -142,11 +155,13 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_empirical = normalize(llh_fall_empirical)
+    store.append('fall/empirical/params_0', llh_fall_empirical)
 
     llh_fall_empirical_cf = compute_llh_fall_counterfactual(pfall, fall)\
         .stack()\
         .unstack('kappa')
     llh_fall_empirical_cf = normalize(llh_fall_empirical_cf)
+    store.append('fall_cf/empirical/params_0', llh_fall_empirical_cf)
 
     # compute ipe likelihoods
     fall = fb_fall
@@ -157,6 +172,7 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_ipe = normalize(llh_fall_ipe)
+    save(llh_fall_ipe, 'fall/ipe', store)
 
     llh_fall_ipe_cf = pfall\
         .groupby(level=['sigma', 'phi'])\
@@ -164,15 +180,17 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_ipe_cf = normalize(llh_fall_ipe_cf)
+    save(llh_fall_ipe_cf, 'fall_cf/ipe', store)
 
-    # fall = fb_nfell
-    # pfall = ipe_fall
-    # llh_nfell_ipe = pfall\
-    #     .groupby(level=['sigma', 'phi', 'kappa'])\
-    #     .apply(compute_llh_nfell_binomial, fall)\
-    #     .stack()\
-    #     .unstack('kappa')
-    # llh_nfell_ipe_binomial = normalize(llh_nfell_ipe)
+    fall = fb_nfell
+    pfall = ipe_fall
+    llh_nfell_ipe = pfall\
+        .groupby(level=['sigma', 'phi', 'kappa'])\
+        .apply(compute_llh_nfell_binomial, fall)\
+        .stack()\
+        .unstack('kappa')
+    llh_nfell_ipe_binomial = normalize(llh_nfell_ipe)
+    save(llh_nfell_ipe_binomial, 'nfell_binomial/ipe', store)
 
     fall = fb_nfell
     pfall = ipe_nfell
@@ -182,6 +200,7 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_nfell_ipe_multinomial = normalize(llh_nfell_ipe)
+    save(llh_nfell_ipe_multinomial, 'nfell_multinomial/ipe', store)
 
     direction = fb_direction
     vmpar = pd.DataFrame({
@@ -197,79 +216,9 @@ def run(results_path, seed):
         .fillna(0)
     llh_dir_ipe[np.isinf(llh_dir_ipe)] = 0.0
     llh_dir_ipe = normalize(llh_dir_ipe)
+    save(llh_dir_ipe, 'direction/ipe', store)
 
-    # put it all together
-    # empirical likelihood -- will it fall?
-    llh_fall_empirical = llh_fall_empirical\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_fall_empirical['likelihood'] = 'empirical'
-    llh_fall_empirical['query'] = 'fall'
-    llh_fall_empirical['sigma'] = 0.0
-    llh_fall_empirical['phi'] = 0.0
-
-    llh_fall_empirical_cf = llh_fall_empirical_cf\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_fall_empirical_cf['likelihood'] = 'empirical'
-    llh_fall_empirical_cf['query'] = 'fall cf'
-    llh_fall_empirical_cf['sigma'] = 0.0
-    llh_fall_empirical_cf['phi'] = 0.0
-
-    # ipe likelihood -- will it fall?
-    llh_fall_ipe = llh_fall_ipe\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_fall_ipe['likelihood'] = 'ipe'
-    llh_fall_ipe['query'] = 'fall'
-
-    llh_fall_ipe_cf = llh_fall_ipe_cf\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_fall_ipe_cf['likelihood'] = 'ipe'
-    llh_fall_ipe_cf['query'] = 'fall cf'
-
-    # # ipe likelihood -- will it fall?
-    # llh_nfell_ipe_binomial = llh_nfell_ipe_binomial\
-    #     .stack()\
-    #     .reset_index()\
-    #     .rename(columns={0: 'llh'})
-    # llh_nfell_ipe_binomial['likelihood'] = 'ipe'
-    # llh_nfell_ipe_binomial['query'] = 'nfell binomial'
-
-    # ipe likelihood -- will it fall?
-    llh_nfell_ipe_multinomial = llh_nfell_ipe_multinomial\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_nfell_ipe_multinomial['likelihood'] = 'ipe'
-    llh_nfell_ipe_multinomial['query'] = 'nfell multinomial'
-
-    # ipe likelihood -- which direction?
-    llh_dir_ipe = llh_dir_ipe\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_dir_ipe['likelihood'] = 'ipe'
-    llh_dir_ipe['query'] = 'direction'
-
-    llh = pd.concat([
-        llh_fall_empirical,
-        llh_fall_ipe,
-        llh_fall_empirical_cf,
-        llh_fall_ipe_cf,
-        # llh_nfell_ipe_binomial,
-        llh_nfell_ipe_multinomial,
-        llh_dir_ipe
-    ])
-    llh = llh.set_index(['likelihood', 'query', 'stimulus', 'kappa'])
-
-    llh.to_csv(results_path)
-
+    store.close()
 
 if __name__ == "__main__":
     util.run_analysis(run, sys.argv[1])
