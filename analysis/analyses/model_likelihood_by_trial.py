@@ -5,22 +5,32 @@ import util
 import pandas as pd
 import numpy as np
 from path import path
+from IPython.parallel import Client, require
 
 
-def make_model_df(arr, trials, hyps, kappa0, pid, version):
-    new_df = pd.DataFrame(arr, index=trials['stimulus'], columns=hyps)
-    new_df.index.name = 'stimulus'
-    new_df.columns.name = 'hypothesis'
-    new_df['trial'] = np.asarray(trials['trial'])
-    new_df = new_df.set_index('trial', append=True).stack()
-    new_df.name = 'logp'
-    new_df = new_df.reset_index()
-    new_df['kappa0'] = kappa0
-    new_df['pid'] = pid
-    new_df['version'] = version
-    new_df = new_df.set_index([
-        'version', 'kappa0', 'pid', 'trial', 'hypothesis'])
-    return new_df
+@require('numpy', 'pandas')
+def task(args):
+    key, version, kappa0, df, pids, orders, hyps = args
+    np = numpy
+    pd = pandas
+    print key, version, kappa0
+    data = []
+    for pid in pids:
+        order, i = orders[pid]
+        model = pd.DataFrame(df[i], index=order['stimulus'], columns=hyps)
+        model.index.name = 'stimulus'
+        model.columns.name = 'hypothesis'
+        model['trial'] = np.asarray(order['trial'])
+        model = model.set_index('trial', append=True).stack()
+        model.name = 'logp'
+        model = model.reset_index()
+        model['kappa0'] = kappa0
+        model['pid'] = pid
+        model['version'] = version
+        model = model.set_index([
+            'version', 'kappa0', 'pid', 'trial', 'hypothesis'])
+        data.append(model)
+    return key, pd.concat(data)
 
 
 def run(results_path, seed):
@@ -50,6 +60,10 @@ def run(results_path, seed):
         i = np.argsort(order.sort('stimulus')['trial'])
         orders[pid] = (order, i)
 
+    rc = Client()
+    lview = rc.load_balanced_view()
+    results = []
+
     for key in old_store.keys():
         if key.split('/')[-1] == 'param_ref':
             store.append(key, old_store[key])
@@ -64,16 +78,19 @@ def run(results_path, seed):
         hyps = llh.columns
 
         for (version, kappa0), pids in participants.groupby(level=['version', 'kappa0']):
-            print key, version, kappa0
-
             df = np.asarray(llh.ix[str(kappa0)])
+            result = lview.apply(task, [key, version, kappa0, df, pids, orders, hyps])
+            results.append(result)
 
-            for pid in pids:
-                order, i = orders[pid]
-                dfi = df[i]
+    while len(results) > 0:
+        result = results.pop(0)
+        if not result.ready():
+            results.append(result)
+            continue
 
-                model = make_model_df(dfi, order, hyps, kappa0, pid, version)
-                store.append(key, model)
+        result.display_outputs()
+        key, model = result.get()
+        store.append(key, model)
 
     store.close()
     old_store.close()
