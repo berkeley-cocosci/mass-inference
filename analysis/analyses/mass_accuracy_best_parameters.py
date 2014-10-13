@@ -21,6 +21,7 @@ def run(results_path, seed):
 
     store = pd.HDFStore(path(results_path).dirname().joinpath(
         'model_belief_fit.h5'))
+
     query = util.get_query()
     params = store["/{}/ipe/param_ref".format(query)]
     store_pth = r"/{}/ipe/(params_[0-9]+)/static/belief".format(query)
@@ -38,6 +39,8 @@ def run(results_path, seed):
         df['sigma'] = sigma
         df['phi'] = phi
         model_belief.append(df)
+
+    store.close()
 
     model = pd.concat(model_belief)\
         .groupby(['sigma', 'phi', 'kappa0', 'stimulus'])['p correct']\

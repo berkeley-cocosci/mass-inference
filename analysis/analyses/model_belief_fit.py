@@ -136,6 +136,8 @@ def task(args):
 
     params = pd.concat([params_G, params_ind]).sortlevel()
 
+    old_store.close()
+
     return key, results, params
 
 
