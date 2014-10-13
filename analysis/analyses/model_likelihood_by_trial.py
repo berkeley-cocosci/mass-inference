@@ -38,7 +38,7 @@ def run(results_path, seed):
     data = util.load_human()
 
     old_store = pd.HDFStore(path(results_path).dirname().joinpath(
-        'model_likelihood.h5'))
+        'model_likelihood.h5'), mode='r')
     store = pd.HDFStore(results_path, mode='w')
 
     pth = path(results_path).dirname().joinpath("trial_order.csv")
