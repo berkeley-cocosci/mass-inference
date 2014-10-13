@@ -13,7 +13,7 @@ def run(results_path, seed):
     results = []
 
     model_belief = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_belief_agg.csv'))
+        'model_belief.csv'))
 
     correct = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
