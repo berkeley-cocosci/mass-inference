@@ -36,7 +36,7 @@ def plot(results_path, fig_paths):
 
     axes[0].legend(loc='best')
 
-    fig.set_figwidth(14)
+    fig.set_figwidth(10)
     fig.set_figheight(3)
     plt.draw()
     plt.tight_layout()

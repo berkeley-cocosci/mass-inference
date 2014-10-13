@@ -125,6 +125,7 @@ make_h5_analysis("model_belief_by_trial", ["results/model_likelihood_by_trial.h5
 make_h5_analysis("model_belief_fit", ["human", "results/model_belief_by_trial.h5"], alias=True)
 make_analysis("model_belief", ["results/model_belief_fit.h5"])
 make_analysis("model_params", ["results/model_belief_fit.h5"])
+make_plot("model_params", ["results/model_params.csv"])
 
 make_analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief.csv"])
 make_plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
