@@ -676,3 +676,9 @@ def exponentiated_luce_choice(x, gamma):
     p1 = (1 - x) ** gamma
     p = p0 / (p0 + p1)
     return p
+
+
+def kde(x, x0, sigma):
+    p = -0.5 * np.log(2 * np.pi * sigma**2) - (x - x0) ** 2 / (2 * sigma ** 2)
+    logp = np.log(np.mean(np.exp(p), axis=-1))
+    return logp

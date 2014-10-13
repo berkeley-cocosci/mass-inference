@@ -7,21 +7,19 @@ import numpy as np
 from path import path
 from scipy.optimize import minimize
 
+
 def log_laplace(x, mu=0, b=1):
     # (1 / 2*b) * np.exp(-np.abs(x - mu) / b)
     c = -np.log(2 * b)
     e = -np.abs(x - mu) / b
     return c + e
 
-def kde(x, params, sigma):
-    p = -0.5 * np.log(2 * np.pi * sigma**2) - (x - params) ** 2 / (2 * sigma ** 2)
-    logp = np.log(np.mean(np.exp(p), axis=-1))
-    return logp
 
 def make_prior(f, *args, **kwargs):
     def prior(x):
         return f(x, *args, **kwargs)
     return prior
+
 
 def make_posterior(X, y, prior_func, verbose=False):
     def log_posterior(B):
@@ -34,6 +32,7 @@ def make_posterior(X, y, prior_func, verbose=False):
         return -log_posterior
     return log_posterior
 
+
 def logistic_regression(X, y, prior_func, verbose=False):
     log_posterior = make_posterior(X, y, prior_func, verbose)
     res = [minimize(fun=log_posterior, x0=x0) for x0 in [-1.0, 0.0, 1.0, 2.0]]
@@ -42,6 +41,7 @@ def logistic_regression(X, y, prior_func, verbose=False):
     if verbose:
         print "best:", best['x'], best['fun']
     return float(best['x'])
+
 
 def fit_responses(df, prior_func, verbose=False):
     df2 = df.dropna()
@@ -64,6 +64,7 @@ def fit_responses(df, prior_func, verbose=False):
     new_df.loc[mask, 'p correct'] = 1 - new_df.loc[mask, 'p correct']
 
     return new_df
+
 
 def run(results_path, seed):
     human = util.load_human()
@@ -121,7 +122,7 @@ def run(results_path, seed):
         # use the parameters fit to participants in version G as a prior
         # over parameters, and then fit parameters to each participant
         empirical_priors = params_G.groupby(level='model').apply(
-            lambda x: make_prior(kde, np.asarray(x), 0.1))
+            lambda x: make_prior(util.kde, np.asarray(x), 0.1))
         res_ind = model\
             .drop('G', level='version')\
             .groupby(level=['version', 'model', 'pid'])\
