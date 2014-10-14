@@ -103,8 +103,10 @@ def save(data, pth, store):
     params = ['sigma', 'phi']
     all_params = {}
     for i, (p, df) in enumerate(data.groupby(level=params)):
-        df2 = df.reset_index(params).drop(params, axis=1)
-        store.append('{}/params_{}'.format(pth, i), df2)
+        key = '{}/params_{}'.format(pth, i)
+        print key
+        df2 = df.reset_index(params, drop=True)
+        store.append(key, df2)
         all_params['params_{}'.format(i)] = p
     all_params = pd.DataFrame(all_params, index=params).T
     store.append('{}/param_ref'.format(pth), all_params)
@@ -147,6 +149,8 @@ def run(results_path, seed):
     store = pd.HDFStore(results_path, mode='w')
 
     # compute empirical likelihoods
+    key = 'fall/empirical/params_0'
+    print key
     fall = fb_fall
     pfall = empirical_fall
     llh_fall_empirical = pfall\
@@ -155,13 +159,15 @@ def run(results_path, seed):
         .stack()\
         .unstack('kappa')
     llh_fall_empirical = normalize(llh_fall_empirical)
-    store.append('fall/empirical/params_0', llh_fall_empirical)
+    store.append(key, llh_fall_empirical)
 
+    key = 'fall_cf/empirical/params_0'
+    print key
     llh_fall_empirical_cf = compute_llh_fall_counterfactual(pfall, fall)\
         .stack()\
         .unstack('kappa')
     llh_fall_empirical_cf = normalize(llh_fall_empirical_cf)
-    store.append('fall_cf/empirical/params_0', llh_fall_empirical_cf)
+    store.append(key, llh_fall_empirical_cf)
 
     # compute ipe likelihoods
     fall = fb_fall
