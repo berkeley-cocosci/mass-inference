@@ -30,10 +30,8 @@ def run(results_path, seed):
         if not key.endswith("belief"):
             continue
         if key.startswith(ipe_pth):
-            print "ipe", key
             ipe.append(store[key])
         elif key.startswith(empirical_pth):
-            print "empirical", key
             empirical.append(store[key])
 
     ipe = pd.concat(ipe).reset_index()
