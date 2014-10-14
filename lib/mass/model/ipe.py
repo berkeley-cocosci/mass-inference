@@ -116,8 +116,8 @@ class IPE(object):
 
     @LazyProperty
     def P_fall_stats(self):
-        alpha = self.alpha.stack()
-        beta = self.beta.stack()
+        alpha = self.alpha.ix[(self.sigma, self.phi)].stack()
+        beta = self.beta.ix[(self.sigma, self.phi)].stack()
         stats = scipy.special.btdtri(
             np.asarray(alpha)[:, None],
             np.asarray(beta)[:, None],
