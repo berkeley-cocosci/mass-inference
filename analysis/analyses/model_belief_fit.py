@@ -23,7 +23,7 @@ def make_prior(f, *args, **kwargs):
 
 
 def make_posterior(X, y, prior_func, verbose=False):
-    def log_posterior(B):
+    def f(B):
         p = 1.0 / (1 + np.exp(-(X * B)))
         log_lh = np.log((y * p) + ((1 - y) * (1 - p))).sum()
         log_prior = prior_func(B)
@@ -31,7 +31,7 @@ def make_posterior(X, y, prior_func, verbose=False):
         if verbose:
             print B, -log_posterior
         return -log_posterior
-    return log_posterior
+    return f
 
 
 def logistic_regression(X, y, prior_func, verbose=False):
@@ -44,17 +44,18 @@ def logistic_regression(X, y, prior_func, verbose=False):
     return float(best['x'])
 
 
-def fit_responses(df, prior_func, verbose=False):
+def fit_responses(df, prior_func, model_name, verbose=False):
     df2 = df.dropna()
     y = np.asarray(df2['responses'])
     X = np.asarray(df2['llr'])
 
-    if 'chance' in df.name:
+    if model_name == 'chance':
         B = 0
     else:
         B = logistic_regression(X, y, prior_func, verbose)
 
-    mu = 1.0 / (1 + np.exp(-(df['llr'] * B)))
+    f = np.asarray(df['llr']) * B
+    mu = 1.0 / (1 + np.exp(-f))
 
     new_df = df.copy()
     new_df['B'] = B
@@ -72,22 +73,24 @@ def task(args):
     key, responses, old_store_pth, pth = args
     print key
 
+    pd = pandas
+    np = numpy
     sys.path.append(pth)
     from analyses import util
     from analyses import model_belief_fit as mbf
-    pd = pandas
-    np = numpy
 
     old_store = pd.HDFStore(old_store_pth, mode='r')
     llh = old_store[key]\
-        .set_index(['stimulus', 'model'], append=True)['logp']\
+        .set_index('stimulus', append=True)['logp']\
         .unstack('hypothesis')
+
+    model_name = key.split("/")[-1]
 
     # L2 regularization is equivalent to using a laplace prior
     laplace_prior = mbf.make_prior(mbf.log_laplace, mu=1, b=1)
 
     # compute the log likelihood ratio between the two hypotheses
-    llr = llh[-1] - llh[1]
+    llr = llh[1.0] - llh[-1.0]
 
     model = llr\
         .reset_index()\
@@ -97,7 +100,7 @@ def task(args):
     model['kappa0'] = responses['kappa0']
     model = model\
         .reset_index()\
-        .set_index(['model', 'version', 'pid', 'trial', 'stimulus'])\
+        .set_index(['version', 'pid', 'trial', 'stimulus'])\
         .sortlevel()
 
     # use L2 logistic regression to fit parameters individually to
@@ -105,36 +108,41 @@ def task(args):
     res_G = model\
         .groupby(level='version')\
         .get_group('G')\
-        .groupby(level=['model', 'pid'])\
-        .apply(mbf.fit_responses, laplace_prior)
+        .groupby(level='pid')\
+        .apply(mbf.fit_responses, laplace_prior, model_name)
     params_G = res_G\
-        .reset_index()[['model', 'version', 'kappa0', 'pid', 'B']]\
+        .reset_index()[['version', 'kappa0', 'pid', 'B']]\
         .drop_duplicates()\
-        .set_index(['model', 'version', 'kappa0', 'pid'])['B']
+        .set_index(['version', 'kappa0', 'pid'])['B']
 
     # use the parameters fit to participants in version G as a prior
     # over parameters, and then fit parameters to each participant
-    empirical_priors = params_G.groupby(level='model').apply(
-        lambda x: mbf.make_prior(util.kde, np.asarray(x), 0.1))
+    empirical_prior = mbf.make_prior(util.kde, np.asarray(params_G), 0.1)
     res_ind = model\
         .drop('G', level='version')\
-        .groupby(level=['version', 'model', 'pid'])\
-        .apply(lambda x: mbf.fit_responses(x, empirical_priors[x.name[1]]))
+        .groupby(level=['version', 'pid'])\
+        .apply(mbf.fit_responses, empirical_prior, model_name)
     params_ind = res_ind\
-        .reset_index()[['model', 'version', 'kappa0', 'pid', 'B']]\
+        .reset_index()[['version', 'kappa0', 'pid', 'B']]\
         .drop_duplicates()\
-        .set_index(['model', 'version', 'kappa0', 'pid'])['B']
+        .set_index(['version', 'kappa0', 'pid'])['B']
 
     results = res_G.reset_index()
     results['version'] = 'G'
     results = pd\
-        .concat([results, res_ind.reset_index()])\
+        .concat([results, res_ind.reset_index()])
+    results['model'] = model_name
+    results = results\
         .dropna()\
         .set_index(['model', 'version', 'kappa0', 'pid', 'trial', 'stimulus'])\
         .sortlevel()\
         .drop('B', axis=1)
 
-    params = pd.concat([params_G, params_ind]).sortlevel()
+    params = pd.concat([params_G, params_ind]).reset_index()
+    params['model'] = model_name
+    params = params\
+        .set_index(['model', 'version', 'kappa0', 'pid'])\
+        .sortlevel()
 
     old_store.close()
 
