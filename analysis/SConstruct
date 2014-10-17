@@ -102,6 +102,8 @@ fb_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_truth_fall.dpkg".forma
 env.Alias("fb", [fb_dpkg_A.joinpath("model.csv"), fb_dpkg_B.joinpath("model.csv")])
 
 env.Alias("model", ["ipe", "fb"])
+env.Alias("query", ROOT.joinpath("config.ini"))
+env.Alias("params", ROOT.joinpath("config.ini"))
 
 ## Analyses and plots
 make_analysis("num_participants", ["participants"])
@@ -123,8 +125,8 @@ make_h5_analysis("model_likelihood", ["human", "model"])
 make_h5_analysis("model_likelihood_by_trial", ["human", "results/model_likelihood.h5", "results/trial_order.csv"])
 make_h5_analysis("model_belief_by_trial", ["results/model_likelihood_by_trial.h5"])
 make_h5_analysis("model_belief_fit", ["human", "results/model_belief_by_trial.h5"], alias=True)
-make_analysis("model_belief", ["results/model_belief_fit.h5"])
-make_analysis("model_params", ["results/model_belief_fit.h5"])
+make_analysis("model_belief", ["results/model_belief_fit.h5", "query", "params"])
+make_analysis("model_params", ["results/model_belief_fit.h5", "query", "params"])
 make_plot("model_params", ["results/model_params.csv"])
 
 make_analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief.csv"])
@@ -135,7 +137,7 @@ make_analysis("mass_responses_by_stimulus", ["human", "results/model_belief.csv"
 make_plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
 make_analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_stimulus.csv"])
 make_latex("mass_responses_by_stimulus_corrs")
-make_analysis("mass_accuracy_best_parameters", ["results/mass_responses_by_stimulus.csv", "results/model_belief_fit.h5"])
+make_analysis("mass_accuracy_best_parameters", ["results/mass_responses_by_stimulus.csv", "results/model_belief_fit.h5", "query"])
 make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
 
 make_analysis("mass_accuracy", ["human", "results/model_belief.csv"])
@@ -148,7 +150,7 @@ make_mass_accuracy_by_trial_with_model_plots()
 make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"])
 make_latex("mass_accuracy_by_trial_corrs")
 
-make_analysis("model_log_lh", ["human", "results/model_belief.csv"], alias=True)
+make_analysis("model_log_lh", ["human", "results/model_belief.csv", "query"], alias=True)
 make_analysis("model_log_lh_ratio_by_participant", ["results/model_log_lh.csv"], alias=True)
 make_analysis("model_log_lh_ratio_by_trial", ["results/model_log_lh.csv"])
 make_plot("model_log_lh_ratio_by_trial", ["results/model_log_lh_ratio_by_trial.csv"])
