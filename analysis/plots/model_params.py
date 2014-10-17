@@ -21,10 +21,10 @@ def plot(results_path, fig_paths):
         for i, (m, df) in enumerate(params.groupby('model')):
             B = np.asarray(df['B'].dropna())
             ax.hist(
-                B, label=m, bins=32, alpha=0.5,
-                range=[-0.5, 2], normed=True, color=colors[i])
+                B, label=m, bins=38, alpha=0.5,
+                range=[-0.5, 2.5], normed=True, color=colors[i])
 
-            x = np.linspace(-0.5, 2.0, 100)
+            x = np.linspace(-0.5, 2.5, 100)
             y = util.kde(x[:, None], B, 0.1)
             ax.plot(x, np.exp(y), color=colors[i])
 
@@ -34,7 +34,7 @@ def plot(results_path, fig_paths):
         util.outward_ticks(ax)
         ax.set_axis_bgcolor('0.9')
 
-    axes[0].legend(loc='best')
+    axes[0].legend(loc='best', fontsize=11, frameon=False)
 
     fig.set_figwidth(10)
     fig.set_figheight(3)

@@ -43,7 +43,7 @@ def plot(results_path, fig_paths):
         ax1.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor='k',
-                     label="kappa=%s" % kappa0)
+                     label=r"$r_0=%s$" % (10 ** kappa0))
 
         x = empirical['median']
         xl = x - empirical['lower']
@@ -55,8 +55,7 @@ def plot(results_path, fig_paths):
 
         ax2.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
-                     color=colors[kappa0], ecolor='k',
-                     label="kappa=%s" % kappa0)
+                     color=colors[kappa0], ecolor='k')
 
         x = empirical['median']
         xl = x - empirical['lower']
@@ -68,8 +67,7 @@ def plot(results_path, fig_paths):
 
         ax3.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
-                     color=colors[kappa0], ecolor='k',
-                     label="kappa=%s" % kappa0)
+                     color=colors[kappa0], ecolor='k')
 
     ax1.set_title("IPE vs. Human")
     ax2.set_title("Empirical vs. Human")
@@ -89,6 +87,8 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
         ax.set_axis_bgcolor('0.9')
+
+    ax1.legend(loc='upper left', fontsize=11, frameon=False)
 
     fig.set_figwidth(12)
     fig.set_figheight(3.5)

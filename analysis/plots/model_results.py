@@ -36,7 +36,7 @@ def plot(results_path, fig_paths):
         .unstack(['species', 'query'])\
         .reorder_levels((1, 2, 0), axis=1)\
         .ix[['-1.0', '1.0']]
-    
+
     fall_corrs = pd\
         .read_csv(results_path.joinpath("fall_response_corrs.csv"))\
         .set_index(['block', 'X', 'Y'])\
@@ -145,6 +145,8 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
         ax.set_axis_bgcolor('0.9')
+
+    ax1.legend(loc='upper left', fontsize=11, frameon=False)
 
     fig.set_figheight(3.5)
     fig.set_figwidth(12)

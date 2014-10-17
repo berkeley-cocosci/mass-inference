@@ -71,7 +71,7 @@ def plot(results_path, fig_paths):
     ax2.set_xlabel("Mass-sensitive IPE")
     ax3.set_xlabel("Mass-insensitive IPE")
 
-    ax3.legend(title='Mass ratio', loc='best')
+    ax3.legend(loc='lower right', fontsize=11, frameon=False)
 
     for ax in (ax2, ax3):
         ax.set_xlim(0, 1)
