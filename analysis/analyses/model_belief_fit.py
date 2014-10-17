@@ -103,34 +103,17 @@ def task(args):
         .set_index(['version', 'pid', 'trial', 'stimulus'])\
         .sortlevel()
 
-    # use L2 logistic regression to fit parameters individually to
-    # each participant in version G
-    res_G = model\
-        .groupby(level='version')\
-        .get_group('G')\
-        .groupby(level='pid')\
-        .apply(mbf.fit_responses, laplace_prior, model_name)
-    params_G = res_G\
-        .reset_index()[['version', 'kappa0', 'pid', 'B']]\
-        .drop_duplicates()\
-        .set_index(['version', 'kappa0', 'pid'])['B']
-
-    # use the parameters fit to participants in version G as a prior
-    # over parameters, and then fit parameters to each participant
-    empirical_prior = mbf.make_prior(util.kde, np.asarray(params_G), 0.1)
+    # use L1 logistic regression to fit parameters individually to
+    # each participant
     res_ind = model\
-        .drop('G', level='version')\
         .groupby(level=['version', 'pid'])\
-        .apply(mbf.fit_responses, empirical_prior, model_name)
+        .apply(mbf.fit_responses, laplace_prior, model_name)
     params_ind = res_ind\
         .reset_index()[['version', 'kappa0', 'pid', 'B']]\
         .drop_duplicates()\
         .set_index(['version', 'kappa0', 'pid'])['B']
 
-    results = res_G.reset_index()
-    results['version'] = 'G'
-    results = pd\
-        .concat([results, res_ind.reset_index()])
+    results = res_ind.reset_index()
     results['model'] = model_name
     results = results\
         .dropna()\
@@ -138,7 +121,7 @@ def task(args):
         .sortlevel()\
         .drop('B', axis=1)
 
-    params = pd.concat([params_G, params_ind]).reset_index()
+    params = params_ind.reset_index()
     params['model'] = model_name
     params = params\
         .set_index(['model', 'version', 'kappa0', 'pid'])\
