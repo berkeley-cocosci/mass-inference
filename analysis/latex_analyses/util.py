@@ -16,8 +16,8 @@ def run_analysis(func, filename):
     func(path(filename), results_path)
 
 
-latex_spearman = r"$\rho={median:.2f}$, 95\% CI $[{lower:.2f}, {upper:.2f}]$"
-latex_pearson = r"$r={median:.2f}$, 95\% CI $[{lower:.2f}, {upper:.2f}]$"
-latex_percent = r"$M={median:.1f}\%$, 95\% CI $[{lower:.1f}\%, {upper:.1f}\%]$"
-latex_mean = r"$M={median:.1f}$, 95\% CI $[{lower:.1f}, {upper:.1f}]$"
-latex_gamma = r"$\gamma={median:.2f}$, 95\% CI $[{lower:.2f}, {upper:.2f}]$"
+latex_spearman = r"\rho={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
+latex_pearson = r"r={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
+latex_percent = r"M={median:.1f}\%\textrm{{, 95\% CI }}[{lower:.1f}\%, {upper:.1f}\%]"
+latex_mean = r"M={median:.1f}\textrm{{, 95\% CI }}[{lower:.1f}, {upper:.1f}]"
+latex_gamma = r"\gamma={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
