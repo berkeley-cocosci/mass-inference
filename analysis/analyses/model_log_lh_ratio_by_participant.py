@@ -17,26 +17,24 @@ def run(results_path, seed):
         df['num_trials'] = len(df['trial'].unique())
         return df
 
-    llh = 2 * llh\
+    llh = llh\
         .groupby('pid')\
         .apply(add_num_trials)\
-        .groupby('likelihood')\
-        .get_group('empirical')\
-        .groupby(['version', 'model', 'num_trials', 'pid'])[['llh']]\
+        .groupby(['likelihood', 'version', 'model', 'num_trials', 'pid'])[['llh']]\
         .sum()\
         .reset_index()\
-        .set_index(['version', 'num_trials', 'pid', 'model'])['llh']\
+        .set_index(['likelihood', 'version', 'num_trials', 'pid', 'model'])['llh']\
         .unstack('model')
 
     llh_H = llh.groupby(level='version').get_group('H')
-    llr_H = (llh_H['static'] - llh_H['chance'])\
+    llr_H = (llh_H['learning'] - llh_H['static'])\
         .reset_index()\
         .rename(columns={0: 'llhr'})
     llr_H['model'] = 'equal'
-    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'chance'
-    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'static'
+    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'static'
+    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'learning'
 
-    llh_GI = llh.drop('H')
+    llh_GI = llh.drop('H', level='version')
     llr_GI = llh_GI['learning'] - llh_GI['static']
     llr_GI = llr_GI\
         .reset_index()\
@@ -53,7 +51,7 @@ def run(results_path, seed):
     llr.loc[np.abs(llr['llhr'] > 6), 'evidence'] = 'strong'
     llr.loc[np.abs(llr['llhr'] > 10), 'evidence'] = 'very strong'
 
-    results = llr.set_index(['version', 'num_trials', 'pid', 'model'])
+    results = llr.set_index(['likelihood', 'version', 'num_trials', 'pid', 'model'])
 
     results.to_csv(results_path)
 

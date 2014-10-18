@@ -10,7 +10,11 @@ import pandas as pd
 def plot(results_path, fig_paths):
     llr = pd.read_csv(results_path.joinpath(
         "model_log_lh_ratio_by_trial.csv"))
-    llr = llr.pivot('trial', 'version', 'llhr').cumsum()
+    llr = llr\
+        .groupby('likelihood')\
+        .get_group('empirical')\
+        .pivot('trial', 'version', 'llhr')\
+        .cumsum()
 
     linestyles = {
         'I (across)': '-',
@@ -41,7 +45,7 @@ def plot(results_path, fig_paths):
     ax.hlines([0], 1, 20, color='k', linestyle='dotted')
     ax.legend(loc='upper left', fontsize=10, frameon=False)
     ax.set_xlim(1, 10)
-    ax.set_ylabel("Cumulative evidence ($D$)")
+    ax.set_ylabel("Cumulative LLR")
     ax.set_xlabel("Trial")
     ax.set_xticks([1, 2, 3, 5, 10])
     ax.set_xticklabels([1, 2, 3, 5, 10])

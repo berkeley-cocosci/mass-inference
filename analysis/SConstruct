@@ -75,7 +75,9 @@ def make_mass_accuracy_by_trial_with_model_plots():
         all_filenames.extend(filenames)
         env.Command(
             filenames, 
-            ["plots/mass_accuracy_by_trial_with_model.py", "results/mass_accuracy_by_trial.csv"],
+            ["plots/mass_accuracy_by_trial_with_model.py", 
+             "results/mass_accuracy_by_trial.csv",
+             "results/model_log_lh_ratios.csv"],
             "python $SOURCE {} $TARGETS".format(model))
 
     env.Alias("mass_accuracy_by_trial_with_model", all_filenames)

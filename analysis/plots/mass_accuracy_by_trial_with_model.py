@@ -16,10 +16,16 @@ def plot(results_path, fig_paths):
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))
 
+    llh = pd\
+        .read_csv(results_path.joinpath('model_log_lh_ratios.csv'))\
+        .set_index(['likelihood', 'version', 'num_trials'])\
+        .ix[model]\
+        .ix[[('H', 20), ('G', 8), ('I', -1)]]['llhr']\
+        .reset_index('num_trials', drop=True)
+
     colors = {
         'static': 'b',
         'learning': 'r',
-        'chance': 'g'
     }
 
     versions = {
@@ -59,9 +65,8 @@ def plot(results_path, fig_paths):
                 yu = df3['upper']
 
                 ax = axes[order.index(version)]
-                ax.fill_between(x, yl, yu, alpha=0.3, color=color)
-                ax.plot(x, y, color=color, lw=2, label=label,
-                        marker='o', markersize=4)
+                ax.fill_between(x, yl, yu, alpha=0.2, color=color)
+                ax.plot(x, y, color=color, lw=2, label=label)
 
         x = np.sort(df['trial'].unique()).astype(int)
         if version == 'H':
@@ -78,11 +83,21 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
 
+    for lhr, ax in zip(llh, axes):
+        l, h = ax.get_xlim()
+        ax.text(h, 0.5125,
+                r"LLR, learning vs static = {:.2f}".format(lhr),
+                horizontalalignment='right', fontsize=9)
+
     ax = axes[0]
     ax.set_ylim(0.5, 1)
     ax.set_ylabel("Fraction correct")
 
-    axes[-1].legend(loc='lower right', fontsize=10)
+    axes[-1].legend(
+        bbox_to_anchor=[1, 0.1],
+        loc='lower right',
+        fontsize=9,
+        frameon=False)
 
     fig.set_figwidth(9)
     fig.set_figheight(3)

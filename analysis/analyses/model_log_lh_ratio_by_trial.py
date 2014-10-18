@@ -39,24 +39,22 @@ def run(results_path, seed):
         .reset_index()
     llh = pd.concat([llh, llh_I_within, llh_I_across])
 
-    llh_trial = 2 * llh\
-        .groupby('likelihood')\
-        .get_group('empirical')\
-        .pivot_table(index=['version', 'model'],
+    llh_trial = llh\
+        .pivot_table(index=['likelihood', 'version', 'model'],
                      columns='trial', values='llh',
                      aggfunc=np.sum)\
         .stack()\
         .unstack('model')
 
     llh_trial_H = llh_trial.groupby(level='version').get_group('H')
-    llr_H = (llh_trial_H['static'] - llh_trial_H['chance'])\
+    llr_H = (llh_trial_H['learning'] - llh_trial_H['static'])\
         .reset_index()\
         .rename(columns={0: 'llhr'})
     llr_H['model'] = None
-    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'chance'
-    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'static'
+    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'static'
+    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'learning'
 
-    llh_trial_GI = llh_trial.drop('H')
+    llh_trial_GI = llh_trial.drop('H', level='version')
     llr_GI = llh_trial_GI['learning'] - llh_trial_GI['static']
     llr_GI = llr_GI\
         .reset_index()\
@@ -73,7 +71,7 @@ def run(results_path, seed):
     llr.loc[np.abs(llr['llhr']) > 6, 'evidence'] = 'strong'
     llr.loc[np.abs(llr['llhr']) > 10, 'evidence'] = 'very strong'
 
-    results = llr.set_index(['version', 'trial'])
+    results = llr.set_index(['likelihood', 'version', 'trial'])
 
     results.to_csv(results_path)
 

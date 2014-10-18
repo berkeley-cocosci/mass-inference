@@ -15,18 +15,23 @@ def run(results_path, seed):
     llh_participant = pd.read_csv(path(results_path).dirname().joinpath(
         'model_log_lh_ratio_by_participant.csv'))
 
-    llh_across = llh_trial.pivot(
-        'trial', 'version', 'llhr').sum()[['I (across)']]
-    llh_across.index = pd.MultiIndex.from_tuples(
-        [('I', -1)], names=['model', 'num_trials'])
+    llh_across = llh_trial\
+        .set_index(['version', 'likelihood', 'trial'])['llhr']\
+        .unstack('trial')\
+        .sum(axis=1)\
+        .ix[['I (across)']]\
+        .reset_index()
+    llh_across.loc[llh_across['version'] == 'I (across)', 'version'] = 'I'
+    llh_across['num_trials'] = -1
+    llh_across = llh_across.set_index(['version', 'likelihood', 'num_trials'])[0]
 
     results = llh_participant\
-        .groupby(['version', 'num_trials'])['llhr']\
+        .groupby(['version', 'likelihood', 'num_trials'])['llhr']\
         .sum()\
         .append(llh_across)\
         .reset_index()\
         .rename(columns={0: 'llhr'})\
-        .set_index(['version', 'num_trials'])
+        .set_index(['version', 'likelihood', 'num_trials'])
 
     results.to_csv(results_path)
 
