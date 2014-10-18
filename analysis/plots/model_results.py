@@ -44,7 +44,7 @@ def plot(results_path, fig_paths):
 
     mass_corrs = pd\
         .read_csv(results_path.joinpath(
-            "mass_accuracy_by_stimulus_corrs.csv"))\
+            "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['version', 'X', 'Y'])
 
     pearson = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
@@ -131,7 +131,7 @@ def plot(results_path, fig_paths):
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
-    ax1.set_title("Will it fall? (Exp 1+2)")
+    ax1.set_title("Will it fall? (Exp 1+2a)")
     ax2.set_xlabel("Empirical")
     ax2.set_title("Which is heavier? (Exp 1)")
     ax3.set_xlabel("IPE")
