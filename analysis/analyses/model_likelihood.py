@@ -188,41 +188,41 @@ def run(results_path, seed):
     llh_fall_ipe_cf = normalize(llh_fall_ipe_cf)
     save(llh_fall_ipe_cf, 'fall_cf/ipe', store)
 
-    fall = fb_nfell
-    pfall = ipe_fall
-    llh_nfell_ipe = pfall\
-        .groupby(level=['sigma', 'phi', 'kappa'])\
-        .apply(compute_llh_nfell_binomial, fall)\
-        .stack()\
-        .unstack('kappa')
-    llh_nfell_ipe_binomial = normalize(llh_nfell_ipe)
-    save(llh_nfell_ipe_binomial, 'nfell_binomial/ipe', store)
+    # fall = fb_nfell
+    # pfall = ipe_fall
+    # llh_nfell_ipe = pfall\
+    #     .groupby(level=['sigma', 'phi', 'kappa'])\
+    #     .apply(compute_llh_nfell_binomial, fall)\
+    #     .stack()\
+    #     .unstack('kappa')
+    # llh_nfell_ipe_binomial = normalize(llh_nfell_ipe)
+    # save(llh_nfell_ipe_binomial, 'nfell_binomial/ipe', store)
 
-    fall = fb_nfell
-    pfall = ipe_nfell
-    llh_nfell_ipe = pfall\
-        .groupby(level=['sigma', 'phi', 'kappa'])\
-        .apply(compute_llh_nfell_multinomial, fall)\
-        .stack()\
-        .unstack('kappa')
-    llh_nfell_ipe_multinomial = normalize(llh_nfell_ipe)
-    save(llh_nfell_ipe_multinomial, 'nfell_multinomial/ipe', store)
+    # fall = fb_nfell
+    # pfall = ipe_nfell
+    # llh_nfell_ipe = pfall\
+    #     .groupby(level=['sigma', 'phi', 'kappa'])\
+    #     .apply(compute_llh_nfell_multinomial, fall)\
+    #     .stack()\
+    #     .unstack('kappa')
+    # llh_nfell_ipe_multinomial = normalize(llh_nfell_ipe)
+    # save(llh_nfell_ipe_multinomial, 'nfell_multinomial/ipe', store)
 
-    direction = fb_direction
-    vmpar = pd.DataFrame({
-        'mean': ipe_direction_mean,
-        'var': ipe_direction_var
-    })
-    vmpar.columns.name = 'param'
-    llh_dir_ipe = vmpar\
-        .groupby(level=['sigma', 'phi', 'kappa'])\
-        .apply(compute_llh_dir, direction)\
-        .stack()\
-        .unstack('kappa')\
-        .fillna(0)
-    llh_dir_ipe[np.isinf(llh_dir_ipe)] = 0.0
-    llh_dir_ipe = normalize(llh_dir_ipe)
-    save(llh_dir_ipe, 'direction/ipe', store)
+    # direction = fb_direction
+    # vmpar = pd.DataFrame({
+    #     'mean': ipe_direction_mean,
+    #     'var': ipe_direction_var
+    # })
+    # vmpar.columns.name = 'param'
+    # llh_dir_ipe = vmpar\
+    #     .groupby(level=['sigma', 'phi', 'kappa'])\
+    #     .apply(compute_llh_dir, direction)\
+    #     .stack()\
+    #     .unstack('kappa')\
+    #     .fillna(0)
+    # llh_dir_ipe[np.isinf(llh_dir_ipe)] = 0.0
+    # llh_dir_ipe = normalize(llh_dir_ipe)
+    # save(llh_dir_ipe, 'direction/ipe', store)
 
     store.close()
 
