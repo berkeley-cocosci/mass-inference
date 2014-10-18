@@ -45,7 +45,7 @@ def plot(results_path, fig_paths):
     ax.set_xlabel("Trial")
     ax.set_xticks([1, 2, 3, 5, 10])
     ax.set_xticklabels([1, 2, 3, 5, 10])
-    ax.set_title("Likelihoods in Experiment 3")
+    ax.set_title("Likelihoods in Experiment 2b")
 
     util.outward_ticks(ax)
     util.clear_right(ax)

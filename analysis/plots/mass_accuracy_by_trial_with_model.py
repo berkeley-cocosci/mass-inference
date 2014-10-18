@@ -22,7 +22,12 @@ def plot(results_path, fig_paths):
         'chance': 'g'
     }
 
-    versions = ['H', 'G', 'I']
+    versions = {
+        'H': 'Experiment 1',
+        'G': 'Experiment 2a',
+        'I': 'Experiment 2b'
+    }
+    order = ['H', 'G', 'I']
 
     fig, axes = plt.subplots(1, 3, sharey=True)
 
@@ -53,7 +58,7 @@ def plot(results_path, fig_paths):
                 yl = df3['lower']
                 yu = df3['upper']
 
-                ax = axes[versions.index(version)]
+                ax = axes[order.index(version)]
                 ax.fill_between(x, yl, yu, alpha=0.3, color=color)
                 ax.plot(x, y, color=color, lw=2, label=label,
                         marker='o', markersize=4)
@@ -67,7 +72,7 @@ def plot(results_path, fig_paths):
             ax.set_xticklabels(x)
         ax.set_xlim(x.min(), x.max())
         ax.set_xlabel("Trial")
-        ax.set_title("Experiment %d" % (versions.index(version) + 1))
+        ax.set_title(versions[version])
 
         util.clear_right(ax)
         util.clear_top(ax)

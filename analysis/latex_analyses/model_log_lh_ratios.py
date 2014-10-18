@@ -11,9 +11,9 @@ def run(latex_path, results_path):
     results = results.set_index(['version', 'num_trials'])
 
     replace = {
-        'G': 'ExpTwo',
+        'G': 'ExpTwoA',
         'H': 'ExpOne',
-        'I': 'ExpThree',
+        'I': 'ExpTwoB',
         1: 'OneTrial',
         2: 'TwoTrials',
         3: 'ThreeTrials',

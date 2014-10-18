@@ -13,9 +13,9 @@ def run(latex_path, results_path):
     results = results.set_index(['version', 'num_mass_trials', 'pid']) 
 
     replace = {
-        'G': 'Two',
+        'G': 'TwoA',
         'H': 'One',
-        'I': 'Three',
+        'I': 'TwoB',
         8: '',
         20: '',
         1: 'OneTrial',

@@ -33,7 +33,12 @@ def plot(results_path, fig_paths):
         'chance': ''
     }
 
-    versions = ['H', 'G', 'I']
+    versions = {
+        'H': 'Experiment 1',
+        'G': 'Experiment 2a',
+        'I': 'Experiment 2b'
+    }
+    order = ['H', 'G', 'I']
 
     fig, axes = plt.subplots(1, 3, sharey=True)
     for version, df in nlearned.groupby('version'):
@@ -56,7 +61,7 @@ def plot(results_path, fig_paths):
                 yl = df3['lower']
                 yu = df3['upper']
 
-                ax = axes[versions.index(version)]
+                ax = axes[order.index(version)]
                 ax.fill_between(
                     x, yl, yu,
                     alpha=0.3,
@@ -79,7 +84,7 @@ def plot(results_path, fig_paths):
             ax.set_xticks(x)
             ax.set_xticklabels(x)
         ax.set_xlabel("Trial")
-        ax.set_title("Experiment %d" % (versions.index(version) + 1))
+        ax.set_title(versions[version])
 
         if version == 'I':
             ax.legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
