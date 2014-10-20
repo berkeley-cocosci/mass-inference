@@ -97,10 +97,10 @@ def plot(results_path, fig_paths):
             marker='o', color=colors[kappa0], ms=6, ls='',
             label=r"$r_0=%.1f$" % 10 ** float(kappa0))
 
-        # middle subplot (empirical ipe mass responses)
-        x = empirical['mass', 'median']
-        x_lerr = empirical['mass', 'median'] - empirical['mass', 'lower']
-        x_uerr = empirical['mass', 'upper'] - empirical['mass', 'median']
+        # middle subplot (ipe mass responses)
+        x = ipe['mass', 'median']
+        x_lerr = ipe['mass', 'median'] - ipe['mass', 'lower']
+        x_uerr = ipe['mass', 'upper'] - ipe['mass', 'median']
         y = human['mass', 'median']
         y_lerr = human['mass', 'median'] - human['mass', 'lower']
         y_uerr = human['mass', 'upper'] - human['mass', 'median']
@@ -111,10 +111,10 @@ def plot(results_path, fig_paths):
                      color=colors[kappa0], ecolor='k',
                      label="kappa=%s" % kappa0)
 
-        # right subplot (ipe mass responses)
-        x = ipe['mass', 'median']
-        x_lerr = ipe['mass', 'median'] - ipe['mass', 'lower']
-        x_uerr = ipe['mass', 'upper'] - ipe['mass', 'median']
+        # right subplot (empirical ipe mass responses)
+        x = empirical['mass', 'median']
+        x_lerr = empirical['mass', 'median'] - empirical['mass', 'lower']
+        x_uerr = empirical['mass', 'upper'] - empirical['mass', 'median']
         y = human['mass', 'median']
         y_lerr = human['mass', 'median'] - human['mass', 'lower']
         y_uerr = human['mass', 'upper'] - human['mass', 'median']
@@ -132,9 +132,9 @@ def plot(results_path, fig_paths):
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
     ax1.set_title("Will it fall? (Exp 1+2a)")
-    ax2.set_xlabel("Empirical")
+    ax2.set_xlabel("IPE Likelihood")
     ax2.set_title("Which is heavier? (Exp 1)")
-    ax3.set_xlabel("IPE")
+    ax3.set_xlabel("Empirical Likelihood")
     ax3.set_title("Which is heavier? (Exp 1)")
 
     for ax in (ax1, ax2, ax3):

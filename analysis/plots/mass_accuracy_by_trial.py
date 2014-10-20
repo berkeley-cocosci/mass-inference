@@ -60,7 +60,7 @@ def plot(results_path, fig_paths):
             version = 'I'
             title = "Experiment 2b\n(within subjects)"
         elif version == "I":
-            title = "Experiment 2b\n(across subjects)"
+            title = "Experiment 2b\n(between subjects)"
         elif version == "G":
             title = "Experiment 2a\n"
 
