@@ -28,7 +28,7 @@ def run(latex_path, results_path):
 
     for (lh, version, num_trials), llhr in results.iterrows():
         cmdname = "llhr{}{}{}".format(lh.capitalize(), replace[version], replace[num_trials])
-        cmd = "$D={llhr:.2f}$".format(**llhr)
+        cmd = r"$\textrm{{LLR}}={llhr:.2f}$".format(**llhr)
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
