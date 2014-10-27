@@ -131,7 +131,7 @@ def plot(results_path, fig_paths):
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
-    ax1.set_title("Will it fall? (Exp 1+2a)")
+    ax1.set_title("Will it fall? (Exp 1+2)")
     ax2.set_xlabel("IPE Likelihood")
     ax2.set_title("Which is heavier? (Exp 1)")
     ax3.set_xlabel("Empirical Likelihood")

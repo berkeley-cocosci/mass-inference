@@ -30,8 +30,8 @@ def plot(results_path, fig_paths):
 
     versions = {
         'H': 'Experiment 1',
-        'G': 'Experiment 2a',
-        'I': 'Experiment 2b'
+        'G': 'Experiment 2',
+        'I': 'Experiment 3'
     }
     order = ['H', 'G', 'I']
 

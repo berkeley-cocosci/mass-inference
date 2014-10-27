@@ -15,8 +15,8 @@ def run(latex_path, results_path):
 
     replace = {
         'H': 'One',
-        'G': 'TwoA',
-        'I': 'TwoB',
+        'G': 'Two',
+        'I': 'Three',
         '-1.0': 'KappaLow',
         '1.0': 'KappaHigh',
         'all': ''

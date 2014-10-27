@@ -19,9 +19,9 @@ def plot(results_path, fig_paths):
         'static': 'b'
     }
     versions = {
-        'G': 'Experiment 2a',
+        'G': 'Experiment 2',
         'H': 'Experiment 1',
-        'I': 'Experiment 2b'
+        'I': 'Experiment 3'
     }
 
     for (version, model), params in data.groupby(['version', 'model']):

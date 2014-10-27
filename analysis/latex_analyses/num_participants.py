@@ -15,8 +15,8 @@ def run(latex_path, results_path):
 
     replace = {
         'H': 'One',
-        'G': 'TwoA',
-        'I': 'TwoB'
+        'G': 'Two',
+        'I': 'Three'
     }
 
     fh = open(latex_path, "w")

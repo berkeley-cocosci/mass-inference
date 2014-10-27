@@ -11,9 +11,9 @@ def run(latex_path, results_path):
     results = results.set_index(['likelihood', 'version', 'num_trials'])
 
     replace = {
-        'G': 'ExpTwoA',
+        'G': 'ExpTwo',
         'H': 'ExpOne',
-        'I': 'ExpTwoB',
+        'I': 'ExpThree',
         1: 'OneTrial',
         2: 'TwoTrials',
         3: 'ThreeTrials',

@@ -58,11 +58,11 @@ def plot(results_path, fig_paths):
         version = versions[i]
         if version == 'I-all':
             version = 'I'
-            title = "Experiment 2b\n(within subjects)"
+            title = "Experiment 3\n(within subjects)"
         elif version == "I":
-            title = "Experiment 2b\n(between subjects)"
+            title = "Experiment 3\n(between subjects)"
         elif version == "G":
-            title = "Experiment 2a\n"
+            title = "Experiment 2\n"
 
         df = mass_responses.groupby('version').get_group(version)
         x = np.sort(df['trial'].unique()).astype(int)
