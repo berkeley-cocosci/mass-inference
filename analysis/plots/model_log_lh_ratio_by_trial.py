@@ -40,9 +40,9 @@ def plot(results_path, fig_paths):
 
         ax.plot(
             df.index, df, label=labels[col],
-            lw=lw, color='k', ls=ls)
+            lw=lw, color=util.darkgrey, ls=ls)
 
-    ax.hlines([0], 1, 20, color='k', linestyle='dotted')
+    ax.hlines([0], 1, 20, color=util.darkgrey, linestyle='dotted')
     ax.legend(loc='upper left', fontsize=10, frameon=False)
     ax.set_xlim(1, 10)
     ax.set_ylabel("Cumulative LLR")

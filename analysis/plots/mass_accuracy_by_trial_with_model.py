@@ -24,8 +24,8 @@ def plot(results_path, fig_paths):
         .reset_index('num_trials', drop=True)
 
     colors = {
-        'static': 'b',
-        'learning': 'r',
+        'static': util.colors[0],
+        'learning': util.colors[2],
     }
 
     versions = {
@@ -43,7 +43,7 @@ def plot(results_path, fig_paths):
             continue
 
         if species == 'human':
-            color = 'k'
+            color = util.darkgrey
             label = 'human'
         elif cls not in colors:
             continue

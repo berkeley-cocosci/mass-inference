@@ -27,6 +27,7 @@ def plot(results_path, fig_paths):
     ax.set_xticklabels(err.columns[::2])
     ax.set_yticklabels(err.index[::2])
     ax.set_title("MSE for \"which is heavier?\"")
+    ax.grid('off')
 
     err_arr = np.asarray(err)
     best_y, best_x = np.nonzero(err_arr == err_arr.min())

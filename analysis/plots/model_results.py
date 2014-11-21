@@ -47,7 +47,7 @@ def plot(results_path, fig_paths):
             "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['version', 'X', 'Y'])
 
-    pearson = r"r={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    pearson = r"$r$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
     corrs = []
     corrs.append(pearson.format(**dict(fall_corrs)))
     corrs.append(pearson.format(**dict(
@@ -63,11 +63,11 @@ def plot(results_path, fig_paths):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
     for ax in (ax1, ax2, ax3):
-        ax.plot([0, 1], [0, 1], 'k--', alpha=0.8)
+        ax.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5, linewidth=2)
 
     colors = {
-        '-1.0': 'r',
-        '1.0': 'b'
+        '-1.0': util.colors[0],
+        '1.0': util.colors[2]
     }
 
     ax1.plot(
@@ -75,7 +75,7 @@ def plot(results_path, fig_paths):
          responses.ix['1.0']['ipe', 'fall', 'median']],
         [responses.ix['-1.0']['human', 'fall', 'median'],
          responses.ix['1.0']['human', 'fall', 'median']],
-        'k-')
+        '-', color=util.darkgrey)
 
     for kappa0, df in responses.groupby(level='kappa0'):
         empirical = df['empirical']
@@ -108,7 +108,7 @@ def plot(results_path, fig_paths):
         ax2.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
                      marker='o', linestyle='', ms=6,
-                     color=colors[kappa0], ecolor='k',
+                     color=colors[kappa0], ecolor=util.darkgrey,
                      label="kappa=%s" % kappa0)
 
         # right subplot (empirical ipe mass responses)
@@ -122,7 +122,7 @@ def plot(results_path, fig_paths):
         ax3.errorbar(x, y, xerr=[x_lerr, x_uerr],
                      yerr=[y_lerr, y_uerr],
                      marker='o', linestyle='', ms=6,
-                     color=colors[kappa0], ecolor='k',
+                     color=colors[kappa0], ecolor=util.darkgrey,
                      label="kappa=%s" % kappa0)
 
     for corr, ax in zip(corrs, (ax1, ax2, ax3)):
@@ -144,7 +144,6 @@ def plot(results_path, fig_paths):
         util.clear_right(ax)
         util.clear_top(ax)
         util.outward_ticks(ax)
-        ax.set_axis_bgcolor('0.9')
 
     ax1.legend(loc='upper left', fontsize=11, frameon=False)
 

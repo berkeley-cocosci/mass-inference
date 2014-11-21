@@ -3,12 +3,16 @@ matplotlib.use('AGG')
 
 from ConfigParser import SafeConfigParser
 import matplotlib.pyplot as plt
+import seaborn as sns
 import os
 import sys
 from path import path
 from mass.analysis import sigmoid
 from mass.analysis import exponentiated_luce_choice, kde
 
+colors = sns.color_palette('bright')
+colorcircle = ['r', 'y', 'g', 'b', 'm']
+darkgrey = "#404040"
 
 def clear_right(ax=None):
     """Remove the right edge of the axis bounding box.

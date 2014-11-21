@@ -15,8 +15,8 @@ def plot(results_path, fig_paths):
         .get_group('H')
 
     colors = {
-        -1.0: 'r',
-        1.0: 'b'
+        -1.0: util.colors[0],
+        1.0: util.colors[2]
     }
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
@@ -42,7 +42,7 @@ def plot(results_path, fig_paths):
 
         ax1.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
-                     color=colors[kappa0], ecolor='k',
+                     color=colors[kappa0], ecolor=util.darkgrey,
                      label=r"$r_0=%s$" % (10 ** kappa0))
 
         x = empirical['median']
@@ -55,7 +55,7 @@ def plot(results_path, fig_paths):
 
         ax2.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
-                     color=colors[kappa0], ecolor='k')
+                     color=colors[kappa0], ecolor=util.darkgrey)
 
         x = empirical['median']
         xl = x - empirical['lower']
@@ -67,7 +67,7 @@ def plot(results_path, fig_paths):
 
         ax3.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
-                     color=colors[kappa0], ecolor='k')
+                     color=colors[kappa0], ecolor=util.darkgrey)
 
     ax1.set_title("IPE vs. Human")
     ax2.set_title("Empirical vs. Human")
@@ -86,7 +86,6 @@ def plot(results_path, fig_paths):
         util.clear_right(ax)
         util.clear_top(ax)
         util.outward_ticks(ax)
-        ax.set_axis_bgcolor('0.9')
 
     ax1.legend(loc='upper left', fontsize=11, frameon=False)
 

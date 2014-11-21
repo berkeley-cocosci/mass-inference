@@ -15,8 +15,8 @@ def plot(results_path, fig_paths):
     version_order = ['H', 'G', 'I']
     model_order = ['static', 'learning']
     colors = {
-        'learning': 'r',
-        'static': 'b'
+        'learning': util.colors[2],
+        'static': util.colors[0]
     }
     versions = {
         'G': 'Experiment 2',
@@ -43,7 +43,6 @@ def plot(results_path, fig_paths):
         util.clear_right(ax)
         util.clear_top(ax)
         util.outward_ticks(ax)
-        ax.set_axis_bgcolor('0.9')
 
         ax.set_yticks(np.linspace(0, len(B), 6))
         yticks = ax.get_yticks()

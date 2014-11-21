@@ -16,8 +16,8 @@ def plot(results_path, fig_paths):
         .get_group(('H', 'human'))
 
     colors = {
-        -1.0: 'r',
-        1.0: 'b'
+        -1.0: util.colors[0],
+        1.0: util.colors[2]
     }
 
     fig, ax = plt.subplots()
@@ -30,7 +30,7 @@ def plot(results_path, fig_paths):
 
         ax.bar(x, y, yerr=[yl, yu],
                color=colors[kappa0],
-               ecolor='k',
+               ecolor=util.darkgrey,
                width=0.3,
                label='kappa=%s' % kappa0)
 

@@ -3,6 +3,7 @@ import pandas as pd
 import snippets.datapackage as dpkg
 import snippets.circstats as cs
 import scipy.special
+import seaborn as sns
 
 from mass import DATA_PATH
 from .util import LazyProperty
@@ -216,7 +217,7 @@ class IPE(object):
 
         return smooth
 
-    def plot_fall(self, ax, ix):
+    def plot_fall(self, ax, ix, color='b'):
         if isinstance(ix, int):
             ix = self.P_fall_smooth.index[ix]
 
@@ -225,12 +226,14 @@ class IPE(object):
         var = self.P_fall_var.ix[ix]
         std = var.map(np.sqrt)
 
+        darkgrey = "#404040"
+
         ax.plot(
             smooth.index, smooth,
-            lw=2, color='k')
+            lw=2, color=darkgrey)
         ax.errorbar(
             mean.index, mean, yerr=std,
-            ls='', marker='o', color='b', ecolor='k')
+            ls='', marker='o', color=color, ecolor=darkgrey)
 
         ax.set_xlabel("kappa")
         ax.set_ylabel("P(fall | kappa)")
@@ -258,7 +261,7 @@ class IPE(object):
         Y = cs.vmpdf(X, mean, var) + r
 
         ax.plot(X, Y, lw=2, color=color)
-        ax.plot(X, np.ones(X.size) * r, 'k-')
+        ax.plot(X, np.ones(X.size) * r, '-', color='#404040')
         ax.plot(points, np.ones(points.size) * r, 'o', color=color)
 
         ax.set_title(

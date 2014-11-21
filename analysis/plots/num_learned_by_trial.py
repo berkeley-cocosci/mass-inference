@@ -14,13 +14,13 @@ def plot(results_path, fig_paths):
         results_path.joinpath('num_learned_by_trial.csv'))
 
     colors = {
-        8: 'k',
-        20: 'k',
-        5: 'r',
-        4: 'y',
-        3: 'g',
-        2: 'b',
-        1: 'm'
+        8: util.darkgrey,
+        20: util.darkgrey,
+        5: util.colorcircle[0],
+        4: util.colorcircle[1],
+        3: util.colorcircle[2],
+        2: util.colorcircle[3],
+        1: util.colorcircle[4]
     }
 
     linestyles = {
@@ -50,7 +50,7 @@ def plot(results_path, fig_paths):
                 if version == 'I' and kappa0 == 'chance' and num != 5:
                     continue
                 if kappa0 == 'chance':
-                    color = 'k'
+                    color = util.darkgrey
                     label = 'chance'
                 else:
                     color = colors[num]

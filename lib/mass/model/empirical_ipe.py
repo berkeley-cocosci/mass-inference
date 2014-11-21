@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.special
 import pandas as pd
+import seaborn as sns
 
 from .util import LazyProperty
 
@@ -70,7 +71,7 @@ class EmpiricalIPE(object):
     def P_fall_smooth(self):
         return self.P_fall_mean
 
-    def plot_fall(self, ax, ix):
+    def plot_fall(self, ax, ix, color='b'):
         if isinstance(ix, int):
             ix = self.P_fall_smooth.index[ix]
 
@@ -85,12 +86,14 @@ class EmpiricalIPE(object):
         var = np.asarray(self.P_fall_var.ix[ix])
         std = np.sqrt(var)
 
+        darkgrey = "#404040"
+
         ax.plot(
             smooth_index, smooth,
-            lw=2, color='k')
+            lw=2, color=darkgrey)
         ax.errorbar(
             mean_index, mean, yerr=std,
-            ls='', marker='o', color='b', ecolor='k')
+            ls='', marker='o', color=color, ecolor=darkgrey)
 
         ax.set_xlabel("kappa")
         ax.set_ylabel("P(fall | kappa)")

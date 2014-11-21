@@ -21,8 +21,8 @@ def plot(results_path, fig_paths):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
     colors = {
-        -1.0: 'r',
-        1.0: 'b'
+        -1.0: util.colors[0],
+        1.0: util.colors[2]
     }
 
     x = groups.get_group('model')['median']
@@ -43,16 +43,16 @@ def plot(results_path, fig_paths):
         y[-1.0], y[1.0],
         xerr=[y_lerr[-1.0], y_uerr[-1.0]],
         yerr=[y_lerr[1.0], y_uerr[1.0]],
-        marker='o', color='k', ls='', ms=8)
+        marker='o', color=util.darkgrey, ls='', ms=8)
     ax1.set_xlim(0, 1)
     ax1.set_ylim(0, 1)
     ax1.set_xlabel(r"Human ($r_0=0.1$)")
     ax1.set_ylabel(r"Human ($r_0=10.0$)")
 
-    ax2.plot([x[-1.0], x[1.0]], [y[-1.0], y[1.0]], 'k-')
-    ax2.plot([0, 1], [0, 1], 'k--', alpha=0.5)
-    ax3.plot([x[0.0], x[0.0]], [y[-1.0], y[1.0]], 'k-')
-    ax3.plot([0, 1], [0, 1], 'k--', alpha=0.5)
+    ax2.plot([x[-1.0], x[1.0]], [y[-1.0], y[1.0]], '-', color=util.darkgrey)
+    ax2.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5)
+    ax3.plot([x[0.0], x[0.0]], [y[-1.0], y[1.0]], '-', color=util.darkgrey)
+    ax3.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5)
 
     for kappa0 in (-1.0, 1.0):
         ax2.errorbar(
@@ -82,7 +82,6 @@ def plot(results_path, fig_paths):
         util.clear_right(ax)
         util.clear_top(ax)
         util.outward_ticks(ax)
-        ax.set_axis_bgcolor('0.9')
 
     fig.set_figheight(3.5)
     fig.set_figwidth(12)
