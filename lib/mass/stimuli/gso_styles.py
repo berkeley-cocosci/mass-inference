@@ -12,7 +12,7 @@ class GSOStyler(object):
         # use a random seed based on the block's name, so we can have
         # "random" properties that are actually always the same for
         # any given block
-        rso = np.random.RandomState(abs(hash(repr(gso))))
+        rso = np.random.RandomState(int(abs(hash(repr(gso))) / 1e15))
         return rso
 
     def floor(self, gso, **kwargs):
