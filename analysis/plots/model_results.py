@@ -47,7 +47,7 @@ def plot(results_path, fig_paths):
             "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['version', 'X', 'Y'])
 
-    pearson = r"$r$={median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
+    pearson = r"$r={median:.2f}$, $95\%\ \mathrm{{CI}}\ [{lower:.2f},\ {upper:.2f}]$"
     corrs = []
     corrs.append(pearson.format(**dict(fall_corrs)))
     corrs.append(pearson.format(**dict(
@@ -55,12 +55,12 @@ def plot(results_path, fig_paths):
     corrs.append(pearson.format(**dict(
         mass_corrs.ix[('H', 'IPE', 'Human')])))
 
-    xmin = -0.05
-    xmax = 1.05
-    ymin = -0.05
-    ymax = 1.05
+    xmin = 0
+    xmax = 1
+    ymin = 0
+    ymax = 1
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
     for ax in (ax1, ax2, ax3):
         ax.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5, linewidth=2)
@@ -70,17 +70,12 @@ def plot(results_path, fig_paths):
         '1.0': util.colors[2]
     }
 
-    ax1.plot(
-        [responses.ix['-1.0']['ipe', 'fall', 'median'],
-         responses.ix['1.0']['ipe', 'fall', 'median']],
-        [responses.ix['-1.0']['human', 'fall', 'median'],
-         responses.ix['1.0']['human', 'fall', 'median']],
-        '-', color=util.darkgrey)
-
     for kappa0, df in responses.groupby(level='kappa0'):
         empirical = df['empirical']
         ipe = df['ipe']
         human = df['human']
+
+        label = r"$r_0=%.1f$" % 10 ** float(kappa0)
 
         # left subplot (fall responses)
         x = ipe['fall', 'median']
@@ -95,7 +90,8 @@ def plot(results_path, fig_paths):
             xerr=[x_lerr, x_uerr],
             yerr=[y_lerr, y_uerr],
             marker='o', color=colors[kappa0], ms=6, ls='',
-            label=r"$r_0=%.1f$" % 10 ** float(kappa0))
+            ecolor=util.darkgrey,
+            label=label)
 
         # middle subplot (ipe mass responses)
         x = ipe['mass', 'median']
@@ -109,7 +105,7 @@ def plot(results_path, fig_paths):
                      yerr=[y_lerr, y_uerr],
                      marker='o', linestyle='', ms=6,
                      color=colors[kappa0], ecolor=util.darkgrey,
-                     label="kappa=%s" % kappa0)
+                     label=label)
 
         # right subplot (empirical ipe mass responses)
         x = empirical['mass', 'median']
@@ -123,19 +119,21 @@ def plot(results_path, fig_paths):
                      yerr=[y_lerr, y_uerr],
                      marker='o', linestyle='', ms=6,
                      color=colors[kappa0], ecolor=util.darkgrey,
-                     label="kappa=%s" % kappa0)
+                     label=label)
 
     for corr, ax in zip(corrs, (ax1, ax2, ax3)):
         ax.text(xmax - 0.01, ymin + 0.025, corr,
-                horizontalalignment='right', fontsize=9)
+                horizontalalignment='right', fontsize=10)
 
-    ax1.set_xlabel("IPE")
-    ax1.set_ylabel("Human")
-    ax1.set_title("Will it fall? (Exp 1+2)")
-    ax2.set_xlabel("IPE Likelihood")
-    ax2.set_title("Which is heavier? (Exp 1)")
-    ax3.set_xlabel("Empirical Likelihood")
-    ax3.set_title("Which is heavier? (Exp 1)")
+    ax1.set_xlabel("IPE model, $p(F_t|S_t)$")
+    ax1.set_ylabel("Normalized human judgments")
+    ax1.set_title("Exp 1+2: Will it fall?")
+    ax2.set_xlabel("IPE model, $p(r=10|F_t,S_t)$")
+    ax2.set_ylabel("% participants choosing $r=10$")
+    ax2.set_title("Exp 1: Which is heavier? (IPE)")
+    ax3.set_xlabel("Empirical model, $p(r=10|F_t,S_t)$")
+    ax3.set_ylabel("% participants choosing $r=10$")
+    ax3.set_title("Exp 1: Which is heavier? (Empirical)")
 
     for ax in (ax1, ax2, ax3):
         ax.set_xlim(xmin, xmax)
@@ -145,7 +143,7 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
 
-    ax1.legend(loc='upper left', fontsize=11, frameon=False)
+    ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
 
     fig.set_figheight(3.5)
     fig.set_figwidth(12)
