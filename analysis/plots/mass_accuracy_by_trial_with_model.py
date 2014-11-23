@@ -6,26 +6,31 @@ import sys
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
 
 
 def plot(results_path, fig_paths):
-
-    model = fig_paths[0]
-    fig_paths = fig_paths[1:]
 
     mass_responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))
 
     llh = pd\
         .read_csv(results_path.joinpath('model_log_lh_ratios.csv'))\
-        .set_index(['likelihood', 'version', 'num_trials'])\
-        .ix[model]\
-        .ix[[('H', 20), ('G', 8), ('I', -1)]]['llhr']\
-        .reset_index('num_trials', drop=True)
+        .set_index(['version', 'num_trials'])\
+        .ix[[('H', 20), ('G', 8), ('I', -1)]][['llhr', 'likelihood']]\
+        .reset_index('num_trials', drop=True)\
+        .set_index('likelihood', append=True)['llhr']\
+        .unstack('likelihood')
 
+    palette = sns.color_palette("Dark2")
     colors = {
-        'static': util.colors[0],
-        'learning': util.colors[2],
+        'static': palette[0],
+        'learning': palette[1],
+    }
+
+    linestyles = {
+        'empirical': '-',
+        'ipe': '--'
     }
 
     versions = {
@@ -36,20 +41,24 @@ def plot(results_path, fig_paths):
     order = ['H', 'G', 'I']
 
     fig, axes = plt.subplots(1, 3, sharey=True)
+    lines = {}
 
     groups = mass_responses.groupby(['version', 'class', 'species'])
     for (version, cls, species), df in groups:
-        if species not in (model, 'human'):
-            continue
-
         if species == 'human':
             color = util.darkgrey
-            label = 'human'
+            label = 'Human'
+            ls = '-'
         elif cls not in colors:
             continue
         else:
             color = colors[cls]
-            label = cls
+            label = "{} model,\n".format(cls.capitalize())
+            if species == 'ipe':
+                label = "{}IPE likelihod".format(label)
+            elif species == "empirical":
+                label = "{}Emp. likelihood".format(label)
+            ls = linestyles[species]
 
         for kappa0, df2 in df.groupby('kappa0'):
             if kappa0 != 'all':
@@ -66,7 +75,8 @@ def plot(results_path, fig_paths):
 
                 ax = axes[order.index(version)]
                 ax.fill_between(x, yl, yu, alpha=0.2, color=color)
-                ax.plot(x, y, color=color, lw=2, label=label)
+                line, = ax.plot(x, y, color=color, lw=2, ls=ls)
+                lines[label] = line
 
         x = np.sort(df['trial'].unique()).astype(int)
         if version == 'H':
@@ -83,19 +93,25 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
 
-    for lhr, ax in zip(llh, axes):
+    for version, ax in zip(llh.T, axes):
         l, h = ax.get_xlim()
-        ax.text(h, 0.5125,
-                r"LLR, learning vs static = {:.2f}".format(lhr),
-                horizontalalignment='right', fontsize=9)
+        lhr = llh.T[version]
+        label = "{} LLR = {:.2f}"
+        text = "{}\n{}".format(
+            label.format("Empirical", lhr["empirical"]),
+            label.format("IPE", lhr["ipe"]))
+        ax.text(h, 0.5125, text, horizontalalignment='right', fontsize=9)
 
     ax = axes[0]
     ax.set_ylim(0.5, 1)
     ax.set_ylabel("Fraction correct")
 
+    labels, lines = zip(*sorted(lines.items()))
+
     axes[-1].legend(
-        bbox_to_anchor=[1, 0.1],
-        loc='lower right',
+        lines, labels,
+        bbox_to_anchor=[1.05, 0.5],
+        loc='center left',
         fontsize=9,
         frameon=False)
 
@@ -103,6 +119,7 @@ def plot(results_path, fig_paths):
     fig.set_figheight(3)
     plt.draw()
     plt.tight_layout()
+    plt.subplots_adjust(right=0.825)
 
     for pth in fig_paths:
         util.save(pth, close=False)

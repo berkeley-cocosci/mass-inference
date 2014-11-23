@@ -65,24 +65,6 @@ def make_fall_response_plots():
     env.Alias("fall_responses", all_filenames)
 
 
-def make_mass_accuracy_by_trial_with_model_plots():
-    all_filenames = []
-    params = ['ipe', 'empirical']
-
-    for model in params:
-        filename = "figures/mass_accuracy_by_trial_with_{}".format(model)
-        filenames = ["{}.{}".format(filename, ext) for ext in ["pdf", "png"]]
-        all_filenames.extend(filenames)
-        env.Command(
-            filenames, 
-            ["plots/mass_accuracy_by_trial_with_model.py", 
-             "results/mass_accuracy_by_trial.csv",
-             "results/model_log_lh_ratios.csv"],
-            "python $SOURCE {} $TARGETS".format(model))
-
-    env.Alias("mass_accuracy_by_trial_with_model", all_filenames)
-
-
 ## Load in configuration
 config = SafeConfigParser()
 config.read(ROOT.joinpath("config.ini"))
@@ -148,7 +130,7 @@ make_analysis("mass_accuracy_by_participant", ["human"])
 make_latex("mass_accuracy_by_participant")
 make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief.csv"])
 make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
-make_mass_accuracy_by_trial_with_model_plots()
+make_plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv", "results/model_log_lh_ratios.csv"])
 make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"])
 make_latex("mass_accuracy_by_trial_corrs")
 

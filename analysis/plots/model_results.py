@@ -5,10 +5,12 @@ import util
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 
 def plot(results_path, fig_paths):
 
+    sns.set_style("darkgrid")
     cols = ['lower', 'median', 'upper']
 
     fall_responses = pd\
