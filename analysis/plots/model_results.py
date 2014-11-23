@@ -75,7 +75,7 @@ def plot(results_path, fig_paths):
         ipe = df['ipe']
         human = df['human']
 
-        label = r"$\kappa_0=%.1f$" % 10 ** float(kappa0)
+        label = r"$\kappa=%.1f$" % 10 ** float(kappa0)
 
         # left subplot (fall responses)
         x = ipe['fall', 'median']
