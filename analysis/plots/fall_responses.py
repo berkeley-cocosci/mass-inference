@@ -46,8 +46,8 @@ def plot(results_path, fig_paths):
         marker='o', color=util.darkgrey, ls='', ms=8)
     ax1.set_xlim(0, 1)
     ax1.set_ylim(0, 1)
-    ax1.set_xlabel(r"Human ($r_0=0.1$)")
-    ax1.set_ylabel(r"Human ($r_0=10.0$)")
+    ax1.set_xlabel(r"Human ($\kappa_0=0.1$)")
+    ax1.set_ylabel(r"Human ($\kappa_0=10.0$)")
 
     ax2.plot([x[-1.0], x[1.0]], [y[-1.0], y[1.0]], '-', color=util.darkgrey)
     ax2.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5)
@@ -60,13 +60,13 @@ def plot(results_path, fig_paths):
             xerr=[x_lerr[kappa0], x_uerr[kappa0]],
             yerr=[y_lerr[kappa0], y_uerr[kappa0]],
             marker='o', color=colors[kappa0], ms=8, ls='',
-            label=r"$r_0=%.1f$" % 10 ** kappa0)
+            label=r"$\kappa_0=%.1f$" % 10 ** kappa0)
         ax3.errorbar(
             x[0.0], y[kappa0],
             xerr=[x_lerr[kappa0], x_uerr[kappa0]],
             yerr=[y_lerr[kappa0], y_uerr[kappa0]],
             marker='o', color=colors[kappa0], ms=8, ls='',
-            label=r"$r_0=%.1f$" % 10 ** kappa0)
+            label=r"$\kappa_0=%.1f$" % 10 ** kappa0)
 
     ax2.set_xlabel("Mass-sensitive IPE")
     ax3.set_xlabel("Mass-insensitive IPE")

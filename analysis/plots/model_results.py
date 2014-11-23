@@ -75,7 +75,7 @@ def plot(results_path, fig_paths):
         ipe = df['ipe']
         human = df['human']
 
-        label = r"$r_0=%.1f$" % 10 ** float(kappa0)
+        label = r"$\kappa_0=%.1f$" % 10 ** float(kappa0)
 
         # left subplot (fall responses)
         x = ipe['fall', 'median']
@@ -128,11 +128,11 @@ def plot(results_path, fig_paths):
     ax1.set_xlabel("IPE model, $p(F_t|S_t)$")
     ax1.set_ylabel("Normalized human judgments")
     ax1.set_title("Exp 1+2: Will it fall?")
-    ax2.set_xlabel("IPE model, $p(r=10|F_t,S_t)$")
-    ax2.set_ylabel("% participants choosing $r=10$")
+    ax2.set_xlabel("IPE model, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_ylabel("% participants choosing $\kappa=10$")
     ax2.set_title("Exp 1: Which is heavier? (IPE)")
-    ax3.set_xlabel("Empirical model, $p(r=10|F_t,S_t)$")
-    ax3.set_ylabel("% participants choosing $r=10$")
+    ax3.set_xlabel("Empirical model, $p(\kappa=10|F_t,S_t)$")
+    ax3.set_ylabel("% participants choosing $\kappa=10$")
     ax3.set_title("Exp 1: Which is heavier? (Empirical)")
 
     for ax in (ax1, ax2, ax3):

@@ -43,7 +43,7 @@ def plot(results_path, fig_paths):
         ax1.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor=util.darkgrey,
-                     label=r"$r_0=%s$" % (10 ** kappa0))
+                     label=r"$\kappa_0=%s$" % (10 ** kappa0))
 
         x = empirical['median']
         xl = x - empirical['lower']
