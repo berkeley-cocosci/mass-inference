@@ -51,9 +51,9 @@ def plot(results_path, fig_paths):
     corrs = []
     corrs.append(pearson.format(**dict(fall_corrs)))
     corrs.append(pearson.format(**dict(
-        mass_corrs.ix[('H', 'Empirical', 'Human')])))
-    corrs.append(pearson.format(**dict(
         mass_corrs.ix[('H', 'IPE', 'Human')])))
+    corrs.append(pearson.format(**dict(
+        mass_corrs.ix[('H', 'Empirical', 'Human')])))
 
     xmin = 0
     xmax = 1
