@@ -93,7 +93,8 @@ def plot(results_path, fig_paths):
         util.clear_top(ax)
         util.outward_ticks(ax)
 
-    for version, ax in zip(llh.T, axes):
+    for version in llh.T:
+        ax = axes[order.index(version)]
         l, h = ax.get_xlim()
         lhr = llh.T[version]
         label = "{} LLR = {:.2f}"
