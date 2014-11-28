@@ -44,15 +44,17 @@ def logistic_regression(X, y, prior_func, verbose=False):
     return float(best['x'])
 
 
-def fit_responses(df, prior_func, model_name, verbose=False):
+def fit_responses(df, prior_func, model_name, verbose=False, fit=True):
     df2 = df.dropna()
     y = np.asarray(df2['responses'])
     X = np.asarray(df2['llr'])
 
     if model_name == 'chance':
         B = 0
-    else:
+    elif fit:
         B = logistic_regression(X, y, prior_func, verbose)
+    else:
+        B = 1
 
     f = np.asarray(df['llr']) * B
     mu = 1.0 / (1 + np.exp(-f))
@@ -113,13 +115,27 @@ def task(args):
         .drop_duplicates()\
         .set_index(['version', 'kappa0', 'pid'])['B']
 
-    results = res_ind.reset_index()
-    results['model'] = model_name
-    results = results\
+    res_raw = model\
+        .groupby(level=['version', 'pid'])\
+        .apply(mbf.fit_responses, None, model_name, fit=False)
+
+    results_fit = res_ind.reset_index()
+    results_fit['model'] = model_name
+    results_fit = results_fit\
         .dropna()\
         .set_index(['model', 'version', 'kappa0', 'pid', 'trial', 'stimulus'])\
         .sortlevel()\
         .drop('B', axis=1)
+
+    results_raw = res_raw.reset_index()
+    results_raw['model'] = "{} raw".format(model_name)
+    results_raw = results_raw\
+        .dropna()\
+        .set_index(['model', 'version', 'kappa0', 'pid', 'trial', 'stimulus'])\
+        .sortlevel()\
+        .drop('B', axis=1)
+
+    results = pd.concat([results_fit, results_raw])
 
     params = params_ind.reset_index()
     params['model'] = model_name
