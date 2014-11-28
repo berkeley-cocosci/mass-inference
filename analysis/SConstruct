@@ -141,10 +141,6 @@ make_plot("model_log_lh_ratio_by_trial", ["results/model_log_lh_ratio_by_trial.c
 make_analysis("model_log_lh_ratios", ["results/model_log_lh_ratio_by_trial.csv", "results/model_log_lh_ratio_by_participant.csv"])
 make_latex("model_log_lh_ratios")
 
-make_analysis("switchpoint", ["human"])
-make_analysis("num_learned_by_trial", ["results/switchpoint.csv", "results/mass_accuracy.csv"])
-make_plot("num_learned_by_trial", ["results/num_learned_by_trial.csv"])
-
 make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
 
 make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv", "results/mass_responses_by_stimulus_corrs.csv"])
