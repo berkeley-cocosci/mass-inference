@@ -5,47 +5,77 @@ import util
 import sys
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 
 def plot(results_path, fig_paths):
 
-    mass_responses = pd\
+    responses = pd\
         .read_csv(results_path.joinpath('mass_accuracy_by_stimulus.csv'))\
-        .groupby(['version', 'species'])\
-        .get_group(('H', 'human'))
+        .groupby('version')\
+        .get_group('H')
 
     colors = {
         -1.0: util.colors[0],
         1.0: util.colors[2]
     }
 
-    fig, ax = plt.subplots()
+    fig, (ax1, ax2) = plt.subplots(1, 2)
 
-    for i, (kappa0, df) in enumerate(mass_responses.groupby('kappa0')):
-        x = i * 0.3 + np.arange(len(df['stimulus']))
-        y = df['median']
-        yl = y - df['lower']
-        yu = df['upper'] - y
+    for kappa0, df in responses.groupby('kappa0'):
+        empirical = df\
+            .groupby('species')\
+            .get_group('empirical')
+        ipe = df\
+            .groupby('species')\
+            .get_group('ipe')
+        human = df\
+            .groupby('species')\
+            .get_group('human')
 
-        ax.bar(x, y, yerr=[yl, yu],
-               color=colors[kappa0],
-               ecolor=util.darkgrey,
-               width=0.3,
-               label='kappa=%s' % kappa0)
+        x = ipe['median']
+        xl = x - ipe['lower']
+        xu = ipe['upper'] - x
 
-    ax.legend(loc='best')
-    ax.set_xlim(1, 20)
-    ax.set_ylim(0, 1.01)
-    ax.set_xlabel("Stimulus")
-    ax.set_ylabel("Fraction correct")
+        y = human['median']
+        yl = y - human['lower']
+        yu = human['upper'] - y
 
-    util.clear_right(ax)
-    util.clear_top(ax)
-    util.outward_ticks(ax)
+        ax1.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
+                     marker='o', linestyle='',
+                     color=colors[kappa0], ecolor=util.darkgrey,
+                     label=r"$\kappa_0=%s$" % (10 ** kappa0))
+
+        x = empirical['median']
+        xl = x - empirical['lower']
+        xu = empirical['upper'] - x
+
+        y = human['median']
+        yl = y - human['lower']
+        yu = human['upper'] - y
+
+        ax2.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
+                     marker='o', linestyle='',
+                     color=colors[kappa0], ecolor=util.darkgrey)
+
+    ax1.set_title("IPE vs. Human")
+    ax2.set_title("Empirical vs. Human")
+
+    ax1.set_xlabel("IPE")
+    ax1.set_ylabel("Human")
+    ax2.set_xlabel("Empirical")
+    ax2.set_ylabel("Human")
+
+    for ax in (ax1, ax2):
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        util.clear_right(ax)
+        util.clear_top(ax)
+        util.outward_ticks(ax)
+
+    ax1.legend(loc='upper left', fontsize=11, frameon=False)
 
     fig.set_figwidth(8)
-    fig.set_figheight(4)
+    fig.set_figheight(3.5)
     plt.draw()
     plt.tight_layout()
 

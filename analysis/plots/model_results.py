@@ -10,7 +10,7 @@ import seaborn as sns
 
 def plot(results_path, fig_paths):
 
-    sns.set_style("darkgrid")
+    sns.set_style("white", {'axes.edgecolor': util.lightgrey})
     cols = ['lower', 'median', 'upper']
 
     fall_responses = pd\
@@ -64,8 +64,11 @@ def plot(results_path, fig_paths):
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
-    for ax in (ax1, ax2, ax3):
-        ax.plot([0, 1], [0, 1], '--', color=util.darkgrey, alpha=0.5, linewidth=2)
+    ax1.plot([0, 1], [0, 1], '--', color=util.lightgrey, linewidth=2, zorder=1)
+    for ax in (ax2, ax3):
+        ax.plot([0, 1], [0.5, 0.5], '-', color=util.lightgrey, linewidth=2, zorder=1)
+        ax.plot([0.5, 0.5], [0, 1], '-', color=util.lightgrey, linewidth=2, zorder=1)
+
 
     colors = {
         '-1.0': util.colors[0],
@@ -140,10 +143,13 @@ def plot(results_path, fig_paths):
     for ax in (ax1, ax2, ax3):
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-
-        util.clear_right(ax)
-        util.clear_top(ax)
-        util.outward_ticks(ax)
+        ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
+        ax.set_xticklabels(["0.0", "0.25", "0.50", "0.75", "1.0"])
+        ax.set_yticks([0, 0.25, 0.50, 0.75, 1])
+        if ax == ax1:
+            ax.set_yticklabels(["0.0", "0.25", "0.50", "0.75", "1.0"])
+        else:
+            ax.set_yticklabels(["0", "25", "50", "75", "100"])
 
     ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
 

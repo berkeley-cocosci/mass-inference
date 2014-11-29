@@ -10,7 +10,8 @@ from path import path
 
 colors = sns.color_palette('bright')
 colorcircle = ['r', 'y', 'g', 'b', 'm']
-darkgrey = "#404040"
+darkgrey = ".3"
+lightgrey = ".7"
 sns.set_style('white')
 
 

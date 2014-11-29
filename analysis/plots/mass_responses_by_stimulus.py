@@ -19,7 +19,7 @@ def plot(results_path, fig_paths):
         1.0: util.colors[2]
     }
 
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig, (ax1, ax2) = plt.subplots(1, 2)
 
     for kappa0, df in responses.groupby('kappa0'):
         empirical = df\
@@ -57,30 +57,15 @@ def plot(results_path, fig_paths):
                      marker='o', linestyle='',
                      color=colors[kappa0], ecolor=util.darkgrey)
 
-        x = empirical['median']
-        xl = x - empirical['lower']
-        xu = empirical['upper'] - x
-
-        y = ipe['median']
-        yl = y - ipe['lower']
-        yu = ipe['upper'] - y
-
-        ax3.errorbar(x, y, xerr=[xl, xu], yerr=[yl, yu],
-                     marker='o', linestyle='',
-                     color=colors[kappa0], ecolor=util.darkgrey)
-
     ax1.set_title("IPE vs. Human")
     ax2.set_title("Empirical vs. Human")
-    ax3.set_title("Empirical vs. IPE")
 
     ax1.set_xlabel("IPE")
     ax1.set_ylabel("Human")
     ax2.set_xlabel("Empirical")
     ax2.set_ylabel("Human")
-    ax3.set_xlabel("Empirical")
-    ax3.set_ylabel("IPE")
 
-    for ax in (ax1, ax2, ax3):
+    for ax in (ax1, ax2):
         ax.set_xlim(0, 1)
         ax.set_ylim(0, 1)
         util.clear_right(ax)
@@ -89,7 +74,7 @@ def plot(results_path, fig_paths):
 
     ax1.legend(loc='upper left', fontsize=11, frameon=False)
 
-    fig.set_figwidth(12)
+    fig.set_figwidth(8)
     fig.set_figheight(3.5)
     plt.draw()
     plt.tight_layout()
