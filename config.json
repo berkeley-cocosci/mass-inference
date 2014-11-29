@@ -1,0 +1,30 @@
+{
+    "analysis": {
+        "model_version": "G",
+        "human_version": "merged",
+        "seed": 923012,
+        "figure_path": "analysis/figures",
+        "results_path": "analysis/results",
+        "data_path": "data",
+        "sigma": 0.04,
+        "phi": 0.2,
+        "query": "fall_cf"
+    },
+
+    "names": {
+        "version": {
+            "H": {
+                "full": "Experiment 1",
+                "abbrev": "Exp 1"
+            },
+            "G": {
+                "full": "Experiment 2",
+                "abbrev": "Exp 2"
+            },
+            "I": {
+                "full": "Experiment 3",
+                "abbrev": "Exp 3"
+            }
+        }
+    }
+}
