@@ -1,6 +1,29 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes bootstrapped correlations for responses to "will it fall?" between:
+
+    * human vs. human
+    * mass-sensitive ipe vs. human
+    * mass-insensitive ipe vs. human
+
+Outputs a csv file with the following columns:
+
+    block (string)
+        experiment block/phase
+    X (string)
+        name of the x-variable (Human, ModelS, ModelIS)
+    Y (string)
+        name of the y-variable (Human, ModelS, ModelIS)
+    lower (float)
+        lower bound of the 95% confidence interval
+    median
+        median of the bootstrapped correlations
+    upper
+        upper bound of the 95% confidence interval
+
+"""
+
 import pandas as pd
 import numpy as np
 import util
@@ -46,4 +69,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.results_path, args.seed)

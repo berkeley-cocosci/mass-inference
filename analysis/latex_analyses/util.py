@@ -1,5 +1,8 @@
 from ConfigParser import SafeConfigParser
+from argparse import ArgumentParser, RawTextHelpFormatter
 from path import path
+
+import os
 
 
 def newcommand(name, val):
@@ -7,13 +10,22 @@ def newcommand(name, val):
     return cmd + "\n"
 
 
-def run_analysis(func, filename):
+def default_argparser(doc):
     root = path("..")
     config = SafeConfigParser()
     config.read(root.joinpath("config.ini"))
-    results_path = root.joinpath(
-        config.get("analysis", "results_path"))
-    func(path(filename), results_path)
+    results_path = os.path.abspath(root.joinpath(
+        config.get("analysis", "results_path")))
+
+    parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
+    parser.add_argument(
+        'latex_path', help='where to save out the latex file')
+    parser.add_argument(
+        '-r', '--results-path',
+        help='directory where the csv results are located\ndefault: %(default)s',
+        default=results_path)
+
+    return parser
 
 
 latex_spearman = r"\rho={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"

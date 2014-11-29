@@ -1,14 +1,24 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the number of stimuli for which people were not significantly above
+chance in judging which mass was heavier. Produces a csv file with the following
+columns:
+
+    version (string)
+        the experiment version
+    kappa0 (float)
+        the true log mass ratio
+    stimulus (string)
+        the stimulus name
+    0.00125 (boolean)
+        whether p(p(correct)) < 0.00125
+
+"""
+
 import util
-import numpy as np
 
-filename = "num_chance.csv"
-
-
-def run(results_path, seed):
-    np.random.seed(seed)
+def run(results_path):
     human = util.load_human()
     results = []
 
@@ -29,4 +39,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__, add_seed=False)
+    args = parser.parse_args()
+    run(args.results_path)

@@ -1,4 +1,5 @@
 from ConfigParser import SafeConfigParser
+from argparse import ArgumentParser, RawTextHelpFormatter
 from path import path
 import numpy as np
 import sys
@@ -117,13 +118,22 @@ def load_all():
     return data
 
 
-def run_analysis(func, filename):
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    seed = config.getint("analysis", "seed")
+def default_argparser(doc, add_seed=True):
+    parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
+    parser.add_argument(
+        'results_path', help='where to save out the results')
 
-    func(filename, seed)
+    if add_seed:
+        root = path("..")
+        config = SafeConfigParser()
+        config.read(root.joinpath("config.ini"))
+        seed = config.getint("analysis", "seed")
+
+        parser.add_argument(
+            '-s', '--seed', default=seed,
+            type=int, help='seed for the random number generator (default: %(default)s)')
+
+    return parser
 
 
 def get_params():

@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+Produces a LaTeX file with the number of stimuli for which people were not
+significantly above chance in judging which color is heavier, for each of the
+different versions of the experiment. Expects the file "num_chance.csv" to be
+present in the results directory.
+"""
+
 import sys
 import util
 import pandas as pd
@@ -33,4 +40,6 @@ def run(latex_path, results_path):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.latex_path, args.results_path)

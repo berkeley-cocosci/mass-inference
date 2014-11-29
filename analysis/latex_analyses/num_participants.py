@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 
+"""
+Produce a LaTeX file that includes details about how participants were excluded,
+e.g. how many failed the posttest, how many had duplicate trials, etc. This
+expects the file "num_participants.csv" to be present in the results directory.
+"""
+
 import sys
 import util
 import pandas as pd
@@ -31,4 +37,6 @@ def run(latex_path, results_path):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.latex_path, args.results_path)

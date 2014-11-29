@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the squared error between model and human judgments on "will it fall?"
+for each stimulus for all the different parameter combinations of sigma/phi.
+Produces a csv file with the following columns:
+
+    stimulus (string)
+        stimulus name
+    kappa (float)
+        log mass ratio
+    sigma (float)
+        perceptual uncertainty
+    phi (float)
+        force uncertainty
+    sqerr (float)
+        squared error between people and model
+
+"""
+
 import util
 import pandas as pd
 import numpy as np
@@ -36,4 +53,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.results_path, args.seed)

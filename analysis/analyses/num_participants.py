@@ -1,10 +1,32 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Compute the number of participants in each condition, and outputs a csv with
+the following columns:
+
+    version (string)
+        the experiment version
+    duplicate_trials (int)
+        how many participants had duplicate trials
+    failed_posttest (int)
+        how many participants failed the posttest
+    incomplete (int)
+        how many participants failed to finish
+    ok (int)
+        how many participants are ok
+    repeat_worker (int)
+        how many participants did a previous version of the experiment
+    complete (int)
+        how many participants completed the experiment
+    excluded (int)
+        how many participants were excluded from analysis
+
+"""
+
 import util
 
 
-def run(results_path, seed):
+def run(results_path):
     participants = util.load_participants()
 
     counts = participants\
@@ -30,4 +52,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__, add_seed=False)
+    args = parser.parse_args()
+    run(args.results_path)

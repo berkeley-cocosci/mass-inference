@@ -1,12 +1,26 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes statistics about how long participants took to complete the experiment,
+and how much the average pay was. Produces a csv file with the following columns:
+
+    version (string)
+        the experiment version
+    mean_pay (float)
+        what the mean payrate (dollars/hour) was across participants
+    mean_time (float)
+        how long it took participants to complete the experiment (mean)
+    median_time (float)
+        how long it took participants to complete the experiment (median)
+
+"""
+
 import util
 import pandas as pd
 from datetime import timedelta
 
 
-def run(results_path, seed):
+def run(results_path):
     human = util.load_human()
     versions = list(human['all']['version'].unique())
     results = {}
@@ -39,4 +53,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__, add_seed=False)
+    args = parser.parse_args()
+    run(args.results_path)

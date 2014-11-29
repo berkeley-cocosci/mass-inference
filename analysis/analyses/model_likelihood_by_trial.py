@@ -58,7 +58,8 @@ def run(results_path, seed):
 
     pth = path(results_path).dirname().joinpath("trial_order.csv")
     trials = pd.read_csv(pth)\
-               .set_index(['mode', 'trial'])\
+               .set_index(['mode', 'trial', 'pid'])['stimulus']\
+               .unstack('pid')\
                .ix['experimentC']
 
     human = data['C']

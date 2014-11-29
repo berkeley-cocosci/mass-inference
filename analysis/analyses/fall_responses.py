@@ -1,6 +1,28 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the average judgments to "will it fall?" for both participants and the
+model. Produces a csv file with the following columns:
+
+    version (string)
+        the experiment version
+    block (string)
+        the experiment phase
+    species (string)
+        either 'human' or 'model'
+    kappa0 (float)
+        the true log mass ratio
+    stimulus (string)
+        the name of the stimulus
+    lower (float in [0, 1])
+        lower bound of the 95% confidence interval
+    median (float in [0, 1])
+        median value across the bootstrapped means
+    upper (float in [0, 1])
+        upper bound of the 95% confidence interval
+
+"""
+
 import util
 import pandas as pd
 import numpy as np
@@ -61,4 +83,7 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.results_path, args.seed)
+
