@@ -6,14 +6,13 @@ e.g. how many failed the posttest, how many had duplicate trials, etc. This
 expects the file "num_participants.csv" to be present in the results directory.
 """
 
-import sys
+import os
 import util
 import pandas as pd
 
 
 def run(latex_path, results_path):
-    results = pd.read_csv(
-        results_path.joinpath("num_participants.csv"))
+    results = pd.read_csv(os.path.join(results_path, "num_participants.csv"))
 
     results = results\
         .set_index('version')\

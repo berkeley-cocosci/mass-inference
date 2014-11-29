@@ -7,14 +7,13 @@ different versions of the experiment. Expects the file "num_chance.csv" to be
 present in the results directory.
 """
 
-import sys
+import os
 import util
 import pandas as pd
 
 
 def run(latex_path, results_path):
-    results = pd.read_csv(
-        results_path.joinpath("num_chance.csv"))
+    results = pd.read_csv(os.path.join(results_path, ("num_chance.csv")))
 
     alpha = results.columns[-1]
     results = results\

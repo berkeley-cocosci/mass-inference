@@ -91,11 +91,9 @@ def load_model():
     config = SafeConfigParser()
     config.read(root.joinpath("config.ini"))
     model_version = config.get("analysis", "model_version")
-    sigma = config.getfloat("analysis", "sigma")
-    phi = config.getfloat("analysis", "phi")
     data_path = root.joinpath(
         config.get("analysis", "data_path")).relpath()
-    ipe, fb = _load_model(model_version, data_path, sigma=sigma, phi=phi)
+    ipe, fb = _load_model(model_version, data_path)
     return ipe, fb
 
 
@@ -105,16 +103,12 @@ def load_all():
     config.read(root.joinpath("config.ini"))
     human_version = config.get("analysis", "human_version")
     model_version = config.get("analysis", "model_version")
-    sigma = config.getfloat("analysis", "sigma")
-    phi = config.getfloat("analysis", "phi")
     data_path = root.joinpath(
         config.get("analysis", "data_path")).relpath()
     data = _load_all(
         model_version=model_version,
         human_version=human_version,
-        data_path=data_path,
-        sigma=sigma,
-        phi=phi)
+        data_path=data_path)
     return data
 
 
