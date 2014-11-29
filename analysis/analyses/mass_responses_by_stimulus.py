@@ -34,10 +34,8 @@ def run(results_path, seed):
         .groupby('model')\
         .get_group('static')\
         .groupby(['likelihood', 'version', 'kappa0', 'stimulus'])['p']\
-        .mean()
-
-    belief.name = 'median'
-    belief = belief\
+        .apply(util.bootstrap_mean)\
+        .unstack(-1)\
         .reset_index()\
         .rename(columns={'likelihood': 'species'})
     belief['class'] = 'static'

@@ -3,10 +3,12 @@ import pandas as pd
 import snippets.datapackage as dpkg
 import snippets.circstats as cs
 import scipy.special
+import scipy.stats
 import seaborn as sns
 
 from mass import DATA_PATH
 from .util import LazyProperty
+from ..analysis import bootstrap_mean
 
 
 class IPE(object):
@@ -19,21 +21,37 @@ class IPE(object):
         self.sigma = float(sigma)
         self.phi = float(phi)
 
-    def _sample_kappa_alpha(self, data):
+    def _sample_kappa_mean(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
             values='nfell')
-        alpha = samps.sum() + 0.5
-        return alpha
+        mean = (samps / 10.0).mean()
+        return mean
 
-    def _sample_kappa_beta(self, data):
+    def _sample_kappa_var(self, data):
         samps = data.pivot(
             index='sample',
             columns='kappa',
             values='nfell')
-        beta = (10 - samps).sum() + 0.5
-        return beta
+        var = (samps / 10.0).var()
+        return var
+
+    def _sample_kappa_sem(self, data):
+        samps = data.pivot(
+            index='sample',
+            columns='kappa',
+            values='nfell')
+        var = (samps / 10.0).apply(scipy.stats.sem)
+        return var
+
+    def _sample_kappa_stats(self, data):
+        samps = data.pivot(
+            index='sample',
+            columns='kappa',
+            values='nfell')
+        sem = (samps / 10.0).apply(bootstrap_mean)
+        return sem
 
     def _bincount(self, x):
         counts = np.bincount(np.asarray(x, dtype=int))
@@ -90,23 +108,10 @@ class IPE(object):
         return var
 
     @LazyProperty
-    def alpha(self):
-        return self.data\
-                   .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_alpha)
-
-    @LazyProperty
-    def beta(self):
-        return self.data\
-                   .groupby(level=['sigma', 'phi', 'stimulus'])\
-                   .apply(self._sample_kappa_beta)
-
-    @LazyProperty
     def P_fall_mean_all(self):
-        alpha = self.alpha
-        beta = self.beta
-        mean = alpha / (alpha + beta)
-        return mean
+        return self.data\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_mean)
 
     @LazyProperty
     def P_fall_mean(self):
@@ -116,29 +121,34 @@ class IPE(object):
                    .reset_index(['sigma', 'phi'], drop=True)
 
     @LazyProperty
+    def P_fall_sem_all(self):
+        return self.data\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_sem)
+
+    @LazyProperty
+    def P_fall_sem(self):
+        return self.P_fall_sem_all\
+                   .groupby(level=['sigma', 'phi'])\
+                   .get_group((self.sigma, self.phi))\
+                   .reset_index(['sigma', 'phi'], drop=True)
+
+    @LazyProperty
     def P_fall_stats(self):
-        alpha = self.alpha.ix[(self.sigma, self.phi)].stack()
-        beta = self.beta.ix[(self.sigma, self.phi)].stack()
-        stats = scipy.special.btdtri(
-            np.asarray(alpha)[:, None],
-            np.asarray(beta)[:, None],
-            [0.025, 0.5, 0.975])
-        stats = pd.DataFrame(
-            stats,
-            index=alpha.index,
-            columns=['lower', 'median', 'upper'])
-        stats.columns.name = 'stat'
-        stats = stats\
-            .stack()\
-            .unstack('kappa')
+        stats = self.data\
+                   .groupby(level=['sigma', 'phi'])\
+                   .get_group((self.sigma, self.phi))\
+                   .reset_index(['sigma', 'phi'], drop=True)\
+                   .groupby(level='stimulus')\
+                   .apply(self._sample_kappa_stats)
+        stats.index.names = ['stimulus', 'stat']
         return stats
 
     @LazyProperty
     def P_fall_var_all(self):
-        alpha = self.alpha
-        beta = self.beta
-        var = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
-        return var
+        return self.data\
+                   .groupby(level=['sigma', 'phi', 'stimulus'])\
+                   .apply(self._sample_kappa_var)
 
     @LazyProperty
     def P_fall_var(self):

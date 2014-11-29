@@ -97,9 +97,8 @@ def run(results_path, seed):
                 .get_group(model)\
                 .groupby(['likelihood', 'version', 'num_mass_trials',
                           'trial'])['p correct']\
-                .mean()
-            belief.name = 'median'
-            belief = belief\
+                .apply(util.bootstrap_mean)\
+                .unstack(-1)\
                 .reset_index()\
                 .rename(columns={'likelihood': 'species'})
             belief['class'] = model

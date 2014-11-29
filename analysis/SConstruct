@@ -137,7 +137,6 @@ make_latex("mass_accuracy_by_trial_corrs")
 make_analysis("model_log_lh", ["human", "results/model_belief.csv", "query"], alias=True)
 make_analysis("model_log_lh_ratio_by_participant", ["results/model_log_lh.csv"], alias=True)
 make_analysis("model_log_lh_ratio_by_trial", ["results/model_log_lh.csv"])
-make_plot("model_log_lh_ratio_by_trial", ["results/model_log_lh_ratio_by_trial.csv"])
 make_analysis("model_log_lh_ratios", ["results/model_log_lh_ratio_by_trial.csv", "results/model_log_lh_ratio_by_participant.csv"])
 make_latex("model_log_lh_ratios")
 

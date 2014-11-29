@@ -7,8 +7,6 @@ import seaborn as sns
 import os
 import sys
 from path import path
-from mass.analysis import sigmoid
-from mass.analysis import exponentiated_luce_choice, kde
 
 colors = sns.color_palette('bright')
 colorcircle = ['r', 'y', 'g', 'b', 'm']
