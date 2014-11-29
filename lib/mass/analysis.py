@@ -49,7 +49,23 @@ def load_human(version, data_path):
     return exp_data
 
 
-def load_model(version, data_path):
+def load_ipe(version, data_path):
+    def load(name):
+        path = os.path.join(data_path, "model/%s.dpkg" % name)
+        dp = dpkg.DataPackage.load(path)
+        data = dp.load_resource("model.csv").set_index(['sigma', 'phi', 'stimulus'])
+        return data
+
+    ipe = {
+        'A': load("mass_inference-%s-a_ipe_fall" % version),
+        'B': load("mass_inference-%s-b_ipe_fall" % version),
+        'C': load("mass_inference-%s-b_ipe_fall" % version)
+    }
+
+    return ipe
+
+
+def load_fb(version, data_path):
     def load(name):
         path = os.path.join(data_path, "model/%s.dpkg" % name)
         dp = dpkg.DataPackage.load(path)
@@ -70,26 +86,27 @@ def load_model(version, data_path):
         data[:] = np.nan
         return data
 
-    ipe = {
-        'A': load("mass_inference-%s-a_ipe_fall" % version),
-        'B': load("mass_inference-%s-b_ipe_fall" % version),
-        'C': load("mass_inference-%s-b_ipe_fall" % version)
-    }
-
     fb = {
         'A': load_nofb("mass_inference-%s-a_truth_fall" % version),
         'B': load_nofb("mass_inference-%s-b_truth_fall" % version),
         'C': load_fb("mass_inference-%s-b_truth_fall" % version),
     }
 
+    return fb
+
+
+def load_model(version, data_path):
+    ipe = load_ipe(version, data_path)
+    fb = load_fb(version, data_path)
     return ipe, fb
 
 
 def load_all(model_version=None, human_version=None, data_path=None,
              human=None, ipe=None, fb=None):
-    if ipe is None or fb is None:
-        ipe, fb = load_model(model_version, data_path)
-
+    if ipe is None:
+        ipe = load_ipe(model_version, data_path)
+    if fb is None:
+        fb = load_fb(model_version, data_path)
     if human is None:
         human = load_human(human_version, data_path)
 

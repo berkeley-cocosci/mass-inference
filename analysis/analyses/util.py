@@ -5,7 +5,8 @@ import sys
 import json
 
 from mass.analysis import load_human as _load_human
-from mass.analysis import load_model as _load_model
+from mass.analysis import load_ipe as _load_ipe
+from mass.analysis import load_fb as _load_fb
 from mass.analysis import load_all as _load_all
 from mass.analysis import load_participants as _load_participants
 from mass.analysis import bootcorr, bootstrap_mean, beta
@@ -90,13 +91,29 @@ def load_participants():
     return human
 
 
-def load_model():
+def load_ipe():
     root = ".."
     config = load_config(root)
     model_version = config["analysis"]["model_version"]
     data_path = os.path.abspath(os.path.join(
         root, config["analysis"]["data_path"]))
-    ipe, fb = _load_model(model_version, data_path)
+    ipe = _load_ipe(model_version, data_path)
+    return ipe
+
+
+def load_fb():
+    root = ".."
+    config = load_config(root)
+    model_version = config["analysis"]["model_version"]
+    data_path = os.path.abspath(os.path.join(
+        root, config["analysis"]["data_path"]))
+    fb = _load_fb(model_version, data_path)
+    return fb
+
+
+def load_model():
+    ipe = load_ipe()
+    fb = load_fb()
     return ipe, fb
 
 
@@ -114,7 +131,7 @@ def load_all():
     return data
 
 
-def default_argparser(doc, results_path=False, seed=False):
+def default_argparser(doc, results_path=False, seed=False, parallel=False):
     root = ".."
     config = load_config(root)
 
@@ -133,6 +150,13 @@ def default_argparser(doc, results_path=False, seed=False):
         parser.add_argument(
             '-s', '--seed', default=config["analysis"]["seed"],
             type=int, help='seed for the random number generator (default: %(default)s)')
+
+    if parallel:
+        parser.add_argument(
+            '--serial',
+            dest='parallel',
+            action='store_false',
+            help="don't run analysis in parallel")
 
     return parser
 

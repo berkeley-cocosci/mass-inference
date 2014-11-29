@@ -66,7 +66,7 @@ def compute_query(data, query):
 
 def run(dest, seed):
     np.random.seed(seed)
-    ipe = util.load_model()[0]
+    ipe = util.load_ipe()
     results = []
 
     for block in ['A', 'B']:
