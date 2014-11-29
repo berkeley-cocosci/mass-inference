@@ -20,7 +20,7 @@ import pandas as pd
 from datetime import timedelta
 
 
-def run(results_path):
+def run(dest):
     human = util.load_human()
     versions = list(human['all']['version'].unique())
     results = {}
@@ -49,10 +49,10 @@ def run(results_path):
     results = pd.DataFrame.from_dict(results).T
     results.index.name = "version"
 
-    results.to_csv(results_path)
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, add_seed=False)
+    parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.results_path)
+    run(args.dest)

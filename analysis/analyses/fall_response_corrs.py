@@ -9,6 +9,8 @@ Computes bootstrapped correlations for responses to "will it fall?" between:
 
 Outputs a csv file with the following columns:
 
+    query (string)
+        the model query
     block (string)
         experiment block/phase
     X (string)
@@ -27,48 +29,50 @@ Outputs a csv file with the following columns:
 import pandas as pd
 import numpy as np
 import util
-from path import path
+import os
 
 
-def run(results_path, seed):
+def run(dest, results_path, seed):
     np.random.seed(seed)
 
-    pth = path(results_path).dirname().joinpath("fall_responses.csv")
-    means = pd\
-        .read_csv(pth)\
-        .set_index(['version', 'block', 'species',
-                    'kappa0', 'stimulus'])['median']\
-        .groupby(level='version')\
-        .get_group('GH')
+    human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
+    human = human.groupby('version').get_group('GH')
+
+    model = pd.read_csv(os.path.join(results_path, "model_fall_responses.csv"))
 
     results = {}
-    for block, df in means.groupby(level='block'):
-        m = df.unstack(['species', 'kappa0'])
+    for (query, block), df in model.groupby(['query', 'block']):
+        h = human\
+            .groupby('block')\
+            .get_group(block)\
+            .pivot('stimulus', 'kappa0', 'median')
+
+        m = df.pivot('stimulus', 'kappa0', 'median')
 
         # human vs human
-        x = m[('human', -1.0)]
-        y = m[('human', 1.0)]
-        results[(block, 'Human', 'Human')] = util.bootcorr(x, y)
+        x = h[-1.0]
+        y = h[1.0]
+        results[(query, block, 'Human', 'Human')] = util.bootcorr(x, y)
 
         # mass-sensitive ipe vs human
-        x = pd.concat([m[('model', -1.0)], m[('model', 1.0)]])
-        y = pd.concat([m[('human', -1.0)], m[('human', 1.0)]])
-        results[(block, 'ModelS', 'Human')] = util.bootcorr(x, y)
+        x = pd.concat([m[-1.0], m[1.0]])
+        y = pd.concat([h[-1.0], h[1.0]])
+        results[(query, block, 'ModelS', 'Human')] = util.bootcorr(x, y)
 
         # mass-insensitive ipe vs human
-        x = pd.concat([m[('model', 0.0)], m[('model', 0.0)]])
-        y = pd.concat([m[('human', -1.0)], m[('human', 1.0)]])
-        results[(block, 'ModelIS', 'Human')] = util.bootcorr(x, y)
+        x = pd.concat([m[0.0], m[0.0]])
+        y = pd.concat([h[-1.0], h[1.0]])
+        results[(query, block, 'ModelIS', 'Human')] = util.bootcorr(x, y)
 
     results = pd.DataFrame.from_dict(results).T
     results.index = pd.MultiIndex.from_tuples(
         results.index,
-        names=['block', 'X', 'Y'])
+        names=['query', 'block', 'X', 'Y'])
 
-    results.to_csv(results_path)
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(__doc__, results_path=True, seed=True)
     args = parser.parse_args()
-    run(args.results_path, args.seed)
+    run(args.dest, args.results_path, args.seed)

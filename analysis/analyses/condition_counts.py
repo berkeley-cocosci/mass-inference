@@ -19,7 +19,7 @@ Outputs a csv with the following columns:
 import util
 
 
-def run(results_path):
+def run(dest):
     human = util.load_human()
 
     # compute how many participants we have for each condition
@@ -31,10 +31,10 @@ def run(results_path):
         'version', 'condition', 'counterbalance', 'num_participants']
     counts = counts.set_index(['version', 'condition', 'counterbalance'])
 
-    counts.to_csv(results_path)
+    counts.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, add_seed=False)
+    parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.results_path)
+    run(args.dest)

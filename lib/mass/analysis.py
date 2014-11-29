@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 import scipy
+import scipy.special
+import os
 
 def bootstrap_mean(x, nsamples=10000):
     arr = np.asarray(x)
@@ -14,20 +16,19 @@ def bootstrap_mean(x, nsamples=10000):
         name=x.name)
     return stats
 
-from mass.model import IPE, EmpiricalIPE, NoFeedback, Feedback
 from snippets import datapackage as dpkg
 
 def load_participants(version, data_path):
-    exp_dp = dpkg.DataPackage.load(data_path.joinpath(
-        "human/mass_inference-%s.dpkg" % version))
+    exp_dp = dpkg.DataPackage.load(os.path.join(
+        data_path, "human/mass_inference-%s.dpkg" % version))
     participants = exp_dp.load_resource("participants.csv")
     participants = participants.reset_index()
     return participants
 
 
 def load_human(version, data_path):
-    exp_dp = dpkg.DataPackage.load(data_path.joinpath(
-        "human/mass_inference-%s.dpkg" % version))
+    exp_dp = dpkg.DataPackage.load(os.path.join(
+        data_path, "human/mass_inference-%s.dpkg" % version))
     exp = exp_dp.load_resource("experiment.csv")
 
     # convert timestamps into datetime objects
@@ -48,29 +49,46 @@ def load_human(version, data_path):
     return exp_data
 
 
-def load_model(version, data_path, sigma=0.04, phi=0.2):
+def load_model(version, data_path):
+    def load(name):
+        path = os.path.join(data_path, "model/%s.dpkg" % name)
+        dp = dpkg.DataPackage.load(path)
+        data = dp.load_resource("model.csv").set_index(['sigma', 'phi', 'stimulus'])
+        return data
+
+    def load_fb(name):
+        data = load(name)
+        return data\
+            .reset_index()\
+            .groupby(['sigma', 'phi', 'sample'])\
+            .get_group((0.0, 0.0, 0))\
+            .drop(['sigma', 'phi', 'sample'], axis=1)\
+            .set_index(['stimulus', 'kappa'])
+
+    def load_nofb(name):
+        data = load_fb(name)
+        data[:] = np.nan
+        return data
+
     ipe = {
-        'A': IPE("mass_inference-%s-a_ipe_fall" % version,
-                 sigma=sigma, phi=phi),
-        'B': IPE("mass_inference-%s-b_ipe_fall" % version,
-                 sigma=sigma, phi=phi),
-        'C': IPE("mass_inference-%s-b_ipe_fall" % version,
-                 sigma=sigma, phi=phi)
+        'A': load("mass_inference-%s-a_ipe_fall" % version),
+        'B': load("mass_inference-%s-b_ipe_fall" % version),
+        'C': load("mass_inference-%s-b_ipe_fall" % version)
     }
 
     fb = {
-        'A': NoFeedback("mass_inference-%s-a_truth_fall" % version),
-        'B': NoFeedback("mass_inference-%s-b_truth_fall" % version),
-        'C': Feedback("mass_inference-%s-b_truth_fall" % version),
+        'A': load_nofb("mass_inference-%s-a_truth_fall" % version),
+        'B': load_nofb("mass_inference-%s-b_truth_fall" % version),
+        'C': load_fb("mass_inference-%s-b_truth_fall" % version),
     }
 
     return ipe, fb
 
 
 def load_all(model_version=None, human_version=None, data_path=None,
-             human=None, ipe=None, fb=None, sigma=0.04, phi=0.2):
+             human=None, ipe=None, fb=None):
     if ipe is None or fb is None:
-        ipe, fb = load_model(model_version, data_path, sigma=sigma, phi=phi)
+        ipe, fb = load_model(model_version, data_path)
 
     if human is None:
         human = load_human(human_version, data_path)
@@ -78,8 +96,7 @@ def load_all(model_version=None, human_version=None, data_path=None,
     data = {
         'human': human,
         'ipe': ipe,
-        'fb': fb,
-        'empirical': {'C': EmpiricalIPE(human['B'])}
+        'fb': fb
     }
 
     return data

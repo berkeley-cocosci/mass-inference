@@ -18,15 +18,15 @@ experiment. The resulting file will have the following columns:
 import util
 
 
-def run(results_path):
+def run(dest):
     human = util.load_human()
     order = human['all']\
         .set_index(['mode', 'trial', 'pid'])['stimulus']
 
-    order.to_csv(results_path)
+    order.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, add_seed=False)
+    parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.results_path)
+    run(args.dest)

@@ -26,11 +26,11 @@ import pandas as pd
 import numpy as np
 
 
-def run(results_path, seed):
+def run(dest, seed):
     np.random.seed(seed)
     data = util.load_human()
-    results = []
 
+    results = []
     for block in ['A', 'B']:
         versions = list(data[block]['version'].unique())
         versions.extend(['GH', 'all'])
@@ -61,11 +61,11 @@ def run(results_path, seed):
                 .set_index(['version', 'block', 'kappa0', 'stimulus'])\
                 .sortlevel()
 
-    results.to_csv(results_path)
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(__doc__, seed=True)
     args = parser.parse_args()
-    run(args.results_path, args.seed)
+    run(args.dest, args.seed)
 

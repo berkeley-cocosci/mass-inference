@@ -1,8 +1,8 @@
-from ConfigParser import SafeConfigParser
 from argparse import ArgumentParser, RawTextHelpFormatter
-from path import path
+import os
 import numpy as np
 import sys
+import json
 
 from mass.analysis import load_human as _load_human
 from mass.analysis import load_model as _load_model
@@ -64,47 +64,49 @@ def normalize(logarr, axis=-1):
     return lognormconsts, lognormarr
 
 
+def load_config(root):
+    with open(os.path.join(root, "config.json"), "r") as fh:
+        config = json.load(fh)
+    return config
+
+
 def load_human():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    human_version = config.get("analysis", "human_version")
-    data_path = root.joinpath(
-        config.get("analysis", "data_path")).relpath()
+    root = ".."
+    config = load_config(root)
+    human_version = config["analysis"]["human_version"]
+    data_path = os.path.abspath(os.path.join(
+        root, config["analysis"]["data_path"]))
     human = _load_human(human_version, data_path)
     return human
 
 
 def load_participants():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    human_version = config.get("analysis", "human_version")
-    data_path = root.joinpath(
-        config.get("analysis", "data_path")).relpath()
+    root = ".."
+    config = load_config(root)
+    human_version = config["analysis"]["human_version"]
+    data_path = os.path.abspath(os.path.join(
+        root, config["analysis"]["data_path"]))
     human = _load_participants(human_version, data_path)
     return human
 
 
 def load_model():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    model_version = config.get("analysis", "model_version")
-    data_path = root.joinpath(
-        config.get("analysis", "data_path")).relpath()
+    root = ".."
+    config = load_config(root)
+    model_version = config["analysis"]["model_version"]
+    data_path = os.path.abspath(os.path.join(
+        root, config["analysis"]["data_path"]))
     ipe, fb = _load_model(model_version, data_path)
     return ipe, fb
 
 
 def load_all():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    human_version = config.get("analysis", "human_version")
-    model_version = config.get("analysis", "model_version")
-    data_path = root.joinpath(
-        config.get("analysis", "data_path")).relpath()
+    root = ".."
+    config = load_config(root)
+    human_version = config["analysis"]["human_version"]
+    model_version = config["analysis"]["model_version"]
+    data_path = os.path.abspath(os.path.join(
+        root, config["analysis"]["data_path"]))
     data = _load_all(
         model_version=model_version,
         human_version=human_version,
@@ -112,36 +114,37 @@ def load_all():
     return data
 
 
-def default_argparser(doc, add_seed=True):
+def default_argparser(doc, results_path=False, seed=False):
+    root = ".."
+    config = load_config(root)
+
     parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        'results_path', help='where to save out the results')
+        'dest', help='where to save out the results')
 
-    if add_seed:
-        root = path("..")
-        config = SafeConfigParser()
-        config.read(root.joinpath("config.ini"))
-        seed = config.getint("analysis", "seed")
-
+    if results_path:
         parser.add_argument(
-            '-s', '--seed', default=seed,
+            '-r', '--results-path',
+            default=os.path.abspath(os.path.join(
+                root, config["analysis"]["results_path"])),
+            help='where other results are saved\ndefault: %(default)s')
+
+    if seed:
+        parser.add_argument(
+            '-s', '--seed', default=config["analysis"]["seed"],
             type=int, help='seed for the random number generator (default: %(default)s)')
 
     return parser
 
 
 def get_params():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    sigma = config.getfloat("analysis", "sigma")
-    phi = config.getfloat("analysis", "phi")
+    config = load_config("..")
+    sigma = config["analysis"]["sigma"]
+    phi = config["analysis"]["phi"]
     return sigma, phi
 
 
 def get_query():
-    root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-    query = config.get("analysis", "query")
+    config = load_config("..")
+    query = config["analysis"]["query"]
     return query

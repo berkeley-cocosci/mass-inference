@@ -18,7 +18,7 @@ columns:
 
 import util
 
-def run(results_path):
+def run(dest):
     human = util.load_human()
     results = []
 
@@ -35,10 +35,10 @@ def run(results_path):
         .groupby('version')\
         .apply(num_chance)
 
-    results.to_csv(results_path)
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, add_seed=False)
+    parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.results_path)
+    run(args.dest)

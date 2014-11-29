@@ -23,7 +23,7 @@ import util
 import numpy as np
 
 
-def run(results_path, seed):
+def run(dest, seed):
     np.random.seed(seed)
     human = util.load_human()['C']\
           .dropna(axis=0, subset=['mass? response'])
@@ -36,10 +36,10 @@ def run(results_path, seed):
         .set_index(['version', 'kappa0', 'stimulus'])\
         .sortlevel()
 
-    results.to_csv(results_path)
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(__doc__, seed=True)
     args = parser.parse_args()
-    run(args.results_path, args.seed)
+    run(args.dest, args.seed)

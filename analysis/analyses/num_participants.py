@@ -26,7 +26,7 @@ the following columns:
 import util
 
 
-def run(results_path):
+def run(dest):
     participants = util.load_participants()
 
     counts = participants\
@@ -47,11 +47,11 @@ def run(results_path):
         counts['repeat_worker'] +
         counts['duplicate_trials'])
 
-    counts.to_csv(results_path)
-    return results_path
+    counts.to_csv(dest)
+    return dest
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, add_seed=False)
+    parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.results_path)
+    run(args.dest)
