@@ -15,13 +15,15 @@ and how much the average pay was. Produces a csv file with the following columns
 
 """
 
+__depends__ = ["human"]
+
 import util
 import pandas as pd
 from datetime import timedelta
 
 
-def run(dest):
-    human = util.load_human()
+def run(dest, data_path):
+    human = util.load_human(data_path)
     versions = list(human['all']['version'].unique())
     results = {}
     for version in versions:
@@ -53,6 +55,6 @@ def run(dest):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest)
+    run(args.dest, args.data_path)

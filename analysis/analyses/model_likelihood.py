@@ -31,6 +31,8 @@ and columns corresponding to the different hypotheses.
 
 """
 
+__depends__ = ["fb_B", "human_fall_responses.csv", "model_fall_responses.csv"]
+
 import os
 import util
 import pandas as pd
@@ -91,7 +93,7 @@ def save(data, pth, store):
     store.append('{}/param_ref'.format(pth), all_params)
 
 
-def run(dest, results_path):
+def run(dest, results_path, data_path):
     hyps = [-1.0, 1.0]
 
     # load empirical probabilities
@@ -112,7 +114,7 @@ def run(dest, results_path):
         .unstack('kappa0')[hyps]
 
     # load feedback
-    fb = (util.load_fb()['C']['nfell'] > 0).unstack('kappa')[hyps]
+    fb = (util.load_fb(data_path)['C']['nfell'] > 0).unstack('kappa')[hyps]
 
     store = pd.HDFStore(dest, mode='w')
 
@@ -145,6 +147,6 @@ def run(dest, results_path):
     store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True)
+    parser = util.default_argparser(locals(), ext=".h5")
     args = parser.parse_args()
-    run(args.dest, args.results_path)
+    run(args.dest, args.results_path, args.data_path)

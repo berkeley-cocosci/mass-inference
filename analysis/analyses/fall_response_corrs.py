@@ -26,6 +26,8 @@ Outputs a csv file with the following columns:
 
 """
 
+__depends__ = ["human_fall_responses.csv", "model_fall_responses.csv"]
+
 import pandas as pd
 import numpy as np
 import util
@@ -73,6 +75,6 @@ def run(dest, results_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
     run(args.dest, args.results_path, args.seed)

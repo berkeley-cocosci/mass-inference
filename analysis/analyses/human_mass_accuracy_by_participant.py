@@ -17,12 +17,14 @@ file with the following columns:
 
 """
 
+__depends__ = ["human"]
+
 import util
 import numpy as np
 
-def run(dest, seed):
+def run(dest, data_path, seed):
     np.random.seed(seed)
-    human = util.load_human()['C']\
+    human = util.load_human(data_path)['C']\
         .dropna(axis=0, subset=['mass? response'])
 
     results = human\
@@ -34,6 +36,6 @@ def run(dest, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
-    run(args.dest, args.seed)
+    run(args.dest, args.data_path, args.seed)

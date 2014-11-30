@@ -19,10 +19,12 @@ experiment. The resulting file will have the following columns:
 
 """
 
+__depends__ = ["human"]
+
 import util
 
-def run(dest):
-    human = util.load_human()
+def run(dest, data_path):
+    human = util.load_human(data_path)
     order = human['all']\
         .set_index(['version', 'kappa0', 'pid', 'mode', 'trial'])[['stimulus']]\
         .sortlevel()
@@ -30,6 +32,6 @@ def run(dest):
     order.to_csv(dest)
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest)
+    run(args.dest, args.data_path)

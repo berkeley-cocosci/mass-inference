@@ -22,14 +22,16 @@ function of trial. Produces a csv file with the following columns:
 
 """
 
+__depends__ = ["human"]
+
 import util
 import pandas as pd
 import numpy as np
 
 
-def run(dest, seed):
+def run(dest, data_path, seed):
     np.random.seed(seed)
-    human = util.load_human()['C'].dropna(subset=['mass? response'])
+    human = util.load_human(data_path)['C'].dropna(subset=['mass? response'])
 
     between_subjs = human\
         .groupby('version')\
@@ -63,7 +65,7 @@ def run(dest, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
-    run(args.dest, args.seed)
+    run(args.dest, args.data_path, args.seed)
 

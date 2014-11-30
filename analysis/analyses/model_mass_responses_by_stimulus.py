@@ -25,6 +25,8 @@ Produces a csv file with the following columns:
 
 """
 
+__depends__ = ["model_belief.csv"]
+
 import os
 import util
 import pandas as pd
@@ -43,6 +45,6 @@ def run(dest, results_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
     run(args.dest, args.results_path, args.seed)

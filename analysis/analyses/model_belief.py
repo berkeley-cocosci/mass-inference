@@ -33,6 +33,8 @@ following columns:
 
 """
 
+__depends__ = ["model_belief_by_trial_fit.h5"]
+
 import os
 import util
 import pandas as pd
@@ -76,6 +78,6 @@ def run(dest, results_path):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
     run(args.dest, args.results_path)

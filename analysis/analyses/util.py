@@ -12,6 +12,7 @@ from mass.analysis import load_participants as _load_participants
 from mass.analysis import bootcorr, bootstrap_mean, beta
 
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 MAX_LOG = np.log(sys.float_info.max)
 
 
@@ -65,65 +66,50 @@ def normalize(logarr, axis=-1):
     return lognormconsts, lognormarr
 
 
-def load_config(root):
-    with open(os.path.join(root, "config.json"), "r") as fh:
+def load_config():
+    with open(os.path.join(ROOT, "config.json"), "r") as fh:
         config = json.load(fh)
     return config
 
 
-def load_human():
-    root = ".."
-    config = load_config(root)
+def load_human(data_path):
+    config = load_config()
     human_version = config["analysis"]["human_version"]
-    data_path = os.path.abspath(os.path.join(
-        root, config["analysis"]["data_path"]))
     human = _load_human(human_version, data_path)
     return human
 
 
-def load_participants():
-    root = ".."
-    config = load_config(root)
+def load_participants(data_path):
+    config = load_config()
     human_version = config["analysis"]["human_version"]
-    data_path = os.path.abspath(os.path.join(
-        root, config["analysis"]["data_path"]))
     human = _load_participants(human_version, data_path)
     return human
 
 
-def load_ipe():
-    root = ".."
-    config = load_config(root)
+def load_ipe(data_path):
+    config = load_config()
     model_version = config["analysis"]["model_version"]
-    data_path = os.path.abspath(os.path.join(
-        root, config["analysis"]["data_path"]))
     ipe = _load_ipe(model_version, data_path)
     return ipe
 
 
-def load_fb():
-    root = ".."
-    config = load_config(root)
+def load_fb(data_path):
+    config = load_config()
     model_version = config["analysis"]["model_version"]
-    data_path = os.path.abspath(os.path.join(
-        root, config["analysis"]["data_path"]))
     fb = _load_fb(model_version, data_path)
     return fb
 
 
-def load_model():
-    ipe = load_ipe()
-    fb = load_fb()
+def load_model(data_path):
+    ipe = load_ipe(data_path)
+    fb = load_fb(data_path)
     return ipe, fb
 
 
-def load_all():
-    root = ".."
-    config = load_config(root)
+def load_all(data_path):
+    config = load_config()
     human_version = config["analysis"]["human_version"]
     model_version = config["analysis"]["model_version"]
-    data_path = os.path.abspath(os.path.join(
-        root, config["analysis"]["data_path"]))
     data = _load_all(
         model_version=model_version,
         human_version=human_version,
@@ -131,24 +117,68 @@ def load_all():
     return data
 
 
-def default_argparser(doc, results_path=False, seed=False, parallel=False):
-    root = ".."
-    config = load_config(root)
+def get_dependencies(depends, config):
+    human_version = config["analysis"]["human_version"]
+    model_version = config["analysis"]["model_version"]
 
-    parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
+    special_deps = {
+        'human': "human/mass_inference-{}.dpkg".format(human_version),
+        'ipe_A': "model/mass_inference-{}-a_ipe_fall.dpkg".format(model_version),
+        'ipe_B': "model/mass_inference-{}-b_ipe_fall.dpkg".format(model_version),
+        'fb_A': "model/mass_inference-{}-a_truth_fall.dpkg".format(model_version),
+        'fb_B': "model/mass_inference-{}-b_truth_fall.dpkg".format(model_version),
+    }
+
+    full_deps = []
+    use_results_path = False
+    use_data_path = False
+    for dep in depends:
+        if dep in special_deps:
+            full_deps.append("DATA_PATH/{}".format(special_deps[dep]))
+            use_data_path = True
+        else:
+            full_deps.append("RESULTS_PATH/{}".format(dep))
+            use_results_path = True
+
+    return full_deps, use_data_path, use_results_path
+
+def default_argparser(module, seed=False, parallel=False, ext=".csv"):
+    config = load_config()
+
+    name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    dest = os.path.join(ROOT, config["paths"]["results"], name + ext)
+    depends, data_path, results_path = get_dependencies(
+        module['__depends__'], config)
+
+    if len(depends) > 0:
+        description = "{}\n\nDependencies:\n\n    {}".format(
+            module['__doc__'], "\n    ".join(depends))
+    else:
+        description = module['__doc__']
+
+    parser = ArgumentParser(
+        description=description,
+        formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        'dest', help='where to save out the results')
+        '--dest',
+        default=dest,
+        help='where to save out the results\ndefault: %(default)s')
+
+    if data_path:
+        parser.add_argument(
+            '--data-path',
+            default=os.path.join(ROOT, config["paths"]["data"]),
+            help='where other results are saved\ndefault: %(default)s')
 
     if results_path:
         parser.add_argument(
-            '-r', '--results-path',
-            default=os.path.abspath(os.path.join(
-                root, config["analysis"]["results_path"])),
+            '--results-path',
+            default=os.path.join(ROOT, config["paths"]["results"]),
             help='where other results are saved\ndefault: %(default)s')
 
     if seed:
         parser.add_argument(
-            '-s', '--seed', default=config["analysis"]["seed"],
+            '--seed', default=config["analysis"]["seed"],
             type=int, help='seed for the random number generator (default: %(default)s)')
 
     if parallel:
@@ -162,12 +192,12 @@ def default_argparser(doc, results_path=False, seed=False, parallel=False):
 
 
 def get_params():
-    config = load_config("..")
+    config = load_config()
     sigma = config["analysis"]["sigma"]
     phi = config["analysis"]["phi"]
     return sigma, phi
 
 
 def get_query():
-    config = load_config("..")
+    config = load_config()
     return config["analysis"]["query"]

@@ -21,6 +21,8 @@ file with the following columns:
 
 """
 
+__depends__ = ["ipe_A", "ipe_B"]
+
 import util
 import pandas as pd
 import numpy as np
@@ -64,9 +66,9 @@ def compute_query(data, query):
     return result
 
 
-def run(dest, seed):
+def run(dest, data_path, seed):
     np.random.seed(seed)
-    ipe = util.load_ipe()
+    ipe = util.load_ipe(data_path)
     results = []
 
     for block in ['A', 'B']:
@@ -91,7 +93,7 @@ def run(dest, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
-    run(args.dest, args.seed)
+    run(args.dest, args.data_path, args.seed)
 

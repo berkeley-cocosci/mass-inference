@@ -43,6 +43,8 @@ following columns (it includes both fitted beliefs, and raw beliefs):
 
 """
 
+__depends__ = ["human", "model_belief_by_trial.h5"]
+
 import os
 import sys
 import util
@@ -193,9 +195,9 @@ def model_belief_fit(args):
     return key, new_belief
 
 
-def run(dest, results_path, parallel):
+def run(dest, results_path, data_path, parallel):
     # load in raw human mass responses
-    human = util.load_human()['C'][
+    human = util.load_human(data_path)['C'][
         ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
     human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
 
@@ -246,6 +248,6 @@ def run(dest, results_path, parallel):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, parallel=True)
+    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.parallel)
+    run(args.dest, args.results_path, args.data_path, args.parallel)

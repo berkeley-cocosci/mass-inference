@@ -27,15 +27,17 @@ Produces a csv file with the following columns:
 
 """
 
+__depends__ = ["human", "model_belief.csv"]
+
 import os
 import util
 import pandas as pd
 import numpy as np
 
 
-def run(dest, results_path, seed):
+def run(dest, results_path, data_path, seed):
     np.random.seed(seed)
-    human = util.load_human()['C'].dropna(subset=['mass? response'])\
+    human = util.load_human(data_path)['C'].dropna(subset=['mass? response'])\
         .set_index(['version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
 
@@ -78,6 +80,6 @@ def run(dest, results_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, seed=True)
+    parser = util.default_argparser(locals(), seed=True)
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.seed)
+    run(args.dest, args.results_path, args.data_path, args.seed)

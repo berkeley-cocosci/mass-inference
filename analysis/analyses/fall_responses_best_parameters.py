@@ -18,14 +18,15 @@ Produces a csv file with the following columns:
 
 """
 
+__depends__ = ["human_fall_responses.csv", "model_fall_responses.csv"]
+
 import util
 import pandas as pd
 import numpy as np
 from path import path
 
 
-def run(results_path, seed):
-    np.random.seed(seed)
+def run(results_path):
     human = pd.read_csv(path(results_path).dirname().joinpath(
         "fall_responses.csv"))
 
@@ -53,6 +54,6 @@ def run(results_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.results_path, args.seed)
+    run(args.results_path)

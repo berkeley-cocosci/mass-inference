@@ -13,14 +13,15 @@ Outputs a csv with the following columns:
     num_participants (int)
         how many participants were in the respective 
         version/condition/counterbalance
-
 """
+
+__depends__ = ["human"]
 
 import util
 
 
-def run(dest):
-    human = util.load_human()
+def run(dest, data_path):
+    human = util.load_human(data_path)
 
     # compute how many participants we have for each condition
     counts = human['all']\
@@ -35,6 +36,6 @@ def run(dest):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest)
+    run(args.dest, args.data_path)

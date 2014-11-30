@@ -23,11 +23,13 @@ the following columns:
 
 """
 
+__depends__ = ["human"]
+
 import util
 
 
-def run(dest):
-    participants = util.load_participants()
+def run(dest, data_path):
+    participants = util.load_participants(data_path)
 
     counts = participants\
         .fillna('ok')\
@@ -52,6 +54,6 @@ def run(dest):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest)
+    run(args.dest, args.data_path)

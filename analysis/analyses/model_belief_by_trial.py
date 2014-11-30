@@ -28,6 +28,8 @@ one of these tables, the columns are:
 
 """
 
+__depends__ = ["model_likelihood_by_trial.h5"]
+
 import os
 import sys
 import util
@@ -131,6 +133,6 @@ def run(dest, results_path, parallel):
     old_store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, parallel=True)
+    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
     args = parser.parse_args()
     run(args.dest, args.results_path, args.parallel)

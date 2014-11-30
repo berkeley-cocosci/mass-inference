@@ -27,6 +27,8 @@ table in the database, the columns are:
 
 """
 
+__depends__ = ["trial_order.csv", "model_likelihood.h5"]
+
 import util
 import pandas
 import numpy
@@ -125,6 +127,6 @@ def run(dest, results_path, parallel):
     store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__, results_path=True, parallel=True)
+    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
     args = parser.parse_args()
     run(args.dest, args.results_path, args.parallel)
