@@ -20,7 +20,7 @@ fitted belief.
 
 This relies on the RESULTS_PATH/model_belief_by_trial.h5 database, and produces
 a similar database with the same keys. Each table in the database has the
-following columns:
+following columns (it includes both fitted beliefs, and raw beliefs):
 
     version (string)
         the experiment version
@@ -33,11 +33,13 @@ following columns:
     trial (int)
         trial number
     p (float)
-        fitted posterior probability of the hypothesis that r=10
+        posterior probability of the hypothesis that r=10
     p correct (float)
-        fitted posterior probability of the correct hypothesis
+        posterior probability of the correct hypothesis
     B (float)
         fitted parameter for the logistic regression
+    fitted (bool)
+        whether this version of the model was fit or not
 
 """
 
@@ -118,16 +120,21 @@ def fit_responses(df, model_name, verbose=False):
         B = logistic_regression(X, y, verbose)
 
     f = numpy.asarray(df['log_odds']) * B
+    f_raw = numpy.asarray(df['log_odds'])
     mu = 1.0 / (1 + numpy.exp(-f))
+    mu_raw = 1.0 / (1 + numpy.exp(-f_raw))
 
     new_df = df.copy().drop(['mass? response', 'log_odds'], axis=1)
     new_df['B'] = B
-    new_df['p'] = mu.copy()
+    new_df['p'] = mu
+    new_df['p raw'] = mu_raw
 
     if kappa0 < 0:
-        new_df['p correct'] = 1 - mu.copy()
+        new_df['p correct'] = 1 - mu
+        new_df['p correct raw'] = 1 - mu_raw
     else:
-        new_df['p correct'] = mu.copy()
+        new_df['p correct'] = mu
+        new_df['p correct raw'] = mu_raw
 
     return new_df
 
@@ -168,12 +175,22 @@ def model_belief_fit(args):
 
     # use L1 logistic regression to fit parameters individually to
     # each participant
-    fitted_belief = model\
+    result = model\
         .groupby(level=['version', 'kappa0', 'pid'])\
         .apply(mbf.fit_responses, model_name)\
         .reset_index()
 
-    return key, fitted_belief
+    # separate out the raw belief from the fitted belief
+    fitted = result.drop(['p raw', 'p correct raw'], axis=1)
+    fitted['fitted'] = True
+    raw = result\
+        .drop(['p', 'p correct'], axis=1)\
+        .rename(columns={'p raw': 'p', 'p correct raw': 'p correct'})
+    raw['fitted'] = False
+    raw['B'] = numpy.nan
+    new_belief = pandas.concat([fitted, raw])
+
+    return key, new_belief
 
 
 def run(dest, results_path, parallel):

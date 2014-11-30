@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
 """
-Computes the model belief for three different models, for each participant:
-static, learning, and chance. This depends on
-RESULTS_PATH/model_likelihood_by_trial.h5, and will produce a new database
-similar to that one. For each key in the likelihood database, this will have
-keys named <key>/static, <key>/learning, and <key>/static. For each one of these
-tables, the columns are:
+Computes the model belief for each participant for the following models:
+    
+    * static
+    * learning
+
+This depends on RESULTS_PATH/model_likelihood_by_trial.h5, and will produce a
+new database similar to that one. For each key in the likelihood database, this
+will have keys named <key>/static, <key>/learning, and <key>/static. For each
+one of these tables, the columns are:
 
     version (string)
         the experiment version
@@ -60,7 +63,6 @@ def model_belief(args):
     models = {
         'static': llh.copy(),
         'learning': llh.groupby(level='pid').apply(numpy.cumsum),
-        'chance': llh * 0.0
     }
 
     for model_name, model in models.items():

@@ -8,7 +8,7 @@
         "data_path": "data",
         "sigma": 0.04,
         "phi": 0.2,
-        "query": "fall_cf"
+        "query": "percent_fell"
     },
 
     "names": {

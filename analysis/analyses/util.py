@@ -170,5 +170,4 @@ def get_params():
 
 def get_query():
     config = load_config("..")
-    query = config["analysis"]["query"]
-    return query
+    return config["analysis"]["query"]

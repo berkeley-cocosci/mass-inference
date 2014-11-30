@@ -31,10 +31,7 @@ def run(dest, seed):
     results = human\
         .groupby(['version', 'kappa0', 'stimulus'])['mass? correct']\
         .apply(util.beta)\
-        .unstack(-1)\
-        .reset_index()\
-        .set_index(['version', 'kappa0', 'stimulus'])\
-        .sortlevel()
+        .unstack(-1)
 
     results.to_csv(dest)
 

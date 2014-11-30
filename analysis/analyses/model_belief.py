@@ -1,53 +1,81 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Pulls out the model belief for the specified IPE likelihood and empirical
+likelihood from the database of all model beliefs. Depends on the database
+RESULTS_PATH/model_belief_by_trial_fit.h5, and produces a csv file with the
+following columns:
+
+    likelihood (string)
+        the likelihood name (e.g., ipe, ipe_cf, empirical, empirical_cf)
+    model (string)
+        the model name (e.g. static, learning)
+    version (string)
+        the experiment version
+    kappa0 (float)
+        true log mass ratio
+    pid (string)
+        unique participant id
+    stimulus (string)
+        stimulus name
+    trial (int)
+        trial number
+    p (float)
+        fitted posterior probability of the hypothesis that r=10
+    p correct (float)
+        fitted posterior probability of the correct hypothesis
+    p raw (float)
+        raw posterior probability of the hypothesis that r=10
+    p correct raw (float)
+        raw posterior probability of the correct hypothesis
+    B (float)
+        fitted parameter for the logistic regression
+
+"""
+
+import os
 import util
 import pandas as pd
-import numpy as np
-from path import path
 
 
-def run(results_path, seed):
-    np.random.seed(seed)
+def load_model(store, pth, name):
+    group = store.root._f_getChild(pth)
+    all_data = pd.DataFrame([])
+    for model in group._v_children:
+        data = store["{}/{}".format(pth, model)]
+        data['model'] = model
+        data['likelihood'] = name
+        all_data = all_data.append(data)
+    return all_data
 
-    store = pd.HDFStore(path(results_path).dirname().joinpath(
-        "model_belief_fit.h5"))
+def run(dest, results_path):
+    # open up the database
+    store = pd.HDFStore(os.path.abspath(os.path.join(
+        results_path, 'model_belief_by_trial_fit.h5')))
 
     query = util.get_query()
     sigma, phi = util.get_params()
 
-    empirical = []
-    ipe = []
-
-    params = store["{}/ipe/param_ref".format(query)]\
+    # look up the name of the key for the parameters that we want (will be
+    # something like params_0)
+    params = store["/ipe_{}/param_ref".format(query)]\
         .reset_index()\
         .set_index(['sigma', 'phi'])['index']\
         .ix[(sigma, phi)]
-    ipe_pth = "/{}/ipe/{}".format(query, params)
-    empirical_pth = "/{}/empirical/params_0".format(query)
 
-    for key in store.keys():
-        if not key.endswith("belief"):
-            continue
-        if key.startswith(ipe_pth):
-            ipe.append(store[key])
-        elif key.startswith(empirical_pth):
-            empirical.append(store[key])
+    # load in the data
+    data = pd.concat([
+        load_model(store, "/ipe_{}/{}".format(query, params), "ipe"),
+        load_model(store, "/ipe_{}_cf/{}".format(query, params), "ipe_cf"),
+        load_model(store, "/empirical/params_0", "empirical"),
+        load_model(store, "/empirical_cf/params_0", "empirical_cf")
+    ]).set_index(['likelihood', 'model'])
 
-    ipe = pd.concat(ipe).reset_index()
-    ipe['likelihood'] = 'ipe'
-    empirical = pd.concat(empirical).reset_index()
-    empirical['likelihood'] = 'empirical'
-
-    results = pd\
-        .concat([empirical, ipe])\
-        .set_index([
-            'model', 'likelihood', 'version', 'pid', 'trial'])\
-        .sortlevel()
-
-    results.to_csv(results_path)
     store.close()
+    data.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__, results_path=True)
+    args = parser.parse_args()
+    run(args.dest, args.results_path)

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import scipy
 import scipy.special
+import scipy.stats
 import os
 
 def bootstrap_mean(x, nsamples=10000):
