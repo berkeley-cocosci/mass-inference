@@ -6,6 +6,8 @@ e.g. how many failed the posttest, how many had duplicate trials, etc. This
 expects the file "num_participants.csv" to be present in the results directory.
 """
 
+__depends__ = ["num_participants.csv"]
+
 import os
 import util
 import pandas as pd
@@ -27,7 +29,7 @@ def run(dest, results_path):
     fh = open(dest, "w")
 
     for (version, note), num in results.iteritems():
-        note = ''.join(map(lambda x: x.capitalize(), note.split('_')))
+        note = ''.join([x.capitalize() for x in note.split('_')])
         cmdname = "Exp{}{}".format(replace[version], note)
         fh.write(util.newcommand(cmdname, int(num)))
 
@@ -35,6 +37,6 @@ def run(dest, results_path):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
     run(args.dest, args.results_path)

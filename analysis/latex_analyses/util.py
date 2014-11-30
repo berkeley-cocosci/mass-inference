@@ -1,40 +1,44 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
-from path import path
 
 import os
 import json
+import sys
+
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 
-def newcommand(name, val):
-    cmd = r"\newcommand{\%s}[0]{%s}" % (name, val)
-    return cmd + "\n"
-
-
-def load_config(root):
-    with open(root.joinpath("config.json"), "r") as fh:
+def load_config():
+    with open(os.path.join(ROOT, "config.json"), "r") as fh:
         config = json.load(fh)
     return config
 
 
-def default_argparser(doc):
-    root = path("..")
-    config = load_config(root)
-    results_path = os.path.abspath(root.joinpath(
-        config["analysis"]["results_path"]))
+def newcommand(name, val):
+    fmt = load_config()["latex"]["newcommand"]
+    return fmt.format(name=name, action=val)
 
-    parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
+
+def default_argparser(module):
+    config = load_config()
+
+    name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    dest = os.path.join(ROOT, config["paths"]["latex"], name + ".tex")
+    results_path = os.path.join(ROOT, config["paths"]["results"])
+    depends = "\n\t".join(["RESULTS_PATH/{}".format(x) for x in module['__depends__']])
+
+    parser = ArgumentParser(
+        description="{}\n\nDependencies:\n\t{}".format(module['__doc__'], depends),
+        formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        'dest', help='where to save out the latex file')
+        '--dest',
+        default=dest,
+        help='where to save out the latex file\ndefault: %(default)s')
     parser.add_argument(
-        '-r', '--results-path',
-        help='directory where the csv results are located\ndefault: %(default)s',
-        default=results_path)
+        '--results-path',
+        default=results_path,
+        help='directory where the results are located\ndefault: %(default)s')
 
     return parser
 
 
-latex_spearman = r"\rho={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
-latex_pearson = r"r={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
-latex_percent = r"M={median:.1f}\%\textrm{{, 95\% CI }}[{lower:.1f}\%, {upper:.1f}\%]"
-latex_mean = r"M={median:.1f}\textrm{{, 95\% CI }}[{lower:.1f}, {upper:.1f}]"
-latex_gamma = r"\gamma={median:.2f}\textrm{{, 95\% CI }}[{lower:.2f}, {upper:.2f}]"
+

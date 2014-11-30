@@ -3,9 +3,10 @@
 """
 Produces a LaTeX file with the number of stimuli for which people were not
 significantly above chance in judging which color is heavier, for each of the
-different versions of the experiment. Expects the file "num_chance.csv" to be
-present in the results directory.
+different versions of the experiment.
 """
+
+__depends__ = ["num_chance.csv"]
 
 import os
 import util
@@ -37,6 +38,6 @@ def run(dest, results_path):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(__doc__)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
     run(args.dest, args.results_path)
