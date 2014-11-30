@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 
 """
-Computes the average model queries for "will it fall?". Produces a csv
-file with the following columns:
+Computes the average model queries for "will it fall?". The results are saved
+into a HDF5 database, with the following structure:
+
+    <query>/params_<n>
+
+where <query> is the name of the query (for example, 'percent_fell') and
+params_<n> (e.g. 'params_0') is the particular combination of sigma/phi
+parameters. Additionally, there is a <query>/param_ref array that gives a
+mapping between the actual parameter values and their identifiers.
+
+Each table in the database has the following columns:
 
     query (string)
         the model query
@@ -52,48 +61,48 @@ def more_than_one_fell(data):
     return (samps > 1).apply(util.beta)
 
 
-def compute_query(data, query):
-    result = data\
-        .groupby(level=['sigma', 'phi', 'stimulus'])\
-        .apply(query)\
-        .unstack()\
-        .stack('kappa')\
-        .reset_index()\
-        .rename(columns={
-            'kappa': 'kappa0'
-        })
-    result['query'] = query.__name__
-    return result
+def save(data, pth, store):
+    params = ['sigma', 'phi']
+    all_params = {}
+    for i, (p, df) in enumerate(data.groupby(level=params)):
+        key = '{}/params_{}'.format(pth, i)
+        print key
+        df2 = df.reset_index(params, drop=True)
+        store.append(key, df2)
+        all_params['params_{}'.format(i)] = p
+    all_params = pd.DataFrame(all_params, index=params).T
+    store.append('{}/param_ref'.format(pth), all_params)
+
+
+def compute_query(data, query, store):
+    for block in ['A', 'B']:
+        result = data[block]\
+            .groupby(level=['sigma', 'phi', 'stimulus'])\
+            .apply(query)\
+            .unstack()\
+            .stack('kappa')\
+            .reset_index()\
+            .rename(columns={
+                'kappa': 'kappa0'
+            })
+        result['query'] = query.__name__
+        result['block'] = block
+        save(result.set_index(['sigma', 'phi']), query.__name__, store)
 
 
 def run(dest, data_path, seed):
     np.random.seed(seed)
     ipe = util.load_ipe(data_path)
-    results = []
 
-    for block in ['A', 'B']:
-        model = compute_query(ipe[block], percent_fell)
-        model['block'] = block
-        results.append(model)
-
-        model = compute_query(ipe[block], more_than_half_fell)
-        model['block'] = block
-        results.append(model)
-
-        model = compute_query(ipe[block], more_than_one_fell)
-        model['block'] = block
-        results.append(model)
-
-    results = pd\
-        .concat(results)\
-        .set_index(['query', 'block', 'kappa0', 'stimulus'])\
-        .sortlevel()
-
-    results.to_csv(dest)
+    store = pd.HDFStore(dest, mode='w')
+    compute_query(ipe, percent_fell, store)
+    compute_query(ipe, more_than_half_fell, store)
+    compute_query(ipe, more_than_one_fell, store)
+    store.close()
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), seed=True)
+    parser = util.default_argparser(locals(), seed=True, ext=".h5")
     args = parser.parse_args()
     run(args.dest, args.data_path, args.seed)
 

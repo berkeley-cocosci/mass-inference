@@ -10,9 +10,8 @@ stimulus, and k is the mass ratio, for several different likelihoods:
     * ipe counterfactual likelihood
 
 Additionally, there may be several different versions of the ipe likelihoods,
-for each query type that is present in RESULTS_PATH/model_fall_responses.csv.
-The empirical likliehoods are computed from
-RESULTS_PATH/empirical_fall_responses.csv.
+for each query type that is present in RESULTS_PATH/model_fall_responses.h5. The
+empirical likliehoods are computed from RESULTS_PATH/human_fall_responses.csv.
 
 The results are saved into a HDF5 database, with the following structure:
 
@@ -31,7 +30,7 @@ and columns corresponding to the different hypotheses.
 
 """
 
-__depends__ = ["fb_B", "human_fall_responses.csv", "model_fall_responses.csv"]
+__depends__ = ["fb_B", "human_fall_responses.csv", "model_fall_responses.h5"]
 
 import os
 import util
@@ -104,47 +103,57 @@ def run(dest, results_path, data_path):
         .get_group(('GH', 'B'))\
         .pivot('stimulus', 'kappa0', 'median')[hyps]
 
-    # load ipe probabilites
-    model_responses = pd.read_csv(os.path.join(
-        results_path, "model_fall_responses.csv"))
-    ipe = model_responses\
-        .groupby('block')\
-        .get_group('B')\
-        .set_index(['query', 'sigma', 'phi', 'stimulus', 'kappa0'])['median']\
-        .unstack('kappa0')[hyps]
-
     # load feedback
     fb = (util.load_fb(data_path)['C']['nfell'] > 0).unstack('kappa')[hyps]
+
+    # load ipe probabilites
+    old_store = pd.HDFStore(
+        os.path.join(results_path, "model_fall_responses.h5"), mode='r')
 
     store = pd.HDFStore(dest, mode='w')
 
     # compute empirical likelihood
-    key = 'empirical/params_0'
+    key = '/empirical/params_0'
     print key
     llh_empirical = compute_llh(empirical, fb)
     store.append(key, llh_empirical)
 
     # compute empirical counterfactual likelihood
-    key = 'empirical_cf/params_0'
+    key = '/empirical_cf/params_0'
     print key
     llh_empirical_cf = compute_llh_counterfactual(empirical, fb)
     store.append(key, llh_empirical_cf)
 
     # compute likelihoods for each query type
-    for query, df in ipe.groupby(level='query'):
+    for key in old_store.keys():
+        parts = key.split('/')
+        parts[1] = 'ipe_{}'.format(parts[1])
+        new_key = '/'.join(parts)
+        parts[1] = '{}_cf'.format(parts[1])
+        new_key_cf = '/'.join(parts)
+
+        if key.split('/')[-1] == 'param_ref':
+            store.append(new_key, old_store[key])
+            store.append(new_key_cf, old_store[key])
+            continue
+
+        ipe = old_store[key]\
+            .groupby('block')\
+            .get_group('B')\
+            .pivot('stimulus', 'kappa0', 'median')[hyps]
+
         # compute ipe likelihood
-        llh_ipe = df\
-            .groupby(level=['sigma', 'phi'])\
-            .apply(compute_llh, fb)
-        save(llh_ipe, 'ipe_{}'.format(query), store)
+        print new_key
+        llh_ipe = compute_llh(ipe, fb)
+        store.append(new_key, llh_ipe)
 
         # compute ipe counterfactual likelihood
-        llh_ipe_cf = df\
-            .groupby(level=['sigma', 'phi'])\
-            .apply(compute_llh_counterfactual, fb)
-        save(llh_ipe_cf, 'ipe_{}_cf'.format(query), store)
+        print new_key_cf
+        llh_ipe_cf = compute_llh_counterfactual(ipe, fb)
+        store.append(new_key_cf, llh_ipe_cf)
 
     store.close()
+    old_store.close()
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals(), ext=".h5")
