@@ -27,7 +27,7 @@ Produces a csv file with the following columns:
 
 """
 
-__depends__ = ["human", "model_belief.csv"]
+__depends__ = ["human", "single_model_belief.csv"]
 
 import os
 import util
@@ -41,7 +41,7 @@ def run(dest, results_path, data_path, seed):
         .set_index(['version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
 
-    model = pd.read_csv(os.path.join(results_path, 'model_belief.csv'))\
+    model = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
         .set_index(['version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
     model['num_mass_trials'] = human['num_mass_trials']

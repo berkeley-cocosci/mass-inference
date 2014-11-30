@@ -25,7 +25,7 @@ with the following columns:
 
 """
 
-__depends__ = ["model_belief.csv"]
+__depends__ = ["single_model_belief.csv"]
 
 import os
 import util
@@ -35,7 +35,7 @@ import numpy as np
 
 def run(dest, results_path, seed):
     np.random.seed(seed)
-    model_belief = pd.read_csv(os.path.join(results_path, 'model_belief.csv'))
+    model_belief = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))
     cols = ['likelihood', 'model', 'fitted', 'version', 'kappa0', 'stimulus']
     results = model_belief\
         .groupby(cols)['p correct']\
