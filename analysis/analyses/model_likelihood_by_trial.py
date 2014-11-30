@@ -47,7 +47,7 @@ def likelihood_by_trial(args):
     results = pandas.DataFrame(numpy.empty((0, len(cols))), columns=cols)
 
     # iterate through each of the pids
-    for (version, kappa0, pid), df in trials.groupby(['version', 'kappa0', 'pid']):
+    for (kappa0, pid), df in trials.groupby(['kappa0', 'pid']):
         # merge the trial order with the model likelihood
         model = pandas.merge(
             llh.get_group(kappa0).reset_index(),
@@ -115,11 +115,8 @@ def run(dest, results_path, parallel):
     while len(results) > 0:
         result = results.pop(0)
         if parallel:
-            if not result.ready():
-                results.append(result)
-                continue
             key, model = result.get()
-
+            result.display_outputs()
         else:
             key, model = result
 
