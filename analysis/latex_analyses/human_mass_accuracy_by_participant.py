@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Produces a LaTeX file with statistics about distribution of mass accuracy across
+participants: the minimum accuracy, the maximum accuracy, and how accuracte most
+(95%) participants were.
+"""
+
+__depends__ = ["human_mass_accuracy_by_participant.csv"]
+
+import os
 import util
 import pandas as pd
 import numpy as np
 
 
-def run(latex_path, results_path):
+def run(dest, results_path):
     results = pd.read_csv(
-        results_path.joinpath("mass_accuracy_by_participant.csv"))
+        os.path.join(results_path, "human_mass_accuracy_by_participant.csv"))
 
-    results = results.set_index(['version', 'num_mass_trials', 'pid']) 
+    results = results.set_index(['version', 'num_mass_trials', 'kappa0', 'pid']) 
 
     replace = {
         'G': 'Two',
@@ -25,7 +33,7 @@ def run(latex_path, results_path):
         5: 'FiveTrials'
     }
 
-    fh = open(latex_path, "w")
+    fh = open(dest, "w")
 
     for (version, num_mass_trials), stats in results.groupby(level=['version', 'num_mass_trials']):
         cmdname = "SubjAccExp{}{}Min".format(replace[version], replace[num_mass_trials])
@@ -54,8 +62,10 @@ def run(latex_path, results_path):
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
-    return latex_path
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)
+

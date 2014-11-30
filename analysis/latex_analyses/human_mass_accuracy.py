@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Produces a latex file with the accuracy of human participants for each version
+of the experiment.
+"""
+
 __depends__ = ["human_mass_accuracy.csv"]
 
 import os
