@@ -22,13 +22,11 @@ tables, the columns are:
         hypothesis about the mass ratio
     logp (float)
         log posterior probability of the hypothesis
-    model (string)
-        model name
 
 """
 
-import sys
 import os
+import sys
 import util
 import pandas
 import numpy
@@ -77,9 +75,8 @@ def model_belief(args):
             var_name='hypothesis',
             value_name='logp')
 
-        # add in the model name and merge with the existing data
+        # merge with the existing data
         model = pandas.merge(data, model).drop('llh', axis=1)
-        model['model'] = model_name
 
         # update the version in the dictionary
         models[model_name] = model
