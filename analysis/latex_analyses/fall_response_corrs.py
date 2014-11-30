@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-import sys
+import os
 import util
 import pandas as pd
 
 
-def run(latex_path, results_path):
-    results = pd.read_csv(
-        results_path.joinpath("fall_response_corrs.csv"))
+def run(dest, results_path):
+    results = pd.read_csv(os.path.join(results_path, "fall_response_corrs.csv"))
 
     results = results.set_index(['block', 'X', 'Y'])
 
-    fh = open(latex_path, "w")
+    fh = open(dest, "w")
 
     for (block, x, y), corrs in results.iterrows():
         cmdname = "FallCorr{}{}{}".format(x, y, block)
@@ -19,8 +18,9 @@ def run(latex_path, results_path):
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
-    return latex_path
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(__doc__)
+    args = parser.parse_args()
+    run(args.dest, args.results_path)

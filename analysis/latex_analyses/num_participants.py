@@ -11,7 +11,7 @@ import util
 import pandas as pd
 
 
-def run(latex_path, results_path):
+def run(dest, results_path):
     results = pd.read_csv(os.path.join(results_path, "num_participants.csv"))
 
     results = results\
@@ -24,7 +24,7 @@ def run(latex_path, results_path):
         'I': 'Three'
     }
 
-    fh = open(latex_path, "w")
+    fh = open(dest, "w")
 
     for (version, note), num in results.iteritems():
         note = ''.join(map(lambda x: x.capitalize(), note.split('_')))
@@ -32,10 +32,9 @@ def run(latex_path, results_path):
         fh.write(util.newcommand(cmdname, int(num)))
 
     fh.close()
-    return latex_path
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(__doc__)
     args = parser.parse_args()
-    run(args.latex_path, args.results_path)
+    run(args.dest, args.results_path)

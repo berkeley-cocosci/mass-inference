@@ -1,8 +1,8 @@
-from ConfigParser import SafeConfigParser
 from argparse import ArgumentParser, RawTextHelpFormatter
 from path import path
 
 import os
+import json
 
 
 def newcommand(name, val):
@@ -10,16 +10,21 @@ def newcommand(name, val):
     return cmd + "\n"
 
 
+def load_config(root):
+    with open(root.joinpath("config.json"), "r") as fh:
+        config = json.load(fh)
+    return config
+
+
 def default_argparser(doc):
     root = path("..")
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
+    config = load_config(root)
     results_path = os.path.abspath(root.joinpath(
-        config.get("analysis", "results_path")))
+        config["analysis"]["results_path"]))
 
     parser = ArgumentParser(description=doc, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        'latex_path', help='where to save out the latex file')
+        'dest', help='where to save out the latex file')
     parser.add_argument(
         '-r', '--results-path',
         help='directory where the csv results are located\ndefault: %(default)s',
