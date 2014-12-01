@@ -158,16 +158,16 @@ def plot(dest, results_path):
     add_corr(ax2, mass_corrs.ix['ipe'])
 
     # right subplot: empirical vs. human (which is heavier?)
-    errorbar(ax3, model_mass.ix['empirical'][-1.0], human_mass[-1.0], color=colors[0])
-    errorbar(ax3, model_mass.ix['empirical'][1.0], human_mass[1.0], color=colors[2])
+    errorbar(ax3, model_mass.ix['empirical'][-1.0], human_mass[-1.0], color=colors[0], label=r"$\kappa=0.1$")
+    errorbar(ax3, model_mass.ix['empirical'][1.0], human_mass[1.0], color=colors[2], label=r"$\kappa=10$")
     ax3.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
     ax3.set_ylabel(r"% participants choosing $\kappa=10$")
     ax3.set_title("Exp 1: Which is heavier? (Empirical)")
     format_mass_plot(ax3, lightgrey)
     add_corr(ax3, mass_corrs.ix['empirical'])
 
-    # TODO: make legend
-    #ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
+    # create the legend
+    ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
 
     # set figure size
     fig.set_figheight(3.5)

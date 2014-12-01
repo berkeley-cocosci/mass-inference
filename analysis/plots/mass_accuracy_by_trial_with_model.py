@@ -16,6 +16,7 @@ __depends__ = [
 import util
 import os
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import pandas as pd
 import seaborn as sns
 
@@ -49,24 +50,27 @@ def filter_trials(df):
 
 
 def make_legend(ax, lines, colors):
-    # TODO: figure out how to add the legend
+    handles = []
 
-    # label = "{} model,\n".format(model.capitalize())
-    # if lh == 'ipe':
-    #     label = "{}IPE likelihod".format(label)
-    # elif lh == "empirical":
-    #     label = "{}Emp. likelihood".format(label)
+    for (lh, model) in sorted(lines.keys()):
+        label = "{} model,\n".format(model.capitalize())
+        if lh == 'ipe':
+            label = "{}IPE likelihod".format(label)
+        elif lh == "empirical":
+            label = "{}Emp. likelihood".format(label)
 
-    # labels, lines = zip(*sorted(lines.items()))
+        handles.append(mlines.Line2D(
+            [], [], 
+            color=colors[lh, model], 
+            linestyle=lines[lh, model], 
+            label=label))
 
-    # ax.legend(
-    #     lines, labels,
-    #     bbox_to_anchor=[1.05, 0.5],
-    #     loc='center left',
-    #     fontsize=9,
-    #     frameon=False)
-
-    pass
+    ax.legend(
+        handles=handles,
+        bbox_to_anchor=[1.05, 0.5],
+        loc='center left',
+        fontsize=9,
+        frameon=False)
 
 
 def plot(dest, results_path):
