@@ -1,14 +1,14 @@
-from argparse import ArgumentParser, RawTextHelpFormatter
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import sys
 import json
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+from argparse import ArgumentParser, RawTextHelpFormatter
 
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sns.set_style('white')
+
 
 def load_config():
     with open(os.path.join(ROOT, "config.json"), "r") as fh:

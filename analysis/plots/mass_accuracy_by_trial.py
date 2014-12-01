@@ -1,100 +1,89 @@
 #!/usr/bin/env python
 
-import util
+"""
+Plots human accuracy on "which is heavier?" as a function of trial for
+experiments 2 and 3 (both between subjects and within subjects for experiment
+3).
+"""
 
-import sys
+__depends__ = ["human_mass_accuracy_by_trial.csv"]
+
+import util
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
+import seaborn as sns
 
 
-def plot(results_path, fig_paths):
+def timeseries(ax, x, color, label=None):
+    ax.fill_between(
+        x['trial'], x['lower'], x['upper'],
+        color=color, alpha=0.3)
+    ax.plot(
+        x['trial'], x['median'], 
+        lw=2, marker='o', ms=6, color=color, label=label)
 
-    mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))\
-        .groupby(['class', 'species'])\
-        .get_group(('chance', 'human'))
 
-    colors = {
-        8: util.darkgrey,
-        20: util.darkgrey,
-        -1: util.darkgrey,
-        5: util.colorcircle[0],
-        4: util.colorcircle[1],
-        3: util.colorcircle[2],
-        2: util.colorcircle[3],
-        1: util.colorcircle[4]
-    }
+def plot(dest, results_path):
 
-    versions = ['G', 'I', 'I-all']
+    # load in the responses
+    responses = pd\
+        .read_csv(os.path.join(results_path, 'human_mass_accuracy_by_trial.csv'))\
+        .groupby('kappa0')\
+        .get_group('all')\
+        .set_index(['version', 'num_mass_trials'])
 
-    fig, axes = plt.subplots(1, 3, sharey=True)
+    # load in colors
+    plot_config = util.load_config()["plots"]
+    darkgrey = plot_config["darkgrey"]
+    colors = plot_config["colorcircle"][::-1]
 
-    for version, df in mass_responses.groupby('version'):
-        if version not in versions:
-            continue
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
-        for kappa0, df2 in df.groupby('kappa0'):
-            if kappa0 != 'all':
-                continue
+    # left subplot: experiment 2
+    timeseries(ax1, responses.ix['G'], darkgrey)
+    ax1.set_title('Experiment 2\n')
+    ax1.set_xlabel('Trial')
+    ax1.set_ylabel('Fraction correct')
+    ax1.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
+    ax1.set_xlim([1, 20])
+    ax1.set_ylim(0.5, 1)
 
-            for num, df3 in df2.groupby('num_mass_trials'):
-                if version == 'I' and num != -1:
-                    ax = axes[versions.index('I-all')]
-                else:
-                    ax = axes[versions.index(version)]
+    # middle subplot: experiment 3 (between subjects)
+    timeseries(ax2, responses.ix[('I', -1)], darkgrey)
+    ax2.set_title('Experiment 3\n(between subjects)')
+    ax2.set_xlabel('Trial')
+    ax2.set_xticks([1, 2, 3, 5, 10])
+    ax2.set_xlim([1, 10])
 
-                x = np.asarray(df3['trial'], dtype=int)
-                y = df3['median']
-                yl = df3['lower']
-                yu = df3['upper']
+    # right subplot: experiment 3 (within subjects)
+    for i in range(1, 6):
+        timeseries(
+            ax3, responses.ix[('I', i)], colors[i - 1], 
+            label="{} trials".format(i))
+    ax3.set_title('Experiment 3\n(within subjects)')
+    ax3.set_xlabel('Trial')
+    ax3.set_xticks([1, 2, 3, 5, 10])
+    ax3.set_xlim([1, 10])
 
-                ax.fill_between(x, yl, yu, alpha=0.3, color=colors[num])
-                ax.plot(x, y, color=colors[num], lw=2,
-                        label="%d trials" % num,
-                        marker='o', markersize=4)
+    # draw the legend
+    ax3.legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
 
-    for i, ax in enumerate(axes):
-        version = versions[i]
-        if version == 'I-all':
-            version = 'I'
-            title = "Experiment 3\n(within subjects)"
-        elif version == "I":
-            title = "Experiment 3\n(between subjects)"
-        elif version == "G":
-            title = "Experiment 2\n"
+    # clear top and right axis lines
+    sns.despine()
 
-        df = mass_responses.groupby('version').get_group(version)
-        x = np.sort(df['trial'].unique()).astype(int)
-        if version == 'H':
-            ax.set_xticks([1, 5, 10, 15, 20])
-            ax.set_xticklabels([1, 5, 10, 15, 20])
-        else:
-            ax.set_xticks(x)
-            ax.set_xticklabels(x)
-
-        ax.set_xlim(x.min(), x.max())
-        ax.set_xlabel("Trial")
-        ax.set_title(title)
-
-        util.clear_right(ax)
-        util.clear_top(ax)
-        util.outward_ticks(ax)
-
-    ax = axes[0]
-    ax.set_ylim(0.5, 1)
-    ax.set_ylabel("Fraction correct")
-
-    axes[-1].legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
-
+    # set figure size
     fig.set_figwidth(9)
     fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
 
-    for pth in fig_paths:
+    # save
+    for pth in dest:
         util.save(pth, close=False)
 
 
 if __name__ == "__main__":
-    util.make_plot(plot, sys.argv[1:])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    plot(args.to, args.results_path)

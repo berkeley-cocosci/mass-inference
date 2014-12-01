@@ -1,130 +1,169 @@
 #!/usr/bin/env python
 
-import util
+"""
+Plots accuracy on "which is heavier?" as a function of trial, both for the model
+and participants, in all three experiments (for experiment 3, it is
+between-subjects). There are four versions of the model plotted: both ipe and
+empirical likelihoods, and both static and learning models.
+"""
 
-import sys
+__depends__ = [
+    "human_mass_accuracy_by_trial.csv", 
+    "model_mass_accuracy_by_trial.csv",
+    "model_log_lh_ratios.csv"
+]
+
+import util
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 import seaborn as sns
 
 
-def plot(results_path, fig_paths):
+def timeseries(ax, x, color, ls='-', label=None):
+    ax.fill_between(
+        x['trial'], x['lower'], x['upper'],
+        color=color, alpha=0.3)
+    ax.plot(
+        x['trial'], x['median'], 
+        lw=2, ls=ls, color=color, label=label)
 
-    mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_accuracy_by_trial.csv'))
+    ax.set_xlim(x['trial'].min(), x['trial'].max())
 
-    llh = pd\
-        .read_csv(results_path.joinpath('model_log_lh_ratios.csv'))\
-        .set_index(['version', 'num_trials'])\
-        .ix[[('H', 20), ('G', 8), ('I', -1)]][['llhr', 'likelihood']]\
-        .reset_index('num_trials', drop=True)\
-        .set_index('likelihood', append=True)['llhr']\
-        .unstack('likelihood')
 
+def plot_models(ax, x, lines, colors):
+    for key in lines:
+        timeseries(ax, x.ix[key], color=colors[key], ls=lines[key])
+
+
+def add_llhr(ax, llhr):
+    label = "{} LLR = {:.2f}"
+    text = "{}\n{}".format(
+        label.format("Empirical", llhr.ix["empirical"]),
+        label.format("IPE", llhr.ix["ipe"]))
+    l, h = ax.get_xlim()
+    ax.text(h, 0.5125, text, horizontalalignment='right', fontsize=9)
+
+def filter_trials(df):
+    return (df['version'] != 'I') | (df['num_mass_trials'] == -1) 
+
+
+def make_legend(ax, lines, colors):
+    # label = "{} model,\n".format(model.capitalize())
+    # if lh == 'ipe':
+    #     label = "{}IPE likelihod".format(label)
+    # elif lh == "empirical":
+    #     label = "{}Emp. likelihood".format(label)
+
+    # labels, lines = zip(*sorted(lines.items()))
+
+    # ax.legend(
+    #     lines, labels,
+    #     bbox_to_anchor=[1.05, 0.5],
+    #     loc='center left',
+    #     fontsize=9,
+    #     frameon=False)
+
+    pass
+
+
+def plot(dest, results_path):
+
+    # load in the human responses
+    human = pd\
+        .read_csv(os.path.join(results_path, 'human_mass_accuracy_by_trial.csv'))\
+        .groupby('kappa0')\
+        .get_group('all')\
+        .groupby(['version', 'num_mass_trials'])\
+        .filter(filter_trials)\
+        .set_index('version')
+
+    # load in the model responses
+    model = pd\
+        .read_csv(os.path.join(results_path, 'model_mass_accuracy_by_trial.csv'))\
+        .groupby(['counterfactual', 'fitted', 'kappa0'])\
+        .get_group((True, False, 'all'))\
+        .groupby(['version', 'num_mass_trials'])\
+        .filter(filter_trials)\
+        .set_index(['version', 'likelihood', 'model'])\
+        .sortlevel()
+
+    # load in the log likelihood ratios
+    llhr = pd\
+        .read_csv(os.path.join(results_path, 'model_log_lh_ratios.csv'))\
+        .groupby(['counterfactual', 'fitted'])\
+        .get_group((True, False))\
+        .groupby(['version', 'num_mass_trials'])\
+        .filter(filter_trials)\
+        .set_index(['version', 'likelihood'])['llhr']
+
+    # colors and line styles
+    plot_config = util.load_config()["plots"]
+    darkgrey = plot_config["darkgrey"]
     palette = sns.color_palette("Dark2")
     colors = {
-        'static': palette[0],
-        'learning': palette[1],
+        ('ipe', 'static'): palette[0],
+        ('ipe', 'learning'): palette[0],
+        ('empirical', 'static'): palette[1],
+        ('empirical', 'learning'): palette[1]
+    }
+    lines = {
+        ('ipe', 'static'): '--',
+        ('ipe', 'learning'): '-',
+        ('empirical', 'static'): '--',
+        ('empirical', 'learning'): '-'
     }
 
-    linestyles = {
-        'empirical': '-',
-        'ipe': '--'
-    }
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
-    versions = {
-        'H': 'Experiment 1',
-        'G': 'Experiment 2',
-        'I': 'Experiment 3'
-    }
-    order = ['H', 'G', 'I']
+    # left subplot: experiment 1
+    timeseries(ax1, human.ix['H'], darkgrey)
+    plot_models(ax1, model.ix['H'], lines, colors)
+    ax1.set_title('Experiment 1')
+    ax1.set_xlabel('Trial')
+    ax1.set_ylabel('Fraction correct')
+    ax1.set_xticks([1, 5, 10, 15, 20])
+    ax1.set_xlim([1, 20])
+    ax1.set_ylim(0.5, 1)
+    add_llhr(ax1, llhr.ix['H'])
 
-    fig, axes = plt.subplots(1, 3, sharey=True)
-    lines = {}
+    # middle subplot: experiment 2
+    timeseries(ax2, human.ix['G'], darkgrey)
+    plot_models(ax2, model.ix['G'], lines, colors)
+    ax2.set_title('Experiment 2')
+    ax2.set_xlabel('Trial')
+    ax2.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
+    ax2.set_xlim([1, 20])
+    add_llhr(ax2, llhr.ix['G'])
 
-    groups = mass_responses.groupby(['version', 'class', 'species'])
-    for (version, cls, species), df in groups:
-        if species == 'human':
-            color = util.darkgrey
-            label = 'Human'
-            ls = '-'
-        elif cls not in colors:
-            continue
-        else:
-            color = colors[cls]
-            label = "{} model,\n".format(cls.capitalize())
-            if species == 'ipe':
-                label = "{}IPE likelihod".format(label)
-            elif species == "empirical":
-                label = "{}Emp. likelihood".format(label)
-            ls = linestyles[species]
+    # right subplot: experiment 3 (between subjects)
+    timeseries(ax3, human.ix['I'], darkgrey)
+    plot_models(ax3, model.ix['I'], lines, colors)
+    ax3.set_title('Experiment 3')
+    ax3.set_xlabel('Trial')
+    ax3.set_xticks([1, 2, 3, 5, 10])
+    ax3.set_xlim([1, 10])
+    add_llhr(ax3, llhr.ix['I'])
 
-        for kappa0, df2 in df.groupby('kappa0'):
-            if kappa0 != 'all':
-                continue
+    # clear top and right axis lines
+    sns.despine()
 
-            for num, df3 in df2.groupby('num_mass_trials'):
-                if version == 'I' and num != -1:
-                    continue
+    # make the legend
+    make_legend(ax3, lines, colors)
 
-                x = np.asarray(df3['trial'], dtype=int)
-                y = df3['median']
-                yl = df3['lower']
-                yu = df3['upper']
-
-                ax = axes[order.index(version)]
-                ax.fill_between(x, yl, yu, alpha=0.2, color=color)
-                line, = ax.plot(x, y, color=color, lw=2, ls=ls)
-                lines[label] = line
-
-        x = np.sort(df['trial'].unique()).astype(int)
-        if version == 'H':
-            ax.set_xticks([1, 5, 10, 15, 20])
-            ax.set_xticklabels([1, 5, 10, 15, 20])
-        else:
-            ax.set_xticks(x)
-            ax.set_xticklabels(x)
-        ax.set_xlim(x.min(), x.max())
-        ax.set_xlabel("Trial")
-        ax.set_title(versions[version])
-
-        util.clear_right(ax)
-        util.clear_top(ax)
-        util.outward_ticks(ax)
-
-    for version in llh.T:
-        ax = axes[order.index(version)]
-        l, h = ax.get_xlim()
-        lhr = llh.T[version]
-        label = "{} LLR = {:.2f}"
-        text = "{}\n{}".format(
-            label.format("Empirical", lhr["empirical"]),
-            label.format("IPE", lhr["ipe"]))
-        ax.text(h, 0.5125, text, horizontalalignment='right', fontsize=9)
-
-    ax = axes[0]
-    ax.set_ylim(0.5, 1)
-    ax.set_ylabel("Fraction correct")
-
-    labels, lines = zip(*sorted(lines.items()))
-
-    axes[-1].legend(
-        lines, labels,
-        bbox_to_anchor=[1.05, 0.5],
-        loc='center left',
-        fontsize=9,
-        frameon=False)
-
+    # set figure size
     fig.set_figwidth(9)
     fig.set_figheight(3)
     plt.draw()
     plt.tight_layout()
     plt.subplots_adjust(right=0.825)
 
-    for pth in fig_paths:
+    # save
+    for pth in dest:
         util.save(pth, close=False)
 
 
 if __name__ == "__main__":
-    util.make_plot(plot, sys.argv[1:])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    plot(args.to, args.results_path)
