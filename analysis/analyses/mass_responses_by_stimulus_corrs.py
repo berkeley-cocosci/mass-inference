@@ -34,17 +34,15 @@ def run(dest, results_path, seed):
     np.random.seed(seed)
 
     # load in human data
-    human = pd.read_csv(
-        os.path.join(results_path, "human_mass_responses_by_stimulus.csv"))
-    human = human\
+    human = pd\
+        .read_csv(os.path.join(results_path, "human_mass_responses_by_stimulus.csv"))\
         .set_index(['stimulus', 'kappa0', 'version'])['median']\
         .unstack('version')
 
     # load in model data
-    model = pd.read_csv(
-        os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))
     cols = ['likelihood', 'model', 'fitted']
-    model = model\
+    model = pd\
+        .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
         .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\
         .unstack('version')
 

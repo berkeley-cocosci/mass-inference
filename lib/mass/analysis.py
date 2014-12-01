@@ -11,9 +11,10 @@ def bootstrap_mean(x, nsamples=10000):
     boot_idx = np.random.randint(0, n, n * nsamples)
     boot_arr = arr[boot_idx].reshape((n, nsamples))
     boot_mean = boot_arr.mean(axis=0)
+    lower, median, upper = np.percentile(boot_mean, [2.5, 50, 97.5])
     stats = pd.Series(
-        np.percentile(boot_mean, [2.5, 50, 97.5]),
-        index=['lower', 'median', 'upper'],
+        [n, lower, median, upper],
+        index=['N', 'lower', 'median', 'upper'],
         name=x.name)
     return stats
 
@@ -127,8 +128,8 @@ def beta(x, n=1, percentiles=None):
         lower, mean, upper = scipy.special.btdtri(
             alpha, beta, [0.025, 0.5, 0.975])
         stats = pd.Series(
-            [lower, mean, upper],
-            index=['lower', 'median', 'upper'],
+            [arr.size, lower, mean, upper],
+            index=['N', 'lower', 'median', 'upper'],
             name=x.name)
     else:
         stats = pd.Series(
