@@ -1,5 +1,23 @@
 #!/usr/bin/env python
 
+"""
+Computes the spearman rank corrlation between trial number and mass accuracy for
+each experiment. This produces a csv file with the following columns:
+
+    version (string)
+        the experiment version
+    num_mass_trials (string)
+        the number of trials on which people responded. -1 indicates a 
+        between-subjects analysis
+    lower (float)
+        lower bound of the 95% confidence interval
+    median
+        median of the bootstrap distribution
+    upper
+        upper bound of the 95% confidence interval
+
+"""
+
 __depends__ = ["human_mass_accuracy_by_trial.csv"]
 
 import os

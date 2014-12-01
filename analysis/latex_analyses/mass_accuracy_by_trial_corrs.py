@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Produces a LaTeX file with the correlations between trial number and human mass
+accuracy.
+"""
+
 __depends__ = ["mass_accuracy_by_trial_corrs.csv"]
 
 import os
