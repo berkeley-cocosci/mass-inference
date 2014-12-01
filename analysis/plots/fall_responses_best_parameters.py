@@ -1,18 +1,24 @@
 #!/usr/bin/env python
 
-import util
+"""Plots a grid of correlations for each pair of sigma/phi parameters. The pair
+with the highest correlation is given a red outline.
 
-import sys
+"""
+
+__depends__ = ["fall_responses_best_parameters.csv"]
+
+import util
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
 
-def plot(results_path, fig_paths):
+def plot(dest, results_path):
     err = pd.read_csv(
-        results_path.joinpath("fall_responses_best_parameters.csv"))
+        os.path.join(results_path, "fall_responses_best_parameters.csv"))
     err = err\
-        .groupby(['sigma', 'phi'])['sqerr']\
+        .groupby(['sigma', 'phi'])['pearsonr']\
         .mean()\
         .unstack('sigma')
 
@@ -26,11 +32,11 @@ def plot(results_path, fig_paths):
     ax.set_yticks(range(len(err.index))[::2])
     ax.set_xticklabels(err.columns[::2])
     ax.set_yticklabels(err.index[::2])
-    ax.set_title("MSE for \"will it fall?\"")
+    ax.set_title("Correlations for \"will it fall?\"")
     ax.grid('off')
 
     err_arr = np.asarray(err)
-    best_y, best_x = np.nonzero(err_arr == err_arr.min())
+    best_y, best_x = np.nonzero(err_arr == err_arr.max())
     best_x = int(best_x)
     best_y = int(best_y)
 
@@ -46,9 +52,11 @@ def plot(results_path, fig_paths):
     plt.draw()
     plt.tight_layout()
 
-    for pth in fig_paths:
+    for pth in dest:
         util.save(pth, close=False)
 
 
 if __name__ == "__main__":
-    util.make_plot(plot, sys.argv[1:])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    plot(args.to, args.results_path)

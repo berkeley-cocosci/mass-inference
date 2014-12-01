@@ -1,5 +1,15 @@
 #!/usr/bin/env python
 
+"""
+Plots model vs human responses to "will it fall?" for a particular experiment
+version and block. Each figure has three subplots:
+
+    1. human (kappa=-1.0) vs human (kappa=1.0)
+    2. model (mass-sensitive) vs human
+    3. model (mass-insensitive) vs human
+
+"""
+
 __depends__ = ["human_fall_responses.csv", "single_model_fall_responses.csv"]
 
 import util
