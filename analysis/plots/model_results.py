@@ -1,166 +1,186 @@
 #!/usr/bin/env python
 
-import util
+"""
+Creates a plot of the overall model results for experiment 1. The first subplot
+is model vs. human judgments on "will it fall?"; the second two subplots are
+model vs. human judgments on "which is heavier?" for both the IPE likelihood and
+empirical likelihood.
+"""
 
-import sys
+__depends__ = [
+    "human_fall_responses.csv", 
+    "single_model_fall_responses.csv",
+    "fall_response_corrs.csv",
+    "human_mass_responses_by_stimulus.csv",
+    "model_mass_responses_by_stimulus.csv",
+    "mass_responses_by_stimulus_corrs.csv"
+]
+
+import util
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
 
-def plot(results_path, fig_paths):
+def errorbar(ax, x, y, ls='', ms=8, marker='o', **kwargs):
+    x_lerr = x['median'] - x['lower']
+    x_uerr = x['upper'] - x['median']
+    y_lerr = y['median'] - y['lower']
+    y_uerr = y['upper'] - y['median']
+    ax.errorbar(
+        x['median'], y['median'], 
+        xerr=[x_lerr, x_uerr], 
+        yerr=[y_lerr, y_uerr],
+        ls=ls, ms=ms, marker=marker,
+        **kwargs)
 
-    sns.set_style("white", {'axes.edgecolor': util.lightgrey})
-    cols = ['lower', 'median', 'upper']
 
-    fall_responses = pd\
-        .read_csv(results_path.joinpath("fall_responses.csv"))\
+def format_fall_plot(ax, color):
+    ax.plot([0, 1], [0, 1], '--', color=color, linewidth=2, zorder=1)
+
+    ax.set_xlim([0, 1])
+    ax.set_ylim([0, 1])
+
+    ticks = [0, 0.25, 0.5, 0.75, 1.0]
+    ticklabels = ['0.0', '0.25', '0.50', '0.75', '1.0']
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(ticklabels)
+    ax.set_yticks(ticks)
+    ax.set_yticklabels(ticklabels)
+
+
+def format_mass_plot(ax, color):
+    ax.plot([0, 1], [50, 50], '-', color=color, linewidth=2, zorder=1)
+    ax.plot([0.5, 0.5], [0, 100], '-', color=color, linewidth=2, zorder=1)
+
+    ax.set_xlim([0, 1])
+    ax.set_ylim([0, 100])
+
+    ticks = [0, 0.25, 0.5, 0.75, 1.0]
+    ticklabels = ['0.0', '0.25', '0.50', '0.75', '1.0']
+    ax.set_xticks(ticks)
+    ax.set_xticklabels(ticklabels)
+    ax.set_yticks([0, 25, 50, 75, 100])
+
+
+def add_corr(ax, corr):
+    pearson = r"$r={median:.2f}$, $95\%\ \mathrm{{CI}}\ [{lower:.2f},\ {upper:.2f}]$"
+    corrstr = pearson.format(**corr)
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    ax.text(
+        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.025, corrstr,
+        horizontalalignment='right', fontsize=10)    
+
+
+def plot(dest, results_path):
+
+    # load human fall responses
+    human_fall = pd\
+        .read_csv(os.path.join(results_path, "human_fall_responses.csv"))\
         .groupby(['version', 'block'])\
         .get_group(('GH', 'B'))\
-        .replace({'species': {'model': 'ipe'}})\
-        .set_index(['species', 'kappa0', 'stimulus'])[cols]\
-        .sortlevel()
-    fall_responses['query'] = 'fall'
+        .set_index(['stimulus', 'kappa0'])\
+        .sortlevel()\
+        .unstack('kappa0')\
+        .reorder_levels([1, 0], axis=1)
 
-    mass_responses = pd\
-        .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
+    # load model fall responses
+    model_fall = pd\
+        .read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))\
+        .groupby(['query', 'block'])\
+        .get_group((util.get_query(), 'B'))\
+        .set_index(['stimulus', 'kappa0'])\
+        .sortlevel()\
+        .unstack('kappa0')\
+        .reorder_levels([1, 0], axis=1)
+
+    # load human mass responses
+    human_mass = pd\
+        .read_csv(os.path.join(results_path, "human_mass_responses_by_stimulus.csv"))\
         .groupby('version')\
-        .get_group('H')
-    mass_responses = mass_responses\
-        .set_index(['species', 'kappa0', 'stimulus'])[cols]\
-        .sortlevel()
-    mass_responses['query'] = 'mass'
+        .get_group('H')\
+        .set_index(['stimulus', 'kappa0'])\
+        .sortlevel()\
+        .unstack('kappa0')\
+        .reorder_levels([1, 0], axis=1) * 100
 
-    responses = pd.concat([fall_responses, mass_responses]).reset_index()
-    responses['kappa0'] = responses['kappa0'].astype(str)
-    responses = responses\
-        .set_index(['species', 'kappa0', 'stimulus', 'query'])\
-        .unstack(['species', 'query'])\
-        .reorder_levels((1, 2, 0), axis=1)\
-        .ix[['-1.0', '1.0']]
+    # load model mass responses
+    model_mass = pd\
+        .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
+        .groupby(['counterfactual', 'fitted', 'model', 'version'])\
+        .get_group((True, False, 'static', 'H'))\
+        .set_index(['likelihood', 'stimulus', 'kappa0'])\
+        .sortlevel()\
+        .unstack('kappa0')\
+        .reorder_levels([1, 0], axis=1)
 
+    # load fall correlations
     fall_corrs = pd\
-        .read_csv(results_path.joinpath("fall_response_corrs.csv"))\
-        .set_index(['block', 'X', 'Y'])\
-        .ix[('B', 'ModelS', 'Human')]
+        .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
+        .set_index(['query', 'block', 'X', 'Y'])\
+        .sortlevel()\
+        .ix[(util.get_query(), 'B', 'ModelS', 'Human')]
 
+    # load mass correlations
     mass_corrs = pd\
-        .read_csv(results_path.joinpath(
-            "mass_responses_by_stimulus_corrs.csv"))\
-        .set_index(['version', 'X', 'Y'])
+        .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
+        .set_index(['counterfactual', 'fitted', 'model', 'version', 'likelihood'])\
+        .sortlevel()\
+        .ix[(True, False, 'static', 'H')]
 
-    pearson = r"$r={median:.2f}$, $95\%\ \mathrm{{CI}}\ [{lower:.2f},\ {upper:.2f}]$"
-    corrs = []
-    corrs.append(pearson.format(**dict(fall_corrs)))
-    corrs.append(pearson.format(**dict(
-        mass_corrs.ix[('H', 'IPE', 'Human')])))
-    corrs.append(pearson.format(**dict(
-        mass_corrs.ix[('H', 'Empirical', 'Human')])))
+    # color config
+    plot_config = util.load_config()["plots"]
+    colors = plot_config["colors"]
+    lightgrey = plot_config["lightgrey"]
+    sns.set_style("white", {'axes.edgecolor': lightgrey})
 
-    xmin = 0
-    xmax = 1
-    ymin = 0
-    ymax = 1
-
+    # create the figure
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
 
-    ax1.plot([0, 1], [0, 1], '--', color=util.lightgrey, linewidth=2, zorder=1)
-    for ax in (ax2, ax3):
-        ax.plot([0, 1], [0.5, 0.5], '-', color=util.lightgrey, linewidth=2, zorder=1)
-        ax.plot([0.5, 0.5], [0, 1], '-', color=util.lightgrey, linewidth=2, zorder=1)
-
-
-    colors = {
-        '-1.0': util.colors[0],
-        '1.0': util.colors[2]
-    }
-
-    for kappa0, df in responses.groupby(level='kappa0'):
-        empirical = df['empirical']
-        ipe = df['ipe']
-        human = df['human']
-
-        label = r"$\kappa=%.1f$" % 10 ** float(kappa0)
-
-        # left subplot (fall responses)
-        x = ipe['fall', 'median']
-        x_lerr = x - ipe['fall', 'lower']
-        x_uerr = ipe['fall', 'upper'] - x
-        y = human['fall', 'median']
-        y_lerr = y - human['fall', 'lower']
-        y_uerr = human['fall', 'upper'] - y
-
-        ax1.errorbar(
-            x, y,
-            xerr=[x_lerr, x_uerr],
-            yerr=[y_lerr, y_uerr],
-            marker='o', color=colors[kappa0], ms=6, ls='',
-            ecolor=util.darkgrey,
-            label=label)
-
-        # middle subplot (ipe mass responses)
-        x = ipe['mass', 'median']
-        x_lerr = ipe['mass', 'median'] - ipe['mass', 'lower']
-        x_uerr = ipe['mass', 'upper'] - ipe['mass', 'median']
-        y = human['mass', 'median']
-        y_lerr = human['mass', 'median'] - human['mass', 'lower']
-        y_uerr = human['mass', 'upper'] - human['mass', 'median']
-
-        ax2.errorbar(x, y, xerr=[x_lerr, x_uerr],
-                     yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='', ms=6,
-                     color=colors[kappa0], ecolor=util.darkgrey,
-                     label=label)
-
-        # right subplot (empirical ipe mass responses)
-        x = empirical['mass', 'median']
-        x_lerr = empirical['mass', 'median'] - empirical['mass', 'lower']
-        x_uerr = empirical['mass', 'upper'] - empirical['mass', 'median']
-        y = human['mass', 'median']
-        y_lerr = human['mass', 'median'] - human['mass', 'lower']
-        y_uerr = human['mass', 'upper'] - human['mass', 'median']
-
-        ax3.errorbar(x, y, xerr=[x_lerr, x_uerr],
-                     yerr=[y_lerr, y_uerr],
-                     marker='o', linestyle='', ms=6,
-                     color=colors[kappa0], ecolor=util.darkgrey,
-                     label=label)
-
-    for corr, ax in zip(corrs, (ax1, ax2, ax3)):
-        ax.text(xmax - 0.01, ymin + 0.025, corr,
-                horizontalalignment='right', fontsize=10)
-
-    ax1.set_xlabel("IPE model, $p(F_t|S_t)$")
-    ax1.set_ylabel("Normalized human judgments")
+    # left subplot: IPE vs. human (will it fall?)
+    errorbar(ax1, model_fall[-1.0], human_fall[-1.0], color=colors[0])
+    errorbar(ax1, model_fall[1.0], human_fall[1.0], color=colors[2])
+    ax1.set_xlabel(r"IPE model, $p(F_t|S_t)$")
+    ax1.set_ylabel(r"Normalized human judgments")
     ax1.set_title("Exp 1+2: Will it fall?")
-    ax2.set_xlabel("IPE model, $p(\kappa=10|F_t,S_t)$")
-    ax2.set_ylabel("% participants choosing $\kappa=10$")
+    format_fall_plot(ax1, lightgrey)
+    add_corr(ax1, fall_corrs)
+
+    # middle subplot: IPE vs. human (which is heavier?)
+    errorbar(ax2, model_mass.ix['ipe'][-1.0], human_mass[-1.0], color=colors[0])
+    errorbar(ax2, model_mass.ix['ipe'][1.0], human_mass[1.0], color=colors[2])
+    ax2.set_xlabel(r"IPE model, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_ylabel(r"% participants choosing $\kappa=10$")
     ax2.set_title("Exp 1: Which is heavier? (IPE)")
-    ax3.set_xlabel("Empirical model, $p(\kappa=10|F_t,S_t)$")
-    ax3.set_ylabel("% participants choosing $\kappa=10$")
+    format_mass_plot(ax2, lightgrey)
+    add_corr(ax2, mass_corrs.ix['ipe'])
+
+    # right subplot: empirical vs. human (which is heavier?)
+    errorbar(ax3, model_mass.ix['empirical'][-1.0], human_mass[-1.0], color=colors[0])
+    errorbar(ax3, model_mass.ix['empirical'][1.0], human_mass[1.0], color=colors[2])
+    ax3.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
+    ax3.set_ylabel(r"% participants choosing $\kappa=10$")
     ax3.set_title("Exp 1: Which is heavier? (Empirical)")
+    format_mass_plot(ax3, lightgrey)
+    add_corr(ax3, mass_corrs.ix['empirical'])
 
-    for ax in (ax1, ax2, ax3):
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(ymin, ymax)
-        ax.set_xticks([0, 0.25, 0.5, 0.75, 1])
-        ax.set_xticklabels(["0.0", "0.25", "0.50", "0.75", "1.0"])
-        ax.set_yticks([0, 0.25, 0.50, 0.75, 1])
-        if ax == ax1:
-            ax.set_yticklabels(["0.0", "0.25", "0.50", "0.75", "1.0"])
-        else:
-            ax.set_yticklabels(["0", "25", "50", "75", "100"])
+    # TODO: make legend
+    #ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
 
-    ax3.legend(loc='upper left', fontsize=10, title="True mass ratio")
-
+    # set figure size
     fig.set_figheight(3.5)
     fig.set_figwidth(12)
     plt.draw()
     plt.tight_layout()
 
-    for pth in fig_paths:
+    # save
+    for pth in dest:
         util.save(pth, close=False)
 
 
 if __name__ == "__main__":
-    util.make_plot(plot, sys.argv[1:])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    plot(args.to, args.results_path)
