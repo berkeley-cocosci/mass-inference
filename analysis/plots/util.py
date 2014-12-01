@@ -1,94 +1,54 @@
-import matplotlib
-matplotlib.use('AGG')
+from argparse import ArgumentParser, RawTextHelpFormatter
 
-from ConfigParser import SafeConfigParser
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import sys
-from path import path
+import json
 
-colors = sns.color_palette('bright')
-colorcircle = ['r', 'y', 'g', 'b', 'm']
-darkgrey = ".3"
-lightgrey = ".7"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+
 sns.set_style('white')
 
-
-def clear_right(ax=None):
-    """Remove the right edge of the axis bounding box.
-
-    Parameters
-    ----------
-    ax : axis object (default=pyplot.gca())
-
-    References
-    ----------
-    http://matplotlib.org/examples/pylab_examples/spine_placement_demo.html
-
-    """
-    if ax is None:
-        ax = plt.gca()
-    ax.spines['right'].set_color('none')
-    ax.yaxis.set_ticks_position('left')
+def load_config():
+    with open(os.path.join(ROOT, "config.json"), "r") as fh:
+        config = json.load(fh)
+    return config
 
 
-def clear_top(ax=None):
-    """Remove the top edge of the axis bounding box.
-
-    Parameters
-    ----------
-    ax : axis object (default=pyplot.gca())
-
-    References
-    ----------
-    http://matplotlib.org/examples/pylab_examples/spine_placement_demo.html
-
-    """
-    if ax is None:
-        ax = plt.gca()
-    ax.spines['top'].set_color('none')
-    ax.xaxis.set_ticks_position('bottom')
+def get_query():
+    return load_config()["analysis"]["query"]
 
 
-def clear_top_bottom(ax=None):
-    """Remove the top and bottom edges of the axis bounding box.
+def default_argparser(module):
+    config = load_config()
 
-    Parameters
-    ----------
-    ax : axis object (default=pyplot.gca())
+    name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+    dest = os.path.join(ROOT, config["paths"]["figures"], name)
+    depends = ["RESULTS_PATH/{}".format(x) for x in module['__depends__']]
 
-    References
-    ----------
-    http://matplotlib.org/examples/pylab_examples/spine_placement_demo.html
-
-    """
-    if ax is None:
-        ax = plt.gca()
-    ax.spines['top'].set_color('none')
-    ax.spines['bottom'].set_color('none')
-    ax.xaxis.set_ticks([])
-
-
-def outward_ticks(ax=None, axis='both'):
-    """Make axis ticks face outwards rather than inwards (which is the
-    default).
-
-    Parameters
-    ----------
-    ax : axis object (default=pyplot.gca())
-    axis : string (default='both')
-        The axis (either 'x', 'y', or 'both') for which to set the tick
-        direction.
-
-    """
-
-    if ax is None:
-        ax = plt.gca()
-    if axis == 'both':
-        ax.tick_params(direction='out')
+    if len(depends) > 0:
+        description = "{}\n\nDependencies:\n\n    {}".format(
+            module['__doc__'], "\n    ".join(depends))
     else:
-        ax.tick_params(axis=axis, direction='out')
+        description = module['__doc__']
+
+    parser = ArgumentParser(
+        description=description,
+        formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument(
+        '--to',
+        nargs="*",
+        default=["{}.pdf".format(dest), "{}.png".format(dest)],
+        help='where to save out the results (accepts multiple values)\ndefault: %(default)s')
+
+    parser.add_argument(
+        '--results-path',
+        default=os.path.join(ROOT, config["paths"]["results"]),
+        help='where other results are saved\ndefault: %(default)s')
+
+    return parser
 
 
 def save(path, fignum=None, close=True, width=None, height=None,
@@ -171,110 +131,3 @@ def save(path, fignum=None, close=True, width=None, height=None,
 
     if verbose:
         sys.stdout.write("Done\n")
-
-
-def sync_ylims(*axes):
-    """Synchronize the y-axis data limits for multiple axes. Uses the maximum
-    upper limit and minimum lower limit across all given axes.
-
-    Parameters
-    ----------
-    *axes : axis objects
-        List of matplotlib axis objects to format
-
-    Returns
-    -------
-    out : ymin, ymax
-        The computed bounds
-
-    """
-    ymins, ymaxs = zip(*[ax.get_ylim() for ax in axes])
-    ymin = min(ymins)
-    ymax = max(ymaxs)
-    for ax in axes:
-        ax.set_ylim(ymin, ymax)
-    return ymin, ymax
-
-
-def sync_xlims(*axes):
-    """Synchronize the x-axis data limits for multiple axes. Uses the maximum
-    upper limit and minimum lower limit across all given axes.
-
-    Parameters
-    ----------
-    *axes : axis objects
-        List of matplotlib axis objects to format
-
-    Returns
-    -------
-    out : xmin, xmax
-        The computed bounds
-
-    """
-    xmins, xmaxs = zip(*[ax.get_xlim() for ax in axes])
-    xmin = min(xmins)
-    xmax = max(xmaxs)
-    for ax in axes:
-        ax.set_xlim(xmin, xmax)
-    return xmin, xmax
-
-
-def sync_xlabel_coords(axes, y, x=0.5):
-    """Set the y-coordinate (and optionally the x-coordinate) of the x-axis
-    labels.
-
-    Parameters
-    ----------
-    axes : list
-        list of axis objects
-    y : float
-        y-coordinate for the label
-    x : float (default=0.5)
-        x-coordinate for the label
-    ax : axis object (default=pyplot.gca())
-
-    References
-    ----------
-    http://matplotlib.org/faq/howto_faq.html#align-my-ylabels-across-multiple-subplots
-
-    """
-    for ax in axes:
-        ax.xaxis.set_label_coords(x, y)
-
-
-def sync_ylabel_coords(axes, x, y=0.5):
-    """Set the x-coordinate (and optionally the y-coordinate) of the y-axis
-    labels.
-
-    Parameters
-    ----------
-    axes : list
-        list of axis objects
-    x : float
-        x-coordinate for the label
-    y : float (default=0.5)
-        y-coordinate for the label
-    ax : axis object (default=pyplot.gca())
-
-    References
-    ----------
-    http://matplotlib.org/faq/howto_faq.html#align-my-ylabels-across-multiple-subplots
-
-    """
-    for ax in axes:
-        ax.yaxis.set_label_coords(x, y)
-
-
-report_pearson = r"$r$ = {median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]"
-
-
-def make_plot(func, fig_paths):
-    root = path("..")
-
-    config = SafeConfigParser()
-    config.read(root.joinpath("config.ini"))
-
-    results_path = root.joinpath(
-        config.get("analysis", "results_path")).relpath()
-
-    func(results_path, fig_paths)
