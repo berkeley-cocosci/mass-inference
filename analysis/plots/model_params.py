@@ -1,74 +1,95 @@
 #!/usr/bin/env python
 
-import util
+"""
+Plots distributions of fitted model parameters for each experiment and each
+model type (i.e. static and learning).
+"""
 
-import sys
+__depends__ = ["single_model_belief.csv"]
+
+import util
+import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import pandas as pd
 import numpy as np
+import seaborn as sns
 
 
-def plot(results_path, fig_paths):
-    data = pd.read_csv('results/model_params.csv')
-    fig, axes = plt.subplots(2, 3, sharex=True)
-    version_order = ['H', 'G', 'I']
-    model_order = ['static', 'learning']
+def hist(ax, x, color):
+    # plot the histogram
+    ax.hist(x, color=color, bins=38, range=[-0.5, 2.5])
+
+    # reformat ytick labels so they show percent, not absolute number
+    yticks = np.linspace(0, len(x), 6)
+    yticklabels = ["{:.0%}".format(tick / float(len(x))) for tick in yticks]
+    ax.set_yticks(yticks)
+    ax.set_yticklabels(yticklabels)
+
+
+def make_legend(ax, colors):
+    handles = [
+        mpatches.Patch(color=colors['learning'], label='learning'),
+        mpatches.Patch(color=colors['static'], label='static')
+    ]
+
+    ax.legend(handles=handles, loc='best', fontsize=12, frameon=False)
+
+
+def plot(dest, results_path):
+    # load in the model data, which includes fitted parameters
+    data = pd\
+        .read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
+        .groupby(['fitted', 'counterfactual', 'likelihood'])\
+        .get_group((True, True, 'ipe'))\
+        .drop_duplicates(['version', 'model', 'pid', 'B'])\
+        .set_index(['version', 'model', 'pid'])\
+        .sortlevel()
+
+    # double check that there is exactly one parameter for each pid
+    assert data.index.is_unique
+
+    # plotting config stuff
+    plot_config = util.load_config()["plots"]
+    all_colors = plot_config["colors"]
     colors = {
-        'learning': util.colors[2],
-        'static': util.colors[0]
-    }
-    versions = {
-        'G': 'Experiment 2',
-        'H': 'Experiment 1',
-        'I': 'Experiment 3'
+        'static': all_colors[2],
+        'learning': all_colors[0]
     }
 
-    for (version, model), params in data.groupby(['version', 'model']):
-        if model not in model_order:
-            continue
+    # create the figure and plot the histograms
+    fig, axes = plt.subplots(2, 3, sharex=True)
+    for i, version in enumerate(['H', 'G', 'I']):
+        for j, model in enumerate(['static', 'learning']):
+            hist(axes[j, i], data.ix[(version, model)]['B'], colors[model])
 
-        j = version_order.index(version)
-        i = model_order.index(model)
-        ax = axes[i, j]
+    # set titles and axis labels
+    axes[0, 0].set_title('Experiment 1')
+    axes[0, 1].set_title('Experiment 2')
+    axes[0, 2].set_title('Experiment 3')
+    for ax in axes[:, 0]:
+        ax.set_ylabel("% participants")
+    for ax in axes[0]:
+        ax.set_xlabel(r"Value of $\beta$")
 
-        B = np.asarray(params['B'].dropna())
-        ax.hist(
-            B, label=model, bins=38,
-            range=[-0.5, 2.5], normed=False,
-            color=colors[model])
+    # make the legend
+    make_legend(axes[1, 0], colors)
 
-        if i == 0:
-            ax.set_title(versions[version])
-        util.clear_right(ax)
-        util.clear_top(ax)
-        util.outward_ticks(ax)
+    # clear top and right axis lines
+    sns.despine()
 
-        ax.set_yticks(np.linspace(0, len(B), 6))
-        yticks = ax.get_yticks()
-        if j == 0:
-            yticklabels = ["{:.1f}".format(tick / float(len(B))) for tick in yticks]
-            ax.set_yticklabels(yticklabels)
-            ax.set_ylabel("% participants")
-        else:
-            ax.set_yticklabels([])
-
-        if i == 1:
-            ax.set_xlabel(r"Value of $\beta$")
-
-    learning = mpatches.Patch(color=colors['learning'], label='learning')
-    static = mpatches.Patch(color=colors['static'], label='static')
-    axes[1, 0].legend(
-        handles=[static, learning], loc='best', fontsize=12, frameon=False)
-
+    # set figure size
     fig.set_figwidth(12)
     fig.set_figheight(4)
     plt.draw()
     plt.tight_layout()
 
-    for pth in fig_paths:
+    # save
+    for pth in dest:
         util.save(pth, close=False)
 
 
 if __name__ == "__main__":
-    util.make_plot(plot, sys.argv[1:])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    plot(args.to, args.results_path)

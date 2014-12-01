@@ -49,6 +49,8 @@ def filter_trials(df):
 
 
 def make_legend(ax, lines, colors):
+    # TODO: figure out how to add the legend
+
     # label = "{} model,\n".format(model.capitalize())
     # if lh == 'ipe':
     #     label = "{}IPE likelihod".format(label)
