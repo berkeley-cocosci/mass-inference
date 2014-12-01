@@ -104,7 +104,7 @@ def run(dest, results_path, data_path):
         .pivot('stimulus', 'kappa0', 'median')[hyps]
 
     # load feedback
-    fb = (util.load_fb(data_path)['C']['nfell'] > 0).unstack('kappa')[hyps]
+    fb = (util.load_fb(data_path)['C']['nfell'] > 1).unstack('kappa')[hyps]
 
     # load ipe probabilites
     old_store = pd.HDFStore(
