@@ -1,33 +1,40 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Produces a LaTeX file with the correlations between model and human mass
+responses across stimuli.
+"""
+
+__depends__ = ["mass_responses_by_stimulus_corrs.csv"]
+
+import os
 import util
 import pandas as pd
 
 
-def run(latex_path, results_path):
+def run(dest, results_path):
     results = pd.read_csv(
-        results_path.joinpath("mass_responses_by_stimulus_corrs.csv"))
+        os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))
 
-    results = results.set_index(['version', 'X', 'Y'])
+    results = results\
+        .groupby(['version', 'model', 'fitted'])\
+        .get_group(('H', 'static', False))\
+        .set_index('likelihood')
 
-    replace = {
-        'H': 'One',
-        'G': 'Two',
-        'I': 'Three'
-    }
+    latex_pearson = util.load_config()["latex"]["pearson"]
 
-    fh = open(latex_path, "w")
+    fh = open(dest, "w")
 
-    for (version, x, y), corrs in results.iterrows():
-        cmdname = "Exp{}MassRespStimCorr{}".format(
-            replace[version], x)
-        cmd = util.latex_pearson.format(**corrs)
+    for lh, corrs in results.iterrows():
+        cmdname = "ExpOneMassRespStimCorr{}".format(
+            lh.replace('_', '').capitalize())
+        cmd = latex_pearson.format(**corrs)
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
-    return latex_path
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)
