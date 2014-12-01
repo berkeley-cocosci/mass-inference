@@ -1,145 +1,30 @@
-from ConfigParser import SafeConfigParser
-from path import path
 import os
+import json
+import subprocess as sp
 
 env = Environment(ENV=os.environ)
-analysis = Builder(action="python $SOURCE $TARGET")
-plot = Builder(action="python $SOURCE $TARGETS")
-builders = {"Plot": plot, "Analysis": analysis}
-env.Append(BUILDERS=builders)
 
-ROOT = path("..")
+DEPENDENCIES = json.loads(sp.check_output(["python", "get_dependencies.py"]))
+for script in DEPENDENCIES:
+    deps = DEPENDENCIES[script]
 
+    # special case: fall response plots
+    if script == 'plots/fall_responses.py':
+        params = [
+            ('G', 'A'), ('G', 'B'), ('H', 'A'), ('H', 'B'), 
+            ('GH', 'A'), ('GH', 'B'), ('I', 'A')
+        ]
 
-def make_analysis(name, additional_dependencies=None, alias=False):
-    dependencies = ["analyses/{}.py".format(name)]
-    if additional_dependencies:
-        dependencies.extend(additional_dependencies)
-    env.Analysis("results/{}.csv".format(name), dependencies)
-    if alias:
-        env.Alias(name, "results/{}.csv".format(name))
+        for version, block in params:
+            target = "figures/fall_responses_{}_{}".format(version, block)
+            targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
+            env.Command(
+                targets, [script] + deps['sources'],
+                "python $SOURCE --to $TARGETS --version {} --block {}".format(
+                    version, block))
 
-
-def make_h5_analysis(name, additional_dependencies=None, alias=False):
-    dependencies = ["analyses/{}.py".format(name)]
-    if additional_dependencies:
-        dependencies.extend(additional_dependencies)
-    env.Analysis("results/{}.h5".format(name), dependencies)
-    if alias:
-        env.Alias(name, "results/{}.h5".format(name))
-
-
-def make_latex(name, additional_dependencies=None):
-    dependencies = ["latex_analyses/{}.py".format(name), "results/{}.csv".format(name)]
-    if additional_dependencies:
-        dependencies.extend(additional_dependencies)
-    env.Analysis("latex_results/{}.tex".format(name), dependencies)
-    env.Alias(name, "latex_results/{}.tex".format(name))
-
-
-def make_plot(name, additional_dependencies):
-    targets = ["figures/{}.pdf".format(name), "figures/{}.png".format(name)]
-    dependencies = ["plots/{}.py".format(name)]
-    if additional_dependencies:
-        dependencies.extend(additional_dependencies)
-    env.Plot(targets, dependencies)
-    env.Alias(name, targets)
-
-
-def make_fall_response_plots():
-    all_filenames = []
-    params = [('G', 'A'), ('G', 'B'), 
-              ('H', 'A'), ('H', 'B'),
-              ('GH', 'A'), ('GH', 'B'),
-              ('I', 'A')]
-
-    for version, block in params:
-        filename = "figures/fall_responses_{}_{}".format(version, block)
-        filenames = ["{}.{}".format(filename, ext) for ext in ["pdf", "png"]]
-        all_filenames.extend(filenames)
+    # everything else
+    else:
         env.Command(
-            filenames, 
-            ["plots/fall_responses.py", "results/fall_responses.csv"],
-            "python $SOURCE {} {} $TARGETS".format(version, block))
-
-    env.Alias("fall_responses", all_filenames)
-
-
-## Load in configuration
-config = SafeConfigParser()
-config.read(ROOT.joinpath("config.ini"))
-human_version = config.get("analysis", "human_version")
-model_version = config.get("analysis", "model_version")
-data_path = ROOT.joinpath(config.get("analysis", "data_path")).relpath()
-
-## Data dependencies
-human_dpkg = data_path.joinpath("human/mass_inference-{}.dpkg".format(human_version))
-env.Alias("human", human_dpkg.joinpath("experiment.csv"))
-env.Alias("participants", human_dpkg.joinpath("participants.csv"))
-
-ipe_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_ipe_fall.dpkg".format(model_version))
-ipe_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_ipe_fall.dpkg".format(model_version))
-env.Alias("ipe", [ipe_dpkg_A.joinpath("model.csv"), ipe_dpkg_B.joinpath("model.csv")])
-
-fb_dpkg_A = data_path.joinpath("model/mass_inference-{}-a_truth_fall.dpkg".format(model_version))
-fb_dpkg_B = data_path.joinpath("model/mass_inference-{}-b_truth_fall.dpkg".format(model_version))
-env.Alias("fb", [fb_dpkg_A.joinpath("model.csv"), fb_dpkg_B.joinpath("model.csv")])
-
-env.Alias("model", ["ipe", "fb"])
-env.Alias("query", ROOT.joinpath("config.ini"))
-env.Alias("params", ROOT.joinpath("config.ini"))
-
-## Analyses and plots
-make_analysis("num_participants", ["participants"])
-make_latex("num_participants")
-make_analysis("condition_counts", ["human"], alias=True)
-make_analysis("payrate", ["human"], alias=True)
-make_analysis("trial_order", ["human"])
-make_analysis("num_chance", ["human"])
-make_latex("num_chance")
-
-make_analysis("fall_responses", ["human", "model"])
-make_fall_response_plots()
-make_analysis("fall_response_corrs", ["results/fall_responses.csv"])
-make_latex("fall_response_corrs")
-make_analysis("fall_responses_best_parameters", ["results/fall_responses.csv", "model"])
-make_plot("fall_responses_best_parameters", ["results/fall_responses_best_parameters.csv"])
-
-make_h5_analysis("model_likelihood", ["human", "model"])
-make_h5_analysis("model_likelihood_by_trial", ["human", "results/model_likelihood.h5", "results/trial_order.csv"])
-make_h5_analysis("model_belief_by_trial", ["results/model_likelihood_by_trial.h5"])
-make_h5_analysis("model_belief_fit", ["human", "results/model_belief_by_trial.h5"], alias=True)
-make_analysis("model_belief", ["results/model_belief_fit.h5", "query", "params"])
-make_analysis("model_params", ["results/model_belief_fit.h5", "query", "params"])
-make_plot("model_params", ["results/model_params.csv"])
-
-make_analysis("mass_accuracy_by_stimulus", ["human", "results/model_belief.csv"])
-make_plot("mass_accuracy_by_stimulus", ["results/mass_accuracy_by_stimulus.csv"])
-make_analysis("mass_accuracy_by_stimulus_corrs", ["results/mass_accuracy_by_stimulus.csv"])
-make_latex("mass_accuracy_by_stimulus_corrs")
-make_analysis("mass_responses_by_stimulus", ["human", "results/model_belief.csv"])
-make_plot("mass_responses_by_stimulus", ["results/mass_responses_by_stimulus.csv"])
-make_analysis("mass_responses_by_stimulus_corrs", ["results/mass_responses_by_stimulus.csv"])
-make_latex("mass_responses_by_stimulus_corrs")
-make_analysis("mass_accuracy_best_parameters", ["results/mass_responses_by_stimulus.csv", "results/model_belief_fit.h5", "query"])
-make_plot("mass_accuracy_best_parameters", ["results/mass_accuracy_best_parameters.csv"])
-
-make_analysis("mass_accuracy", ["human", "results/model_belief.csv"])
-make_latex("mass_accuracy")
-make_analysis("mass_accuracy_by_participant", ["human"])
-make_latex("mass_accuracy_by_participant")
-make_analysis("mass_accuracy_by_trial", ["human", "results/model_belief.csv"])
-make_plot("mass_accuracy_by_trial", ["results/mass_accuracy_by_trial.csv"])
-make_plot("mass_accuracy_by_trial_with_model", ["results/mass_accuracy_by_trial.csv", "results/model_log_lh_ratios.csv"])
-make_analysis("mass_accuracy_by_trial_corrs", ["results/mass_accuracy_by_trial.csv"])
-make_latex("mass_accuracy_by_trial_corrs")
-
-make_analysis("model_log_lh", ["human", "results/model_belief.csv", "query"], alias=True)
-make_analysis("model_log_lh_ratio_by_participant", ["results/model_log_lh.csv"], alias=True)
-make_analysis("model_log_lh_ratio_by_trial", ["results/model_log_lh.csv"])
-make_analysis("model_log_lh_ratios", ["results/model_log_lh_ratio_by_trial.csv", "results/model_log_lh_ratio_by_participant.csv"])
-make_latex("model_log_lh_ratios")
-
-make_plot("best_parameters", ["results/mass_accuracy_best_parameters.csv", "results/fall_responses_best_parameters.csv"])
-
-make_plot("model_results", ["results/fall_responses.csv", "results/mass_responses_by_stimulus.csv", "results/fall_response_corrs.csv", "results/mass_responses_by_stimulus_corrs.csv"])
+            deps['targets'], [script] + deps['sources'], 
+            "python $SOURCE --to $TARGETS")
