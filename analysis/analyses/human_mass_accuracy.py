@@ -2,7 +2,22 @@
 
 """
 Computes overall participant accuracy for each version of the experiment for
-each separate mass ratio, and for both mass ratios combined.
+each separate mass ratio, and for both mass ratios combined. Produces a csv file
+with the following columns:
+
+    version (string)
+        the experiment version
+    kappa0 (float)
+        true log mass ratio
+    lower (float)
+        lower bound of the 95% confidence interval
+    median
+        median of the beta distribution
+    upper
+        upper bound of the 95% confidence interval
+    N (int)
+        how many samples the mean was computed over
+
 """
 
 __depends__ = ["human"]

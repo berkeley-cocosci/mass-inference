@@ -16,6 +16,8 @@ file with the following columns:
         median of the beta distribution
     upper (float)
         upper bound of the 95% confidence interval
+    N (int)
+        how many samples the mean was computed over
 
 """
 

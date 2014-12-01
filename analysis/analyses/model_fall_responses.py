@@ -27,6 +27,8 @@ Each table in the database has the following columns:
         median value across the bootstrapped means
     upper (float in [0, 1])
         upper bound of the 95% confidence interval
+    N (int)
+        how many samples the mean was computed over
 
 """
 
