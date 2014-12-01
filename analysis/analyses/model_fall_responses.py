@@ -75,6 +75,7 @@ def save(data, pth, store):
 
 
 def compute_query(data, query, store):
+    results = []
     for block in ['A', 'B']:
         result = data[block]\
             .groupby(level=['sigma', 'phi', 'stimulus'])\
@@ -87,7 +88,10 @@ def compute_query(data, query, store):
             })
         result['query'] = query.__name__
         result['block'] = block
-        save(result.set_index(['sigma', 'phi']), query.__name__, store)
+        results.append(result)
+
+    results = pd.concat(results)
+    save(results.set_index(['sigma', 'phi']), query.__name__, store)
 
 
 def run(dest, data_path, seed):

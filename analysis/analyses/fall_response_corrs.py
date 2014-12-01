@@ -26,7 +26,7 @@ Outputs a csv file with the following columns:
 
 """
 
-__depends__ = ["human_fall_responses.csv", "model_fall_responses.csv"]
+__depends__ = ["human_fall_responses.csv", "single_model_fall_responses.csv"]
 
 import pandas as pd
 import numpy as np
@@ -40,7 +40,7 @@ def run(dest, results_path, seed):
     human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
     human = human.groupby('version').get_group('GH')
 
-    model = pd.read_csv(os.path.join(results_path, "model_fall_responses.csv"))
+    model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
 
     results = {}
     for (query, block), df in model.groupby(['query', 'block']):
