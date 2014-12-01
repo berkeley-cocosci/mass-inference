@@ -68,7 +68,7 @@ def model_belief(args):
     # compute the belief for each model
     models = {
         'static': llh.copy(),
-        'learning': llh.groupby(level='pid').apply(numpy.cumsum),
+        'learning': llh.groupby(level=['counterfactual', 'pid']).apply(numpy.cumsum),
     }
 
     for model_name, model in models.items():
