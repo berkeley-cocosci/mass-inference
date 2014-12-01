@@ -7,7 +7,7 @@
     },
 
     "analysis": {
-        "model_version": "G",
+        "model_version": "I",
         "human_version": "merged",
         "seed": 923012,
         "sigma": 0.04,
