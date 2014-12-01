@@ -21,6 +21,9 @@ def get_query():
 
 
 def default_argparser(module):
+    # switch matplotlib backends because we don't need to be interactive here
+    plt.switch_backend('AGG')
+
     config = load_config()
 
     name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
