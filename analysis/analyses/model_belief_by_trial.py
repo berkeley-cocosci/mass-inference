@@ -31,6 +31,8 @@ one of these tables, the columns are:
 """
 
 __depends__ = ["model_likelihood_by_trial.h5"]
+__parallel__ = True
+__ext__ = '.h5'
 
 import os
 import sys
@@ -135,6 +137,6 @@ def run(dest, results_path, parallel):
     old_store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.parallel)
+    run(args.to, args.results_path, args.parallel)

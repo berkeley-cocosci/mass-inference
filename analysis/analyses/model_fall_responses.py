@@ -33,6 +33,8 @@ Each table in the database has the following columns:
 """
 
 __depends__ = ["ipe_A", "ipe_B"]
+__random__ = True
+__ext__ = '.h5'
 
 import util
 import pandas as pd
@@ -108,7 +110,7 @@ def run(dest, data_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), seed=True, ext=".h5")
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.data_path, args.seed)
+    run(args.to, args.data_path, args.seed)
 

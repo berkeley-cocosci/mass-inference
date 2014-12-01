@@ -57,4 +57,4 @@ def run(dest, data_path):
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.data_path)
+    run(args.to, args.data_path)

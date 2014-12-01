@@ -30,6 +30,8 @@ table in the database, the columns are:
 """
 
 __depends__ = ["trial_order.csv", "model_likelihood.h5"]
+__parallel__ = True
+__ext__ = '.h5'
 
 import util
 import pandas
@@ -120,6 +122,6 @@ def run(dest, results_path, parallel):
     store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.parallel)
+    run(args.to, args.results_path, args.parallel)

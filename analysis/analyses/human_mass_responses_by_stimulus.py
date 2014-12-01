@@ -22,6 +22,7 @@ file with the following columns:
 """
 
 __depends__ = ["human"]
+__random__ = True
 
 import util
 import numpy as np
@@ -47,6 +48,6 @@ def run(dest, data_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), seed=True)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.data_path, args.seed)
+    run(args.to, args.data_path, args.seed)

@@ -27,6 +27,7 @@ Outputs a csv file with the following columns:
 """
 
 __depends__ = ["human_fall_responses.csv", "single_model_fall_responses.csv"]
+__random__ = True
 
 import pandas as pd
 import numpy as np
@@ -75,6 +76,6 @@ def run(dest, results_path, seed):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), seed=True)
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.seed)
+    run(args.to, args.results_path, args.seed)

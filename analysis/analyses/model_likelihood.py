@@ -40,6 +40,7 @@ For each array stored in the database, it has the following columns:
 """
 
 __depends__ = ["fb_B", "human_fall_responses.csv", "model_fall_responses.h5"]
+__ext__ = '.h5'
 
 import os
 import util
@@ -159,6 +160,6 @@ def run(dest, results_path, data_path):
     old_store.close()
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), ext=".h5")
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.data_path)
+    run(args.to, args.results_path, args.data_path)

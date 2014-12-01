@@ -31,9 +31,9 @@ def default_argparser(module):
         description="{}\n\nDependencies:\n\n    {}".format(module['__doc__'], depends),
         formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        '--dest',
+        '--to',
         default=dest,
-        help='where to save out the latex file\ndefault: %(default)s')
+        help='where to save the resulting latex file\ndefault: %(default)s')
     parser.add_argument(
         '--results-path',
         default=results_path,

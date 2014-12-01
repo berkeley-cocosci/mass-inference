@@ -46,6 +46,8 @@ following columns (it includes both fitted beliefs, and raw beliefs):
 """
 
 __depends__ = ["human", "model_belief_by_trial.h5"]
+__parallel__ = True
+__ext__ = '.h5'
 
 import os
 import sys
@@ -250,6 +252,6 @@ def run(dest, results_path, data_path, parallel):
 
 
 if __name__ == "__main__":
-    parser = util.default_argparser(locals(), parallel=True, ext=".h5")
+    parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.dest, args.results_path, args.data_path, args.parallel)
+    run(args.to, args.results_path, args.data_path, args.parallel)
