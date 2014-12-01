@@ -1,60 +1,54 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the log likelihood ratio between learning and static models for each
+participant. Produces a csv file with the following columns:
+
+    likelihood (string)
+        the name of the likelihood
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
+    fitted (bool)
+        whether the model was fitted to human data
+    version (string)
+        the experiment version
+    num_mass_trials (int)
+        the number of mass trials that participant responded on
+    pid (string)
+        the participant's unique id
+    llhr (float)
+        the log likelihood ratio of learning to static
+    model_favored (string)
+        the name of the model that is favored by the LLHR
+
+"""
+
+__depends__ = ["model_log_lh.csv"]
+
+import os
 import util
 import pandas as pd
-import numpy as np
-from path import path
 
 
-def run(results_path, seed):
-    np.random.seed(seed)
+def run(dest, results_path):
 
-    llh = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh.csv'))
+    data = pd.read_csv(os.path.join(results_path, 'model_log_lh.csv'))
 
-    def add_num_trials(df):
-        df['num_trials'] = len(df['trial'].unique())
-        return df
-
-    llh = llh\
-        .groupby('pid')\
-        .apply(add_num_trials)\
-        .groupby(['likelihood', 'version', 'model', 'num_trials', 'pid'])[['llh']]\
+    cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'num_mass_trials', 'pid']
+    llh = data\
+        .groupby(cols)['llh']\
         .sum()\
-        .reset_index()\
-        .set_index(['likelihood', 'version', 'num_trials', 'pid', 'model'])['llh']\
         .unstack('model')
 
-    llh_H = llh.groupby(level='version').get_group('H')
-    llr_H = (llh_H['learning'] - llh_H['static'])\
-        .reset_index()\
-        .rename(columns={0: 'llhr'})
-    llr_H['model'] = 'equal'
-    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'static'
-    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'learning'
+    llhr = (llh['learning'] - llh['static']).to_frame('llhr')
+    llhr['model_favored'] = 'equal'
+    llhr.loc[llhr['llhr'] < 0, 'model_favored'] = 'static'
+    llhr.loc[llhr['llhr'] > 0, 'model_favored'] = 'learning'
 
-    llh_GI = llh.drop('H', level='version')
-    llr_GI = llh_GI['learning'] - llh_GI['static']
-    llr_GI = llr_GI\
-        .reset_index()\
-        .rename(columns={0: 'llhr'})
-    llr_GI['model'] = 'equal'
-    llr_GI.loc[llr_GI['llhr'] < 0, 'model'] = 'static'
-    llr_GI.loc[llr_GI['llhr'] > 0, 'model'] = 'learning'
-
-    llr = pd.concat([llr_H, llr_GI])
-    llr.loc[:, 'llhr'] = llr['llhr']
-    llr['evidence'] = 'equal'
-    llr.loc[np.abs(llr['llhr'] > 0), 'evidence'] = 'weak'
-    llr.loc[np.abs(llr['llhr'] > 2), 'evidence'] = 'positive'
-    llr.loc[np.abs(llr['llhr'] > 6), 'evidence'] = 'strong'
-    llr.loc[np.abs(llr['llhr'] > 10), 'evidence'] = 'very strong'
-
-    results = llr.set_index(['likelihood', 'version', 'num_trials', 'pid', 'model'])
-
-    results.to_csv(results_path)
+    llhr.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)

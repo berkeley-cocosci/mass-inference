@@ -11,6 +11,8 @@ new database similar to that one. For each key in the likelihood database, this
 will have keys named <key>/static, <key>/learning, and <key>/static. For each
 one of these tables, the columns are:
 
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     version (string)
         the experiment version
     kappa0 (float)
@@ -57,7 +59,7 @@ def model_belief(args):
 
     # compute the belief
     llh = data\
-        .set_index(['pid', 'hypothesis', 'trial'])['llh']\
+        .set_index(['counterfactual', 'pid', 'hypothesis', 'trial'])['llh']\
         .unstack('hypothesis')\
         .sortlevel()
 
@@ -75,7 +77,7 @@ def model_belief(args):
         # convert to long form
         model = pandas.melt(
             model.reset_index(),
-            id_vars=['pid', 'trial'],
+            id_vars=['counterfactual', 'pid', 'trial'],
             var_name='hypothesis',
             value_name='logp')
 

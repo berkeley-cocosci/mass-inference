@@ -1,14 +1,23 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Produces a LaTeX file with the log likelihood ratio of the learning model to the
+static model for each likelihood type and experiment version.
+"""
+
+__depends__ = ["model_log_lh_ratios.csv"]
+
+import os
 import util
 import pandas as pd
 
 
-def run(latex_path, results_path):
-    results = pd.read_csv(
-        results_path.joinpath("model_log_lh_ratios.csv"))
-    results = results.set_index(['likelihood', 'version', 'num_trials'])
+def run(dest, results_path):
+    results = pd\
+        .read_csv(os.path.join(results_path, 'model_log_lh_ratios.csv'))\
+        .groupby(['counterfactual', 'fitted'])\
+        .get_group((True, True))\
+        .set_index(['likelihood', 'version', 'num_mass_trials'])
 
     replace = {
         'G': 'ExpTwo',
@@ -24,7 +33,7 @@ def run(latex_path, results_path):
         20: ''
     }
 
-    fh = open(latex_path, "w")
+    fh = open(dest, "w")
 
     for (lh, version, num_trials), llhr in results.iterrows():
         cmdname = "llhr{}{}{}".format(lh.capitalize(), replace[version], replace[num_trials])
@@ -32,8 +41,9 @@ def run(latex_path, results_path):
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()
-    return latex_path
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)

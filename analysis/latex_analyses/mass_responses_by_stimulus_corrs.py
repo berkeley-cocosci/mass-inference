@@ -17,8 +17,8 @@ def run(dest, results_path):
         os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))
 
     results = results\
-        .groupby(['version', 'model', 'fitted'])\
-        .get_group(('H', 'static', False))\
+        .groupby(['version', 'model', 'counterfactual', 'fitted'])\
+        .get_group(('H', 'static', True, False))\
         .set_index('likelihood')
 
     latex_pearson = util.load_config()["latex"]["pearson"]

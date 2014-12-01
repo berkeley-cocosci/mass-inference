@@ -18,15 +18,24 @@ The results are saved into a HDF5 database, with the following structure:
     <likelihood>/params_<n>
 
 where <likelihood> is the name of the likelihood (for example, 'empirical',
-'empirical_cf', 'ipe_percent_fell', etc.) and params_<n> (e.g. 'params_0') is
-the particular combination of sigma/phi parameters. For the empirical
-likelihoods, this is just params_0 (because there are not actually any sigma/phi
-parameters). For the IPE likelihoods, there is additionally a
-<likelihood>/param_ref array that gives a mapping between the actual parameter
-values and their identifiers.
+'ipe_percent_fell', etc.) and params_<n> (e.g. 'params_0') is the particular
+combination of sigma/phi parameters. For the empirical likelihoods, this is just
+params_0 (because there are not actually any sigma/phi parameters). For the IPE
+likelihoods, there is additionally a <likelihood>/param_ref array that gives a
+mapping between the actual parameter values and their identifiers.
 
-For each array stored in the database, it has an index of [stimulus, kappa0],
-and columns corresponding to the different hypotheses.
+For each array stored in the database, it has the following columns:
+
+    stimulus (string)
+        the name of the stimulus
+    kappa0 (float)
+        the true log mass ratio
+    hypothesis (float)
+        the hypothesis under consideration
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
+    llh (float)
+        the log likelihood
 
 """
 
@@ -56,7 +65,7 @@ def compute_llh(pfall_df, fall_df):
         llh_norm, index=fall_df.stack().index, columns=pfall_df.columns)
     llh_df.columns.name = 'hypothesis'
     llh_df.index.names = ['stimulus', 'kappa0']
-    return llh_df
+    return llh_df.stack().to_frame('llh').reset_index()
 
 
 def compute_llh_counterfactual(pfall_df, fall_df):
@@ -116,12 +125,10 @@ def run(dest, results_path, data_path):
     key = '/empirical/params_0'
     print key
     llh_empirical = compute_llh(empirical, fb)
-    store.append(key, llh_empirical)
-
-    # compute empirical counterfactual likelihood
-    key = '/empirical_cf/params_0'
-    print key
+    llh_empirical['counterfactual'] = False
     llh_empirical_cf = compute_llh_counterfactual(empirical, fb)
+    llh_empirical_cf['counterfactual'] = True
+    store.append(key, llh_empirical)
     store.append(key, llh_empirical_cf)
 
     # compute likelihoods for each query type
@@ -129,12 +136,9 @@ def run(dest, results_path, data_path):
         parts = key.split('/')
         parts[1] = 'ipe_{}'.format(parts[1])
         new_key = '/'.join(parts)
-        parts[1] = '{}_cf'.format(parts[1])
-        new_key_cf = '/'.join(parts)
 
         if key.split('/')[-1] == 'param_ref':
             store.append(new_key, old_store[key])
-            store.append(new_key_cf, old_store[key])
             continue
 
         ipe = old_store[key]\
@@ -145,12 +149,11 @@ def run(dest, results_path, data_path):
         # compute ipe likelihood
         print new_key
         llh_ipe = compute_llh(ipe, fb)
-        store.append(new_key, llh_ipe)
-
-        # compute ipe counterfactual likelihood
-        print new_key_cf
+        llh_ipe['counterfactual'] = False
         llh_ipe_cf = compute_llh_counterfactual(ipe, fb)
-        store.append(new_key_cf, llh_ipe_cf)
+        llh_ipe_cf['counterfactual'] = True
+        store.append(new_key, llh_ipe)
+        store.append(new_key, llh_ipe_cf)
 
     store.close()
     old_store.close()

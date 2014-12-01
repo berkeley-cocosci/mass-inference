@@ -1,40 +1,48 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the overall log likelihood ratio between the learning model and the
+static model. Produces a csv with the following columns:
+
+    likelihood (string)
+        the name of the likelihood
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
+    fitted (bool)
+        whether the model was fitted to human data
+    version (string)
+        the experiment version
+    num_mass_trials (int)
+        the number of mass trials on which participants responded
+    llhr (float)
+        the log likelihood ratio of learning to static
+    model_favored (string)
+        the name of the model that is favored by the LLHR
+"""
+
+__depends__ = ["model_log_lh_ratio_by_trial.csv"]
+
+import os
 import util
 import pandas as pd
-import numpy as np
-from path import path
 
 
-def run(results_path, seed):
-    np.random.seed(seed)
+def run(dest, results_path):
 
-    llh_trial = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh_ratio_by_trial.csv'))
-    llh_participant = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh_ratio_by_participant.csv'))
-
-    llh_across = llh_trial\
-        .set_index(['version', 'likelihood', 'trial'])['llhr']\
-        .unstack('trial')\
-        .sum(axis=1)\
-        .ix[['I (across)']]\
-        .reset_index()
-    llh_across.loc[llh_across['version'] == 'I (across)', 'version'] = 'I'
-    llh_across['num_trials'] = -1
-    llh_across = llh_across.set_index(['version', 'likelihood', 'num_trials'])[0]
-
-    results = llh_participant\
-        .groupby(['version', 'likelihood', 'num_trials'])['llhr']\
+    llhr = pd\
+        .read_csv(os.path.join(results_path, 'model_log_lh_ratio_by_trial.csv'))\
+        .groupby(['likelihood', 'counterfactual', 'fitted', 'version', 'num_mass_trials'])['llhr']\
         .sum()\
-        .append(llh_across)\
-        .reset_index()\
-        .rename(columns={0: 'llhr'})\
-        .set_index(['version', 'likelihood', 'num_trials'])
+        .to_frame('llhr')
 
-    results.to_csv(results_path)
+    llhr['model_favored'] = 'equal'
+    llhr.loc[llhr['llhr'] < 0, 'model_favored'] = 'static'
+    llhr.loc[llhr['llhr'] > 0, 'model_favored'] = 'learning'
+
+    llhr.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)

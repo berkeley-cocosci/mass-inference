@@ -9,6 +9,8 @@ following columns:
         the experiment version
     likelihood (string)
         the name of the likelihood that was used
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     model (string)
         the name of the model (e.g. learning, static)
     fitted (bool)
@@ -40,7 +42,7 @@ def run(dest, results_path, seed):
         .unstack('version')
 
     # load in model data
-    cols = ['likelihood', 'model', 'fitted']
+    cols = ['likelihood', 'counterfactual', 'model', 'fitted']
     model = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
         .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\

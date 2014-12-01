@@ -10,6 +10,8 @@ This depends on RESULTS_PATH/model_likelihood.h5, and produces a new HDF5
 database, with the same key structure as model_likelihood.h5. For each
 table in the database, the columns are:
 
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     version (string)
         the experiment version
     kappa0 (float)
@@ -31,7 +33,6 @@ __depends__ = ["trial_order.csv", "model_likelihood.h5"]
 
 import util
 import pandas
-import numpy
 import os
 
 from IPython.parallel import Client, require
@@ -41,26 +42,18 @@ def likelihood_by_trial(args):
     key, trials, old_store_pth = args
 
     old_store = pandas.HDFStore(old_store_pth, mode='r')
-    llh = old_store[key].groupby(level='kappa0')
+    llh = old_store[key].groupby('kappa0')
     old_store.close()
 
     # create an empty dataframe for the results
-    cols = ['version', 'kappa0', 'pid', 'stimulus', 'trial', 'hypothesis', 'llh']
-    results = pandas.DataFrame(numpy.empty((0, len(cols))), columns=cols)
+    results = pandas.DataFrame([])
 
     # iterate through each of the pids
     for (kappa0, pid), df in trials.groupby(['kappa0', 'pid']):
         # merge the trial order with the model likelihood
         model = pandas.merge(
-            llh.get_group(kappa0).reset_index(),
+            llh.get_group(kappa0),
             df.reset_index())
-
-        # convert to long format
-        model = pandas.melt(
-            model,
-            id_vars=['version', 'kappa0', 'pid', 'stimulus', 'trial'],
-            var_name='hypothesis',
-            value_name='llh')
 
         results = results.append(model, ignore_index=True)
 
@@ -85,7 +78,7 @@ def run(dest, results_path, parallel):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('numpy', 'pandas')(likelihood_by_trial)
+        task = require('pandas')(likelihood_by_trial)
     else:
         task = likelihood_by_trial
 

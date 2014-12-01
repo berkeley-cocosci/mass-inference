@@ -22,6 +22,8 @@ This relies on the RESULTS_PATH/model_belief_by_trial.h5 database, and produces
 a similar database with the same keys. Each table in the database has the
 following columns (it includes both fitted beliefs, and raw beliefs):
 
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     version (string)
         the experiment version
     kappa0 (float)
@@ -110,7 +112,7 @@ def fit_responses(df, model_name, verbose=False):
     correctly).
 
     """
-    version, kappa0, pid = df.name
+    counterfactual, version, kappa0, pid = df.name
 
     df2 = df.dropna()
     y = numpy.asarray(df2['mass? response'])
@@ -157,7 +159,7 @@ def model_belief_fit(args):
 
     # convert model belief to wide form
     belief = data\
-        .set_index(['version', 'kappa0', 'pid', 'trial', 'hypothesis'])['logp']\
+        .set_index(['counterfactual', 'version', 'kappa0', 'pid', 'trial', 'hypothesis'])['logp']\
         .unstack('hypothesis')\
         .sortlevel()
 
@@ -165,20 +167,20 @@ def model_belief_fit(args):
     # to long form
     log_odds = pandas.melt(
         (belief[1.0] - belief[-1.0]).unstack('trial').reset_index(),
-        id_vars=['version', 'kappa0', 'pid'],
+        id_vars=['counterfactual', 'version', 'kappa0', 'pid'],
         var_name='trial',
         value_name='log_odds')
 
     # merge with human responses
     model = pandas\
         .merge(log_odds, responses)\
-        .set_index(['version', 'kappa0', 'pid', 'trial'])\
+        .set_index(['counterfactual', 'version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
 
     # use L1 logistic regression to fit parameters individually to
     # each participant
     result = model\
-        .groupby(level=['version', 'kappa0', 'pid'])\
+        .groupby(level=['counterfactual', 'version', 'kappa0', 'pid'])\
         .apply(mbf.fit_responses, model_name)\
         .reset_index()
 

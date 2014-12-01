@@ -6,6 +6,8 @@ Produces a csv file with the following columns:
 
     likelihood (string)
         the likelihood name (e.g., ipe, ipe_cf, empirical, empirical_cf)
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     model (string)
         the model version (e.g., static, learning)
     fitted (bool)
@@ -38,7 +40,7 @@ import numpy as np
 def run(dest, results_path, seed):
     np.random.seed(seed)
     model_belief = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))
-    cols = ['likelihood', 'model', 'fitted', 'version', 'kappa0', 'stimulus']
+    cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'kappa0', 'stimulus']
     results = model_belief\
         .groupby(cols)['p']\
         .apply(util.bootstrap_mean)\

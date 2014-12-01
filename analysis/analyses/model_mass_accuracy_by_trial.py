@@ -6,6 +6,8 @@ Produces a csv file with the following columns:
 
     likelihood (string)
         the likelihood name (e.g., ipe, ipe_cf, empirical, empirical_cf)
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     model (string)
         the model version (e.g., static, learning)
     fitted (bool)
@@ -53,7 +55,7 @@ def run(dest, results_path, data_path, seed):
         .groupby('version')\
         .get_group('I')\
         .sort(['pid', 'trial'])\
-        .drop_duplicates(['likelihood', 'model', 'fitted', 'pid'])
+        .drop_duplicates(['likelihood', 'counterfactual', 'model', 'fitted', 'pid'])
     between_subjs['num_mass_trials'] = -1
     responses = pd.concat([model, between_subjs])
 
@@ -64,7 +66,7 @@ def run(dest, results_path, data_path, seed):
         else:
             correct = responses.groupby('kappa0').get_group(kappa)
 
-        cols = ['likelihood', 'model', 'fitted', 'version', 'num_mass_trials', 'trial']
+        cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'num_mass_trials', 'trial']
         accuracy = correct\
             .groupby(cols)['p correct']\
             .apply(util.bootstrap_mean)\
@@ -75,7 +77,7 @@ def run(dest, results_path, data_path, seed):
         results.append(accuracy)
 
     results = pd.concat(results)\
-        .set_index(['likelihood', 'model', 'fitted'])\
+        .set_index(['likelihood', 'counterfactual', 'model', 'fitted'])\
         .sortlevel()
 
     results.to_csv(dest)

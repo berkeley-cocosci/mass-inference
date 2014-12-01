@@ -7,7 +7,9 @@ RESULTS_PATH/model_belief_by_trial_fit.h5, and produces a csv file with the
 following columns:
 
     likelihood (string)
-        the likelihood name (e.g., ipe, ipe_cf, empirical, empirical_cf)
+        the likelihood name (e.g., ipe, empirical)
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
     model (string)
         the model name (e.g. static, learning)
     version (string)
@@ -68,10 +70,8 @@ def run(dest, results_path):
     # load in the data
     data = pd.concat([
         load_model(store, "/ipe_{}/{}".format(query, params), "ipe"),
-        load_model(store, "/ipe_{}_cf/{}".format(query, params), "ipe_cf"),
         load_model(store, "/empirical/params_0", "empirical"),
-        load_model(store, "/empirical_cf/params_0", "empirical_cf")
-    ]).set_index(['likelihood', 'model'])
+    ]).set_index(['likelihood', 'counterfactual', 'model'])
 
     store.close()
     data.to_csv(dest)

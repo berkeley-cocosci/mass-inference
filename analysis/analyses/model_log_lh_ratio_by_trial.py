@@ -1,80 +1,61 @@
 #!/usr/bin/env python
 
-import sys
+"""
+Computes the log likelihood ratio between learning and static models for each
+trial. Produces a csv file with the following columns:
+
+    likelihood (string)
+        the name of the likelihood
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
+    fitted (bool)
+        whether the model was fitted to human data
+    version (string)
+        the experiment version
+    trial (int)
+        the trial number
+    num_mass_trials (int)
+        the number of mass trials on which participants responded
+    llhr (float)
+        the log likelihood ratio of learning to static
+    model_favored (string)
+        the name of the model that is favored by the LLHR
+
+"""
+
+__depends__ = ["model_log_lh.csv"]
+
+import os
 import util
 import pandas as pd
-import numpy as np
-from path import path
 
+def run(dest, results_path):
 
-def run(results_path, seed):
-    np.random.seed(seed)
+    data = pd.read_csv(os.path.join(results_path, 'model_log_lh.csv'))
 
-    llh = pd.read_csv(path(results_path).dirname().joinpath(
-        'model_log_lh.csv'))
-
-    llh_I_within = llh\
+    between_subjs = data\
         .groupby('version')\
         .get_group('I')\
-        .set_index(['likelihood', 'model', 'pid'])\
-        .groupby(level=['likelihood', 'model', 'pid'])\
-        .apply(lambda x: x.sort('trial').irow(0))\
-        .reset_index()
-    llh_I_within['version'] = "I (across)"
+        .sort(['pid', 'trial'])\
+        .drop_duplicates(['likelihood', 'counterfactual', 'model', 'fitted', 'pid'])
+    between_subjs['num_mass_trials'] = -1
 
-    llh_I_across = llh\
-        .groupby('version')\
-        .get_group('I')\
-        .set_index(['version', 'model', 'likelihood', 'pid', 'trial'])['llh']\
-        .unstack('trial')\
-        .dropna(subset=[1])\
-        .stack()\
-        .reset_index()\
-        .rename(columns={0: 'llh'})
-    llh_I_across['version'] = "I (within)"
-
-    llh = llh\
-        .set_index('version')\
-        .drop('I', axis=0)\
-        .reset_index()
-    llh = pd.concat([llh, llh_I_within, llh_I_across])
-
-    llh_trial = llh\
-        .pivot_table(index=['likelihood', 'version', 'model'],
-                     columns='trial', values='llh',
-                     aggfunc=np.sum)\
-        .stack()\
+    cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'num_mass_trials', 'trial']
+    llh = pd\
+        .concat([data, between_subjs])\
+        .groupby(cols)['llh']\
+        .sum()\
         .unstack('model')
 
-    llh_trial_H = llh_trial.groupby(level='version').get_group('H')
-    llr_H = (llh_trial_H['learning'] - llh_trial_H['static'])\
-        .reset_index()\
-        .rename(columns={0: 'llhr'})
-    llr_H['model'] = None
-    llr_H.loc[llr_H['llhr'] < 0, 'model'] = 'static'
-    llr_H.loc[llr_H['llhr'] > 0, 'model'] = 'learning'
+    llhr = (llh['learning'] - llh['static']).to_frame('llhr')
+    llhr['model_favored'] = 'equal'
+    llhr.loc[llhr['llhr'] < 0, 'model_favored'] = 'static'
+    llhr.loc[llhr['llhr'] > 0, 'model_favored'] = 'learning'
 
-    llh_trial_GI = llh_trial.drop('H', level='version')
-    llr_GI = llh_trial_GI['learning'] - llh_trial_GI['static']
-    llr_GI = llr_GI\
-        .reset_index()\
-        .rename(columns={0: 'llhr'})
-    llr_GI['model'] = None
-    llr_GI.loc[llr_GI['llhr'] < 0, 'model'] = 'static'
-    llr_GI.loc[llr_GI['llhr'] > 0, 'model'] = 'learning'
-
-    llr = pd.concat([llr_H, llr_GI])
-    llr.loc[:, 'llhr'] = llr['llhr']
-    llr['evidence'] = 'equal'
-    llr.loc[np.abs(llr['llhr']) > 0, 'evidence'] = 'weak'
-    llr.loc[np.abs(llr['llhr']) > 2, 'evidence'] = 'positive'
-    llr.loc[np.abs(llr['llhr']) > 6, 'evidence'] = 'strong'
-    llr.loc[np.abs(llr['llhr']) > 10, 'evidence'] = 'very strong'
-
-    results = llr.set_index(['likelihood', 'version', 'trial'])
-
-    results.to_csv(results_path)
+    llhr.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run, sys.argv[1])
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.dest, args.results_path)
