@@ -169,20 +169,20 @@ def load_participants(data_path):
 
 
 def load_ipe(data_path):
-    config = load_config()
-    version = config["analysis"]["model_version"]
-
-    def load(name):
-        path = os.path.join(data_path, "model/%s.dpkg" % name)
+    def load(version, block):
+        path = os.path.join(
+            data_path, "model/mass_inference-%s-%s_ipe_fall.dpkg" % (version, block.lower()))
         dp = dpkg.DataPackage.load(path)
-        data = dp.load_resource("model.csv").set_index(['sigma', 'phi', 'stimulus'])
+        data = dp.load_resource("model.csv")
+        data["block"] = block
         return data
 
-    ipe = {
-        'A': load("mass_inference-%s-a_ipe_fall" % version),
-        'B': load("mass_inference-%s-b_ipe_fall" % version),
-        'C': load("mass_inference-%s-b_ipe_fall" % version)
-    }
+    config = load_config()
+    version = config["analysis"]["model_version"]
+    ipe = pd.concat([
+        load(version, "A"),
+        load(version, "B")
+    ])
 
     return ipe
 

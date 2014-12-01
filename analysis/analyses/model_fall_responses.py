@@ -34,11 +34,16 @@ Each table in the database has the following columns:
 
 __depends__ = ["ipe_A", "ipe_B"]
 __random__ = True
+__parallel__ = True
 __ext__ = '.h5'
 
 import util
-import pandas as pd
-import numpy as np
+import pandas
+import numpy
+import os
+import sys
+
+from IPython.parallel import Client, require
 
 
 def percent_fell(data):
@@ -46,7 +51,8 @@ def percent_fell(data):
         index='sample',
         columns='kappa',
         values='nfell')
-    return (samps / 10.0).apply(util.bootstrap_mean)
+    answer = (samps / 10.0).apply(util.bootstrap_mean)
+    return answer.T
 
 
 def more_than_half_fell(data):
@@ -54,7 +60,8 @@ def more_than_half_fell(data):
         index='sample',
         columns='kappa',
         values='nfell')
-    return (samps > 5).apply(util.beta)
+    answer = (samps > 5).apply(util.beta)
+    return answer.T
 
 
 def more_than_one_fell(data):
@@ -62,55 +69,87 @@ def more_than_one_fell(data):
         index='sample',
         columns='kappa',
         values='nfell')
-    return (samps > 1).apply(util.beta)
+    answer = (samps > 1).apply(util.beta)
+    return answer.T
 
 
-def save(data, pth, store):
-    params = ['sigma', 'phi']
-    all_params = {}
-    for i, (p, df) in enumerate(data.groupby(level=params)):
-        key = '{}/params_{}'.format(pth, i)
-        print key
-        df2 = df.reset_index(params, drop=True)
-        store.append(key, df2)
-        all_params['params_{}'.format(i)] = p
-    all_params = pd.DataFrame(all_params, index=params).T
-    store.append('{}/param_ref'.format(pth), all_params)
+def model_fall_responses(args):
+    key, queryname, data, pth = args
+    print key
+
+    sys.path.append(pth)
+    import model_fall_responses as mfr
+
+    result = data\
+        .groupby(['block', 'stimulus'])\
+        .apply(getattr(mfr, queryname))\
+        .reset_index()\
+        .rename(columns=dict(kappa='kappa0'))
+    result['query'] = queryname
+
+    return key, result
 
 
-def compute_query(data, query, store):
-    results = []
-    for block in ['A', 'B']:
-        result = data[block]\
-            .groupby(level=['sigma', 'phi', 'stimulus'])\
-            .apply(query)\
-            .unstack()\
-            .stack('kappa')\
-            .reset_index()\
-            .rename(columns={
-                'kappa': 'kappa0'
-            })
-        result['query'] = query.__name__
-        result['block'] = block
-        results.append(result)
+def run(dest, data_path, parallel, seed):
+    numpy.random.seed(seed)
 
-    results = pd.concat(results)
-    save(results.set_index(['sigma', 'phi']), query.__name__, store)
-
-
-def run(dest, data_path, seed):
-    np.random.seed(seed)
+    # load the raw ipe data
     ipe = util.load_ipe(data_path)
 
-    store = pd.HDFStore(dest, mode='w')
-    compute_query(ipe, percent_fell, store)
-    compute_query(ipe, more_than_half_fell, store)
-    compute_query(ipe, more_than_one_fell, store)
+    # queries we'll be computing
+    queries = ['percent_fell', 'more_than_half_fell', 'more_than_one_fell']
+
+    # open up the store for saving
+    store = pandas.HDFStore(dest, mode='w')
+
+    # path to the directory with analysis stuff in it
+    pth = os.path.abspath(os.path.dirname(__file__))
+
+    # create the ipython parallel client
+    if parallel:
+        rc = Client()
+        lview = rc.load_balanced_view()
+        task = require('numpy', 'pandas', 'sys')(model_fall_responses)
+    else:
+        task = model_fall_responses
+
+    # start the tasks
+    all_params = {}
+    results = []
+    for i, (params, df) in enumerate(ipe.groupby(['sigma', 'phi'])):
+        all_params['params_{}'.format(i)] = params
+
+        for query in queries:
+            key = "/{}/params_{}".format(query, i)
+            args = [key, query, df, pth]
+            if parallel:
+                result = lview.apply(task, args)
+            else:
+                result = task(args)
+            results.append(result)
+
+    # save the parameters into the database
+    all_params = pandas.DataFrame(all_params, index=['sigma', 'phi']).T
+    for query in queries:
+        key = "/{}/param_ref".format(query)
+        store.append(key, all_params)
+
+    # collect and save results
+    while len(results) > 0:
+        result = results.pop(0)
+        if parallel:
+            key, responses = result.get()
+            result.display_outputs()
+        else:
+            key, responses = result
+
+        store.append(key, responses)
+
     store.close()
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.data_path, args.seed)
+    run(args.to, args.data_path, args.parallel, args.seed)
 
