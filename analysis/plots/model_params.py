@@ -69,7 +69,7 @@ def plot(dest, results_path):
     axes[0, 2].set_title('Experiment 3')
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
-    for ax in axes[0]:
+    for ax in axes[1]:
         ax.set_xlabel(r"Value of $\beta$")
 
     # make the legend

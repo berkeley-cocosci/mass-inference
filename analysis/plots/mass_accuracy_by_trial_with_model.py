@@ -84,7 +84,7 @@ def plot(dest, results_path):
     model = pd\
         .read_csv(os.path.join(results_path, 'model_mass_accuracy_by_trial.csv'))\
         .groupby(['counterfactual', 'fitted', 'kappa0'])\
-        .get_group((True, False, 'all'))\
+        .get_group((True, True, 'all'))\
         .groupby(['version', 'num_mass_trials'])\
         .filter(filter_trials)\
         .set_index(['version', 'likelihood', 'model'])\
@@ -94,7 +94,7 @@ def plot(dest, results_path):
     llhr = pd\
         .read_csv(os.path.join(results_path, 'model_log_lh_ratios.csv'))\
         .groupby(['counterfactual', 'fitted'])\
-        .get_group((True, False))\
+        .get_group((True, True))\
         .groupby(['version', 'num_mass_trials'])\
         .filter(filter_trials)\
         .set_index(['version', 'likelihood'])['llhr']
