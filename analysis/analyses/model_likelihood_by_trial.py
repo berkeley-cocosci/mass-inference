@@ -42,6 +42,7 @@ from IPython.parallel import Client, require
 
 def likelihood_by_trial(args):
     key, trials, old_store_pth = args
+    print key
 
     old_store = pandas.HDFStore(old_store_pth, mode='r')
     llh = old_store[key].groupby('kappa0')
@@ -97,7 +98,6 @@ def run(dest, results_path, parallel):
             store.append(key, old_store[key])
             continue
 
-        print "starting:", key
         args = [key, trials, old_store_pth]
         if parallel:
             result = lview.apply(task, args)
@@ -117,7 +117,6 @@ def run(dest, results_path, parallel):
         else:
             key, model = result
 
-        print "finished:", key
         store.append(key, model)
     store.close()
 
