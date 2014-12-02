@@ -53,7 +53,7 @@ def plot(dest, results_path):
     plot_config = util.load_config()["plots"]
     all_colors = plot_config["colors"]
     colors = {
-        'static': all_colors[2],
+        'static': all_colors[1],
         'learning': all_colors[0]
     }
 
@@ -70,7 +70,7 @@ def plot(dest, results_path):
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:
-        ax.set_xlabel(r"Value of $\beta$")
+        ax.set_xlabel(r"Best fit learning rate ($\beta$)")
 
     # make the legend
     make_legend(axes[1, 0], colors)

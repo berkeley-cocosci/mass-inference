@@ -32,37 +32,35 @@ def timeseries(ax, x, color, ls='-', label=None):
     ax.set_xlim(x['trial'].min(), x['trial'].max())
 
 
-def plot_models(ax, x, lines, colors):
-    for key in lines:
-        timeseries(ax, x.ix[key], color=colors[key], ls=lines[key])
+def plot_all(ax, human, model, lines, colors):
+    timeseries(ax, human, colors['human'], ls=lines['human'])
+    timeseries(ax, model.ix['learning'], colors['learning'], ls=lines['learning'])
+    timeseries(ax, model.ix['static'], colors['static'], ls=lines['static'])
 
 
 def add_llhr(ax, llhr):
-    label = "{} LLR = {:.2f}"
-    text = "{}\n{}".format(
-        label.format("Empirical", llhr.ix["empirical"]),
-        label.format("IPE", llhr.ix["ipe"]))
+    label = "LLR (learning v. static) = {:.2f}".format(llhr)
     l, h = ax.get_xlim()
-    ax.text(h, 0.5125, text, horizontalalignment='right', fontsize=9)
+    ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center', fontsize=9)
+
 
 def filter_trials(df):
-    return (df['version'] != 'I') | (df['num_mass_trials'] == -1) 
+    return (df['version'] != 'I') | (df['num_mass_trials'] == -1)
 
 
 def make_legend(ax, lines, colors):
     handles = []
 
-    for (lh, model) in sorted(lines.keys()):
-        label = "{} model,\n".format(model.capitalize())
-        if lh == 'ipe':
-            label = "{}IPE likelihod".format(label)
-        elif lh == "empirical":
-            label = "{}Emp. likelihood".format(label)
+    for model in sorted(colors.keys()):
+        if model == 'human':
+            label = 'Human'
+        else:
+            label = "{} model".format(model.capitalize())
 
         handles.append(mlines.Line2D(
-            [], [], 
-            color=colors[lh, model], 
-            linestyle=lines[lh, model], 
+            [], [],
+            color=colors[model], 
+            linestyle=lines[model],
             label=label))
 
     ax.legend(
@@ -73,7 +71,7 @@ def make_legend(ax, lines, colors):
         frameon=False)
 
 
-def plot(dest, results_path):
+def plot(dest, results_path, counterfactual, fitted, likelihood):
 
     # load in the human responses
     human = pd\
@@ -87,44 +85,40 @@ def plot(dest, results_path):
     # load in the model responses
     model = pd\
         .read_csv(os.path.join(results_path, 'model_mass_accuracy_by_trial.csv'))\
-        .groupby(['counterfactual', 'fitted', 'kappa0'])\
-        .get_group((True, True, 'all'))\
+        .groupby(['likelihood', 'counterfactual', 'fitted', 'kappa0'])\
+        .get_group((likelihood, counterfactual, fitted, 'all'))\
         .groupby(['version', 'num_mass_trials'])\
         .filter(filter_trials)\
-        .set_index(['version', 'likelihood', 'model'])\
+        .set_index(['version', 'model'])\
         .sortlevel()
 
     # load in the log likelihood ratios
     llhr = pd\
         .read_csv(os.path.join(results_path, 'model_log_lh_ratios.csv'))\
-        .groupby(['counterfactual', 'fitted'])\
-        .get_group((True, True))\
+        .groupby(['likelihood', 'counterfactual', 'fitted'])\
+        .get_group((likelihood, counterfactual, fitted))\
         .groupby(['version', 'num_mass_trials'])\
         .filter(filter_trials)\
-        .set_index(['version', 'likelihood'])['llhr']
+        .set_index(['version'])['llhr']
 
     # colors and line styles
     plot_config = util.load_config()["plots"]
     darkgrey = plot_config["darkgrey"]
-    palette = sns.color_palette("Dark2")
-    colors = {
-        ('ipe', 'static'): palette[0],
-        ('ipe', 'learning'): palette[0],
-        ('empirical', 'static'): palette[1],
-        ('empirical', 'learning'): palette[1]
-    }
     lines = {
-        ('ipe', 'static'): '--',
-        ('ipe', 'learning'): '-',
-        ('empirical', 'static'): '--',
-        ('empirical', 'learning'): '-'
+        'human': '-',
+        'static': ':',
+        'learning': '--'
+    }
+    colors = {
+        'human': darkgrey,
+        'static': darkgrey,
+        'learning': darkgrey
     }
 
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, sharey=True)
 
     # left subplot: experiment 1
-    timeseries(ax1, human.ix['H'], darkgrey)
-    plot_models(ax1, model.ix['H'], lines, colors)
+    plot_all(ax1, human.ix['H'], model.ix['H'], lines, colors)
     ax1.set_title('Experiment 1')
     ax1.set_xlabel('Trial')
     ax1.set_ylabel('Fraction correct')
@@ -134,8 +128,7 @@ def plot(dest, results_path):
     add_llhr(ax1, llhr.ix['H'])
 
     # middle subplot: experiment 2
-    timeseries(ax2, human.ix['G'], darkgrey)
-    plot_models(ax2, model.ix['G'], lines, colors)
+    plot_all(ax2, human.ix['G'], model.ix['G'], lines, colors)
     ax2.set_title('Experiment 2')
     ax2.set_xlabel('Trial')
     ax2.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
@@ -143,8 +136,7 @@ def plot(dest, results_path):
     add_llhr(ax2, llhr.ix['G'])
 
     # right subplot: experiment 3 (between subjects)
-    timeseries(ax3, human.ix['I'], darkgrey)
-    plot_models(ax3, model.ix['I'], lines, colors)
+    plot_all(ax3, human.ix['I'], model.ix['I'], lines, colors)
     ax3.set_title('Experiment 3')
     ax3.set_xlabel('Trial')
     ax3.set_xticks([1, 2, 3, 5, 10])
@@ -171,5 +163,22 @@ def plot(dest, results_path):
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
+    parser.add_argument(
+        '--no-counterfactual',
+        action='store_false',
+        dest='counterfactual',
+        default=True,
+        help='whether to plot the counterfactual likelihoods')
+    parser.add_argument(
+        '--not-fitted',
+        action='store_false',
+        dest='fitted',
+        default=True,
+        help='whether to plot the fitted models')
+    parser.add_argument(
+        '--likelihood',
+        default='ipe',
+        help='which version of the likelihood to plot')
+
     args = parser.parse_args()
-    plot(args.to, args.results_path)
+    plot(args.to, args.results_path, args.counterfactual, args.fitted, args.likelihood)

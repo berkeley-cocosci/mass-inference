@@ -14,6 +14,7 @@ __depends__ = [
 import util
 import os
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -74,7 +75,30 @@ def add_corr(ax, corr):
     ymin, ymax = ax.get_ylim()
     ax.text(
         xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.025, corrstr,
-        horizontalalignment='right', fontsize=10)    
+        horizontalalignment='right', fontsize=10)
+
+
+def plot_kappas(ax, model, human, colors, markers):
+    errorbar(
+        ax, model[-1.0], human[-1.0], 
+        color=colors[0], marker=markers[0])
+    errorbar(
+        ax, model[1.0], human[1.0], 
+        color=colors[1], marker=markers[1])
+
+
+def make_legend(ax, colors, markers):
+    handles = []
+
+    for i, kappa in enumerate(['0.1', '10']):
+        handles.append(mlines.Line2D(
+            [], [],
+            color=colors[i], 
+            marker=markers[i],
+            linestyle='',
+            label=r"$\kappa={}$".format(kappa)))
+
+    ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
 
 
 def plot(dest, results_path):
@@ -108,7 +132,9 @@ def plot(dest, results_path):
 
     # color config
     plot_config = util.load_config()["plots"]
-    colors = plot_config["colors"]
+    palette = plot_config["colors"]
+    colors = [palette[0], palette[2]]
+    markers = ['o', 's']
     darkgrey = plot_config["darkgrey"]
 
     # create the figure
@@ -116,8 +142,7 @@ def plot(dest, results_path):
 
     # left subplot: regular likelihood
     plot_sigmoid(ax1, model_mass.ix[False], human_mass, color=darkgrey)
-    errorbar(ax1, model_mass.ix[False][-1.0], human_mass[-1.0], color=colors[0], label=r"$\kappa=0.1$")
-    errorbar(ax1, model_mass.ix[False][1.0], human_mass[1.0], color=colors[2], label=r"$\kappa=10$")
+    plot_kappas(ax1, model_mass.ix[False], human_mass, colors, markers)
     ax1.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
     ax1.set_ylabel(r"% participants choosing $\kappa=10$")
     ax1.set_title("Normal likelihood")
@@ -126,8 +151,7 @@ def plot(dest, results_path):
 
     # right subplot: counterfactual likelihood
     plot_sigmoid(ax2, model_mass.ix[True], human_mass, color=darkgrey)
-    errorbar(ax2, model_mass.ix[True][-1.0], human_mass[-1.0], color=colors[0])
-    errorbar(ax2, model_mass.ix[True][1.0], human_mass[1.0], color=colors[2])
+    plot_kappas(ax2, model_mass.ix[True], human_mass, colors, markers)
     ax2.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
     ax2.set_title("Counterfactual likelihood")
@@ -135,7 +159,7 @@ def plot(dest, results_path):
     add_corr(ax2, mass_corrs.ix[True])
 
     # create the legend
-    ax1.legend(loc='upper left', fontsize=10, title="True mass ratio")
+    make_legend(ax1, colors, markers)
 
     # clear the top and right axis lines
     sns.despine()

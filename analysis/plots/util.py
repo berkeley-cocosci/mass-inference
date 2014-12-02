@@ -3,6 +3,7 @@ import seaborn as sns
 import os
 import sys
 import json
+import numpy as np
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 
@@ -18,6 +19,17 @@ def load_config():
 
 def get_query():
     return load_config()["analysis"]["query"]
+
+
+def grayify(colors):
+    """Based on grayify function from:
+
+    https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/
+
+    """
+    RGB_weight = [0.299, 0.587, 0.114]
+    luminance = np.sqrt(np.dot(np.array(colors)[:, :3] ** 2, RGB_weight))
+    return [str(x) for x in luminance]
 
 
 def default_argparser(module):
