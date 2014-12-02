@@ -55,7 +55,7 @@ import util
 import pandas
 import numpy
 
-from scipy.optimize import minimize
+from scipy.optimize import minimize_scalar as minimize
 from IPython.parallel import Client, require
 
 
@@ -67,7 +67,7 @@ def log_laplace(x, mu=0, b=1):
     return c + e
 
 
-def make_posterior(X, y, verbose=False):
+def make_posterior(X, y):
     """Returns a function that takes an argument for the hypothesis, and that
     then computes the posterior probability of that hypothesis given X and y
 
@@ -83,9 +83,6 @@ def make_posterior(X, y, verbose=False):
         # compute the posterior
         log_posterior = log_lh + log_prior
 
-        if verbose:
-            print B, -log_posterior
-        
         return -log_posterior
 
     return f
@@ -96,13 +93,11 @@ def logistic_regression(X, y, verbose=False):
     output y.
 
     """
-    log_posterior = make_posterior(X, y, verbose)
-    res = [minimize(fun=log_posterior, x0=x0) for x0 in [-1.0, 0.0, 1.0, 2.0]]
-    res.sort(cmp=lambda x, y: cmp(x['fun'], y['fun']))
-    best = res[0]
+    log_posterior = make_posterior(X, y)
+    res = minimize(log_posterior)
     if verbose:
-        print "best:", best['x'], best['fun']
-    return float(best['x'])
+        print res
+    return float(res['x'])
 
 
 def fit_responses(df, model_name, verbose=False):
