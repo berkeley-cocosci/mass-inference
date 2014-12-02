@@ -3,6 +3,7 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from mass.sims.build import build
 from copy import deepcopy
+import numpy as np
 
 defaults = dict(
     # maximum number of conditions per simulation task
@@ -221,6 +222,50 @@ def make_options():
         'num_samples': 100,
         'sigmas': [0.04],
         'phis': [0.2]
+    })
+
+    # I-a-truth
+    options.append({
+        'exp': 'mass_inference-I-a',
+        'tag': 'truth',
+        'cpo_path': "mass-inference-I-a",
+        'num_samples': 1,
+        'sigmas': [0.0],
+        'phis': [0.0],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-a-ipe
+    options.append({
+        'exp': 'mass_inference-I-a',
+        'tag': 'ipe',
+        'cpo_path': "mass-inference-I-a",
+        'num_samples': 100,
+        'sigmas': [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1],
+        'phis': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.6, 2.0, 2.5, 3.0],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-b-truth
+    options.append({
+        'exp': 'mass_inference-I-b',
+        'tag': 'truth',
+        'cpo_path': "mass-inference-I-b",
+        'num_samples': 1,
+        'sigmas': [0.0],
+        'phis': [0.0],
+        'kappas': [-1.0, 0.0, 1.0]
+    })
+
+    # I-b-ipe
+    options.append({
+        'exp': 'mass_inference-I-b',
+        'tag': 'ipe',
+        'cpo_path': "mass-inference-I-b",
+        'num_samples': 100,
+        'sigmas': [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1],
+        'phis': [0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.6, 2.0, 2.5, 3.0],
+        'kappas': [-1.0, 0.0, 1.0]
     })
 
     return options

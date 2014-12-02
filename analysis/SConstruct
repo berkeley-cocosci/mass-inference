@@ -1,0 +1,45 @@
+import os
+import json
+import subprocess as sp
+
+env = Environment(ENV=os.environ)
+
+DEPENDENCIES = json.loads(sp.check_output(["python", "get_dependencies.py"]))
+for script in DEPENDENCIES:
+    deps = DEPENDENCIES[script]
+
+    # special case: fall response plots
+    if script == 'plots/fall_responses.py':
+        params = [
+            ('G', 'A'), ('G', 'B'), ('H', 'A'), ('H', 'B'), 
+            ('GH', 'A'), ('GH', 'B'), ('I', 'A')
+        ]
+
+        for version, block in params:
+            target = "figures/fall_responses_{}_{}".format(version, block)
+            targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
+            env.Command(
+                targets, [script] + deps['sources'],
+                "python $SOURCE --to $TARGETS --version {} --block {}".format(
+                    version, block))
+
+    # special case: fall response plots
+    elif script == 'plots/mass_accuracy_by_trial_with_model.py':
+        params = [(True, True), (True, False), (False, True), (False, False)]
+
+        for cf, fit in params:
+            target = "figures/mass_accuracy_by_trial_with_model{}{}".format(
+                '_nocf' if not cf else '',
+                '_nofit' if not fit else '')
+            targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
+            env.Command(
+                targets, [script] + deps['sources'],
+                "python $SOURCE --to $TARGETS {} {}".format(
+                    '--no-counterfactual' if not cf else '',
+                    '--not-fitted' if not fit else ''))
+
+    # everything else
+    else:
+        env.Command(
+            deps['targets'], [script] + deps['sources'], 
+            "python $SOURCE --to $TARGETS")

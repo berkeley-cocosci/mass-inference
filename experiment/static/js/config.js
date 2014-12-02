@@ -10,9 +10,8 @@ var EXPERIMENT = Object.freeze({
     pretest: 0,
     experimentA: 1,
     experimentB: 2,
-    experimentC: 3,
-    posttest: 4,
-    length: 5
+    posttest: 3,
+    length: 4
 });
 
 // Enum-like object mapping trial phase names to ids, in the order
@@ -31,14 +30,11 @@ var TRIAL = Object.freeze({
 var FALL_PHASES = [
     EXPERIMENT.pretest,
     EXPERIMENT.experimentA,
-    EXPERIMENT.experimentB,
     EXPERIMENT.posttest
 ];
 
 // The phases in which we will ask the "mass?" question
-var MASS_PHASES = [EXPERIMENT.experimentC];
-// The trials on which we will ask the "mass?" question
-var MASS_TRIALS = [0, 1, 2, 3, 5, 8, 13, 19];
+var MASS_PHASES = [EXPERIMENT.experimentB];
 
 // Enum-like object for representing key names.
 var KEYS = new Object();
@@ -81,6 +77,8 @@ var Config = function (condition, counterbalance) {
     this.fade = 200;
     // List of trial information object for each experiment phase
     this.trials = new Object();
+    this.mass_trials = [];
+    this.num_mass_trials = 0;
 
     // Lists of pages and examples for each instruction page.  We know
     // the list of pages we want to display a priori.
@@ -96,9 +94,6 @@ var Config = function (condition, counterbalance) {
     this.instructions[EXPERIMENT.experimentB] = {
         pages: ["instructions-experimentB"],
         examples: [null]
-    };
-    this.instructions[EXPERIMENT.experimentC] = {
-        pages: ["instructions-experimentC"],
     };
     this.instructions[EXPERIMENT.posttest] = {
         pages: ["instructions-posttest"],
@@ -120,12 +115,13 @@ var Config = function (condition, counterbalance) {
     // Parse the JSON object that we've requested and load it into the
     // configuration
     this.parse_config = function (data) {
+        this.mass_trials = data["mass_trials"];
+        this.num_mass_trials = data["num_mass_trials"];
         this.trials[EXPERIMENT.pretest] = _.shuffle(data["pretest"]);
         this.trials[EXPERIMENT.experimentA] = _.shuffle(data["experimentA"]);
-        this.trials[EXPERIMENT.experimentB] = _.shuffle(data["experimentB"]);
-        this.trials[EXPERIMENT.experimentC] = _.shuffle(data["experimentC"]);
+        this.trials[EXPERIMENT.experimentB] = _.shuffle(data["experimentB"]).slice(0, this.num_mass_trials);
         this.trials[EXPERIMENT.posttest] = _.shuffle(data["posttest"]);
-
+        
         this.instructions[EXPERIMENT.pretest].examples = [
             data.unstable_example,
             data.stable_example,
@@ -136,8 +132,8 @@ var Config = function (condition, counterbalance) {
             data.mass_example
         ];
 
-        this.instructions[EXPERIMENT.experimentC].examples = [
-            data.experimentC[0]
+        this.instructions[EXPERIMENT.experimentB].examples = [
+            data.experimentB[0]
         ];
     };
 

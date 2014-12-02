@@ -120,7 +120,7 @@ def build(exp, tag, force, **params):
         script_root.rmtree()
 
     # Locations of stimuli and the floor
-    cpo_paths = CPO_PATH.joinpath(params['cpo_path']).listdir()
+    cpo_paths = sorted(CPO_PATH.joinpath(params['cpo_path']).listdir())
     floor_path = CPO_PATH.joinpath(params['floor_path'])
 
     # Names of all the objects we'll be simulating -- make sure

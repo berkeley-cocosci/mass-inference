@@ -72,7 +72,9 @@ def find_bad_participants(exp, data):
             'pid': pid,
             'assignment': assignment,
             'note': None,
-            'timestamp': None
+            'timestamp': None,
+            'percent': 0.0,
+            'num_failed': np.nan
         }
 
         # go ahead and add this to our list now -- the dictionary is
@@ -87,52 +89,69 @@ def find_bad_participants(exp, data):
             datetime.fromtimestamp(times.irow(0) / 1e3))
         info['timestamp'] = start_time
 
+        # add condition/counterbalance
+        cond = int(df['condition'].unique())
+        cb = int(df['counterbalance'].unique())
+        info['condition'] = cond
+        info['counterbalance'] = cb
+
         # check for duplicated entries
-        dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
-                  .duplicated().any()
-        if dupes:
-            logger.warning("%s has duplicate trials", pid)
-            info['note'] = "duplicate_trials"
-            continue
+        if exp == 'mass_inference-G':
+            dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
+                      .duplicated().any()
+            if dupes:
+                logger.warning(
+                    "%s (%s, %s) has duplicate trials", pid, cond, cb)
+                info['note'] = "duplicate_trials"
+                continue
 
         # check to make sure they actually finished
         try:
-            pretest = df\
-                .groupby(['mode', 'trial_phase'])\
-                .get_group(('pretest', 'fall_response'))
-            posttest = df\
-                .groupby(['mode', 'trial_phase'])\
-                .get_group(('posttest', 'fall_response'))
             prestim = df\
-                .groupby(['trial_phase'])\
+                .set_index(['mode', 'trial', 'trial_phase'])\
+                .groupby(level='trial_phase')\
                 .get_group('prestim')
-        except (KeyError, IndexError):
-            pretest = None
-            posttest = None
-            incomplete = True
+        except IndexError:
+            if df['trial_phase'].isnull().all():
+                incomplete = True
+            else:
+                raise
         else:
-            incomplete = any([
-                np.isnan(pretest['response']).any(),
-                np.isnan(posttest['response']).any(),
-                len(pretest) != 6,
-                len(posttest) != 6,
-                len(prestim) != 62
-            ])
+            if exp == 'mass_inference-G':
+                num_trials = 62
+            elif exp == 'mass_inference-H':
+                num_trials = 62
+            elif exp == 'mass_inference-I':
+                num_trials = 32
+            else:
+                raise ValueError("unhandled experiment: %s" % exp)
+
+            incomplete = len(prestim) != num_trials
+            info['percent'] = 100 * len(prestim) / num_trials
+
         if incomplete:
-            logger.warning("%s is incomplete", pid)
+            logger.warning(
+                "%s (%s, %s) is incomplete (completed %d/32 trials [%.1f%%])",
+                pid, cond, cb, len(prestim), info['percent'])
             info['note'] = "incomplete"
             continue
 
         # check to see if they passed the posttest
-        if posttest is not None:
-            truth = (posttest['nfell'] > 0).astype(float)
-            resp = (posttest['response'] > 4).astype(float)
-            resp[posttest['response'] == 4] = np.nan
-            failed = (truth != resp).sum() > 1
-        else:
-            failed = True
-        if failed:
-            logger.warning("%s failed posttest", pid)
+        posttest = df\
+            .set_index(['mode', 'trial', 'trial_phase'])\
+            .groupby(level=['mode', 'trial_phase'])\
+            .get_group(('posttest', 'fall_response'))
+
+        truth = (posttest['nfell'] > 0).astype(float)
+        resp = (posttest['response'] > 4).astype(float)
+        resp[posttest['response'] == 4] = np.nan
+        failed = (truth != resp).sum()
+        info['num_failed'] = failed
+
+        if failed > 1:
+            logger.warning(
+                "%s (%s, %s) failed posttest (%d wrong)",
+                pid, cond, cb, failed)
             info['note'] = "failed_posttest"
             continue
 
@@ -144,7 +163,7 @@ def find_bad_participants(exp, data):
         if exp in exps:
             exps.remove(exp)
         if len(exps) > 0:
-            logger.warning("%s is a repeat worker", pid)
+            logger.warning("%s (%s, %s) is a repeat worker", pid, cond, cb)
             info['note'] = "repeat_worker"
             continue
 
@@ -174,7 +193,11 @@ def load_meta(data_path):
     conds = conds.T.to_dict()
 
     # make sure everyone saw the same questions/possible responses
-    meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
+    if 'hash' in meta:
+        meta = meta.drop(
+            ['condition', 'counterbalance', 'hash'], axis=1).drop_duplicates()
+    else:
+        meta = meta.drop(['condition', 'counterbalance'], axis=1).drop_duplicates()
     if len(meta) > 1:
         print "WARNING: metadata is not unique! (%d versions found)" % len(meta)
 
@@ -221,6 +244,10 @@ def load_data(data_path, conds, fields=None):
     # replace None and '' with np.nan
     data = data.replace([None, ''], [np.nan, np.nan])
 
+    # set labels to NaN where the color is NaN
+    data.loc[data['color0'].isnull(), 'label0'] = np.nan
+    data.loc[data['color1'].isnull(), 'label1'] = np.nan
+
     # process other various fields to make sure they're in the right
     # data format
     data['instructions'] = map(str2bool, data['instructions'])
@@ -233,7 +260,8 @@ def load_data(data_path, conds, fields=None):
     data['camera_spin'] = data['camera_spin'].astype('float')
     data['response'] = data['response'].astype('float')
     data['ratio'] = data['ratio'].astype('float')
-    data['trial_phase'] = data['trial_phase'].fillna('prestim')
+    data['occlude'] = data['occlude'].astype('float')
+    data['full_render'] = data['full_render'].astype('float')
 
     # remove instructions rows
     data = data\
@@ -252,6 +280,65 @@ def load_data(data_path, conds, fields=None):
         'psiturk_currenttrial',
         'instructions'], axis=1)
 
+    def add_condition(df):
+        info = conds[df.name]
+        df['condition'] = info['condition']
+        # sanity check -- make sure assignment and counterbalance
+        # fields match
+        assert (df['assignment'] == info['assignment']).all()
+        assert (df['counterbalance'] == info['counterbalance']).all()
+        return df
+
+    # add a column for the condition code
+    data = data.groupby('pid').apply(add_condition)
+
+    # hack to handle bug where the mode and trial phase don't get
+    # recorded somehow?
+    if data_path.namebase == 'mass_inference-I':
+        bad_trials = data.ix[data['mode'].isnull()]
+        for pid, df in bad_trials.groupby('pid'):
+            trials = df['trial']
+            inc = np.asarray(trials)
+            inc[1:] = inc[1:] < inc[:-1]
+            inc[0] = False
+            transitions, = np.nonzero(inc)
+            idx = np.arange(len(inc))
+
+            if len(transitions) > 0:
+                pretest_idx = df.index[idx < transitions[0]]
+                bad_trials.loc[pretest_idx, 'mode'] = 'pretest'
+            if len(transitions) > 1:
+                experimentA_idx = df.index[
+                    (idx >= transitions[0]) & (idx < transitions[1])]
+                bad_trials.loc[experimentA_idx, 'mode'] = 'experimentA'
+            if len(transitions) > 2:
+                experimentB_idx = df.index[
+                    (idx >= transitions[1]) & (idx < transitions[2])]
+                bad_trials.loc[experimentB_idx, 'mode'] = 'experimentB'
+                posttest_idx = df.index[idx >= transitions[2]]
+                bad_trials.loc[posttest_idx, 'mode'] = 'posttest'
+
+        data.loc[data['mode'].isnull(), 'mode'] = bad_trials['mode']
+
+        bad_trials = data.ix[data['trial_phase'].isnull()]
+        for pid, df in bad_trials.groupby('pid'):
+            prestim_idx = df[['mode', 'trial']].drop_duplicates().index
+
+            notB = df['mode'] != 'experimentB'
+            response = ~(df['response'].isnull())
+            fall_idx = df.index[notB & response]
+            bad_trials.loc[fall_idx, 'trial_phase'] = 'fall_response'
+
+            mass_idx = df.index[~notB & response]
+            bad_trials.loc[mass_idx, 'trial_phase'] = 'mass_response'
+
+            prefeedback_idx = df.index[~notB & ~response]
+            bad_trials.loc[prefeedback_idx, 'trial_phase'] = 'prefeedback'
+            bad_trials.loc[prestim_idx, 'trial_phase'] = 'prestim'
+
+        idx = data['trial_phase'].isnull()
+        data.loc[idx, 'trial_phase'] = bad_trials['trial_phase']
+
     # construct a dataframe containing information about the
     # participants
     p_conds = pd\
@@ -268,7 +355,7 @@ def load_data(data_path, conds, fields=None):
 
     # drop bad participants
     all_pids = p_info.set_index(['assignment', 'pid'])
-    bad_pids = all_pids.dropna()
+    bad_pids = all_pids.dropna(subset=['note'])
     n_failed = (bad_pids['note'] == 'failed_posttest').sum()
     n_subj = len(all_pids)
     n_good = n_subj - len(bad_pids)
@@ -282,6 +369,7 @@ def load_data(data_path, conds, fields=None):
     logger.info(
         "%d/%d (%.1f%%) completed participants OK",
         n_good, n_completed, n_good * 100. / n_completed)
+
     data = data\
         .set_index(['assignment', 'pid'])\
         .drop(bad_pids.index)\
@@ -308,22 +396,25 @@ def load_data(data_path, conds, fields=None):
         .sortlevel()\
         .reset_index()
 
-    def add_condition(df):
-        info = conds[df.name]
-        df['condition'] = info['condition']
-        # sanity check -- make sure assignment and counterbalance
-        # fields match
-        assert (df['assignment'] == info['assignment']).all()
-        assert (df['counterbalance'] == info['counterbalance']).all()
-        return df
-
-    # add a column for the condition code
-    data = data.groupby('pid').apply(add_condition)
-
     # create a column for the kappa value of the feedback they saw
     if 'kappa' in data:
         data = data.drop(['kappa'], axis=1)
     data['kappa0'] = np.log10(data['ratio'])
+
+    # update mass responses
+    data.loc[:, 'mass? response'] = data['mass? response'] * 2 - 1
+    data.loc[:, 'mass? correct'] = data['mass? response'] == data['kappa0']
+    isnan = np.isnan(data['mass? response'])
+    data.loc[isnan, 'mass? correct'] = np.nan
+
+    # include number of mass trials
+    def get_num_mass_trials(x):
+        trials = x.set_index('trial')['mass? response']
+        num_mass_trials = (~trials.isnull()).sum()
+        x['num_mass_trials'] = num_mass_trials
+        return x
+
+    data = data.groupby(['mode', 'pid']).apply(get_num_mass_trials)
 
     return data, participants
 

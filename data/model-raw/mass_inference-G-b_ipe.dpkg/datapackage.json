@@ -1,10 +1,5 @@
 {
   "description": null, 
-  "last_modified": "2013-11-13 17:14:48.367807", 
-  "title": null, 
-  "image": null, 
-  "datapackage_version": "1.0-beta.5", 
-  "sources": [], 
   "contributors": [
     {
       "email": "jhamrick@berkeley.edu", 
@@ -19,7 +14,10 @@
       "name": "Joshua B. Tenenbaum"
     }
   ], 
-  "version": "1.0.0", 
+  "image": null, 
+  "datapackage_version": "1.0-beta.5", 
+  "sources": [], 
+  "last_modified": "2014-07-11 14:09:10.387028", 
   "keywords": null, 
   "licenses": [
     {
@@ -27,6 +25,9 @@
       "id": "odc-by"
     }
   ], 
+  "name": "mass_inference-G-b_ipe.dpkg", 
+  "title": null, 
+  "version": "1.1.0", 
   "homepage": null, 
   "resources": [
     {
@@ -34,7 +35,7 @@
       "name": "simulations.npy", 
       "format": "npy", 
       "bytes": 90720096, 
-      "modified": "2013-11-13 17:14:46.885431", 
+      "modified": "2014-07-11 14:09:09.093402", 
       "path": "./simulations.npy"
     }, 
     {
@@ -42,7 +43,7 @@
       "name": "forces.npy", 
       "format": "npy", 
       "bytes": 32112, 
-      "modified": "2013-11-13 17:14:48.357410", 
+      "modified": "2014-07-11 14:09:10.374450", 
       "path": "./forces.npy"
     }, 
     {
@@ -50,7 +51,7 @@
       "name": "noises.npy", 
       "format": "npy", 
       "bytes": 480096, 
-      "modified": "2013-11-13 17:14:48.359657", 
+      "modified": "2014-07-11 14:09:10.377635", 
       "path": "./noises.npy"
     }, 
     {
@@ -271,7 +272,7 @@
       }, 
       "name": "simulation_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 17:14:48.367781"
+      "modified": "2014-07-11 14:09:10.386999"
     }, 
     {
       "format": "json", 
@@ -413,7 +414,7 @@
       }, 
       "name": "force_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 17:14:48.367798"
+      "modified": "2014-07-11 14:09:10.387018"
     }, 
     {
       "format": "json", 
@@ -574,8 +575,7 @@
       }, 
       "name": "noise_metadata", 
       "mediaformat": "application/json", 
-      "modified": "2013-11-13 17:14:48.367802"
+      "modified": "2014-07-11 14:09:10.387022"
     }
-  ], 
-  "name": "mass_inference-G-b_ipe.dpkg"
+  ]
 }

@@ -1,41 +1,72 @@
 #!/usr/bin/env python
 
+"""
+Computes the pearson correlation between model and human judgments on "which is
+heavier?" for each version of the experiment. Produces a csv file with the
+following columns:
+
+    version (string)
+        the experiment version
+    likelihood (string)
+        the name of the likelihood that was used
+    counterfactual (bool)
+        whether the counterfactual likelihood was used
+    model (string)
+        the name of the model (e.g. learning, static)
+    fitted (bool)
+        whether the model was fitted to human data
+    lower (float)
+        lower bound of the 95% confidence interval
+    median (float)
+        median of the bootstrap distribution
+    upper (float)
+        upper bound of the 95% confidence interval
+
+"""
+
+__depends__ = ["human_mass_responses_by_stimulus.csv", "model_mass_responses_by_stimulus.csv"]
+__random__ = True
+
+import os
 import util
 import pandas as pd
 import numpy as np
 
-filename = "mass_responses_by_stimulus_corrs.csv"
 
-
-def run(data, results_path, seed):
+def run(dest, results_path, seed):
     np.random.seed(seed)
-    results = []
 
-    responses = pd\
-        .read_csv(results_path.joinpath('mass_responses_by_stimulus.csv'))\
-        .set_index(['version', 'species', 'kappa0', 'stimulus'])['median']
+    # load in human data
+    human = pd\
+        .read_csv(os.path.join(results_path, "human_mass_responses_by_stimulus.csv"))\
+        .set_index(['stimulus', 'kappa0', 'version'])['median']\
+        .unstack('version')
 
-    results = {}
-    for version, df in responses.groupby(level='version'):
-        m = df.unstack('species')
+    # load in model data
+    cols = ['likelihood', 'counterfactual', 'model', 'fitted']
+    model = pd\
+        .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
+        .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\
+        .unstack('version')
 
-        x = m['ipe']
-        y = m['human']
-        results[(version, 'IPE', 'Human')] = util.bootcorr(x, y)
+    # create empty dataframe for our results
+    results = pd.DataFrame([])
 
-        x = m['empirical']
-        y = m['human']
-        results[(version, 'Empirical IPE', 'Human')] = util.bootcorr(x, y)
+    for version in human:
+        corr = model[version]\
+            .groupby(level=cols)\
+            .apply(util.bootcorr, human[version], method='pearson')\
+            .unstack()\
+            .reset_index()
 
-    results = pd.DataFrame.from_dict(results, orient='index')
-    results.index = pd.MultiIndex.from_tuples(
-        results.index,
-        names=['version', 'X', 'Y'])
+        corr['version'] = version
+        results = results.append(corr)
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-    return pth
+    results = results.set_index(['version'] + cols).sortlevel()
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.to, args.results_path, args.seed)

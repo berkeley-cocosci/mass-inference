@@ -1,44 +1,46 @@
 #!/usr/bin/env python
 
+"""
+Computes the number of stimuli for which people were not significantly above
+chance in judging which mass was heavier. Produces a csv file with the following
+columns:
+
+    version (string)
+        the experiment version
+    kappa0 (float)
+        the true log mass ratio
+    stimulus (string)
+        the stimulus name
+    0.00125 (boolean)
+        whether p(p(correct)) < 0.00125
+
+"""
+
+__depends__ = ["human"]
+
 import util
-import numpy as np
 
-filename = "num_chance.csv"
-texname = "num_chance.tex"
-
-words = [
-    'zero', 'one', 'two', 'three', 'four',
-    'five', 'six', 'seven', 'eight', 'nine', 'ten'
-]
-
-
-def run(data, results_path, seed):
-    np.random.seed(seed)
+def run(dest, data_path):
+    human = util.load_human(data_path)
     results = []
 
-    groups = data['human']['C']\
+    def num_chance(df):
+        groups = df.groupby(['kappa0', 'stimulus'])['mass? correct']
+        alpha = 0.05 / len(groups.groups)
+        results = groups\
+            .apply(lambda x: util.beta(x, 1, [alpha]))\
+            .unstack(-1) <= 0.5
+        return results
+
+    results = human['C']\
         .dropna(axis=0, subset=['mass? response'])\
         .groupby('version')\
-        .get_group('H')\
-        .groupby(['kappa0', 'stimulus'])['mass? correct']
-    alpha = 0.05 / len(groups.groups)
-    results = groups\
-        .apply(util.beta, [alpha])\
-        .unstack(-1) <= 0.5
+        .apply(num_chance)
 
-    pth = results_path.joinpath(filename)
-    results.to_csv(pth)
-
-    with open(results_path.joinpath(texname), "w") as fh:
-        fh.write("%% AUTOMATICALLY GENERATED -- DO NOT EDIT!\n")
-        num = results[alpha].sum()
-        if num < len(words):
-            num = words[num]
-        cmd = util.newcommand("NumChance", num)
-        fh.write(cmd)
-
-    return pth
+    results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.to, args.data_path)

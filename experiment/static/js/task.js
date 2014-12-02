@@ -50,11 +50,13 @@ var Instructions = function() {
         // Load the next page of instructions
         $(".slide").hide();
         var slide = $("#" + this.pages[STATE.index]);
-        set_reload(slide);
         slide.fadeIn($c.fade);
 
         // Update the URL hash
         STATE.set_hash();
+        
+        // Save data
+        psiTurk.saveData();
 
         // Bind a handler to the "next" button. We have to wrap it in
         // an anonymous function to preserve the scope.
@@ -79,7 +81,6 @@ var Instructions = function() {
 
                 // Start the video immediately
                 var on_ready = function (e, api) {
-                    unset_reload(slide);
                     api.play();
                 };
                 // Loop the player by restarting the current video
@@ -112,8 +113,9 @@ var Instructions = function() {
         data.update(STATE.as_data());
         data.update(this.examples[STATE.index]);
         data.update({response: "", response_time: rt});
-        psiTurk.recordTrialData(data);
+
         debug(data);
+        psiTurk.recordTrialData(data);
 
          // Destroy the video player
         if (this.player) this.player.unload();
@@ -132,17 +134,16 @@ var Instructions = function() {
     this.finish = function() {
         debug("Done with instructions")
 
-        // Record that the user has finished the instructions and
-        // moved on to the experiment. This changes their status
-        // code in the database.
-        if (STATE.experiment_phase == EXPERIMENT.pretest) {
-	    psiTurk.finishInstructions();
-        }
-
         // Reset the state object for the test phase
         STATE.set_instructions(0);
         STATE.set_index();
         STATE.set_trial_phase();
+        STATE.set_hash();
+
+        // Save data
+        psiTurk.saveData();
+
+        // Start the test phase
         CURRENTVIEW = new TestPhase();
     };
 
@@ -220,8 +221,6 @@ var TestPhase = function() {
             $(".question-image-A").show();
         } else if (STATE.experiment_phase == EXPERIMENT.experimentB) {
             $(".question-image-B").show();
-        } else if (STATE.experiment_phase == EXPERIMENT.experimentC) {
-            $(".question-image-C").show();
         }
 
         // Determine which feedback to show (stable or unstable)
@@ -387,7 +386,9 @@ var TestPhase = function() {
     // Show the current trial at the currect phase
     this.show = function () {
         // Update the URL hash
-        set_reload($("#trial"));
+        STATE.set_hash();
+        // Save data
+        psiTurk.saveData();
         // Call the phase setup handler
         this.phases[STATE.trial_phase](this);
         // Record when this phase started
@@ -419,8 +420,8 @@ var TestPhase = function() {
         });
 
         // Create the record we want to save
-        psiTurk.recordTrialData(data);
         debug(data);
+        psiTurk.recordTrialData(data);
 
         // Tell the state to go to the next trial phase or trial
         if (STATE.trial_phase == (TRIAL.length - 1)) {
@@ -443,7 +444,8 @@ var TestPhase = function() {
         STATE.set_instructions();
         STATE.set_index();
         STATE.set_trial_phase();
-
+        STATE.set_hash();
+        
         // If we're at the end of the experiment, submit the data to
         // mechanical turk, otherwise go on to the next experiment
         // phase and show the relevant instructions
@@ -461,7 +463,7 @@ var TestPhase = function() {
                         clearInterval(reprompt); 
                         finish();
                     }, 
-                    error: prompt_resubmit
+                    error: prompt_resubmit,
                 });
             };
 
@@ -506,14 +508,14 @@ var TestPhase = function() {
  ******************/
 
 $(document).ready(function() { 
+    var hash = psiTurk.taskdata.attributes.questiondata.hash;
+    if (hash) {
+        window.location.hash = hash;
+    }
+    STATE = new State();
+
     // Load the HTML for the trials
     psiTurk.showPage("trial.html");
-
-    // Record field names for the data that we'll be collecting
-    var data = new DataRecord();
-    var fields = JSON.stringify(data.fields);
-    psiTurk.recordUnstructuredData("fields", fields);
-    debug(fields);
 
     // Record various unstructured data
     psiTurk.recordUnstructuredData("condition", condition);
@@ -522,9 +524,8 @@ $(document).ready(function() {
     psiTurk.recordUnstructuredData("fall_choices", $("#fall_response").html());
     psiTurk.recordUnstructuredData("mass_question", $("#mass-question").html());
     psiTurk.recordUnstructuredData("mass_choices", $("#mass_response").html());
-    
+
     // Start the experiment
-    STATE = new State();
     PLAYER = new Player();
 
     // Begin the experiment phase

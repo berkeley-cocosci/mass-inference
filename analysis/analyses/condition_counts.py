@@ -1,13 +1,30 @@
 #!/usr/bin/env python
 
+"""
+Computes the number of participants in each condition of each experiment.
+Outputs a csv with the following columns:
+
+    version (string)
+        the version of the experiment
+    condition (int)
+        the number of the condition
+    counterbalance (bool)
+        boolean indicating counterbalancing
+    num_participants (int)
+        how many participants were in the respective 
+        version/condition/counterbalance
+"""
+
+__depends__ = ["human"]
+
 import util
 
-filename = "condition_counts.csv"
 
+def run(dest, data_path):
+    human = util.load_human(data_path)
 
-def run(data, results_path, seed):
     # compute how many participants we have for each condition
-    counts = data['human']['all']\
+    counts = human['all']\
         .groupby(['version', 'condition', 'counterbalance'])['pid']\
         .apply(lambda x: len(x.unique()))\
         .reset_index()
@@ -15,10 +32,10 @@ def run(data, results_path, seed):
         'version', 'condition', 'counterbalance', 'num_participants']
     counts = counts.set_index(['version', 'condition', 'counterbalance'])
 
-    pth = results_path.joinpath(filename)
-    counts.to_csv(pth)
-    return pth
+    counts.to_csv(dest)
 
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.to, args.data_path)

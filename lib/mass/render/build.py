@@ -33,7 +33,7 @@ def build(exp, condition, tag, force, cpo_path, seed, **params):
         return
 
     # Location of the stimuli
-    stims = CPO_PATH.joinpath(cpo_path).abspath().listdir()
+    stims = sorted(CPO_PATH.joinpath(cpo_path).abspath().listdir())
     tasks = [x.namebase for x in stims]
 
     # Random number generator

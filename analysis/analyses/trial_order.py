@@ -1,19 +1,37 @@
 #!/usr/bin/env python
 
+"""
+Create a csv file containing the trial order for each participant in the
+experiment. The resulting file will have the following columns:
+
+    version (string)
+        experiment version
+    kappa0 (float)
+        true log mass ratio
+    pid (string)
+        the unique participant id
+    mode (string)
+        the experiment phase
+    trial (int)
+        the trial number
+    stimulus (string)
+        the stimulus name
+
+"""
+
+__depends__ = ["human"]
+
 import util
 
-filename = "trial_order.csv"
+def run(dest, data_path):
+    human = util.load_human(data_path)
+    order = human['all']\
+        .set_index(['version', 'kappa0', 'pid', 'mode', 'trial'])[['stimulus']]\
+        .sortlevel()
 
-
-def run(data, results_path, seed):
-    order = data['human']['all']\
-        .set_index(['mode', 'trial', 'pid'])['stimulus']\
-        .unstack('pid')
-
-    pth = results_path.joinpath(filename)
-    order.to_csv(pth)
-    return pth
-
+    order.to_csv(dest)
 
 if __name__ == "__main__":
-    util.run_analysis(run)
+    parser = util.default_argparser(locals())
+    args = parser.parse_args()
+    run(args.to, args.data_path)
