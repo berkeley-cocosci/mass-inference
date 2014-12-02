@@ -13,10 +13,12 @@ import pandas as pd
 
 
 def run(dest, results_path):
-    results = pd.read_csv(os.path.join(results_path, "fall_response_corrs.csv"))
+    results = pd\
+        .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
+        .set_index(['query', 'block', 'X', 'Y'])\
+        .ix[util.load_query()]
 
     format_pearson = util.load_config()["latex"]["pearson"]
-    results = results.set_index(['block', 'X', 'Y'])
 
     fh = open(dest, "w")
 

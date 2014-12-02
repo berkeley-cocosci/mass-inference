@@ -13,6 +13,10 @@ def load_config():
     return config
 
 
+def load_query():
+    return load_config()["analysis"]["query"]
+
+
 def newcommand(name, val):
     fmt = load_config()["latex"]["newcommand"]
     return fmt.format(name=name, action=val)
