@@ -40,14 +40,13 @@ __ext__ = '.h5'
 import util
 import pandas as pd
 import numpy as np
-import os
 import model_fall_responses_queries as queries
 
-from IPython.parallel import Client, require
+from IPython.parallel import Client, require, Reference
 
 
-def model_fall_responses(args):
-    key, queryname, data = args
+def model_fall_responses(key, queryname, params, ipe):
+    data = ipe.groupby(['sigma', 'phi']).get_group(params)
     print key
 
     result = data\
@@ -65,6 +64,7 @@ def run(dest, data_path, parallel, seed):
 
     # load the raw ipe data
     ipe = util.load_ipe(data_path)
+    ipe_params = ipe.groupby(['sigma', 'phi']).groups.keys()
 
     # open up the store for saving
     store = pd.HDFStore(dest, mode='w')
@@ -74,22 +74,25 @@ def run(dest, data_path, parallel, seed):
         rc = Client()
         lview = rc.load_balanced_view()
         task = require('util', 'model_fall_responses_queries as queries')(model_fall_responses)
+        rc[:].push(dict(ipe=ipe), block=True)
+        data = Reference('ipe')
     else:
         task = model_fall_responses
+        data = ipe
 
     # start the tasks
     all_params = {}
     results = []
-    for i, (params, df) in enumerate(ipe.groupby(['sigma', 'phi'])):
+    for i, params in enumerate(ipe_params):
         all_params['params_{}'.format(i)] = params
 
         for query in queries.__all__:
             key = "/{}/params_{}".format(query, i)
-            args = [key, query, df]
+            args = [key, query, params, data]
             if parallel:
-                result = lview.apply(task, args)
+                result = lview.apply(task, *args)
             else:
-                result = task(args)
+                result = task(*args)
             results.append(result)
 
     # save the parameters into the database
