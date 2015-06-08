@@ -69,9 +69,6 @@ def run(dest, data_path, parallel, seed):
     # open up the store for saving
     store = pd.HDFStore(dest, mode='w')
 
-    # path to the directory with analysis stuff in it
-    pth = os.path.abspath(os.path.dirname(__file__))
-
     # create the ipython parallel client
     if parallel:
         rc = Client()
@@ -88,7 +85,7 @@ def run(dest, data_path, parallel, seed):
 
         for query in queries.__all__:
             key = "/{}/params_{}".format(query, i)
-            args = [key, query, df, pth]
+            args = [key, query, df]
             if parallel:
                 result = lview.apply(task, args)
             else:
