@@ -97,7 +97,7 @@ def run(dest, data_path, parallel, seed):
 
     # save the parameters into the database
     all_params = pd.DataFrame(all_params, index=['sigma', 'phi']).T
-    for query in queries:
+    for query in queries.__all__:
         key = "/{}/param_ref".format(query)
         store.append(key, all_params)
 
