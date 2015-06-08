@@ -38,9 +38,10 @@ __parallel__ = True
 __ext__ = '.h5'
 
 import util
-import pandas
-import numpy
+import pandas as pd
+import numpy as np
 import os
+import model_fall_responses_queries as queries
 
 from IPython.parallel import Client, require
 
@@ -51,7 +52,7 @@ def model_fall_responses(args):
 
     result = data\
         .groupby(['block', 'stimulus'])\
-        .apply(getattr(util, queryname))\
+        .apply(getattr(queries, queryname))\
         .reset_index()\
         .rename(columns=dict(kappa='kappa0'))
     result['query'] = queryname
@@ -60,16 +61,13 @@ def model_fall_responses(args):
 
 
 def run(dest, data_path, parallel, seed):
-    numpy.random.seed(seed)
+    np.random.seed(seed)
 
     # load the raw ipe data
     ipe = util.load_ipe(data_path)
 
-    # queries we'll be computing
-    queries = ['percent_fell', 'more_than_half_fell', 'more_than_one_fell']
-
     # open up the store for saving
-    store = pandas.HDFStore(dest, mode='w')
+    store = pd.HDFStore(dest, mode='w')
 
     # path to the directory with analysis stuff in it
     pth = os.path.abspath(os.path.dirname(__file__))
@@ -78,7 +76,7 @@ def run(dest, data_path, parallel, seed):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('util')(model_fall_responses)
+        task = require('util', 'model_fall_responses_queries as queries')(model_fall_responses)
     else:
         task = model_fall_responses
 
@@ -88,7 +86,7 @@ def run(dest, data_path, parallel, seed):
     for i, (params, df) in enumerate(ipe.groupby(['sigma', 'phi'])):
         all_params['params_{}'.format(i)] = params
 
-        for query in queries:
+        for query in queries.__all__:
             key = "/{}/params_{}".format(query, i)
             args = [key, query, df, pth]
             if parallel:
@@ -98,7 +96,7 @@ def run(dest, data_path, parallel, seed):
             results.append(result)
 
     # save the parameters into the database
-    all_params = pandas.DataFrame(all_params, index=['sigma', 'phi']).T
+    all_params = pd.DataFrame(all_params, index=['sigma', 'phi']).T
     for query in queries:
         key = "/{}/param_ref".format(query)
         store.append(key, all_params)

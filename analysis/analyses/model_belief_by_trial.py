@@ -2,7 +2,7 @@
 
 """
 Computes the model belief for each participant for the following models:
-    
+
     * static
     * learning
 
@@ -35,27 +35,19 @@ __parallel__ = True
 __ext__ = '.h5'
 
 import os
-import sys
 import util
-import pandas
-import numpy
+import pandas as pd
+import numpy as np
 
 from IPython.parallel import Client, require
 
 
 def model_belief(args):
-    key, old_store_pth, pth = args
+    key, old_store_pth = args
     print key
 
-    # make sure the directory where util.py is, is on the path
-    if pth not in sys.path:
-        sys.path.append(pth)
-
-    # import util, so we can use the normalize functon
-    import util
-
     # load in the model likelihoods
-    old_store = pandas.HDFStore(old_store_pth, mode='r')
+    old_store = pd.HDFStore(old_store_pth, mode='r')
     data = old_store[key]
     old_store.close()
 
@@ -68,23 +60,23 @@ def model_belief(args):
     # compute the belief for each model
     models = {
         'static': llh.copy(),
-        'learning': llh.groupby(level=['counterfactual', 'pid']).apply(numpy.cumsum),
+        'learning': llh.groupby(level=['counterfactual', 'pid']).apply(np.cumsum),
     }
 
     for model_name, model in models.items():
         # normalize the probabilities so they sum to one
         model[:] = util.normalize(
-            numpy.asarray(model), axis=1)[1]
+            np.asarray(model), axis=1)[1]
 
         # convert to long form
-        model = pandas.melt(
+        model = pd.melt(
             model.reset_index(),
             id_vars=['counterfactual', 'pid', 'trial'],
             var_name='hypothesis',
             value_name='logp')
 
         # merge with the existing data
-        model = pandas.merge(data, model).drop('llh', axis=1)
+        model = pd.merge(data, model).drop('llh', axis=1)
 
         # update the version in the dictionary
         models[model_name] = model
@@ -95,16 +87,13 @@ def model_belief(args):
 def run(dest, results_path, parallel):
     old_store_pth = os.path.abspath(os.path.join(
         results_path, 'model_likelihood_by_trial.h5'))
-    old_store = pandas.HDFStore(old_store_pth, mode='r')
-    store = pandas.HDFStore(dest, mode='w')
-
-    # path to the directory with analysis stuff in it
-    pth = os.path.abspath(os.path.dirname(__file__))
+    old_store = pd.HDFStore(old_store_pth, mode='r')
+    store = pd.HDFStore(dest, mode='w')
 
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('numpy', 'pandas', 'sys')(model_belief)
+        task = require('numpy as np', 'pandas as pd', 'sys', 'util')(model_belief)
     else:
         task = model_belief
 
@@ -115,7 +104,7 @@ def run(dest, results_path, parallel):
             store.append(key, old_store[key])
             continue
 
-        args = [key, old_store_pth, pth]
+        args = [key, old_store_pth]
         if parallel:
             result = lview.apply(task, args)
         else:

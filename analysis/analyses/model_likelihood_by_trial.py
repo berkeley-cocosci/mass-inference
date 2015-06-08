@@ -34,7 +34,7 @@ __parallel__ = True
 __ext__ = '.h5'
 
 import util
-import pandas
+import pandas as pd
 import os
 
 from IPython.parallel import Client, require
@@ -44,17 +44,17 @@ def likelihood_by_trial(args):
     key, trials, old_store_pth = args
     print key
 
-    old_store = pandas.HDFStore(old_store_pth, mode='r')
+    old_store = pd.HDFStore(old_store_pth, mode='r')
     llh = old_store[key].groupby('kappa0')
     old_store.close()
 
     # create an empty dataframe for the results
-    results = pandas.DataFrame([])
+    results = pd.DataFrame([])
 
     # iterate through each of the pids
     for (kappa0, pid), df in trials.groupby(['kappa0', 'pid']):
         # merge the trial order with the model likelihood
-        model = pandas.merge(
+        model = pd.merge(
             llh.get_group(kappa0),
             df.reset_index())
 
@@ -68,7 +68,7 @@ def likelihood_by_trial(args):
 
 def run(dest, results_path, parallel):
     # load in trial order
-    trial_order = pandas.read_csv(os.path.join(
+    trial_order = pd.read_csv(os.path.join(
         results_path, 'trial_order.csv'))
     trials = trial_order\
         .groupby('mode')\
@@ -81,18 +81,18 @@ def run(dest, results_path, parallel):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('pandas')(likelihood_by_trial)
+        task = require('pandas as pd')(likelihood_by_trial)
     else:
         task = likelihood_by_trial
 
     # load model likelihoods
     old_store_pth = os.path.abspath(os.path.join(
         results_path, 'model_likelihood.h5'))
-    old_store = pandas.HDFStore(old_store_pth, mode='r')
+    old_store = pd.HDFStore(old_store_pth, mode='r')
 
     # run the tasks
     results = []
-    store = pandas.HDFStore(dest, mode='w')
+    store = pd.HDFStore(dest, mode='w')
     for key in old_store.keys():
         if key.split('/')[-1] == 'param_ref':
             store.append(key, old_store[key])
