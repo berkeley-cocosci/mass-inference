@@ -41,48 +41,17 @@ import util
 import pandas
 import numpy
 import os
-import sys
 
 from IPython.parallel import Client, require
 
 
-def percent_fell(data):
-    samps = data.pivot(
-        index='sample',
-        columns='kappa',
-        values='nfell')
-    answer = (samps / 10.0).apply(util.bootstrap_mean)
-    return answer.T
-
-
-def more_than_half_fell(data):
-    samps = data.pivot(
-        index='sample',
-        columns='kappa',
-        values='nfell')
-    answer = (samps > 5).apply(util.beta)
-    return answer.T
-
-
-def more_than_one_fell(data):
-    samps = data.pivot(
-        index='sample',
-        columns='kappa',
-        values='nfell')
-    answer = (samps > 1).apply(util.beta)
-    return answer.T
-
-
 def model_fall_responses(args):
-    key, queryname, data, pth = args
+    key, queryname, data = args
     print key
-
-    sys.path.append(pth)
-    import model_fall_responses as mfr
 
     result = data\
         .groupby(['block', 'stimulus'])\
-        .apply(getattr(mfr, queryname))\
+        .apply(getattr(util, queryname))\
         .reset_index()\
         .rename(columns=dict(kappa='kappa0'))
     result['query'] = queryname
@@ -109,7 +78,7 @@ def run(dest, data_path, parallel, seed):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('numpy', 'pandas', 'sys')(model_fall_responses)
+        task = require('util')(model_fall_responses)
     else:
         task = model_fall_responses
 

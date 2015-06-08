@@ -7,7 +7,7 @@ import scipy.special
 import scipy.stats
 
 from argparse import ArgumentParser, RawTextHelpFormatter
-from snippets import datapackage as dpkg
+import datapackage as dpkg
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 MAX_LOG = np.log(sys.float_info.max)
@@ -306,3 +306,30 @@ def get_params():
 def get_query():
     config = load_config()
     return config["analysis"]["query"]
+
+
+def percent_fell(data):
+    samps = data.pivot(
+        index='sample',
+        columns='kappa',
+        values='nfell')
+    answer = (samps / 10.0).apply(util.bootstrap_mean)
+    return answer.T
+
+
+def more_than_half_fell(data):
+    samps = data.pivot(
+        index='sample',
+        columns='kappa',
+        values='nfell')
+    answer = (samps > 5).apply(util.beta)
+    return answer.T
+
+
+def more_than_one_fell(data):
+    samps = data.pivot(
+        index='sample',
+        columns='kappa',
+        values='nfell')
+    answer = (samps > 1).apply(util.beta)
+    return answer.T
