@@ -37,16 +37,12 @@ import util
 import pandas as pd
 import os
 
-from IPython.parallel import Client, require
+from IPython.parallel import Client, require, Reference
 
 
-def likelihood_by_trial(args):
-    key, trials, old_store_pth = args
+def likelihood_by_trial(key, trials, data):
     print key
-
-    old_store = pd.HDFStore(old_store_pth, mode='r')
-    llh = old_store[key].groupby('kappa0')
-    old_store.close()
+    llh = data.groupby('kappa0')
 
     # create an empty dataframe for the results
     results = pd.DataFrame([])
@@ -82,6 +78,8 @@ def run(dest, results_path, parallel):
         rc = Client()
         lview = rc.load_balanced_view()
         task = require('pandas as pd')(likelihood_by_trial)
+        rc[:].push(dict(trials=trials), block=True)
+        trials = Reference('trials')
     else:
         task = likelihood_by_trial
 
@@ -98,11 +96,11 @@ def run(dest, results_path, parallel):
             store.append(key, old_store[key])
             continue
 
-        args = [key, trials, old_store_pth]
+        args = [key, trials, old_store[key]]
         if parallel:
-            result = lview.apply(task, args)
+            result = lview.apply(task, *args)
         else:
-            result = task(args)
+            result = task(*args)
         results.append(result)
 
     # close the old hdf5 store

@@ -42,14 +42,8 @@ import numpy as np
 from IPython.parallel import Client, require
 
 
-def model_belief(args):
-    key, old_store_pth = args
+def model_belief(key, data):
     print key
-
-    # load in the model likelihoods
-    old_store = pd.HDFStore(old_store_pth, mode='r')
-    data = old_store[key]
-    old_store.close()
 
     # compute the belief
     llh = data\
@@ -104,11 +98,11 @@ def run(dest, results_path, parallel):
             store.append(key, old_store[key])
             continue
 
-        args = [key, old_store_pth]
+        args = [key, old_store[key]]
         if parallel:
-            result = lview.apply(task, args)
+            result = lview.apply(task, *args)
         else:
-            result = task(args)
+            result = task(*args)
         results.append(result)
 
     while len(results) > 0:

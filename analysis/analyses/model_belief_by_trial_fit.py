@@ -55,17 +55,12 @@ import pandas as pd
 import numpy as np
 import model_belief_by_trial_fit_util as mbf
 
-from IPython.parallel import Client, require
+from IPython.parallel import Client, require, Reference
 
 
-def model_belief_fit(args):
-    key, responses, old_store_pth = args
+def model_belief_fit(key, responses, data):
     model_name = key.split("/")[-1]
     print key
-
-    old_store = pd.HDFStore(old_store_pth, mode='r')
-    data = old_store[key]
-    old_store.close()
 
     # convert model belief to wide form
     belief = data\
@@ -119,14 +114,13 @@ def run(dest, results_path, data_path, parallel):
     old_store = pd.HDFStore(old_store_pth, mode='r')
     store = pd.HDFStore(dest, mode='w')
 
-    # path to the directory with analysis stuff in it
-    pth = os.path.abspath(os.path.dirname(__file__))
-
     # create the ipython parallel client
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
         task = require('numpy as np', 'pandas as pd', 'util', 'model_belief_by_trial_fit_util as mbf')(model_belief_fit)
+        rc[:].push(dict(human=human), block=True)
+        human = Reference('human')
     else:
         task = model_belief_fit
 
@@ -137,11 +131,11 @@ def run(dest, results_path, data_path, parallel):
             store.append(key, old_store[key])
             continue
 
-        args = [key, human, old_store_pth, pth]
+        args = [key, human, old_store[key]]
         if parallel:
-            result = lview.apply(task, args)
+            result = lview.apply(task, *args)
         else:
-            result = task(args)
+            result = task(*args)
         results.append(result)
 
     # collect and save results
