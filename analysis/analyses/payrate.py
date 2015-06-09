@@ -31,8 +31,8 @@ def run(dest, data_path):
         starttime = hdata.groupby('pid')['timestamp'].min()
         endtime = hdata.groupby('pid')['timestamp'].max()
         exptime = endtime - starttime
-        medtime = timedelta(seconds=float(exptime.median()) / 1e9)
-        meantime = timedelta(seconds=float(exptime.mean()) / 1e9)
+        medtime = timedelta(seconds=exptime.median().total_seconds())
+        meantime = timedelta(seconds=exptime.mean().total_seconds())
         if version == "G":
             payrate = (1.0 / (exptime.astype(int) / (1e9 * 60 * 60))).mean()
         elif version == "H":
