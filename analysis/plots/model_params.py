@@ -18,7 +18,6 @@ import seaborn as sns
 
 def hist(ax, x, color):
     # plot the histogram
-    print x.min(), x.max()
     ax.hist(x, color=color, bins=57, range=[-1.5, 3.0])
 
     # reformat ytick labels so they show percent, not absolute number

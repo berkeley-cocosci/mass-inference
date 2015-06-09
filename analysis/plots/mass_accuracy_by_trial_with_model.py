@@ -78,7 +78,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
         .read_csv(os.path.join(results_path, 'human_mass_accuracy_by_trial.csv'))\
         .groupby('kappa0')\
         .get_group('all')\
-        .groupby(['version', 'num_mass_trials'])\
+        .groupby(['version', 'num_mass_trials', 'trial'])\
         .filter(filter_trials)\
         .set_index('version')
 
@@ -87,7 +87,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
         .read_csv(os.path.join(results_path, 'model_mass_accuracy_by_trial.csv'))\
         .groupby(['likelihood', 'counterfactual', 'fitted', 'kappa0'])\
         .get_group((likelihood, counterfactual, fitted, 'all'))\
-        .groupby(['version', 'num_mass_trials'])\
+        .groupby(['version', 'num_mass_trials', 'trial', 'model'])\
         .filter(filter_trials)\
         .set_index(['version', 'model'])\
         .sortlevel()
