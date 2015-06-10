@@ -46,6 +46,23 @@ def beta(x, n=1, percentiles=None):
     return stats
 
 
+def beta_stddev(x):
+    arr = np.asarray(x, dtype=int)
+    alpha = arr.sum() + 0.5
+    beta = (1 - arr).sum() + 0.5
+    var = alpha * beta / ((alpha + beta) ** 2 * (alpha + beta + 1))
+    stddev = np.sqrt(var)
+    return stddev
+
+
+def beta_mean(x):
+    arr = np.asarray(x, dtype=int)
+    alpha = arr.sum() + 0.5
+    beta = (1 - arr).sum() + 0.5
+    mean = alpha / (alpha + beta)
+    return mean
+
+
 def bootcorr(x, y, nsamples=10000, method='pearson'):
     arr1 = np.asarray(x)
     arr2 = np.asarray(y)
