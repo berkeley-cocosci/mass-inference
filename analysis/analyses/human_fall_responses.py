@@ -20,6 +20,10 @@ file with the following columns:
         upper bound of the 95% confidence interval
     N (int)
         how many samples the mean was computed over
+    mean (float)
+        raw mean of judgments
+    stddev (float)
+        standard deviation of judgments
 
 """
 
@@ -56,8 +60,14 @@ def run(dest, data_path, seed):
             human = human_all\
                 .groupby(['kappa0', 'stimulus'])['fall? response']\
                 .apply(lambda x: util.bootstrap_mean((x - 1) / 6.0))\
-                .unstack(-1)\
-                .reset_index()
+                .unstack(-1)
+            human['mean'] = human_all\
+                .groupby(['kappa0', 'stimulus'])['fall? response']\
+                .apply(lambda x: np.mean((x - 1) / 6.0))
+            human['stddev'] = human_all\
+                .groupby(['kappa0', 'stimulus'])['fall? response']\
+                .apply(lambda x: np.std((x - 1) / 6.0))
+            human = human.reset_index()
             human['block'] = block
             human['version'] = version
             results.append(human)
