@@ -35,11 +35,11 @@ import util
 import os
 
 
-def run(dest, results_path, seed):
+def run(dest, results_path, seed, version):
     np.random.seed(seed)
 
     human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
-    human = human.groupby('version').get_group('GH')
+    human = human.groupby('version').get_group(version)
 
     model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
 
@@ -76,6 +76,11 @@ def run(dest, results_path, seed):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
+    parser.add_argument(
+        '--version',
+        default=config['analysis']['human_fall_version'],
+        help='which version of the experiment to use responses from')
     args = parser.parse_args()
-    run(args.to, args.results_path, args.seed)
+    run(args.to, args.results_path, args.seed, args.version)

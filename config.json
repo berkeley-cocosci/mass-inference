@@ -9,6 +9,7 @@
     "analysis": {
         "model_version": "I",
         "human_version": "merged",
+        "human_fall_version": "H",
         "seed": 923012,
         "sigma": 0.04,
         "phi": 0.2,

@@ -43,7 +43,8 @@ def plot_connected(ax, x0, x1, y0, y1, colors, labels, plot_config):
 def plot(dest, results_path, version, block):
 
     # various config stuff
-    plot_config = util.load_config()["plots"]
+    config = util.load_config()
+    plot_config = config["plots"]
     colors = [plot_config["colors"][0], plot_config["colors"][2]]
     labels = [r"$\kappa_0=%.1f$" % 10 ** kappa0 for kappa0 in [-1.0, 1.0]]
 
@@ -109,10 +110,11 @@ def plot(dest, results_path, version, block):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
     parser.add_argument(
         '--version',
-        default='GH',
+        default=config['analysis']['human_fall_version'],
         help='which version of the experiment to plot responses from')
     parser.add_argument(
         '--block',

@@ -102,7 +102,7 @@ def save(data, pth, store):
     store.append('{}/param_ref'.format(pth), all_params)
 
 
-def run(dest, results_path, data_path):
+def run(dest, results_path, data_path, version):
     hyps = [-1.0, 1.0]
 
     # load empirical probabilities
@@ -110,7 +110,7 @@ def run(dest, results_path, data_path):
         results_path, "human_fall_responses.csv"))
     empirical = human_responses\
         .groupby(['version', 'block'])\
-        .get_group(('GH', 'B'))\
+        .get_group((version, 'B'))\
         .pivot('stimulus', 'kappa0', 'median')[hyps]
 
     # load feedback
@@ -160,6 +160,11 @@ def run(dest, results_path, data_path):
     old_store.close()
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
+    parser.add_argument(
+        '--version',
+        default=config['analysis']['human_fall_version'],
+        help='which version of the experiment to use responses from')
     args = parser.parse_args()
-    run(args.to, args.results_path, args.data_path)
+    run(args.to, args.results_path, args.data_path, args.version)

@@ -97,13 +97,13 @@ def make_legend(ax, colors, markers):
 
     ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
 
-def plot(dest, results_path):
+def plot(dest, results_path, version):
 
     # load human fall responses
     human_fall = pd\
         .read_csv(os.path.join(results_path, "human_fall_responses.csv"))\
         .groupby(['version', 'block'])\
-        .get_group(('GH', 'B'))\
+        .get_group((version, 'B'))\
         .set_index(['stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
@@ -203,6 +203,11 @@ def plot(dest, results_path):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
+    parser.add_argument(
+        '--version',
+        default=config['analysis']['human_fall_version'],
+        help='which version of the experiment to plot responses from')
     args = parser.parse_args()
-    plot(args.to, args.results_path)
+    plot(args.to, args.results_path, args.version)
