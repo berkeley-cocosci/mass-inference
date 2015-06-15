@@ -27,60 +27,27 @@ file with the following columns:
 
 """
 
-__depends__ = ["human"]
+__depends__ = ["human_fall_responses_raw.csv"]
 __random__ = True
 
 import util
 import pandas as pd
 import numpy as np
+import os
 
 
-def run(dest, data_path, seed):
+def run(dest, results_path, seed):
     np.random.seed(seed)
-    data = util.load_human(data_path)
-
-    results = []
-    for block in ['A', 'B']:
-        versions = list(data[block]['version'].unique())
-        versions.extend(['GH', 'all'])
-        for version in versions:
-            if version == 'all':
-                human_all = data[block]
-            elif version == 'GH':
-                human_all = data[block]\
-                    .set_index('version')\
-                    .groupby(lambda x: x in ('G', 'H'))\
-                    .get_group(True)\
-                    .reset_index()
-            else:
-                human_all = data[block]\
-                    .groupby('version')\
-                    .get_group(version)
-
-            human = human_all\
-                .groupby(['kappa0', 'stimulus'])['fall? response']\
-                .apply(lambda x: util.bootstrap_mean((x - 1) / 6.0))\
-                .unstack(-1)
-            human['mean'] = human_all\
-                .groupby(['kappa0', 'stimulus'])['fall? response']\
-                .apply(lambda x: np.mean((x - 1) / 6.0))
-            human['stddev'] = human_all\
-                .groupby(['kappa0', 'stimulus'])['fall? response']\
-                .apply(lambda x: np.std((x - 1) / 6.0))
-            human = human.reset_index()
-            human['block'] = block
-            human['version'] = version
-            results.append(human)
-
-    results = pd.concat(results)\
-                .set_index(['version', 'block', 'kappa0', 'stimulus'])\
-                .sortlevel()
-
+    data = pd.read_csv(os.path.join(results_path, 'human_fall_responses_raw.csv'))\
+        .groupby(['version', 'block', 'kappa0', 'stimulus'])['fall? response']
+    results = data.apply(util.bootstrap_mean).unstack(-1)
+    results['mean'] = data.mean()
+    results['stddev'] = data.std()
     results.to_csv(dest)
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.data_path, args.seed)
+    run(args.to, args.results_path, args.seed)
 

@@ -32,7 +32,7 @@ Each table in the database has the following columns:
 
 """
 
-__depends__ = ["ipe_A", "ipe_B"]
+__depends__ = ["model_fall_responses_raw.h5"]
 __random__ = True
 __parallel__ = True
 __ext__ = '.h5'
@@ -40,31 +40,28 @@ __ext__ = '.h5'
 import util
 import pandas as pd
 import numpy as np
-import model_fall_responses_queries as queries
+import os
 
-from IPython.parallel import Client, require, Reference
+from IPython.parallel import Client, require
 
 
-def model_fall_responses(key, queryname, params, ipe):
-    data = ipe.groupby(['sigma', 'phi']).get_group(params)
+def model_fall_responses(key, ipe):
     print key
-
-    result = data\
-        .groupby(['block', 'stimulus'])\
-        .apply(getattr(queries, queryname))\
-        .reset_index()\
-        .rename(columns=dict(kappa='kappa0'))
-    result['query'] = queryname
-
+    samps = ipe.set_index(['query', 'block', 'kappa0', 'stimulus', 'sample'])['response'].unstack('sample')
+    result = samps.apply(util.bootstrap_mean, axis=1)
+    result['mean'] = samps.mean(axis=1)
+    result['stddev'] = samps.std(axis=1)
+    result = result.reset_index()
     return key, result
 
 
-def run(dest, data_path, parallel, seed):
+def run(dest, results_path, parallel, seed):
     np.random.seed(seed)
 
-    # load the raw ipe data
-    ipe = util.load_ipe(data_path)
-    ipe_params = ipe.groupby(['sigma', 'phi']).groups.keys()
+    # load theresponses
+    old_store_pth = os.path.abspath(os.path.join(
+        results_path, 'model_fall_responses_raw.h5'))
+    old_store = pd.HDFStore(old_store_pth, mode='r')
 
     # open up the store for saving
     store = pd.HDFStore(dest, mode='w')
@@ -73,33 +70,23 @@ def run(dest, data_path, parallel, seed):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('util', 'model_fall_responses_queries as queries')(model_fall_responses)
-        rc[:].push(dict(ipe=ipe), block=True)
-        data = Reference('ipe')
+        task = require('util')(model_fall_responses)
     else:
         task = model_fall_responses
-        data = ipe
 
     # start the tasks
-    all_params = {}
     results = []
-    for i, params in enumerate(ipe_params):
-        all_params['params_{}'.format(i)] = params
+    for key in old_store.keys():
+        if key.split('/')[-1] == 'param_ref':
+            store.append(key, old_store[key])
+            continue
 
-        for query in queries.__all__:
-            key = "/{}/params_{}".format(query, i)
-            args = [key, query, params, data]
-            if parallel:
-                result = lview.apply(task, *args)
-            else:
-                result = task(*args)
-            results.append(result)
-
-    # save the parameters into the database
-    all_params = pd.DataFrame(all_params, index=['sigma', 'phi']).T
-    for query in queries.__all__:
-        key = "/{}/param_ref".format(query)
-        store.append(key, all_params)
+        args = [key, old_store[key]]
+        if parallel:
+            result = lview.apply(task, *args)
+        else:
+            result = task(*args)
+        results.append(result)
 
     # collect and save results
     while len(results) > 0:
@@ -118,5 +105,5 @@ def run(dest, data_path, parallel, seed):
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.data_path, args.parallel, args.seed)
+    run(args.to, args.results_path, args.parallel, args.seed)
 
