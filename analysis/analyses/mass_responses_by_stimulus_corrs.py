@@ -24,49 +24,69 @@ following columns:
 
 """
 
-__depends__ = ["human_mass_responses_by_stimulus.csv", "model_mass_responses_by_stimulus.csv"]
+__depends__ = ["human", "single_model_belief.csv"]
 __random__ = True
 
 import os
 import util
 import pandas as pd
 import numpy as np
+import scipy.stats
 
 
-def run(dest, results_path, seed):
+def run(dest, results_path, data_path, seed):
     np.random.seed(seed)
 
+    def bootcorr(df, n=10000):
+        print df.name
+
+        by_pid = df.unstack('pid')
+        h = np.asarray(by_pid['h'])
+        m = np.asarray(by_pid['m'])
+        num_pids = h.shape[1]
+
+        ix = np.random.randint(0, num_pids, (num_pids, n))
+        corrs = np.empty(n)
+        for i in range(n):
+            h_mean = np.nanmean(h[:, ix[:, i]], axis=1)
+            m_mean = np.nanmean(m[:, ix[:, i]], axis=1)
+            corrs[i] = scipy.stats.pearsonr(h_mean, m_mean)[0]
+
+        stats = pd.Series(
+            np.percentile(corrs[~np.isnan(corrs)], [2.5, 50, 97.5]),
+            index=['lower', 'median', 'upper'])
+
+        return stats
+
     # load in human data
-    human = pd\
-        .read_csv(os.path.join(results_path, "human_mass_responses_by_stimulus.csv"))\
-        .set_index(['stimulus', 'kappa0', 'version'])['median']\
-        .unstack('version')
+    human = util.load_human(data_path)['C']\
+        .dropna(axis=0, subset=['mass? response'])
+
+    # convert from -1, 1 responses to 0, 1 responses
+    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
+    human = human[['stimulus', 'kappa0', 'version', 'pid', 'mass? response']]
+    human = human.rename(columns={'mass? response': 'h'})
 
     # load in model data
-    cols = ['likelihood', 'counterfactual', 'model', 'fitted']
-    model = pd\
-        .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
-        .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\
-        .unstack('version')
+    model = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))
+    cols = ['version', 'likelihood', 'counterfactual', 'model', 'fitted']
+    model = model[cols + ['stimulus', 'kappa0', 'pid', 'p']]
+    model = model.rename(columns={'p': 'm'})
 
-    # create empty dataframe for our results
-    results = pd.DataFrame([])
+    # merge the data
+    data = pd\
+        .merge(human, model)\
+        .set_index(cols + ['stimulus', 'kappa0', 'pid'])\
+        .sortlevel()
 
-    for version in human:
-        corr = model[version]\
-            .groupby(level=cols)\
-            .apply(util.bootcorr, human[version], method='pearson')\
-            .unstack()\
-            .reset_index()
+    results = data\
+        .groupby(level=cols)\
+        .apply(bootcorr)
 
-        corr['version'] = version
-        results = results.append(corr)
-
-    results = results.set_index(['version'] + cols).sortlevel()
     results.to_csv(dest)
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.seed)
+    run(args.to, args.results_path, args.data_path, args.seed)

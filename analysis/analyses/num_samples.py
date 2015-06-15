@@ -69,7 +69,7 @@ if __name__ == "__main__":
         help='which version of the experiment to use responses from')
     parser.add_argument(
         '--block',
-        default='A',
+        default='B',
         help='which block of the experiment to use responses from')
     args = parser.parse_args()
     run(args.to, args.results_path, args.version, args.block)
