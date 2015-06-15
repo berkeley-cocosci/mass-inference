@@ -120,6 +120,9 @@ def run(dest, results_path, data_path, version):
     old_store = pd.HDFStore(
         os.path.join(results_path, "model_fall_responses.h5"), mode='r')
 
+    # get the parameters we want
+    sigma, phi = util.get_params()
+
     store = pd.HDFStore(dest, mode='w')
 
     # compute empirical likelihood
@@ -133,19 +136,32 @@ def run(dest, results_path, data_path, version):
     store.append(key, llh_empirical_cf)
 
     # compute likelihoods for each query type
-    for key in old_store.keys():
-        parts = key.split('/')
-        parts[1] = 'ipe_{}'.format(parts[1])
-        new_key = '/'.join(parts)
+    for query in old_store.root._v_children:
+        # look up the name of the key for the parameters that we want (will be
+        # something like params_0)
+        param_ref_key = "/{}/param_ref".format(query)
+        params = old_store[param_ref_key]\
+            .reset_index()\
+            .set_index(['sigma', 'phi'])['index']\
+            .ix[(sigma, phi)]
 
-        if key.split('/')[-1] == 'param_ref':
-            store.append(new_key, old_store[key])
-            continue
+        # store the new param ref
+        new_param_ref_key = '/ipe_{}/param_ref'.format(query)
+        new_param_ref = old_store[param_ref_key]\
+            .groupby(['sigma', 'phi'])\
+            .get_group((sigma, phi))
+        store.append(new_param_ref_key, new_param_ref)
 
+        # get the data
+        key = "/{}/{}".format(query, params)
         ipe = old_store[key]\
             .groupby('block')\
             .get_group('B')\
             .pivot('stimulus', 'kappa0', 'median')[hyps]
+
+        parts = key.split('/')
+        parts[1] = 'ipe_{}'.format(parts[1])
+        new_key = '/'.join(parts)
 
         # compute ipe likelihood
         print new_key

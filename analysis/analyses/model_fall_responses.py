@@ -58,7 +58,7 @@ def model_fall_responses(key, ipe):
 def run(dest, results_path, parallel, seed):
     np.random.seed(seed)
 
-    # load theresponses
+    # load the responses
     old_store_pth = os.path.abspath(os.path.join(
         results_path, 'model_fall_responses_raw.h5'))
     old_store = pd.HDFStore(old_store_pth, mode='r')

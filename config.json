@@ -13,7 +13,8 @@
         "seed": 923012,
         "sigma": 0.04,
         "phi": 0.2,
-        "query": "percent_fell"
+        "query": "percent_fell",
+        "parallel": false
     },
 
     "latex": {

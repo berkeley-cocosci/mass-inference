@@ -304,11 +304,18 @@ def default_argparser(module):
             type=int, help='seed for the random number generator (default: %(default)s)')
 
     if module.get('__parallel__', False):
-        parser.add_argument(
-            '--serial',
-            dest='parallel',
-            action='store_false',
-            help="don't run analysis in parallel")
+        if config['analysis']['parallel']:
+            parser.add_argument(
+                '--serial',
+                dest='parallel',
+                action='store_false',
+                help="don't run analysis in parallel")
+        else:
+            parser.add_argument(
+                '--parallel',
+                dest='parallel',
+                action='store_true',
+                help="run analysis in parallel")
 
     return parser
 
