@@ -26,7 +26,7 @@ def run(dest, results_path):
         'I': 'Three'
     }
 
-    latex_pearson = util.load_config()["latex"]["pearson"]
+    latex_pearson = util.load_config()["latex"]["spearman"]
 
     fh = open(dest, "w")
 
