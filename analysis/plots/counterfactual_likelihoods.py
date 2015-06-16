@@ -101,7 +101,7 @@ def make_legend(ax, colors, markers):
     ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
 
 
-def plot(dest, results_path):
+def plot(dest, results_path, likelihood):
 
     # load human mass responses
     human_mass = pd\
@@ -117,7 +117,7 @@ def plot(dest, results_path):
     model_mass = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
         .groupby(['likelihood', 'fitted', 'model', 'version'])\
-        .get_group(('empirical', False, 'static', 'H'))\
+        .get_group((likelihood, False, 'static', 'H'))\
         .set_index(['counterfactual', 'stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
@@ -128,7 +128,7 @@ def plot(dest, results_path):
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['likelihood', 'fitted', 'model', 'version', 'counterfactual'])\
         .sortlevel()\
-        .ix[('empirical', False, 'static', 'H')]
+        .ix[(likelihood, False, 'static', 'H')]
 
     # color config
     plot_config = util.load_config()["plots"]
@@ -140,10 +140,17 @@ def plot(dest, results_path):
     # create the figure
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
+    if likelihood == 'empirical':
+        likelihood_str = 'Empirical'
+    elif likelihood == 'ipe':
+        likelihood_str = 'IPE'
+    else:
+        raise ValueError('unknown likelihood: {}'.format(likelihood))
+
     # left subplot: regular likelihood
     plot_sigmoid(ax1, model_mass.ix[False], human_mass, color=darkgrey)
     plot_kappas(ax1, model_mass.ix[False], human_mass, colors, markers)
-    ax1.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
+    ax1.set_xlabel(r"{} model, $p(\kappa=10|F_t,S_t)$".format(likelihood_str))
     ax1.set_ylabel(r"% participants choosing $\kappa=10$")
     ax1.set_title("Normal likelihood")
     format_mass_plot(ax1)
@@ -152,7 +159,7 @@ def plot(dest, results_path):
     # right subplot: counterfactual likelihood
     plot_sigmoid(ax2, model_mass.ix[True], human_mass, color=darkgrey)
     plot_kappas(ax2, model_mass.ix[True], human_mass, colors, markers)
-    ax2.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_xlabel(r"{} model, $p(\kappa=10|F_t,S_t)$".format(likelihood_str))
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
     ax2.set_title("Counterfactual likelihood")
     format_mass_plot(ax2)
@@ -177,5 +184,9 @@ def plot(dest, results_path):
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
+    parser.add_argument(
+        '--likelihood',
+        default='empirical',
+        help='which likelihood to use')
     args = parser.parse_args()
-    plot(args.to, args.results_path)
+    plot(args.to, args.results_path, args.likelihood)
