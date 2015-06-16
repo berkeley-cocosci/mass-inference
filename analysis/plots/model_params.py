@@ -36,12 +36,12 @@ def make_legend(ax, colors):
     ax.legend(handles=handles, loc='best', fontsize=12, frameon=False)
 
 
-def plot(dest, results_path):
+def plot(dest, results_path, counterfactual, likelihood):
     # load in the model data, which includes fitted parameters
     data = pd\
         .read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
         .groupby(['fitted', 'counterfactual', 'likelihood'])\
-        .get_group((True, True, 'ipe'))\
+        .get_group((True, counterfactual, likelihood))\
         .drop_duplicates(['version', 'model', 'pid', 'B'])\
         .set_index(['version', 'model', 'pid'])\
         .sortlevel()
@@ -90,6 +90,25 @@ def plot(dest, results_path):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
+    if config['analysis']['counterfactual']:
+        parser.add_argument(
+            '--no-counterfactual',
+            action='store_false',
+            dest='counterfactual',
+            default=True,
+            help="don't plot the counterfactual likelihoods")
+    else:
+        parser.add_argument(
+            '--counterfactual',
+            action='store_true',
+            dest='counterfactual',
+            default=False,
+            help='plot the counterfactual likelihoods')
+    parser.add_argument(
+        '--likelihood',
+        default=config['analysis']['likelihood'],
+        help='which version of the likelihood to plot')
     args = parser.parse_args()
-    plot(args.to, args.results_path)
+    plot(args.to, args.results_path, args.counterfactual, args.likelihood)

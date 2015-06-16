@@ -169,17 +169,25 @@ def plot(dest, results_path, counterfactual, likelihood):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
-    parser.add_argument(
-        '--no-counterfactual',
-        action='store_false',
-        dest='counterfactual',
-        default=True,
-        help='whether to plot the counterfactual likelihoods')
+    if config['analysis']['counterfactual']:
+        parser.add_argument(
+            '--no-counterfactual',
+            action='store_false',
+            dest='counterfactual',
+            default=True,
+            help="don't plot the counterfactual likelihoods")
+    else:
+        parser.add_argument(
+            '--counterfactual',
+            action='store_true',
+            dest='counterfactual',
+            default=False,
+            help='plot the counterfactual likelihoods')
     parser.add_argument(
         '--likelihood',
-        default='ipe',
+        default=config['analysis']['likelihood'],
         help='which version of the likelihood to plot')
-
     args = parser.parse_args()
     plot(args.to, args.results_path, args.counterfactual, args.likelihood)

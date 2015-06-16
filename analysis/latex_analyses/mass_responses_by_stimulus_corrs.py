@@ -12,13 +12,13 @@ import util
 import pandas as pd
 
 
-def run(dest, results_path):
+def run(dest, results_path, counterfactual):
     results = pd.read_csv(
         os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))
 
     results = results\
         .groupby(['version', 'model', 'counterfactual', 'fitted'])\
-        .get_group(('H', 'static', True, False))\
+        .get_group(('H', 'static', counterfactual, False))\
         .set_index('likelihood')
 
     latex_pearson = util.load_config()["latex"]["pearson"]
@@ -35,6 +35,21 @@ def run(dest, results_path):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
+    if config['analysis']['counterfactual']:
+        parser.add_argument(
+            '--no-counterfactual',
+            action='store_false',
+            dest='counterfactual',
+            default=True,
+            help="don't plot the counterfactual likelihoods")
+    else:
+        parser.add_argument(
+            '--counterfactual',
+            action='store_true',
+            dest='counterfactual',
+            default=False,
+            help='plot the counterfactual likelihoods')
     args = parser.parse_args()
-    run(args.to, args.results_path)
+    run(args.to, args.results_path, args.counterfactual)

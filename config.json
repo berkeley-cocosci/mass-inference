@@ -9,11 +9,13 @@
     "analysis": {
         "model_version": "I",
         "human_version": "merged",
-        "human_fall_version": "H",
+        "human_fall_version": "GH",
         "seed": 923012,
         "sigma": 0.04,
         "phi": 0.2,
         "query": "percent_fell",
+        "counterfactual": true,
+        "likelihood": "ipe",
         "parallel": false
     },
 

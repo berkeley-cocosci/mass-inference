@@ -184,6 +184,7 @@ def plot(dest, results_path, likelihood):
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
+    # this is always empirical, regardless of the setting in config.json
     parser.add_argument(
         '--likelihood',
         default='empirical',

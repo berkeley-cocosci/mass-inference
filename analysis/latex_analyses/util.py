@@ -19,7 +19,9 @@ def load_query():
 
 def newcommand(name, val):
     fmt = load_config()["latex"]["newcommand"]
-    return fmt.format(name=name, action=val)
+    cmd = fmt.format(name=name, action=val)
+    print(cmd)
+    return cmd
 
 
 def default_argparser(module):

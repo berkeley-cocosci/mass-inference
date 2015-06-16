@@ -97,7 +97,7 @@ def make_legend(ax, colors, markers):
 
     ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
 
-def plot(dest, results_path, version):
+def plot(dest, results_path, version, counterfactual):
 
     # load human fall responses
     human_fall = pd\
@@ -133,7 +133,7 @@ def plot(dest, results_path, version):
     model_mass = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
         .groupby(['counterfactual', 'fitted', 'model', 'version'])\
-        .get_group((True, False, 'static', 'H'))\
+        .get_group((counterfactual, False, 'static', 'H'))\
         .set_index(['likelihood', 'stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
@@ -151,7 +151,7 @@ def plot(dest, results_path, version):
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
         .set_index(['counterfactual', 'fitted', 'model', 'version', 'likelihood'])\
         .sortlevel()\
-        .ix[(True, False, 'static', 'H')]
+        .ix[(counterfactual, False, 'static', 'H')]
 
     # color config
     plot_config = util.load_config()["plots"]
@@ -168,7 +168,7 @@ def plot(dest, results_path, version):
     plot_kappas(ax1, model_fall, human_fall, colors, markers)
     ax1.set_xlabel(r"IPE model, $p(F_t|S_t)$")
     ax1.set_ylabel(r"Normalized human judgments")
-    ax1.set_title("Exp 1+2: Will it fall?")
+    ax1.set_title("Exp 1: Will it fall?")
     format_fall_plot(ax1, lightgrey)
     add_corr(ax1, fall_corrs)
 
@@ -176,7 +176,7 @@ def plot(dest, results_path, version):
     plot_kappas(ax2, model_mass.ix['ipe'], human_mass, colors, markers)
     ax2.set_xlabel(r"IPE model, $p(\kappa=10|F_t,S_t)$")
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax2.set_title("Exp 1: Which is heavier? (IPE)")
+    ax2.set_title("Exp 1a: Which is heavier? (IPE)")
     format_mass_plot(ax2, lightgrey)
     add_corr(ax2, mass_corrs.ix['ipe'])
 
@@ -184,7 +184,7 @@ def plot(dest, results_path, version):
     plot_kappas(ax3, model_mass.ix['empirical'], human_mass, colors, markers)
     ax3.set_xlabel(r"Empirical model, $p(\kappa=10|F_t,S_t)$")
     ax3.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax3.set_title("Exp 1: Which is heavier? (Empirical)")
+    ax3.set_title("Exp 1a: Which is heavier? (Empirical)")
     format_mass_plot(ax3, lightgrey)
     add_corr(ax3, mass_corrs.ix['empirical'])
 
@@ -205,9 +205,23 @@ def plot(dest, results_path, version):
 if __name__ == "__main__":
     config = util.load_config()
     parser = util.default_argparser(locals())
+    if config['analysis']['counterfactual']:
+        parser.add_argument(
+            '--no-counterfactual',
+            action='store_false',
+            dest='counterfactual',
+            default=True,
+            help="don't plot the counterfactual likelihoods")
+    else:
+        parser.add_argument(
+            '--counterfactual',
+            action='store_true',
+            dest='counterfactual',
+            default=False,
+            help='plot the counterfactual likelihoods')
     parser.add_argument(
         '--version',
         default=config['analysis']['human_fall_version'],
         help='which version of the experiment to plot responses from')
     args = parser.parse_args()
-    plot(args.to, args.results_path, args.version)
+    plot(args.to, args.results_path, args.version, args.counterfactual)
