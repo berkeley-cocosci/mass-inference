@@ -64,9 +64,9 @@ def plot(dest, results_path, counterfactual, likelihood):
             hist(axes[j, i], data.ix[(version, model)]['B'], colors[model])
 
     # set titles and axis labels
-    axes[0, 0].set_title('Experiment 1')
-    axes[0, 1].set_title('Experiment 2')
-    axes[0, 2].set_title('Experiment 3')
+    axes[0, 0].set_title('Experiment 1a')
+    axes[0, 1].set_title('Experiment 1b')
+    axes[0, 2].set_title('Experiment 2')
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:

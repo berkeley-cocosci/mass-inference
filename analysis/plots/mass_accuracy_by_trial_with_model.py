@@ -119,7 +119,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
 
     # left subplot: experiment 1
     plot_all(ax1, human.ix['H'], model.ix['H'], lines, colors)
-    ax1.set_title('Experiment 1')
+    ax1.set_title('Experiment 1a')
     ax1.set_xlabel('Trial')
     ax1.set_ylabel('Fraction correct')
     ax1.set_xticks([1, 5, 10, 15, 20])
@@ -129,7 +129,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
 
     # middle subplot: experiment 2
     plot_all(ax2, human.ix['G'], model.ix['G'], lines, colors)
-    ax2.set_title('Experiment 2')
+    ax2.set_title('Experiment 1b')
     ax2.set_xlabel('Trial')
     ax2.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
     ax2.set_xlim([1, 20])
@@ -137,7 +137,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
 
     # right subplot: experiment 3 (between subjects)
     plot_all(ax3, human.ix['I'], model.ix['I'], lines, colors)
-    ax3.set_title('Experiment 3')
+    ax3.set_title('Experiment 2')
     ax3.set_xlabel('Trial')
     ax3.set_xticks([1, 2, 3, 5, 10])
     ax3.set_xlim([1, 10])
