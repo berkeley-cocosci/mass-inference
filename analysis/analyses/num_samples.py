@@ -15,23 +15,10 @@ import util
 import pandas as pd
 import numpy as np
 
-
-def run(dest, results_path, version, block):
-    human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
-    human = human\
-        .groupby(['version', 'block'])\
-        .get_group((version, block))\
-        .set_index(['kappa0', 'stimulus'])\
-        .sortlevel()
-
-    query = util.get_query()
-    model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
-    model = model\
-        .groupby(['query', 'block'])\
-        .get_group((query, block))\
-        .set_index(['kappa0', 'stimulus'])\
-        .sortlevel()
-    model = model.ix[human.index]
+def fit(df):
+    data = df.set_index(['kappa0', 'stimulus'])
+    human = data['human'] ** 2
+    model = data['model'] ** 2
 
     results = []
     for k in range(1, 7):
@@ -40,13 +27,13 @@ def run(dest, results_path, version, block):
         slope = 1.0 / k
 
         # fit the intercept
-        X = np.ones((model['stddev'].size, 1))
-        Y = np.asarray(human['stddev']**2 - slope * model['stddev']**2)[:, None]
+        X = np.ones((model.size, 1))
+        Y = np.asarray(human - slope * model)[:, None]
         intercept = float(np.linalg.lstsq(X, Y)[0].ravel())
 
         # compute MSE
-        X = slope * model['stddev']**2 + intercept
-        Y = human['stddev']**2
+        X = slope * model + intercept
+        Y = human
         err = np.mean((Y - X) ** 2)
 
         results.append({
@@ -57,19 +44,27 @@ def run(dest, results_path, version, block):
         })
 
     results = pd.DataFrame(results).set_index('k')
+    results.name = df.name
+    return results
+
+
+def run(dest, results_path):
+    human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
+    human = human[['version', 'block', 'kappa0', 'stimulus', 'stddev']]\
+        .rename(columns={'stddev': 'human'})
+
+    model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
+    model = model[['query', 'block', 'kappa0', 'stimulus', 'stddev']]\
+        .rename(columns={'stddev': 'model'})
+
+    results = pd.merge(human, model)\
+        .groupby(['query', 'version', 'block'])\
+        .apply(fit)
+
     results.to_csv(dest)
 
 
 if __name__ == "__main__":
-    config = util.load_config()
     parser = util.default_argparser(locals())
-    parser.add_argument(
-        '--version',
-        default=config['analysis']['human_fall_version'],
-        help='which version of the experiment to use responses from')
-    parser.add_argument(
-        '--block',
-        default='B',
-        help='which block of the experiment to use responses from')
     args = parser.parse_args()
-    run(args.to, args.results_path, args.version, args.block)
+    run(args.to, args.results_path)

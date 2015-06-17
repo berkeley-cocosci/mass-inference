@@ -33,9 +33,16 @@ def run(dest, results_path, counterfactual):
         20: ''
     }
 
+    query = util.load_query()
+
     fh = open(dest, "w")
 
     for (lh, version, num_trials), llhr in results.iterrows():
+        if lh == "ipe_" + query:
+            lh = 'Ipe'
+        else:
+            lh = "".join([x.capitalize() for x in lh.split("_")])
+
         cmdname = "llhr{}{}{}".format(lh.capitalize(), replace[version], replace[num_trials])
         cmd = r"$\textrm{{LLR}}={llhr:.2f}$".format(**llhr)
         fh.write(util.newcommand(cmdname, cmd))

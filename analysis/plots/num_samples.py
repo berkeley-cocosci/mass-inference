@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-def plot(dest, results_path, version, block):
+def plot(dest, results_path, version, block, query):
     human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
     human = human\
         .groupby(['version', 'block'])\
@@ -27,7 +27,6 @@ def plot(dest, results_path, version, block):
         .set_index(['kappa0', 'stimulus'])\
         .sortlevel()
 
-    query = util.get_query()
     model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
     model = model\
         .groupby(['query', 'block'])\
@@ -36,7 +35,10 @@ def plot(dest, results_path, version, block):
         .sortlevel()
     model = model.ix[human.index]
 
-    fits = pd.read_csv(os.path.join(results_path, "num_samples.csv")).set_index('k')
+    fits = pd.read_csv(os.path.join(results_path, "num_samples.csv"))\
+        .groupby(['version', 'query', 'block'])\
+        .get_group((version, query, block))\
+        .set_index('k')
     best_k = fits['mse'].argmin()
 
     fall_corrs = pd\
@@ -114,6 +116,10 @@ if __name__ == "__main__":
         '--block',
         default='B',
         help='which block of the experiment to plot responses from')
+    parser.add_argument(
+        '--query',
+        default=config['analysis']['query'],
+        help='which ipe query to use')
 
     args = parser.parse_args()
-    plot(args.to, args.results_path, args.version, args.block)
+    plot(args.to, args.results_path, args.version, args.block, args.query)
