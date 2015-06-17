@@ -17,10 +17,15 @@ import numpy as np
 def plot(dest, results_path):
     err = pd.read_csv(
         os.path.join(results_path, "fall_responses_best_parameters.csv"))
+
+    query = util.get_query()
     err = err\
+        .groupby('query')\
+        .get_group(query)\
         .groupby(['sigma', 'phi'])['pearsonr']\
         .mean()\
-        .unstack('sigma')
+        .unstack('sigma')\
+        .fillna(0)
 
     fig, ax = plt.subplots()
     cax = ax.imshow(

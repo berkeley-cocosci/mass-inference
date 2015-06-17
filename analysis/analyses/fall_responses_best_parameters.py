@@ -32,36 +32,39 @@ def run(dest, results_path, version):
         .stack()
     kappas = human.index.get_level_values('kappa0').unique()
 
-    # load in the table of parameter mappings
-    query = util.get_query()
+    # load in the model responses
     store = pd.HDFStore(
         os.path.join(results_path, "model_fall_responses.h5"), 'r')
-    params = store["/{}/param_ref".format(query)]
 
     # empty list to put the correlations
     corrs = []
 
     # load in the model data for each parameter combination, one by one
-    for key in store.root._f_getChild("/{}".format(query))._v_children:
-        if key == 'param_ref':
-            continue
+    for query in store.root._v_children:
+        print query
+        params = store["/{}/param_ref".format(query)]
 
-        data = store["{}/{}".format(query, key)]
-        sigma = params.ix[key]['sigma']
-        phi = params.ix[key]['phi']
+        for key in store.root._f_getChild("/{}".format(query))._v_children:
+            if key == 'param_ref':
+                continue
 
-        model = data\
-            .groupby('block')\
-            .get_group('B')\
-            .pivot('stimulus', 'kappa0', 'median')[kappas]\
-            .stack()
+            data = store["{}/{}".format(query, key)]
+            sigma = params.ix[key]['sigma']
+            phi = params.ix[key]['phi']
 
-        corrs.append(dict(
-            sigma=sigma,
-            phi=phi,
-            pearsonr=scipy.stats.pearsonr(model, human)[0]))
+            model = data\
+                .groupby('block')\
+                .get_group('B')\
+                .pivot('stimulus', 'kappa0', 'median')[kappas]\
+                .stack()
 
-    results = pd.DataFrame(corrs).set_index(['sigma', 'phi']).sortlevel()
+            corrs.append(dict(
+                query=query,
+                sigma=sigma,
+                phi=phi,
+                pearsonr=scipy.stats.pearsonr(model, human)[0]))
+
+    results = pd.DataFrame(corrs).set_index(['query', 'sigma', 'phi']).sortlevel()
     results.to_csv(dest)
     store.close()
 

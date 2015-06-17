@@ -13,17 +13,19 @@ import pandas as pd
 
 
 def run(dest, results_path):
+    main_query = util.load_query()
     results = pd\
         .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
-        .set_index(['query', 'block', 'X', 'Y'])\
-        .ix[util.load_query()]
+        .set_index(['query', 'block', 'X', 'Y'])
 
     format_pearson = util.load_config()["latex"]["pearson"]
 
     fh = open(dest, "w")
 
-    for (block, x, y), corrs in results.iterrows():
+    for (query, block, x, y), corrs in results.iterrows():
         cmdname = "FallCorr{}{}{}".format(x, y, block)
+        if query != main_query:
+            cmdname += "".join([x.capitalize() for x in query.split("_")])
         cmd = format_pearson.format(**corrs)
         fh.write(util.newcommand(cmdname, cmd))
 
