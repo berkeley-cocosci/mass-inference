@@ -48,7 +48,7 @@ from IPython.parallel import Client, require
 def model_fall_responses(key, ipe):
     print key
     samps = ipe.set_index(['query', 'block', 'kappa0', 'stimulus', 'sample'])['response'].unstack('sample')
-    if ((samps == 0) | (samps == 1)).all():
+    if ((np.asarray(samps) == 0) | (np.asarray(samps) == 1)).all():
         result = samps.apply(util.beta, axis=1)
     else:
         result = samps.apply(util.bootstrap_mean, axis=1)
