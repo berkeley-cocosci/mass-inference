@@ -7,7 +7,7 @@ each experiment. This produces a csv file with the following columns:
     version (string)
         the experiment version
     num_mass_trials (string)
-        the number of trials on which people responded. -1 indicates a 
+        the number of trials on which people responded. -1 indicates a
         between-subjects analysis
     lower (float)
         lower bound of the 95% confidence interval
@@ -20,6 +20,7 @@ each experiment. This produces a csv file with the following columns:
 
 __depends__ = ["human_mass_accuracy_by_trial.csv"]
 __random__ = True
+__parallel__ = True
 
 import os
 import util
@@ -27,8 +28,12 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
+from IPython.parallel import Client, require
 
+
+@require('numpy as np', 'pandas as pd')
 def corr(df):
+    name, df = df
     x = np.asarray(df['trial'])
     y = np.asarray(df['median'])
     N = np.asarray(df['N'])
@@ -43,28 +48,43 @@ def corr(df):
         stats = pd.Series(
             np.percentile(corrs, [2.5, 50, 97.5]),
             index=['lower', 'median', 'upper'])
-    stats.name = df.name
+    stats.name = name
     return stats
 
 
-def run(dest, results_path, seed):
+def run(dest, results_path, seed, parallel):
     np.random.seed(seed)
 
     # load in human data
-    human = pd.read_csv(os.path.join(results_path, "human_mass_accuracy_by_trial.csv"))
+    human = pd\
+        .read_csv(os.path.join(results_path, "human_mass_accuracy_by_trial.csv"))\
+        .groupby('kappa0')\
+        .get_group('all')
+
+    def as_df(x, index_names):
+        df = pd.DataFrame(x)
+        if len(index_names) == 1:
+            df.index.name = index_names[0]
+        else:
+            df.index = pd.MultiIndex.from_tuples(df.index)
+            df.index.names = index_names
+        return df
+
+    if parallel:
+        rc = Client()
+        dview = rc[:]
+        mapfunc = dview.map_sync
+    else:
+        mapfunc = map
 
     # compute correlations
-    results = human\
-        .groupby('kappa0')\
-        .get_group('all')\
-        .groupby(['version', 'num_mass_trials'])\
-        .apply(corr)
-
+    results = mapfunc(corr, list(human.groupby(['version', 'num_mass_trials'])))
+    results = as_df(results, ['version', 'num_mass_trials'])
     results.to_csv(dest)
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.seed)
+    run(args.to, args.results_path, args.seed, args.parallel)
 

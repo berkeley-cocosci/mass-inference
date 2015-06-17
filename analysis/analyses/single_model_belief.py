@@ -57,21 +57,25 @@ def run(dest, results_path):
     store = pd.HDFStore(os.path.abspath(os.path.join(
         results_path, 'model_belief_by_trial_fit.h5')))
 
-    query = util.get_query()
     sigma, phi = util.get_params()
 
-    # look up the name of the key for the parameters that we want (will be
-    # something like params_0)
-    params = store["/ipe_{}/param_ref".format(query)]\
-        .reset_index()\
-        .set_index(['sigma', 'phi'])['index']\
-        .ix[(sigma, phi)]
+    data = [load_model(store, "/empirical/params_0", "empirical")]
+
+    for key in store.root._v_children:
+        if not key.startswith("ipe"):
+            continue
+
+        # look up the name of the key for the parameters that we want (will be
+        # something like params_0)
+        params = store["/{}/param_ref".format(key)]\
+            .reset_index()\
+            .set_index(['sigma', 'phi'])['index']\
+            .ix[(sigma, phi)]
+
+        data.append(load_model(store, "/{}/{}".format(key, params), key))
 
     # load in the data
-    data = pd.concat([
-        load_model(store, "/ipe_{}/{}".format(query, params), "ipe"),
-        load_model(store, "/empirical/params_0", "empirical"),
-    ]).set_index(['likelihood', 'counterfactual', 'model'])
+    data = pd.concat(data).set_index(['likelihood', 'counterfactual', 'model'])
 
     store.close()
     data.to_csv(dest)

@@ -102,27 +102,7 @@ def make_legend(ax, colors, markers):
 
     ax.legend(handles=handles, loc='upper left', fontsize=9, title="True mass ratio")
 
-def plot(dest, results_path, version, counterfactual):
-
-    # load human fall responses
-    human_fall = pd\
-        .read_csv(os.path.join(results_path, "human_fall_responses.csv"))\
-        .groupby(['version', 'block'])\
-        .get_group((version, 'B'))\
-        .set_index(['stimulus', 'kappa0'])\
-        .sortlevel()\
-        .unstack('kappa0')\
-        .reorder_levels([1, 0], axis=1)
-
-    # load model fall responses
-    model_fall = pd\
-        .read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))\
-        .groupby(['query', 'block'])\
-        .get_group((util.get_query(), 'B'))\
-        .set_index(['stimulus', 'kappa0'])\
-        .sortlevel()\
-        .unstack('kappa0')\
-        .reorder_levels([1, 0], axis=1)
+def plot(dest, results_path, version, counterfactual, query):
 
     # load human mass responses
     human_mass = pd\
@@ -144,13 +124,6 @@ def plot(dest, results_path, version, counterfactual):
         .unstack('kappa0')\
         .reorder_levels([1, 0], axis=1)
 
-    # load fall correlations
-    fall_corrs = pd\
-        .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
-        .set_index(['query', 'block', 'X', 'Y'])\
-        .sortlevel()\
-        .ix[(util.get_query(), 'B', 'ModelS', 'Human')]
-
     # load mass correlations
     mass_corrs = pd\
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
@@ -160,8 +133,6 @@ def plot(dest, results_path, version, counterfactual):
 
     # color config
     plot_config = util.load_config()["plots"]
-    #palette = util.grayify(plot_config["colors"])
-    #colors = [palette[0], palette[2]]
     colors = ['.4', '.1']
     markers = ['o', 's']
     lightgrey = plot_config["lightgrey"]
@@ -170,21 +141,14 @@ def plot(dest, results_path, version, counterfactual):
     # create the figure
     fig, (ax2, ax3) = plt.subplots(1, 2)
 
-    # # left subplot: IPE vs. human (will it fall?)
-    # plot_kappas(ax1, model_fall, human_fall, colors, markers)
-    # ax1.set_xlabel(r"Ideal observer model, $p(F_t|S_t)$")
-    # ax1.set_ylabel(r"Normalized human judgments")
-    # ax1.set_title('(a) Exp 1+2: "Will it fall?"')
-    # format_fall_plot(ax1, lightgrey)
-    # add_corr(ax1, fall_corrs)
-
     # middle subplot: IPE vs. human (which is heavier?)
-    plot_kappas(ax2, model_mass.ix['ipe'], human_mass, colors, markers)
+    ipe_query = "ipe_" + query
+    plot_kappas(ax2, model_mass.ix[ipe_query], human_mass, colors, markers)
     ax2.set_xlabel(r"Ideal observer, $p(\kappa=10|F_t,S_t)$")
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
     ax2.set_title('(a) Ideal Observer')
     format_mass_plot(ax2, lightgrey)
-    add_corr(ax2, mass_corrs.ix['ipe'])
+    add_corr(ax2, mass_corrs.ix[ipe_query])
 
     # right subplot: empirical vs. human (which is heavier?)
     plot_kappas(ax3, model_mass.ix['empirical'], human_mass, colors, markers)
@@ -234,5 +198,9 @@ if __name__ == "__main__":
         '--version',
         default=config['analysis']['human_fall_version'],
         help='which version of the experiment to plot responses from')
+    parser.add_argument(
+        '--query',
+        default=config['analysis']['query'],
+        help='which query for the ipe to use')
     args = parser.parse_args()
-    plot(args.to, args.results_path, args.version, args.counterfactual)
+    plot(args.to, args.results_path, args.version, args.counterfactual, args.query)

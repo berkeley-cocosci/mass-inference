@@ -38,6 +38,17 @@ for script in DEPENDENCIES:
                     '--no-counterfactual' if not cf else '',
                     '--not-fitted' if not fit else ''))
 
+    # special case: model results
+    elif script == 'plots/model_results.py':
+        params = ['', 'percent_fell', 'more_than_one_fell', 'more_than_half_fell']
+        for query in params:
+            target = "figures/model_results{}".format('_' + query if query != '' else '')
+            targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
+            env.Command(
+                targets, [script] + deps['sources'],
+                "python $SOURCE --to $TARGETS {}".format(
+                    '--query={}'.format(query) if query != '' else ''))
+
     # everything else
     else:
         env.Command(

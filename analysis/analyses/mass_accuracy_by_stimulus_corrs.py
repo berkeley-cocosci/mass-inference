@@ -26,14 +26,17 @@ following columns:
 
 __depends__ = ["human_mass_accuracy_by_stimulus.csv", "model_mass_accuracy_by_stimulus.csv"]
 __random__ = True
+__parallel__ = True
 
 import os
 import util
 import pandas as pd
 import numpy as np
 
+from IPython.parallel import Client, require
 
-def run(dest, results_path, seed):
+
+def run(dest, results_path, seed, parallel):
     np.random.seed(seed)
 
     # load in human data
@@ -49,16 +52,37 @@ def run(dest, results_path, seed):
         .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\
         .unstack('version')
 
+    @require('numpy as np', 'pandas as pd', 'util')
+    def bootcorr(x, y, **kwargs):
+        name, x = x
+        corr = util.bootcorr(x, y, **kwargs)
+        corr.name = name
+        return corr
+
+    def as_df(x, index_names):
+        df = pd.DataFrame(x)
+        if len(index_names) == 1:
+            df.index.name = index_names[0]
+        else:
+            df.index = pd.MultiIndex.from_tuples(df.index)
+            df.index.names = index_names
+        return df
+
+    if parallel:
+        rc = Client()
+        dview = rc[:]
+        mapfunc = dview.map_sync
+    else:
+        mapfunc = map
+
     # create empty dataframe for our results
     results = pd.DataFrame([])
 
     for version in human:
-        corr = model[version]\
-            .groupby(level=cols)\
-            .apply(util.bootcorr, human[version], method='pearson')\
-            .unstack()\
-            .reset_index()
-
+        corr = mapfunc(
+            lambda df: bootcorr(df, human[version], method='pearson'),
+            list(model[version].groupby(level=cols)))
+        corr = as_df(corr, cols).reset_index()
         corr['version'] = version
         results = results.append(corr)
 
@@ -69,4 +93,4 @@ def run(dest, results_path, seed):
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.seed)
+    run(args.to, args.results_path, args.seed, args.parallel)
