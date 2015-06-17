@@ -17,15 +17,21 @@ import seaborn as sns
 
 
 def hist(ax, x, color):
+    ymax = len(x) * 1.02
+    ax.plot([0, 0], [0, ymax], '-', color='0.6', zorder=1)
+    ax.plot([1, 1], [0, ymax], ':', color='0.6', zorder=1)
+
     # plot the histogram
-    ax.hist(x, color=color, bins=57, range=[-1.5, 3.0])
+    bins = np.arange(-0.7, 2.8, 0.2)
+    ax.hist(x, color=color, bins=bins, zorder=10)
 
     # reformat ytick labels so they show percent, not absolute number
     yticks = np.linspace(0, len(x), 6)
     yticklabels = ["{:.0%}".format(tick / float(len(x))) for tick in yticks]
     ax.set_yticks(yticks)
     ax.set_yticklabels(yticklabels)
-
+    ax.set_ylim(0, ymax)
+    ax.set_xlim(bins.min(), bins.max())
 
 def make_legend(ax, colors):
     handles = [
@@ -61,28 +67,34 @@ def plot(dest, results_path, counterfactual, likelihood):
     fig, axes = plt.subplots(2, 3, sharex=True)
     for i, version in enumerate(['H', 'G', 'I']):
         for j, model in enumerate(['static', 'learning']):
-            hist(axes[j, i], data.ix[(version, model)]['B'], colors[model])
+            hist(axes[j, i], data.ix[(version, model)]['B'], plot_config['darkgrey'])
 
     # set titles and axis labels
-    axes[0, 0].set_title('Experiment 1a')
-    axes[0, 1].set_title('Experiment 1b')
-    axes[0, 2].set_title('Experiment 2')
+    for i in range(3):
+        axes[0, i].set_title('Experiment {}'.format(i+1), fontsize=14, weight='bold', y=1.05)
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:
         ax.set_xlabel(r"Best fit learning rate ($\beta$)")
 
-    # make the legend
-    make_legend(axes[1, 0], colors)
+    for i, label in enumerate(['Static', 'Learning']):
+        mid = sum(axes[i, 0].get_ylim()) / 2.0
+        axes[i, 0].text(
+            -2.3, mid, label,
+            rotation=90,
+            fontsize=14,
+            weight='bold',
+            verticalalignment='center')
 
     # clear top and right axis lines
     sns.despine()
 
     # set figure size
-    fig.set_figwidth(12)
+    fig.set_figwidth(8)
     fig.set_figheight(4)
     plt.draw()
     plt.tight_layout()
+    plt.subplots_adjust(left=0.12)
 
     # save
     for pth in dest:

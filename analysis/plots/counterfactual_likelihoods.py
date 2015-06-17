@@ -132,8 +132,9 @@ def plot(dest, results_path, likelihood):
 
     # color config
     plot_config = util.load_config()["plots"]
-    palette = plot_config["colors"]
-    colors = [palette[0], palette[2]]
+    #palette = plot_config["colors"]
+    #colors = [palette[0], palette[2]]
+    colors = ['.4', '.1']
     markers = ['o', 's']
     darkgrey = plot_config["darkgrey"]
 

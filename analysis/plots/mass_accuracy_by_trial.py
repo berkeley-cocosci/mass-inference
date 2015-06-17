@@ -42,7 +42,7 @@ def plot(dest, results_path):
 
     # left subplot: experiment 2
     timeseries(ax1, responses.ix['G'], darkgrey)
-    ax1.set_title('Experiment 1b\n')
+    ax1.set_title('Experiment 1\n')
     ax1.set_xlabel('Trial')
     ax1.set_ylabel('Fraction correct')
     ax1.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
@@ -61,7 +61,7 @@ def plot(dest, results_path):
         timeseries(
             ax3, responses.ix[('I', i)], colors[i - 1], 
             label="{} trials".format(i))
-    ax3.set_title('Experiment 2\n(within subjects)')
+    ax3.set_title('Experiment 3\n(within subjects)')
     ax3.set_xlabel('Trial')
     ax3.set_xticks([1, 2, 3, 5, 10])
     ax3.set_xlim([1, 10])

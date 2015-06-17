@@ -37,16 +37,16 @@ def run(dest, results_path, version, block):
     for k in range(1, 7):
 
         # compute the slope
-        slope = 1.0 / np.sqrt(k)
+        slope = 1.0 / k
 
         # fit the intercept
         X = np.ones((model['stddev'].size, 1))
-        Y = np.asarray(human['stddev'] - slope * model['stddev'])[:, None]
+        Y = np.asarray(human['stddev']**2 - slope * model['stddev']**2)[:, None]
         intercept = float(np.linalg.lstsq(X, Y)[0].ravel())
 
         # compute MSE
-        X = slope * model['stddev'] + intercept
-        Y = human['stddev']
+        X = slope * model['stddev']**2 + intercept
+        Y = human['stddev']**2
         err = np.mean((Y - X) ** 2)
 
         results.append({

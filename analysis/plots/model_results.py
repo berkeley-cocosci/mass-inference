@@ -52,11 +52,16 @@ def format_fall_plot(ax, color):
 
 
 def format_mass_plot(ax, color):
-    ax.plot([0, 1], [50, 50], '-', color=color, linewidth=2, zorder=1)
-    ax.plot([0.5, 0.5], [0, 100], '-', color=color, linewidth=2, zorder=1)
+    xmin = -0.02
+    xmax = 1.02
+    ymin = -2
+    ymax = 102
 
-    ax.set_xlim([0, 1])
-    ax.set_ylim([0, 100])
+    ax.plot([xmin, xmax], [50, 50], '--', color=color, linewidth=2, zorder=1)
+    ax.plot([0.5, 0.5], [ymin, ymax], '--', color=color, linewidth=2, zorder=1)
+
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
 
     ticks = [0, 0.25, 0.5, 0.75, 1.0]
     ticklabels = ['0.0', '0.25', '0.50', '0.75', '1.0']
@@ -71,8 +76,8 @@ def add_corr(ax, corr):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     ax.text(
-        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.025, corrstr,
-        horizontalalignment='right', fontsize=10)
+        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.035, corrstr,
+        horizontalalignment='right', fontsize=10, backgroundcolor='white')
 
 
 def plot_kappas(ax, model, human, colors, markers):
@@ -95,7 +100,7 @@ def make_legend(ax, colors, markers):
             linestyle='',
             label=r"$\kappa={}$".format(kappa)))
 
-    ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
+    ax.legend(handles=handles, loc='upper left', fontsize=9, title="True mass ratio")
 
 def plot(dest, results_path, version, counterfactual):
 
@@ -155,47 +160,53 @@ def plot(dest, results_path, version, counterfactual):
 
     # color config
     plot_config = util.load_config()["plots"]
-    palette = plot_config["colors"]
-    colors = [palette[0], palette[2]]
+    #palette = util.grayify(plot_config["colors"])
+    #colors = [palette[0], palette[2]]
+    colors = ['.4', '.1']
     markers = ['o', 's']
     lightgrey = plot_config["lightgrey"]
     sns.set_style("white", {'axes.edgecolor': lightgrey})
 
     # create the figure
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fig, (ax2, ax3) = plt.subplots(1, 2)
 
-    # left subplot: IPE vs. human (will it fall?)
-    plot_kappas(ax1, model_fall, human_fall, colors, markers)
-    ax1.set_xlabel(r"Ideal observer model, $p(F_t|S_t)$")
-    ax1.set_ylabel(r"Normalized human judgments")
-    ax1.set_title('A: "Will it fall?"')
-    format_fall_plot(ax1, lightgrey)
-    add_corr(ax1, fall_corrs)
+    # # left subplot: IPE vs. human (will it fall?)
+    # plot_kappas(ax1, model_fall, human_fall, colors, markers)
+    # ax1.set_xlabel(r"Ideal observer model, $p(F_t|S_t)$")
+    # ax1.set_ylabel(r"Normalized human judgments")
+    # ax1.set_title('(a) Exp 1+2: "Will it fall?"')
+    # format_fall_plot(ax1, lightgrey)
+    # add_corr(ax1, fall_corrs)
 
     # middle subplot: IPE vs. human (which is heavier?)
     plot_kappas(ax2, model_mass.ix['ipe'], human_mass, colors, markers)
-    ax2.set_xlabel(r"Ideal observer model, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_xlabel(r"Ideal observer, $p(\kappa=10|F_t,S_t)$")
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax2.set_title('B: "Which is heavier?" (Ideal)')
+    ax2.set_title('(a) Ideal Observer')
     format_mass_plot(ax2, lightgrey)
     add_corr(ax2, mass_corrs.ix['ipe'])
 
     # right subplot: empirical vs. human (which is heavier?)
     plot_kappas(ax3, model_mass.ix['empirical'], human_mass, colors, markers)
-    ax3.set_xlabel(r"Empirical observer model, $p(\kappa=10|F_t,S_t)$")
-    ax3.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax3.set_title('C: "Which is heavier?" (Empirical)')
+    ax3.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
+    #ax3.set_ylabel(r"% participants choosing $\kappa=10$")
+    ax3.set_yticklabels([])
+    ax3.set_title('(b) Empirical Observer')
     format_mass_plot(ax3, lightgrey)
     add_corr(ax3, mass_corrs.ix['empirical'])
 
     # create the legend
     make_legend(ax3, colors, markers)
 
+    sns.despine()
+
     # set figure size
     fig.set_figheight(3.5)
-    fig.set_figwidth(12)
+    fig.set_figwidth(7)
     plt.draw()
     plt.tight_layout()
+
+    plt.subplots_adjust(left=0.08, right=0.99)
 
     # save
     for pth in dest:
