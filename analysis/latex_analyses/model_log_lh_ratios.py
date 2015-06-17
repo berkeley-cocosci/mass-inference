@@ -43,7 +43,7 @@ def run(dest, results_path, counterfactual):
         else:
             lh = "".join([x.capitalize() for x in lh.split("_")])
 
-        cmdname = "llhr{}{}{}".format(lh.capitalize(), replace[version], replace[num_trials])
+        cmdname = "llhr{}{}{}".format(lh, replace[version], replace[num_trials])
         cmd = r"$\textrm{{LLR}}={llhr:.2f}$".format(**llhr)
         fh.write(util.newcommand(cmdname, cmd))
 
