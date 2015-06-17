@@ -72,6 +72,8 @@ def make_legend(ax, lines, colors):
 
 
 def plot(dest, results_path, counterfactual, fitted, likelihood):
+    if likelihood == 'ipe':
+        likelihood = 'ipe_' + util.get_query()
 
     # load in the human responses
     human = pd\

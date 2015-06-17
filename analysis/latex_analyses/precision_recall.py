@@ -21,13 +21,20 @@ def run(dest, results_path):
         .get_group(('H', 'static', False))\
         .set_index(['likelihood', 'counterfactual'])
 
+    query = util.load_query()
+
     fh = open(dest, "w")
 
     for (lh, cf), res in results.iterrows():
-        if cf:
-            suffix = "{}CF".format(lh.replace('_', '').capitalize())
+        if lh == 'ipe_' + query:
+            lh = 'Ipe'
         else:
-            suffix = "{}NoCF".format(lh.replace('_', '').capitalize())
+            lh = "".join([x.capitalize() for x in lh.split('_')])
+
+        if cf:
+            suffix = "{}CF".format(lh)
+        else:
+            suffix = "{}NoCF".format(lh)
 
         cmdname = "ExpOneFScore{}".format(suffix)
         cmd = "F_1={F1:.2f}".format(**res)

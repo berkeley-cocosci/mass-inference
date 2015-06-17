@@ -22,14 +22,20 @@ def run(dest, results_path):
         .set_index(['likelihood', 'counterfactual'])
 
     latex_pearson = util.load_config()["latex"]["pearson"]
+    query = util.load_query()
 
     fh = open(dest, "w")
 
     for (lh, cf), corrs in results.iterrows():
-        if cf:
-            suffix = "{}CF".format(lh.replace('_', '').capitalize())
+        if lh == 'ipe_' + query:
+            lh = 'Ipe'
         else:
-            suffix = "{}NoCF".format(lh.replace('_', '').capitalize())
+            lh = "".join([x.capitalize() for x in lh.split('_')])
+
+        if cf:
+            suffix = "{}CF".format(lh)
+        else:
+            suffix = "{}NoCF".format(lh)
 
         cmdname = "ExpOneMassRespStimCorr{}".format(suffix)
         cmd = latex_pearson.format(**corrs)

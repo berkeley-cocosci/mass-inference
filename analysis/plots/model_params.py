@@ -43,6 +43,9 @@ def make_legend(ax, colors):
 
 
 def plot(dest, results_path, counterfactual, likelihood):
+    if likelihood == 'ipe':
+        likelihood = 'ipe_' + util.get_query()
+
     # load in the model data, which includes fitted parameters
     data = pd\
         .read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
