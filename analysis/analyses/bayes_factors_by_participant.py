@@ -29,7 +29,7 @@ import pandas as pd
 def run(dest, results_path):
     model = pd\
         .read_csv(os.path.join(results_path, "marginal_likelihoods.csv"))\
-        .set_index(['likelihood', 'counterfactual', 'version', 'pid', 'model'])['logp']\
+        .set_index(['likelihood', 'counterfactual', 'version', 'num_mass_trials', 'pid', 'model'])['logp']\
         .unstack('model')
 
     results = (model['learning'] - model['static']).to_frame('logK')

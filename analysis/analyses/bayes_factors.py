@@ -27,7 +27,7 @@ import pandas as pd
 def run(dest, results_path):
     results = pd\
         .read_csv(os.path.join(results_path, "bayes_factors_by_participant.csv"))\
-        .groupby(['likelihood', 'counterfactual', 'version'])['logK']\
+        .groupby(['likelihood', 'counterfactual', 'version', 'num_mass_trials'])['logK']\
         .sum()\
         .to_frame('logK')
 

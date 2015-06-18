@@ -112,7 +112,9 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
         .read_csv(os.path.join(results_path, 'bayes_factors.csv'))\
         .groupby(['likelihood', 'counterfactual'])\
         .get_group((likelihood, counterfactual))\
-        .set_index('version')['logK']
+        .groupby(['version', 'num_mass_trials'])\
+        .filter(filter_trials)\
+        .set_index(['version'])['logK']
 
     # colors and line styles
     plot_config = util.load_config()["plots"]

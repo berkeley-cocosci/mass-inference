@@ -17,26 +17,34 @@ def run(dest, results_path, counterfactual):
         .read_csv(os.path.join(results_path, 'bayes_factors.csv'))\
         .groupby('counterfactual')\
         .get_group(counterfactual)\
-        .set_index(['likelihood', 'version'])
+        .set_index(['likelihood', 'version', 'num_mass_trials'])
 
     replace = {
         'G': 'ExpTwo',
         'H': 'ExpOne',
-        'I': 'ExpThree'
+        'I': 'ExpThree',
+        1: 'OneTrial',
+        2: 'TwoTrials',
+        3: 'ThreeTrials',
+        4: 'FourTrials',
+        5: 'FiveTrials',
+        -1: 'AcrossSubjs',
+        8: '',
+        20: ''
     }
 
     query = util.load_query()
 
     fh = open(dest, "w")
 
-    for (lh, version), logk in results.iterrows():
+    for (lh, version, num_trials), logk in results.iterrows():
         if lh == "ipe_" + query:
             lh = 'Ipe'
         else:
             lh = "".join([x.capitalize() for x in lh.split("_")])
 
-        cmdname = "BayesFactor{}{}".format(lh, replace[version])
-        cmd = r"$\textrm{{\log{{K}}}}={logK:.2f}$".format(**logk)
+        cmdname = "BayesFactor{}{}{}".format(lh, replace[version], replace[num_trials])
+        cmd = r"{logK:.2f}".format(**logk)
         fh.write(util.newcommand(cmdname, cmd))
 
     fh.close()

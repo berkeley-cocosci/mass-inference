@@ -80,7 +80,8 @@ def model_belief_fit(key, responses, data):
     model = pd\
         .merge(log_odds, responses)\
         .set_index(['counterfactual', 'version', 'kappa0', 'pid', 'trial'])\
-        .sortlevel()
+        .sortlevel()\
+        .dropna()
 
     # use L1 logistic regression to fit parameters individually to
     # each participant

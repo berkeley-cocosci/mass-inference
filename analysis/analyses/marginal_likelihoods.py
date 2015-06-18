@@ -46,22 +46,29 @@ following columns (it includes both fitted beliefs, and raw beliefs):
 """
 
 __depends__ = ["human", "model_belief_by_trial.h5"]
+__parallel__ = True
 
 import os
 import util
 import pandas as pd
 import numpy as np
 
-
-def log_laplace(x, mu=0, b=1):
-    """Compute p(x | mu, b) according to a laplace distribution"""
-    # (1 / 2*b) * np.exp(-np.abs(x - mu) / b)
-    c = -np.log(2 * b)
-    e = -np.abs(x - mu) / b
-    return c + e
+from IPython.parallel import Client, require
 
 
+def as_df(x, index_names):
+    df = pd.DataFrame(x)
+    if len(index_names) == 1:
+        df.index.name = index_names[0]
+    else:
+        df.index = pd.MultiIndex.from_tuples(df.index)
+        df.index.names = index_names
+    return df
+
+
+@require('numpy as np', 'pandas as pd')
 def integrate(df):
+    name, df = df
     df2 = df.dropna()
     y = np.asarray(df2['mass? response'])
     X = np.asarray(df2['log_odds'])
@@ -70,7 +77,8 @@ def integrate(df):
     B = np.linspace(-20, 21, 10000)
 
     # compute the prior
-    log_prior = log_laplace(B, mu=1, b=1)
+    # (1 / 2*b) * np.exp(-np.abs(x - mu) / b)
+    log_prior = -np.log(2) - np.abs(B - 1)
 
     # compute the likelihood
     p = 1.0 / (1 + np.exp(-(X * B[:, None])))
@@ -78,12 +86,14 @@ def integrate(df):
 
     # compute the joint and integrate
     joint = np.exp(log_lh + log_prior)
-    marginal = np.trapz(joint, B)
+    marginal = np.log(np.trapz(joint, B))
 
-    return np.log(marginal)
+    s = pd.Series([marginal], index=['logp'])
+    s.name = name
+    return s
 
 
-def marginal_likelihood(responses, data):
+def marginal_likelihood(responses, data, parallel):
     # convert model belief to wide form
     belief = data\
         .set_index(['counterfactual', 'version', 'pid', 'trial', 'hypothesis'])['logp']\
@@ -101,20 +111,43 @@ def marginal_likelihood(responses, data):
     # merge with human responses
     model = pd\
         .merge(log_odds, responses)\
-        .set_index(['counterfactual', 'version', 'pid', 'trial'])\
+        .set_index(['counterfactual', 'version', 'pid'])\
+        .sortlevel()\
+        .dropna()
+    model['num_mass_trials'] = model\
+        .groupby(level=['counterfactual', 'version', 'pid'])\
+        .apply(len)
+    between_subjs = model\
+        .reset_index()\
+        .groupby('version')\
+        .get_group('I')\
+        .groupby(['counterfactual', 'version', 'pid'])\
+        .apply(lambda x: x.sort('trial').head(1))\
+        .set_index(['counterfactual', 'version', 'pid'])
+    between_subjs['num_mass_trials'] = -1
+
+    model = pd\
+        .concat([model, between_subjs])\
+        .reset_index()\
+        .set_index(['counterfactual', 'version', 'num_mass_trials', 'pid', 'trial'])\
         .sortlevel()
 
+    if parallel:
+        rc = Client()
+        dview = rc[:]
+        mapfunc = dview.map_sync
+    else:
+        mapfunc = map
+
     # compute marginal likelihoods
-    result = model\
-        .groupby(level=['counterfactual', 'version', 'pid'])\
-        .apply(integrate)\
-        .to_frame('logp')\
-        .reset_index()
+    cols = ['counterfactual', 'version', 'num_mass_trials', 'pid']
+    result = mapfunc(integrate, list(model.groupby(level=cols)))
+    result = as_df(result, cols).reset_index()
 
     return result
 
 
-def run(dest, results_path, data_path):
+def run(dest, results_path, data_path, parallel):
     # load in raw human mass responses
     human = util.load_human(data_path)['C'][
         ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
@@ -146,7 +179,7 @@ def run(dest, results_path, data_path):
         group = store.root._f_getChild(pth)
         for model in group._v_children:
             data = store["{}/{}".format(pth, model)]
-            result = marginal_likelihood(human, data)
+            result = marginal_likelihood(human, data, parallel)
             result['model'] = model
             result['likelihood'] = key
             results.append(result)
@@ -159,4 +192,4 @@ def run(dest, results_path, data_path):
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.data_path)
+    run(args.to, args.results_path, args.data_path, args.parallel)
