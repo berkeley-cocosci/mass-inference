@@ -18,7 +18,7 @@ def load_query():
 
 
 def newcommand(name, val):
-    fmt = load_config()["latex"]["newcommand"]
+    fmt = "\\newcommand{{\\{name}}}[0]{{{action}}}\n"
     cmd = fmt.format(name=name, action=val)
     print(cmd)
     return cmd

@@ -40,7 +40,7 @@ for script in DEPENDENCIES:
 
     # special case: model results
     elif script == 'plots/model_results.py':
-        params = ['', 'percent_fell', 'more_than_one_fell', 'more_than_half_fell']
+        params = ['', 'percent_fell', 'at_least_one_fell', 'more_than_half_fell']
         for query in params:
             target = "figures/model_results{}".format('_' + query if query != '' else '')
             targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
@@ -51,7 +51,7 @@ for script in DEPENDENCIES:
 
     # special case: model learning results
     elif script == 'plots/model_learning_results.py':
-        params = ['', 'ipe_percent_fell', 'ipe_more_than_one_fell', 'ipe_more_than_half_fell', 'empirical']
+        params = ['', 'ipe_percent_fell', 'ipe_at_least_one_fell', 'ipe_more_than_half_fell', 'empirical']
         for lh in params:
             target = "figures/model_learning_results{}".format('_' + lh if lh != '' else '')
             targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
@@ -62,7 +62,7 @@ for script in DEPENDENCIES:
 
     # special case: num samples
     elif script == 'plots/num_samples.py':
-        params = ['', 'percent_fell', 'more_than_one_fell', 'more_than_half_fell']
+        params = ['', 'percent_fell', 'at_least_one_fell', 'more_than_half_fell']
         for query in params:
             target = "figures/num_samples{}".format('_' + query if query != '' else '')
             targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
@@ -74,5 +74,5 @@ for script in DEPENDENCIES:
     # everything else
     else:
         env.Command(
-            deps['targets'], [script] + deps['sources'], 
+            deps['targets'], [script] + deps['sources'],
             "python $SOURCE --to $TARGETS")
