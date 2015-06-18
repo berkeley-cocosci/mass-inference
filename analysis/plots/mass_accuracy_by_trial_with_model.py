@@ -10,7 +10,8 @@ empirical likelihoods, and both static and learning models.
 __depends__ = [
     "human_mass_accuracy_by_trial.csv", 
     "model_mass_accuracy_by_trial.csv",
-    "model_log_lh_ratios.csv"
+    "model_log_lh_ratios.csv",
+    "bayes_factors.csv"
 ]
 
 import util
@@ -38,8 +39,11 @@ def plot_all(ax, human, model, lines, colors):
     timeseries(ax, model.ix['static'], colors['static'], ls=lines['static'])
 
 
-def add_llhr(ax, llhr):
-    label = "LLR (learning v. static) = {:.2f}".format(llhr)
+def add_llhr_and_factor(ax, llhr, factor):
+    label = (
+        "LLR (learning v. static) = {:.2f}\n"
+        "Bayes' Factor = {:.2f}"
+    ).format(llhr, factor)
     l, h = ax.get_xlim()
     ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center', fontsize=9)
 
@@ -103,6 +107,13 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
         .filter(filter_trials)\
         .set_index(['version'])['llhr']
 
+    # load in the bayes factors
+    factors = pd\
+        .read_csv(os.path.join(results_path, 'bayes_factors.csv'))\
+        .groupby(['likelihood', 'counterfactual'])\
+        .get_group((likelihood, counterfactual))\
+        .set_index('version')['logK']
+
     # colors and line styles
     plot_config = util.load_config()["plots"]
     darkgrey = plot_config["darkgrey"]
@@ -127,7 +138,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
     ax1.set_xticks([1, 5, 10, 15, 20])
     ax1.set_xlim([1, 20])
     ax1.set_ylim(0.5, 1)
-    add_llhr(ax1, llhr.ix['H'])
+    add_llhr_and_factor(ax1, llhr.ix['H'], factors.ix['H'])
 
     # middle subplot: experiment 2
     plot_all(ax2, human.ix['G'], model.ix['G'], lines, colors)
@@ -135,7 +146,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
     ax2.set_xlabel('Trial')
     ax2.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
     ax2.set_xlim([1, 20])
-    add_llhr(ax2, llhr.ix['G'])
+    add_llhr_and_factor(ax2, llhr.ix['G'], factors.ix['G'])
 
     # right subplot: experiment 3 (between subjects)
     plot_all(ax3, human.ix['I'], model.ix['I'], lines, colors)
@@ -143,7 +154,7 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
     ax3.set_xlabel('Trial')
     ax3.set_xticks([1, 2, 3, 5, 10])
     ax3.set_xlim([1, 10])
-    add_llhr(ax3, llhr.ix['I'])
+    add_llhr_and_factor(ax3, llhr.ix['I'], factors.ix['I'])
 
     # clear top and right axis lines
     sns.despine()

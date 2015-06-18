@@ -71,6 +71,17 @@ for script in DEPENDENCIES:
                 "python $SOURCE --to $TARGETS {}".format(
                     '--query={}'.format(query) if query != '' else ''))
 
+    # special case: model params
+    elif script == 'plots/model_params.py':
+        params = ['', 'ipe_percent_fell', 'ipe_at_least_one_fell', 'ipe_more_than_half_fell', 'empirical']
+        for lh in params:
+            target = "figures/model_params{}".format('_' + lh if lh != '' else '')
+            targets = ["{}.{}".format(target, ext) for ext in ["pdf", "png"]]
+            env.Command(
+                targets, [script] + deps['sources'],
+                "python $SOURCE --to $TARGETS {}".format(
+                    '--likelihood={}'.format(lh) if lh != '' else ''))
+
     # everything else
     else:
         env.Command(

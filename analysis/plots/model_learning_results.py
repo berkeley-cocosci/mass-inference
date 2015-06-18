@@ -39,8 +39,11 @@ def plot_all(ax, human, model, lines, colors):
     timeseries(ax, model.ix['static'], colors['static'], ls=lines['static'])
 
 
-def add_llhr(ax, llhr):
-    label = "LLR (learning v. static) = {:.2f}".format(llhr)
+def add_llhr_and_factor(ax, llhr, factor):
+    label = (
+        "LLR (learning v. static) = {:.2f}\n"
+        "Bayes' Factor = {:.2f}"
+    ).format(llhr, factor)
     l, h = ax.get_xlim()
     ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center', fontsize=9)
 
@@ -103,6 +106,13 @@ def plot(dest, results_path, counterfactual, likelihood):
         .filter(filter_trials)\
         .set_index(['version'])['llhr']
 
+    # load in the bayes factors
+    factors = pd\
+        .read_csv(os.path.join(results_path, 'bayes_factors.csv'))\
+        .groupby(['likelihood', 'counterfactual'])\
+        .get_group((likelihood, counterfactual))\
+        .set_index('version')['logK']
+
     # colors and line styles
     plot_config = util.load_config()["plots"]
     darkgrey = plot_config["darkgrey"]
@@ -134,7 +144,7 @@ def plot(dest, results_path, counterfactual, likelihood):
     axes[0, 1].set_xlabel('Trial')
     axes[0, 1].set_xticks([1, 5, 10, 15, 20])
     axes[0, 1].set_xlim([1, 20])
-    add_llhr(axes[0, 1], llhr.ix['H'])
+    add_llhr_and_factor(axes[0, 1], llhr.ix['H'], factors.ix['H'])
 
     # bottom left subplot: experiment 1b
     plot_all(axes[1, 0], human.ix['G'], model.ix[('G', True)], lines, colors)
@@ -143,7 +153,7 @@ def plot(dest, results_path, counterfactual, likelihood):
     axes[1, 0].set_ylabel('Pr(correct ratio chosen)')
     axes[1, 0].set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
     axes[1, 0].set_xlim([1, 20])
-    add_llhr(axes[1, 0], llhr.ix['G'])
+    add_llhr_and_factor(axes[1, 0], llhr.ix['G'], factors.ix['G'])
 
     # bottom right subplot: experiment 2 (between subjects)
     plot_all(axes[1, 1], human.ix['I'], model.ix[('I', True)], lines, colors)
@@ -151,7 +161,7 @@ def plot(dest, results_path, counterfactual, likelihood):
     axes[1, 1].set_xlabel('Trial')
     axes[1, 1].set_xticks([1, 2, 3, 5, 10])
     axes[1, 1].set_xlim([1, 10])
-    add_llhr(axes[1, 1], llhr.ix['I'])
+    add_llhr_and_factor(axes[1, 1], llhr.ix['I'], factors.ix['I'])
 
     # clear top and right axis lines
     sns.despine()

@@ -61,7 +61,8 @@ def fit_responses(df, model_name, verbose=False):
     if model_name == 'chance':
         B = 0
     else:
-        B = logistic_regression(X, y, verbose)
+        #B = logistic_regression(X, y, verbose)
+        B = integrate(X, y, verbose)
 
     f = np.asarray(df['log_odds']) * B
     f_raw = np.asarray(df['log_odds'])
