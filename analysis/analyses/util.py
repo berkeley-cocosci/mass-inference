@@ -7,6 +7,8 @@ import scipy.special
 import scipy.stats
 
 from argparse import ArgumentParser, RawTextHelpFormatter
+from IPython.parallel import Client
+
 import datapackage as dpkg
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -330,3 +332,24 @@ def get_params():
 def get_query():
     config = load_config()
     return config["analysis"]["query"]
+
+
+def as_df(x, index_names):
+    df = pd.DataFrame(x)
+    if len(index_names) == 1:
+        df.index.name = index_names[0]
+    else:
+        df.index = pd.MultiIndex.from_tuples(df.index)
+        df.index.names = index_names
+    return df
+
+
+def get_mapfunc(parallel):
+    if parallel:
+        rc = Client()
+        dview = rc[:]
+        mapfunc = dview.map_sync
+    else:
+        mapfunc = map
+
+    return mapfunc

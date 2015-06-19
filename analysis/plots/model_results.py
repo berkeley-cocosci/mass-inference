@@ -8,7 +8,7 @@ empirical likelihood.
 """
 
 __depends__ = [
-    "human_fall_responses.csv", 
+    "human_fall_responses.csv",
     "single_model_fall_responses.csv",
     "fall_response_corrs.csv",
     "human_mass_responses_by_stimulus.csv",
@@ -117,8 +117,8 @@ def plot(dest, results_path, version, counterfactual, query):
     # load model mass responses
     model_mass = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
-        .groupby(['counterfactual', 'fitted', 'model', 'version'])\
-        .get_group((counterfactual, False, 'static', 'H'))\
+        .groupby('counterfactual')\
+        .get_group(counterfactual)\
         .set_index(['likelihood', 'stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
@@ -127,9 +127,9 @@ def plot(dest, results_path, version, counterfactual, query):
     # load mass correlations
     mass_corrs = pd\
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
-        .set_index(['counterfactual', 'fitted', 'model', 'version', 'likelihood'])\
+        .set_index(['counterfactual', 'version', 'likelihood'])\
         .sortlevel()\
-        .ix[(counterfactual, False, 'static', 'H')]
+        .ix[(counterfactual, 'H')]
 
     # color config
     plot_config = util.load_config()["plots"]

@@ -45,26 +45,81 @@ following columns (it includes both fitted beliefs, and raw beliefs):
 
 """
 
-__depends__ = ["human", "model_belief_by_trial.h5"]
+__depends__ = ["human", "model_belief_by_trial.csv"]
 __parallel__ = True
-__ext__ = '.h5'
 
 import os
 import util
 import pandas as pd
 import numpy as np
-import model_belief_by_trial_fit_util as mbf
+import scipy.optimize
 
-from IPython.parallel import Client, require, Reference
+from IPython.parallel import require
 
 
-def model_belief_fit(key, responses, data):
-    model_name = key.split("/")[-1]
-    print key
+@require('numpy as np', 'pandas as pd', 'scipy.optimize')
+def fit_responses(df):
+    """Fits participant responses using a logistic regression. The given data
+    frame should have, at least, columns for 'mass? response' and 'log_odds'. A
+    new dataframe will be returned, minus columns for 'mass? response' and
+    'log_odds', but with columns 'B' (the fitted parameter), 'p' (the fitted
+    belief for r=10), and 'p correct' (the fitted probability of answering
+    correctly).
+
+    """
+    (likelihood, counterfactual, version, model, kappa0, pid), df = df
+
+    df2 = df.dropna()
+    y = np.asarray(df2['mass? response'])
+    X = np.asarray(df2['log_odds'])
+
+    def log_posterior(B):
+        # compute the prior
+        # (1 / 2*b) * np.exp(-np.abs(x - mu) / b)
+        log_prior = -np.log(2) - np.abs(B - 1)
+
+        # compute the likelihood
+        p = 1.0 / (1 + np.exp(-(X * B)))
+        log_lh = np.log((y * p) + ((1 - y) * (1 - p))).sum()
+
+        # compute the posterior
+        log_posterior = log_lh + log_prior
+
+        return -log_posterior
+
+    B = float(scipy.optimize.minimize_scalar(log_posterior)['x'])
+    f = np.asarray(df['log_odds']) * B
+    f_raw = np.asarray(df['log_odds'])
+    mu = 1.0 / (1 + np.exp(-f))
+    mu_raw = 1.0 / (1 + np.exp(-f_raw))
+
+    new_df = df.copy().drop(['mass? response', 'log_odds'], axis=1)
+    new_df['B'] = B
+    new_df['p'] = mu
+    new_df['p raw'] = mu_raw
+
+    if kappa0 < 0:
+        new_df['p correct'] = 1 - mu
+        new_df['p correct raw'] = 1 - mu_raw
+    else:
+        new_df['p correct'] = mu
+        new_df['p correct raw'] = mu_raw
+
+    return new_df
+
+
+def run(dest, results_path, data_path, parallel):
+    # load in raw human mass responses
+    human = util.load_human(data_path)['C'][
+        ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
+    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
+
+    data = pd.read_csv(os.path.join(results_path, 'model_belief_by_trial.csv'))
 
     # convert model belief to wide form
+    cols = ['likelihood', 'counterfactual', 'version', 'model', 'kappa0', 'pid']
     belief = data\
-        .set_index(['counterfactual', 'version', 'kappa0', 'pid', 'trial', 'hypothesis'])['logp']\
+        .set_index(cols + ['trial', 'hypothesis'])['logp']\
         .unstack('hypothesis')\
         .sortlevel()
 
@@ -72,23 +127,22 @@ def model_belief_fit(key, responses, data):
     # to long form
     log_odds = pd.melt(
         (belief[1.0] - belief[-1.0]).unstack('trial').reset_index(),
-        id_vars=['counterfactual', 'version', 'kappa0', 'pid'],
+        id_vars=cols,
         var_name='trial',
         value_name='log_odds')
 
     # merge with human responses
     model = pd\
-        .merge(log_odds, responses)\
-        .set_index(['counterfactual', 'version', 'kappa0', 'pid', 'trial'])\
+        .merge(log_odds, human)\
+        .set_index(cols + ['trial'])\
         .sortlevel()\
         .dropna()
 
     # use L1 logistic regression to fit parameters individually to
     # each participant
-    result = model\
-        .groupby(level=['counterfactual', 'version', 'kappa0', 'pid'])\
-        .apply(mbf.fit_responses, model_name)\
-        .reset_index()
+    mapfunc = util.get_mapfunc(parallel)
+    result = mapfunc(fit_responses, list(model.groupby(level=cols)))
+    result = pd.concat(result).reset_index()
 
     # separate out the raw belief from the fitted belief
     fitted = result.drop(['p raw', 'p correct raw'], axis=1)
@@ -98,60 +152,18 @@ def model_belief_fit(key, responses, data):
         .rename(columns={'p raw': 'p', 'p correct raw': 'p correct'})
     raw['fitted'] = False
     raw['B'] = np.nan
-    new_belief = pd.concat([fitted, raw])
 
-    return key, new_belief
+    new_belief = pd\
+        .concat([fitted, raw])\
+        .set_index(cols)\
+        .sortlevel()
 
+    assert not np.isnan(new_belief['p']).any()
+    assert not np.isnan(new_belief['p correct']).any()
+    assert not np.isinf(new_belief['p']).any()
+    assert not np.isinf(new_belief['p correct']).any()
 
-def run(dest, results_path, data_path, parallel):
-    # load in raw human mass responses
-    human = util.load_human(data_path)['C'][
-        ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
-    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
-
-    # load in raw model belief
-    old_store_pth = os.path.abspath(os.path.join(
-        results_path, 'model_belief_by_trial.h5'))
-    old_store = pd.HDFStore(old_store_pth, mode='r')
-    store = pd.HDFStore(dest, mode='w')
-
-    # create the ipython parallel client
-    if parallel:
-        rc = Client()
-        lview = rc.load_balanced_view()
-        task = require('numpy as np', 'pandas as pd', 'util', 'model_belief_by_trial_fit_util as mbf')(model_belief_fit)
-        rc[:].push(dict(human=human), block=True)
-        human = Reference('human')
-    else:
-        task = model_belief_fit
-
-    # go through each key in the existing database and begin processing it
-    results = []
-    for key in old_store.keys():
-        if key.split('/')[-1] == 'param_ref':
-            store.append(key, old_store[key])
-            continue
-
-        args = [key, human, old_store[key]]
-        if parallel:
-            result = lview.apply(task, *args)
-        else:
-            result = task(*args)
-        results.append(result)
-
-    # collect and save results
-    while len(results) > 0:
-        result = results.pop(0)
-        if parallel:
-            key, belief = result.get()
-            result.display_outputs()
-        else:
-            key, belief = result
-
-        store.append(key, belief)
-
-    store.close()
-    old_store.close()
+    new_belief.to_csv(dest)
 
 
 if __name__ == "__main__":

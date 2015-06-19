@@ -31,7 +31,7 @@ Produces a csv file with the following columns:
 
 """
 
-__depends__ = ["human", "single_model_belief.csv"]
+__depends__ = ["human", "model_belief_by_trial_fit.csv"]
 __random__ = True
 __parallel__ = True
 
@@ -40,7 +40,7 @@ import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import Client, require
+from IPython.parallel import require
 
 
 def run(dest, results_path, data_path, seed, parallel):
@@ -49,7 +49,7 @@ def run(dest, results_path, data_path, seed, parallel):
         .set_index(['version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
 
-    model = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
+    model = pd.read_csv(os.path.join(results_path, 'model_belief_by_trial_fit.csv'))\
         .set_index(['version', 'kappa0', 'pid', 'trial'])\
         .sortlevel()
     model['num_mass_trials'] = human['num_mass_trials']
@@ -69,23 +69,8 @@ def run(dest, results_path, data_path, seed, parallel):
         df.name = name
         return util.bootstrap_mean(df, **kwargs)
 
-    def as_df(x, index_names):
-        df = pd.DataFrame(x)
-        if len(index_names) == 1:
-            df.index.name = index_names[0]
-        else:
-            df.index = pd.MultiIndex.from_tuples(df.index)
-            df.index.names = index_names
-        return df
-
-    if parallel:
-        rc = Client()
-        dview = rc[:]
-        mapfunc = dview.map_sync
-    else:
-        mapfunc = map
-
     results = []
+    mapfunc = util.get_mapfunc(parallel)
     for kappa in [-1.0, 1.0, 'all']:
         if kappa == 'all':
             correct = responses
@@ -94,7 +79,7 @@ def run(dest, results_path, data_path, seed, parallel):
 
         cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'num_mass_trials', 'trial']
         accuracy = mapfunc(bootstrap_mean, list(correct.groupby(cols)['p correct']))
-        accuracy = as_df(accuracy, cols).reset_index()
+        accuracy = util.as_df(accuracy, cols).reset_index()
         accuracy['kappa0'] = kappa
         results.append(accuracy)
 

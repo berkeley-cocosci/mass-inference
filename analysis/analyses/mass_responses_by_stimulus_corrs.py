@@ -33,7 +33,7 @@ import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import Client, require
+from IPython.parallel import require
 
 
 def run(dest, results_path, seed, parallel):
@@ -46,11 +46,10 @@ def run(dest, results_path, seed, parallel):
         .unstack('version')
 
     # load in model data
-    cols = ['likelihood', 'counterfactual', 'model', 'fitted']
+    cols = ['likelihood', 'counterfactual']
     model = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
-        .set_index(cols + ['stimulus', 'kappa0', 'version'])['median']\
-        .unstack('version')
+        .set_index(cols + ['stimulus', 'kappa0'])['median']
 
     @require('numpy as np', 'pandas as pd', 'util')
     def bootcorr(x, y, **kwargs):
@@ -59,30 +58,15 @@ def run(dest, results_path, seed, parallel):
         corr.name = name
         return corr
 
-    def as_df(x, index_names):
-        df = pd.DataFrame(x)
-        if len(index_names) == 1:
-            df.index.name = index_names[0]
-        else:
-            df.index = pd.MultiIndex.from_tuples(df.index)
-            df.index.names = index_names
-        return df
-
-    if parallel:
-        rc = Client()
-        dview = rc[:]
-        mapfunc = dview.map_sync
-    else:
-        mapfunc = map
-
     # create empty dataframe for our results
     results = pd.DataFrame([])
 
+    mapfunc = util.get_mapfunc(parallel)
     for version in human:
         corr = mapfunc(
             lambda df: bootcorr(df, human[version], method='pearson'),
-            list(model[version].groupby(level=cols)))
-        corr = as_df(corr, cols).reset_index()
+            list(model.groupby(level=cols)))
+        corr = util.as_df(corr, cols).reset_index()
         corr['version'] = version
         results = results.append(corr)
 

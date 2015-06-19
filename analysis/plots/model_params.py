@@ -5,7 +5,7 @@ Plots distributions of fitted model parameters for each experiment and each
 model type (i.e. static and learning).
 """
 
-__depends__ = ["single_model_belief.csv"]
+__depends__ = ["model_belief_by_trial_fit.csv"]
 
 import util
 import os
@@ -48,7 +48,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # load in the model data, which includes fitted parameters
     data = pd\
-        .read_csv(os.path.join(results_path, 'single_model_belief.csv'))\
+        .read_csv(os.path.join(results_path, 'model_belief_by_trial_fit.csv'))\
         .groupby(['fitted', 'counterfactual', 'likelihood'])\
         .get_group((True, counterfactual, likelihood))\
         .drop_duplicates(['version', 'model', 'pid', 'B'])\

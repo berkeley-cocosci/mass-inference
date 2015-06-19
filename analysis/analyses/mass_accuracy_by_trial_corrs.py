@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-from IPython.parallel import Client, require
+from IPython.parallel import require
 
 
 @require('numpy as np', 'pandas as pd')
@@ -61,25 +61,10 @@ def run(dest, results_path, seed, parallel):
         .groupby('kappa0')\
         .get_group('all')
 
-    def as_df(x, index_names):
-        df = pd.DataFrame(x)
-        if len(index_names) == 1:
-            df.index.name = index_names[0]
-        else:
-            df.index = pd.MultiIndex.from_tuples(df.index)
-            df.index.names = index_names
-        return df
-
-    if parallel:
-        rc = Client()
-        dview = rc[:]
-        mapfunc = dview.map_sync
-    else:
-        mapfunc = map
-
     # compute correlations
+    mapfunc = util.get_mapfunc(parallel)
     results = mapfunc(corr, list(human.groupby(['version', 'num_mass_trials'])))
-    results = as_df(results, ['version', 'num_mass_trials'])
+    results = util.as_df(results, ['version', 'num_mass_trials'])
     results.to_csv(dest)
 
 

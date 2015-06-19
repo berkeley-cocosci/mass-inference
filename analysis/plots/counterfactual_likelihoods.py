@@ -116,8 +116,8 @@ def plot(dest, results_path, likelihood):
     # load model mass responses
     model_mass = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
-        .groupby(['likelihood', 'fitted', 'model', 'version'])\
-        .get_group((likelihood, False, 'static', 'H'))\
+        .groupby('likelihood')\
+        .get_group(likelihood)\
         .set_index(['counterfactual', 'stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
@@ -126,9 +126,9 @@ def plot(dest, results_path, likelihood):
     # load mass correlations
     mass_corrs = pd\
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
-        .set_index(['likelihood', 'fitted', 'model', 'version', 'counterfactual'])\
+        .set_index(['likelihood', 'version', 'counterfactual'])\
         .sortlevel()\
-        .ix[(likelihood, False, 'static', 'H')]
+        .ix[(likelihood, 'H')]
 
     # color config
     plot_config = util.load_config()["plots"]

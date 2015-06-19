@@ -29,26 +29,22 @@ table in the database, the columns are:
 
 """
 
-__depends__ = ["trial_order.csv", "model_likelihood.h5"]
-__parallel__ = True
-__ext__ = '.h5'
+__depends__ = ["trial_order.csv", "model_likelihood.csv"]
 
 import util
 import pandas as pd
 import os
+import numpy as np
 
-from IPython.parallel import Client, require, Reference
 
-
-def likelihood_by_trial(key, trials, data):
-    print key
+def likelihood_by_trial(trials, data):
     llh = data.groupby('kappa0')
 
     # create an empty dataframe for the results
     results = pd.DataFrame([])
 
     # iterate through each of the pids
-    for (kappa0, pid), df in trials.groupby(['kappa0', 'pid']):
+    for (kappa0, _), df in trials.groupby(['kappa0', 'pid']):
         # merge the trial order with the model likelihood
         model = pd.merge(
             llh.get_group(kappa0),
@@ -59,10 +55,10 @@ def likelihood_by_trial(key, trials, data):
     # make sure hypothesis is of type float, otherwise hdf5 will complain
     results.loc[:, 'hypothesis'] = results['hypothesis'].astype(float)
 
-    return key, results
+    return results
 
 
-def run(dest, results_path, parallel):
+def run(dest, results_path):
     # load in trial order
     trial_order = pd.read_csv(os.path.join(
         results_path, 'trial_order.csv'))
@@ -73,52 +69,22 @@ def run(dest, results_path, parallel):
         .set_index('stimulus')\
         .sort('trial')
 
-    # start up the ipython parallel client
-    if parallel:
-        rc = Client()
-        lview = rc.load_balanced_view()
-        task = require('pandas as pd')(likelihood_by_trial)
-        rc[:].push(dict(trials=trials), block=True)
-        trials = Reference('trials')
-    else:
-        task = likelihood_by_trial
+    likelihood = pd\
+        .read_csv(os.path.join(results_path, 'model_likelihood.csv'))\
+        .set_index(['likelihood', 'counterfactual', 'stimulus', 'kappa0', 'hypothesis'])['median']\
+        .to_frame('llh')\
+        .reset_index()
 
-    # load model likelihoods
-    old_store_pth = os.path.abspath(os.path.join(
-        results_path, 'model_likelihood.h5'))
-    old_store = pd.HDFStore(old_store_pth, mode='r')
+    results = likelihood_by_trial(trials, likelihood)\
+        .set_index(['likelihood', 'counterfactual', 'version', 'pid', 'trial', 'hypothesis'])\
+        .sortlevel()
 
-    # run the tasks
-    results = []
-    store = pd.HDFStore(dest, mode='w')
-    for key in old_store.keys():
-        if key.split('/')[-1] == 'param_ref':
-            store.append(key, old_store[key])
-            continue
+    assert not np.isnan(results['llh']).any()
+    assert not np.isinf(results['llh']).any()
 
-        args = [key, trials, old_store[key]]
-        if parallel:
-            result = lview.apply(task, *args)
-        else:
-            result = task(*args)
-        results.append(result)
-
-    # close the old hdf5 store
-    old_store.close()
-
-    # get and save results
-    while len(results) > 0:
-        result = results.pop(0)
-        if parallel:
-            key, model = result.get()
-            result.display_outputs()
-        else:
-            key, model = result
-
-        store.append(key, model)
-    store.close()
+    results.to_csv(dest)
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.parallel)
+    run(args.to, args.results_path)

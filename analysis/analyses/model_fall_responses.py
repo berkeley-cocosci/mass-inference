@@ -45,6 +45,7 @@ import os
 from IPython.parallel import Client, require
 
 
+@require('numpy as np', 'util')
 def model_fall_responses(key, ipe):
     print key
     samps = ipe.set_index(['query', 'block', 'kappa0', 'stimulus', 'sample'])['response'].unstack('sample')
@@ -73,9 +74,6 @@ def run(dest, results_path, parallel, seed):
     if parallel:
         rc = Client()
         lview = rc.load_balanced_view()
-        task = require('util')(model_fall_responses)
-    else:
-        task = model_fall_responses
 
     # start the tasks
     results = []
@@ -86,9 +84,9 @@ def run(dest, results_path, parallel, seed):
 
         args = [key, old_store[key]]
         if parallel:
-            result = lview.apply(task, *args)
+            result = lview.apply(model_fall_responses, *args)
         else:
-            result = task(*args)
+            result = model_fall_responses(*args)
         results.append(result)
 
     # collect and save results
@@ -103,10 +101,15 @@ def run(dest, results_path, parallel, seed):
         store.append(key, responses)
 
     store.close()
+    old_store.close()
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.parallel, args.seed)
+    try:
+        run(args.to, args.results_path, args.parallel, args.seed)
+    except:
+        if os.path.exists(args.to):
+            os.remove(args.to)
 

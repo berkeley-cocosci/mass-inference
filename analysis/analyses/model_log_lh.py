@@ -25,7 +25,7 @@ of the different models. Produces a csv file with the following columns:
 
 """
 
-__depends__ = ["human", "single_model_belief.csv"]
+__depends__ = ["human", "model_belief_by_trial_fit.csv"]
 
 import os
 import util
@@ -56,7 +56,7 @@ def run(dest, data_path, results_path):
 
     cols = ['likelihood', 'counterfactual', 'model', 'fitted']
     model = pd\
-        .read_csv(os.path.join(results_path, "single_model_belief.csv"))\
+        .read_csv(os.path.join(results_path, "model_belief_by_trial_fit.csv"))\
         .set_index(cols + ['version', 'pid', 'trial'])['p']\
         .unstack('trial')\
         .sortlevel()

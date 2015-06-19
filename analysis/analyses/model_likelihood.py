@@ -39,8 +39,8 @@ For each array stored in the database, it has the following columns:
 
 """
 
-__depends__ = ["fb_B", "human_fall_responses.csv", "model_fall_responses.h5"]
-__ext__ = '.h5'
+__depends__ = ["fb_B", "human_fall_responses_raw.csv", "model_fall_responses_raw.h5"]
+__random__ = True
 
 import os
 import util
@@ -65,8 +65,8 @@ def compute_llh(pfall_df, fall_df):
     llh_df = pd.DataFrame(
         llh_norm, index=fall_df.stack().index, columns=pfall_df.columns)
     llh_df.columns.name = 'hypothesis'
-    llh_df.index.names = ['stimulus', 'kappa0']
-    return llh_df.stack().to_frame('llh').reset_index()
+    llh_df.index.names = ['sample', 'stimulus', 'kappa0']
+    return llh_df.stack().to_frame('llh')
 
 
 def compute_llh_counterfactual(pfall_df, fall_df):
@@ -89,54 +89,101 @@ def compute_llh_counterfactual(pfall_df, fall_df):
     return llh_df
 
 
-def save(data, pth, store):
-    params = ['sigma', 'phi']
-    all_params = {}
-    for i, (p, df) in enumerate(data.groupby(level=params)):
-        key = '{}/params_{}'.format(pth, i)
-        print key
-        df2 = df.reset_index(params, drop=True)
-        store.append(key, df2)
-        all_params['params_{}'.format(i)] = p
-    all_params = pd.DataFrame(all_params, index=params).T
-    store.append('{}/param_ref'.format(pth), all_params)
+def bootsamps(df, n=10000):
+    arr = np.asarray(df)
+    ix = np.random.randint(0, df.size, (n, df.size))
+    if ((arr == 0) | (arr == 1)).all():
+        alpha = arr[ix].sum(axis=1) + 0.5
+        beta = (1 - arr[ix]).sum(axis=1) + 0.5
+        means = alpha / (alpha + beta)
+    else:
+        means = arr[ix].mean(axis=1)
+    s = pd.Series(means, name=df.name)
+    s.index.name = 'sample'
+    return s
 
 
-def run(dest, results_path, data_path, version):
+def stats(df):
+    return pd.Series(
+        np.percentile(df, [2.5, 50, 97.5]),
+        index=['lower', 'median', 'upper'],
+        name=df.name)
+
+
+def bootstrap_llh(llh_func, p, fb, n=10000):
+    samps = p\
+        .groupby(level=['stimulus', 'kappa'])\
+        .apply(bootsamps, n=n)\
+        .to_frame('p')\
+        .reset_index()
+
+    data = pd\
+        .merge(samps, fb)\
+        .reset_index()\
+        .set_index(['sample', 'stimulus', 'kappa'])\
+        .sortlevel()
+
+    pfall_df = data['p'].unstack('kappa')
+    fall_df = data['fb'].unstack('kappa')
+    llh_samps = llh_func(pfall_df, fall_df)['llh']
+
+    llh = llh_samps\
+        .groupby(level=['stimulus', 'kappa0', 'hypothesis'])\
+        .apply(lambda x: np.log(stats(np.exp(x))))\
+        .unstack()\
+        .reset_index()
+
+    return llh
+
+
+def run(dest, results_path, data_path, version, seed):
+    np.random.seed(seed)
     hyps = [-1.0, 1.0]
 
     # load empirical probabilities
     human_responses = pd.read_csv(os.path.join(
-        results_path, "human_fall_responses.csv"))
+        results_path, "human_fall_responses_raw.csv"))
     empirical = human_responses\
         .groupby(['version', 'block'])\
         .get_group((version, 'B'))\
-        .pivot('stimulus', 'kappa0', 'median')[hyps]
+        .rename(columns={'kappa0': 'kappa'})\
+        .set_index(['stimulus', 'kappa', 'pid'])['fall? response']\
+        .unstack('kappa')[hyps]\
+        .stack()
 
     # load feedback
-    fb = (util.load_fb(data_path)['C']['nfell'] > 1).unstack('kappa')[hyps]
+    fb = (util.load_fb(data_path)['C']['nfell'] > 1)\
+        .unstack('kappa')[hyps]\
+        .stack()\
+        .to_frame('fb')\
+        .reset_index()
 
     # load ipe probabilites
     old_store = pd.HDFStore(
-        os.path.join(results_path, "model_fall_responses.h5"), mode='r')
+        os.path.join(results_path, "model_fall_responses_raw.h5"), mode='r')
 
     # get the parameters we want
     sigma, phi = util.get_params()
 
-    store = pd.HDFStore(dest, mode='w')
+    # dataframe to store all the results
+    all_llh = pd.DataFrame([])
 
     # compute empirical likelihood
-    key = '/empirical/params_0'
-    print key
-    llh_empirical = compute_llh(empirical, fb)
+    print('empirical')
+    llh_empirical = bootstrap_llh(compute_llh, empirical, fb)
     llh_empirical['counterfactual'] = False
-    llh_empirical_cf = compute_llh_counterfactual(empirical, fb)
+    llh_empirical['likelihood'] = 'empirical'
+    all_llh = all_llh.append(llh_empirical)
+
+    print('empirical cf')
+    llh_empirical_cf = bootstrap_llh(compute_llh_counterfactual, empirical, fb)
     llh_empirical_cf['counterfactual'] = True
-    store.append(key, llh_empirical)
-    store.append(key, llh_empirical_cf)
+    llh_empirical_cf['likelihood'] = 'empirical'
+    all_llh = all_llh.append(llh_empirical_cf)
 
     # compute likelihoods for each query type
     for query in old_store.root._v_children:
+
         # look up the name of the key for the parameters that we want (will be
         # something like params_0)
         param_ref_key = "/{}/param_ref".format(query)
@@ -145,35 +192,40 @@ def run(dest, results_path, data_path, version):
             .set_index(['sigma', 'phi'])['index']\
             .ix[(sigma, phi)]
 
-        # store the new param ref
-        new_param_ref_key = '/ipe_{}/param_ref'.format(query)
-        new_param_ref = old_store[param_ref_key]\
-            .groupby(['sigma', 'phi'])\
-            .get_group((sigma, phi))
-        store.append(new_param_ref_key, new_param_ref)
-
         # get the data
         key = "/{}/{}".format(query, params)
         ipe = old_store[key]\
             .groupby('block')\
             .get_group('B')\
-            .pivot('stimulus', 'kappa0', 'median')[hyps]
-
-        parts = key.split('/')
-        parts[1] = 'ipe_{}'.format(parts[1])
-        new_key = '/'.join(parts)
+            .rename(columns={'kappa0': 'kappa'})\
+            .set_index(['stimulus', 'kappa', 'sample'])['response']\
+            .unstack('kappa')[hyps]\
+            .stack()
 
         # compute ipe likelihood
-        print new_key
-        llh_ipe = compute_llh(ipe, fb)
+        print(query)
+        llh_ipe = bootstrap_llh(compute_llh, ipe, fb)
         llh_ipe['counterfactual'] = False
-        llh_ipe_cf = compute_llh_counterfactual(ipe, fb)
-        llh_ipe_cf['counterfactual'] = True
-        store.append(new_key, llh_ipe)
-        store.append(new_key, llh_ipe_cf)
+        llh_ipe['likelihood'] = 'ipe_' + query
+        all_llh = all_llh.append(llh_ipe)
 
-    store.close()
+        print(query + ' cf')
+        llh_ipe_cf = bootstrap_llh(compute_llh_counterfactual, ipe, fb)
+        llh_ipe_cf['counterfactual'] = True
+        llh_ipe_cf['likelihood'] = 'ipe_' + query
+        all_llh = all_llh.append(llh_ipe_cf)
+
     old_store.close()
+
+    results = all_llh\
+        .set_index(['likelihood', 'counterfactual', 'stimulus', 'kappa0', 'hypothesis'])\
+        .sortlevel()
+
+    assert not np.isnan(results['median']).any()
+    assert not np.isinf(results['median']).any()
+
+    results.to_csv(dest)
+
 
 if __name__ == "__main__":
     config = util.load_config()
@@ -183,4 +235,4 @@ if __name__ == "__main__":
         default=config['analysis']['human_fall_version'],
         help='which version of the experiment to use responses from')
     args = parser.parse_args()
-    run(args.to, args.results_path, args.data_path, args.version)
+    run(args.to, args.results_path, args.data_path, args.version, args.seed)

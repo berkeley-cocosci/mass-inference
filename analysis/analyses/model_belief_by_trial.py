@@ -30,33 +30,31 @@ one of these tables, the columns are:
 
 """
 
-__depends__ = ["model_likelihood_by_trial.h5"]
-__parallel__ = True
-__ext__ = '.h5'
+__depends__ = ["model_likelihood_by_trial.csv"]
 
 import os
 import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import Client, require
 
-
-def model_belief(key, data):
-    print key
+def run(dest, results_path):
+    data = pd.read_csv(os.path.join(results_path, 'model_likelihood_by_trial.csv'))
 
     # compute the belief
+    cols = ['likelihood', 'counterfactual', 'version', 'pid']
     llh = data\
-        .set_index(['counterfactual', 'pid', 'hypothesis', 'trial'])['llh']\
+        .set_index(cols + ['hypothesis', 'trial'])['llh']\
         .unstack('hypothesis')\
         .sortlevel()
 
     # compute the belief for each model
     models = {
         'static': llh.copy(),
-        'learning': llh.groupby(level=['counterfactual', 'pid']).apply(np.cumsum),
+        'learning': llh.groupby(level=cols).apply(np.cumsum),
     }
 
+    results = pd.DataFrame([])
     for model_name, model in models.items():
         # normalize the probabilities so they sum to one
         model[:] = util.normalize(
@@ -65,61 +63,26 @@ def model_belief(key, data):
         # convert to long form
         model = pd.melt(
             model.reset_index(),
-            id_vars=['counterfactual', 'pid', 'trial'],
+            id_vars=cols + ['trial'],
             var_name='hypothesis',
             value_name='logp')
 
         # merge with the existing data
         model = pd.merge(data, model).drop('llh', axis=1)
+        model['model'] = model_name
+        results = results.append(model)
 
-        # update the version in the dictionary
-        models[model_name] = model
+    results = results\
+        .set_index(cols + ['model', 'trial', 'hypothesis'])\
+        .sortlevel()
 
-    return key, models
+    assert not np.isnan(results['logp']).any()
+    assert not np.isinf(results['logp']).any()
 
+    results.to_csv(dest)
 
-def run(dest, results_path, parallel):
-    old_store_pth = os.path.abspath(os.path.join(
-        results_path, 'model_likelihood_by_trial.h5'))
-    old_store = pd.HDFStore(old_store_pth, mode='r')
-    store = pd.HDFStore(dest, mode='w')
-
-    if parallel:
-        rc = Client()
-        lview = rc.load_balanced_view()
-        task = require('numpy as np', 'pandas as pd', 'sys', 'util')(model_belief)
-    else:
-        task = model_belief
-
-    results = []
-
-    for key in old_store.keys():
-        if key.split('/')[-1] == 'param_ref':
-            store.append(key, old_store[key])
-            continue
-
-        args = [key, old_store[key]]
-        if parallel:
-            result = lview.apply(task, *args)
-        else:
-            result = task(*args)
-        results.append(result)
-
-    while len(results) > 0:
-        result = results.pop(0)
-        if parallel:
-            key, data = result.get()
-            result.display_outputs()
-        else:
-            key, data = result
-
-        for model in data:
-            store.append("{}/{}".format(key, model), data[model])
-
-    store.close()
-    old_store.close()
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.parallel)
+    run(args.to, args.results_path)

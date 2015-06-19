@@ -45,7 +45,7 @@ following columns (it includes both fitted beliefs, and raw beliefs):
 
 """
 
-__depends__ = ["human", "model_belief_by_trial.h5"]
+__depends__ = ["human", "model_belief_by_trial.csv"]
 __parallel__ = True
 
 import os
@@ -53,17 +53,7 @@ import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import Client, require
-
-
-def as_df(x, index_names):
-    df = pd.DataFrame(x)
-    if len(index_names) == 1:
-        df.index.name = index_names[0]
-    else:
-        df.index = pd.MultiIndex.from_tuples(df.index)
-        df.index.names = index_names
-    return df
+from IPython.parallel import require
 
 
 @require('numpy as np', 'pandas as pd')
@@ -93,10 +83,18 @@ def integrate(df):
     return s
 
 
-def marginal_likelihood(responses, data, parallel):
+def run(dest, results_path, data_path, parallel):
+    # load in raw human mass responses
+    human = util.load_human(data_path)['C'][
+        ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
+    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
+
+    data = pd.read_csv(os.path.join(results_path, 'model_belief_by_trial.csv'))
+
     # convert model belief to wide form
+    cols = ['likelihood', 'counterfactual', 'version', 'model', 'pid']
     belief = data\
-        .set_index(['counterfactual', 'version', 'pid', 'trial', 'hypothesis'])['logp']\
+        .set_index(cols + ['trial', 'hypothesis'])['logp']\
         .unstack('hypothesis')\
         .sortlevel()
 
@@ -104,89 +102,39 @@ def marginal_likelihood(responses, data, parallel):
     # to long form
     log_odds = pd.melt(
         (belief[1.0] - belief[-1.0]).unstack('trial').reset_index(),
-        id_vars=['counterfactual', 'version', 'pid'],
+        id_vars=cols,
         var_name='trial',
         value_name='log_odds')
 
     # merge with human responses
     model = pd\
-        .merge(log_odds, responses)\
-        .set_index(['counterfactual', 'version', 'pid'])\
+        .merge(log_odds, human)\
+        .set_index(cols)\
         .sortlevel()\
         .dropna()
     model['num_mass_trials'] = model\
-        .groupby(level=['counterfactual', 'version', 'pid'])\
+        .groupby(level=cols)\
         .apply(len)
     between_subjs = model\
         .reset_index()\
         .groupby('version')\
         .get_group('I')\
-        .groupby(['counterfactual', 'version', 'pid'])\
+        .groupby(cols)\
         .apply(lambda x: x.sort('trial').head(1))\
-        .set_index(['counterfactual', 'version', 'pid'])
+        .set_index(cols)
     between_subjs['num_mass_trials'] = -1
 
     model = pd\
         .concat([model, between_subjs])\
         .reset_index()\
-        .set_index(['counterfactual', 'version', 'num_mass_trials', 'pid', 'trial'])\
+        .set_index(cols + ['num_mass_trials', 'trial'])\
         .sortlevel()
 
-    if parallel:
-        rc = Client()
-        dview = rc[:]
-        mapfunc = dview.map_sync
-    else:
-        mapfunc = map
-
     # compute marginal likelihoods
-    cols = ['counterfactual', 'version', 'num_mass_trials', 'pid']
-    result = mapfunc(integrate, list(model.groupby(level=cols)))
-    result = as_df(result, cols).reset_index()
-
-    return result
-
-
-def run(dest, results_path, data_path, parallel):
-    # load in raw human mass responses
-    human = util.load_human(data_path)['C'][
-        ['version', 'kappa0', 'pid', 'trial', 'stimulus', 'mass? response']]
-    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
-
-    # load in raw model belief
-    store_pth = os.path.abspath(os.path.join(
-        results_path, 'model_belief_by_trial.h5'))
-    store = pd.HDFStore(store_pth, mode='r')
-
-    sigma, phi = util.get_params()
-
-    results = []
-    for key in store.root._v_children:
-        print(key)
-
-        if key.startswith("ipe"):
-            # look up the name of the key for the parameters that we want (will be
-            # something like params_0)
-            params = store["/{}/param_ref".format(key)]\
-                .reset_index()\
-                .set_index(['sigma', 'phi'])['index']\
-                .ix[(sigma, phi)]
-
-            pth = "/{}/{}".format(key, params)
-        else:
-            pth = "/{}/params_0".format(key)
-
-        group = store.root._f_getChild(pth)
-        for model in group._v_children:
-            data = store["{}/{}".format(pth, model)]
-            result = marginal_likelihood(human, data, parallel)
-            result['model'] = model
-            result['likelihood'] = key
-            results.append(result)
-
-    results = pd.concat(results)
-    results.to_csv(dest)
-    store.close()
+    mapfunc = util.get_mapfunc(parallel)
+    result = mapfunc(integrate, list(model.groupby(level=cols + ['num_mass_trials'])))
+    result = util.as_df(result, cols + ['num_mass_trials'])
+    result.to_csv(dest)
 
 
 if __name__ == "__main__":

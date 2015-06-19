@@ -8,10 +8,6 @@ Produces a csv file with the following columns:
         the likelihood name (e.g., ipe, ipe_cf, empirical, empirical_cf)
     counterfactual (bool)
         whether the counterfactual likelihood was used
-    model (string)
-        the model version (e.g., static, learning)
-    fitted (bool)
-        whether the model was fit to human responses
     version (string)
         experiment version
     kappa0 (float)
@@ -24,57 +20,33 @@ Produces a csv file with the following columns:
         median of the bootstrap distribution
     upper (float)
         upper bound of the 95% confidence interval
-    N (int)
-        how many samples the mean was computed over
 
 """
 
-__depends__ = ["single_model_belief.csv"]
-__random__ = True
-__parallel__ = True
+__depends__ = ["model_likelihood.csv"]
 
 import os
 import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import Client, require
 
+def run(dest, results_path):
 
-def run(dest, results_path, seed, parallel):
-    np.random.seed(seed)
+    llh = pd.read_csv(os.path.join(results_path, 'model_likelihood.csv'))
 
-    @require('numpy as np', 'pandas as pd', 'util')
-    def bootstrap_mean(df, **kwargs):
-        name, df = df
-        df.name = name
-        return util.bootstrap_mean(df, **kwargs)
+    result = llh\
+        .groupby('hypothesis')\
+        .get_group(1)\
+        .drop('hypothesis', axis=1)\
+        .set_index(['likelihood', 'counterfactual', 'stimulus', 'kappa0'])\
+        .sortlevel()
+    result = np.exp(result)
 
-    def as_df(x, index_names):
-        df = pd.DataFrame(x)
-        if len(index_names) == 1:
-            df.index.name = index_names[0]
-        else:
-            df.index = pd.MultiIndex.from_tuples(df.index)
-            df.index.names = index_names
-        return df
-
-    if parallel:
-        rc = Client()
-        dview = rc[:]
-        mapfunc = dview.map_sync
-    else:
-        mapfunc = map
-
-    model_belief = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))
-    cols = ['likelihood', 'counterfactual', 'model', 'fitted', 'version', 'kappa0', 'stimulus']
-
-    results = mapfunc(bootstrap_mean, list(model_belief.groupby(cols)['p']))
-    results = as_df(results, cols)
-    results.to_csv(dest)
+    result.to_csv(dest)
 
 
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.results_path, args.seed, args.parallel)
+    run(args.to, args.results_path)

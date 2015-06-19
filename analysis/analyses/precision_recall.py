@@ -5,7 +5,7 @@
 
 """
 
-__depends__ = ["human", "single_model_belief.csv"]
+__depends__ = ["human", "model_belief_by_trial_fit.csv"]
 __random__ = True
 
 import os
@@ -27,7 +27,7 @@ def run(dest, data_path, results_path, seed):
         .rename(columns={'mass? response': 'h'})
 
     # load model data
-    model = pd.read_csv(os.path.join(results_path, 'single_model_belief.csv'))
+    model = pd.read_csv(os.path.join(results_path, 'model_belief_by_trial_fit.csv'))
     model = model[cols + ['kappa0', 'stimulus', 'pid', 'p']]\
         .rename(columns={'p': 'm'})
     model.loc[:, 'm'] = (model['m'] > 0.5).astype(int)
