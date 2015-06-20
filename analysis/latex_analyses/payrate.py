@@ -24,8 +24,8 @@ def run(dest, results_path):
     fh = open(dest, "w")
 
     for version, data in results.iteritems():
-        cmdname = "Exp{}MeanTime".format(replace[version])
-        time = "{:.1f}".format(pd.to_timedelta(data['mean_time']).total_seconds() / 60.0)
+        cmdname = "Exp{}MedianTime".format(replace[version])
+        time = "{:.1f}".format(pd.to_timedelta(data['median_time']).total_seconds() / 60.0)
         fh.write(util.newcommand(cmdname, time))
 
     fh.close()
