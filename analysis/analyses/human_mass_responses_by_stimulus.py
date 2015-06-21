@@ -21,21 +21,18 @@ file with the following columns:
 
 """
 
-__depends__ = ["human"]
+__depends__ = ["human_mass_responses_by_stimulus_raw.csv"]
 __random__ = True
 
 import util
 import numpy as np
+import os
+import pandas as pd
 
 
-def run(dest, data_path, seed):
+def run(dest, results_path, seed):
     np.random.seed(seed)
-    human = util.load_human(data_path)['C']\
-        .dropna(axis=0, subset=['mass? response'])
-
-    # convert from -1, 1 responses to 0, 1 responses
-    human.loc[:, 'mass? response'] = (human['mass? response'] + 1) / 2.0
-
+    human = pd.read_csv(os.path.join(results_path, "human_mass_responses_by_stimulus_raw.csv"))
     results = human\
         .groupby(['version', 'kappa0', 'stimulus'])['mass? response']\
         .apply(util.beta)\
@@ -50,4 +47,4 @@ def run(dest, data_path, seed):
 if __name__ == "__main__":
     parser = util.default_argparser(locals())
     args = parser.parse_args()
-    run(args.to, args.data_path, args.seed)
+    run(args.to, args.results_path, args.seed)

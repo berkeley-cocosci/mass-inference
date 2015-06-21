@@ -8,9 +8,6 @@ empirical likelihood.
 """
 
 __depends__ = [
-    "human_fall_responses.csv",
-    "single_model_fall_responses.csv",
-    "fall_response_corrs.csv",
     "human_mass_responses_by_stimulus.csv",
     "model_mass_responses_by_stimulus.csv",
     "mass_responses_by_stimulus_corrs.csv"

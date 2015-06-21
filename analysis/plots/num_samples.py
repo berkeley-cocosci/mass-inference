@@ -6,6 +6,7 @@ as best fitting lines for several different k values (number of samples).
 """
 
 __depends__ = [
+    "fall_response_corrs.csv",
     "human_fall_responses.csv",
     "single_model_fall_responses.csv",
     "num_samples.csv"
@@ -43,9 +44,9 @@ def plot(dest, results_path, version, block, query):
 
     fall_corrs = pd\
         .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
-        .set_index(['query', 'block', 'X', 'Y'])\
+        .set_index(['block', 'X', 'Y'])\
         .sortlevel()\
-        .ix[(query, block, 'ModelS', 'Human')]
+        .ix[(block, query, 'Human')]
 
     colors = sns.color_palette("cubehelix", 7)
 
