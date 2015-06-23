@@ -42,7 +42,7 @@ def plot_all(ax, human, model, lines, colors):
 def add_llhr_and_factor(ax, llhr, factor):
     label = (
         "LLR (learning v. static) = {:.2f}\n"
-        "Bayes' Factor = {:.2f}"
+        "Bayes Factor = {:.2f}"
     ).format(llhr, factor)
     l, h = ax.get_xlim()
     ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center', fontsize=9)
