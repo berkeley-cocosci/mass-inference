@@ -16,7 +16,7 @@
         "query": "percent_fell",
         "counterfactual": true,
         "likelihood": "ipe",
-        "parallel": false
+        "parallel": true
     },
 
     "latex": {
