@@ -67,7 +67,7 @@ def default_argparser(module):
 
 
 def save(path, fignum=None, close=True, width=None, height=None,
-         ext=None, verbose=False):
+         ext=None, dpi=None, verbose=False):
     """Save a figure from pyplot.
 
     Parameters:
@@ -111,6 +111,10 @@ def save(path, fignum=None, close=True, width=None, height=None,
     if height:
         fig.set_figheight(height)
 
+    # get the dpi
+    if dpi is None:
+        dpi = load_config()["plots"]["dpi"]
+
     # make sure we have a list of extensions
     if ext is not None and not hasattr(ext, '__iter__'):
         ext = [ext]
@@ -138,7 +142,7 @@ def save(path, fignum=None, close=True, width=None, height=None,
             sys.stdout.write("Saving figure to '%s'..." % savepath)
 
         # Actually save the figure
-        plt.savefig(savepath)
+        plt.savefig(savepath, dpi=dpi)
 
     # Close it
     if close:
