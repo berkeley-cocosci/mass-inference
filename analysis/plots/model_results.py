@@ -141,9 +141,9 @@ def plot(dest, results_path, version, counterfactual, query):
     # middle subplot: IPE vs. human (which is heavier?)
     ipe_query = "ipe_" + query
     plot_kappas(ax2, model_mass.ix[ipe_query], human_mass, colors, markers)
-    ax2.set_xlabel(r"Ideal observer, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
     ax2.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax2.set_title('(a) Ideal Observer')
+    ax2.set_title('(a) IPE Observer')
     format_mass_plot(ax2, lightgrey)
     add_corr(ax2, mass_corrs.ix[ipe_query])
 

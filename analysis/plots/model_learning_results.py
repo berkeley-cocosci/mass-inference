@@ -131,9 +131,9 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     fig, axes = plt.subplots(2, 2, sharey=True)
 
-    # top left subplot: ideal model for experiment 1
+    # top left subplot: IPE model for experiment 1
     plot_all(axes[0, 0], None, model.ix[('H', False)], lines, colors)
-    axes[0, 0].set_title('(a) Ideal observer model')
+    axes[0, 0].set_title('(a) IPE observer model')
     axes[0, 0].set_xlabel('Trial')
     axes[0, 0].set_ylabel('Pr(correct ratio chosen)')
     axes[0, 0].set_xticks([1, 5, 10, 15, 20])

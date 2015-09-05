@@ -62,7 +62,7 @@ def plot(dest, results_path, version, block, query):
         model['median'], human['median'],
         xerr=[mlerr, muerr], yerr=[hlerr, huerr],
         color='k', linestyle='', marker='o')
-    ax1.set_xlabel(r"Ideal observer model, $p(F_t|S_t)$")
+    ax1.set_xlabel(r"IPE observer model, $p(F_t|S_t)$")
     ax1.set_ylabel(r"Normalized human judgments")
     ax1.set_title('(a) Mean judgments')
     ax1.set_xlim(-0.03, 1.03)
