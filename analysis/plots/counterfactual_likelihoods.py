@@ -57,9 +57,17 @@ def errorbar(ax, x, y, ls='', ms=8, marker='o', **kwargs):
         **kwargs)
 
 
-def format_mass_plot(ax):
-    ax.set_xlim([0, 1])
-    ax.set_ylim([0, 100])
+def format_mass_plot(ax, color):
+    xmin = -0.02
+    xmax = 1.02
+    ymin = -2
+    ymax = 102
+
+    ax.plot([xmin, xmax], [50, 50], '--', color=color, linewidth=2, zorder=1)
+    ax.plot([0.5, 0.5], [ymin, ymax], '--', color=color, linewidth=2, zorder=1)
+
+    ax.set_xlim([xmin, xmax])
+    ax.set_ylim([ymin, ymax])
 
     ticks = [0, 0.25, 0.5, 0.75, 1.0]
     ticklabels = ['0.0', '0.25', '0.50', '0.75', '1.0']
@@ -101,7 +109,7 @@ def make_legend(ax, colors, markers):
     ax.legend(handles=handles, loc='upper left', fontsize=10, title="True mass ratio")
 
 
-def plot(dest, results_path, likelihood):
+def plot(dest, results_path, query):
 
     # load human mass responses
     human_mass = pd\
@@ -116,9 +124,7 @@ def plot(dest, results_path, likelihood):
     # load model mass responses
     model_mass = pd\
         .read_csv(os.path.join(results_path, "model_mass_responses_by_stimulus.csv"))\
-        .groupby('likelihood')\
-        .get_group(likelihood)\
-        .set_index(['counterfactual', 'stimulus', 'kappa0'])\
+        .set_index(['likelihood', 'counterfactual', 'stimulus', 'kappa0'])\
         .sortlevel()\
         .unstack('kappa0')\
         .reorder_levels([1, 0], axis=1)
@@ -126,9 +132,9 @@ def plot(dest, results_path, likelihood):
     # load mass correlations
     mass_corrs = pd\
         .read_csv(os.path.join(results_path, "mass_responses_by_stimulus_corrs.csv"))\
-        .set_index(['likelihood', 'version', 'counterfactual'])\
+        .set_index(['version', 'likelihood', 'counterfactual'])\
         .sortlevel()\
-        .ix[(likelihood, 'H')]
+        .ix['H']
 
     # color config
     plot_config = util.load_config()["plots"]
@@ -137,34 +143,46 @@ def plot(dest, results_path, likelihood):
     colors = ['.4', '.1']
     markers = ['o', 's']
     darkgrey = plot_config["darkgrey"]
+    lightgrey = plot_config["lightgrey"]
+    sns.set_style("white", {'axes.edgecolor': lightgrey})
 
     # create the figure
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex=True, sharey=True)
 
-    if likelihood == 'empirical':
-        likelihood_str = 'Empirical'
-    elif likelihood == 'ipe':
-        likelihood_str = 'IPE'
-    else:
-        raise ValueError('unknown likelihood: {}'.format(likelihood))
-
-    # left subplot: regular likelihood
-    plot_sigmoid(ax1, model_mass.ix[False], human_mass, color=darkgrey)
-    plot_kappas(ax1, model_mass.ix[False], human_mass, colors, markers)
-    ax1.set_xlabel(r"{} model, $p(\kappa=10|F_t,S_t)$".format(likelihood_str))
+    # top left subplot: regular empirical likelihood
+    plot_sigmoid(ax1, model_mass.ix[('empirical', False)], human_mass, color=darkgrey)
+    plot_kappas(ax1, model_mass.ix[('empirical', False)], human_mass, colors, markers)
+    ax1.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
     ax1.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax1.set_title("Normal likelihood")
-    format_mass_plot(ax1)
-    add_corr(ax1, mass_corrs.ix[False])
+    ax1.set_title("(a) Normal empirical likelihood")
+    format_mass_plot(ax1, lightgrey)
+    add_corr(ax1, mass_corrs.ix[('empirical', False)])
 
-    # right subplot: counterfactual likelihood
-    plot_sigmoid(ax2, model_mass.ix[True], human_mass, color=darkgrey)
-    plot_kappas(ax2, model_mass.ix[True], human_mass, colors, markers)
-    ax2.set_xlabel(r"{} model, $p(\kappa=10|F_t,S_t)$".format(likelihood_str))
-    ax2.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax2.set_title("Counterfactual likelihood")
-    format_mass_plot(ax2)
-    add_corr(ax2, mass_corrs.ix[True])
+    # top right subplot: counterfactual empirical likelihood
+    plot_sigmoid(ax2, model_mass.ix[('empirical', True)], human_mass, color=darkgrey)
+    plot_kappas(ax2, model_mass.ix[('empirical', True)], human_mass, colors, markers)
+    ax2.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
+    ax2.set_title("(b) Counterfactual empirical likelihood")
+    format_mass_plot(ax2, lightgrey)
+    add_corr(ax2, mass_corrs.ix[('empirical', True)])
+
+    # bottom left subplot: regular IPE likelihood
+    ipe_query = "ipe_" + query
+    plot_sigmoid(ax3, model_mass.ix[(ipe_query, False)], human_mass, color=darkgrey)
+    plot_kappas(ax3, model_mass.ix[(ipe_query, False)], human_mass, colors, markers)
+    ax3.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
+    ax3.set_ylabel(r"% participants choosing $\kappa=10$")
+    ax3.set_title("(c) Normal IPE likelihood")
+    format_mass_plot(ax3, lightgrey)
+    add_corr(ax3, mass_corrs.ix[(ipe_query, False)])
+
+    # bottom right subplot: counterfactual IPE likelihood
+    plot_sigmoid(ax4, model_mass.ix[(ipe_query, True)], human_mass, color=darkgrey)
+    plot_kappas(ax4, model_mass.ix[(ipe_query, True)], human_mass, colors, markers)
+    ax4.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
+    ax4.set_title("(d) Counterfactual IPE likelihood")
+    format_mass_plot(ax4, lightgrey)
+    add_corr(ax4, mass_corrs.ix[(ipe_query, True)])
 
     # create the legend
     make_legend(ax1, colors, markers)
@@ -173,10 +191,12 @@ def plot(dest, results_path, likelihood):
     sns.despine()
 
     # set figure size
-    fig.set_figheight(3.5)
-    fig.set_figwidth(9)
+    fig.set_figheight(7)
+    fig.set_figwidth(7)
     plt.draw()
     plt.tight_layout()
+
+    plt.subplots_adjust(left=0.08, right=0.99)
 
     # save
     for pth in dest:
@@ -184,11 +204,11 @@ def plot(dest, results_path, likelihood):
 
 
 if __name__ == "__main__":
+    config = util.load_config()
     parser = util.default_argparser(locals())
-    # this is always empirical, regardless of the setting in config.json
     parser.add_argument(
-        '--likelihood',
-        default='empirical',
-        help='which likelihood to use')
+        '--query',
+        default=config['analysis']['query'],
+        help='which query for the ipe to use')
     args = parser.parse_args()
-    plot(args.to, args.results_path, args.likelihood)
+    plot(args.to, args.results_path, args.query)
