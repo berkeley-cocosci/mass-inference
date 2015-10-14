@@ -39,7 +39,7 @@ def make_legend(ax, colors):
         mpatches.Patch(color=colors['static'], label='static')
     ]
 
-    ax.legend(handles=handles, loc='best', fontsize=12, frameon=False)
+    ax.legend(handles=handles, loc='best', frameon=False)
 
 
 def plot(dest, results_path, counterfactual, likelihood):
@@ -74,7 +74,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # set titles and axis labels
     for i in range(3):
-        axes[0, i].set_title('Experiment {}'.format(i+1), fontsize=14, weight='bold', y=1.05)
+        axes[0, i].set_title('Experiment {}'.format(i+1), weight='bold', y=1.05)
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:
@@ -85,7 +85,6 @@ def plot(dest, results_path, counterfactual, likelihood):
         axes[i, 0].text(
             -2.3, mid, label,
             rotation=90,
-            fontsize=14,
             weight='bold',
             verticalalignment='center')
 
@@ -93,8 +92,8 @@ def plot(dest, results_path, counterfactual, likelihood):
     sns.despine()
 
     # set figure size
-    fig.set_figwidth(8)
-    fig.set_figheight(4)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
     plt.subplots_adjust(left=0.12)

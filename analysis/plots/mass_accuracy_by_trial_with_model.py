@@ -45,7 +45,7 @@ def add_llhr_and_factor(ax, llhr, factor):
         "Bayes Factor = {:.2f}"
     ).format(llhr, factor)
     l, h = ax.get_xlim()
-    ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center', fontsize=9)
+    ax.text((h + l) / 2.0, 0.5125, label, horizontalalignment='center')
 
 
 def filter_trials(df):
@@ -71,7 +71,6 @@ def make_legend(ax, lines, colors):
         handles=handles,
         bbox_to_anchor=[1.05, 0.5],
         loc='center left',
-        fontsize=9,
         frameon=False)
 
 
@@ -165,8 +164,8 @@ def plot(dest, results_path, counterfactual, fitted, likelihood):
     make_legend(ax3, lines, colors)
 
     # set figure size
-    fig.set_figwidth(9)
-    fig.set_figheight(3)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(2.15)
     plt.draw()
     plt.tight_layout()
     plt.subplots_adjust(right=0.825)

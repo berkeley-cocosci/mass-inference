@@ -10,6 +10,15 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sns.set_style('white')
 
+from matplotlib import rcParams
+rcParams['font.family'] = 'Helvetica Neue'
+rcParams['axes.titlesize'] = 12
+rcParams['axes.labelsize'] = 10
+rcParams['xtick.labelsize'] = 9
+rcParams['ytick.labelsize'] = 9
+rcParams['legend.fontsize'] = 9
+rcParams['font.size'] = 9
+
 
 def load_config():
     with open(os.path.join(ROOT, "config.json"), "r") as fh:

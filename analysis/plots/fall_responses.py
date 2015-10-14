@@ -91,7 +91,7 @@ def plot(dest, results_path, version, block):
     ax3.set_ylabel("Human")
 
     # make the legend
-    ax3.legend(loc='lower right', fontsize=11, frameon=False)
+    ax3.legend(loc='lower right', frameon=False)
 
     # set axis limits
     for ax in (ax1, ax2, ax3):
@@ -99,8 +99,8 @@ def plot(dest, results_path, version, block):
         ax.set_ylim(0, 1)
 
     # adjust figure size
-    fig.set_figheight(3.5)
-    fig.set_figwidth(12)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(1.9)
     plt.draw()
     plt.tight_layout()
 

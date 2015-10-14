@@ -74,7 +74,7 @@ def plot(dest, results_path, version, block, query):
     ymin, ymax = ax1.get_ylim()
     ax1.text(
         xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.035, corrstr,
-        horizontalalignment='right', fontsize=10, backgroundcolor='white')
+        horizontalalignment='right', backgroundcolor='white')
 
     # variances
     for k, row in fits.iterrows():
@@ -97,8 +97,8 @@ def plot(dest, results_path, version, block, query):
     sns.despine()
 
     # set figure size
-    fig.set_figwidth(7)
-    fig.set_figheight(3.5)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
 

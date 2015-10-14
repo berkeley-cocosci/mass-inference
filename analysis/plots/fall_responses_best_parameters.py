@@ -52,8 +52,8 @@ def plot(dest, results_path):
 
     fig.colorbar(cax)
 
-    fig.set_figwidth(5)
-    fig.set_figheight(4)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(5.2)
     plt.draw()
     plt.tight_layout()
 

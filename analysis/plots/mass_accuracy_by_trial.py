@@ -74,16 +74,17 @@ def plot(dest, results_path):
     ax3.set_xlim([1, 10.25])
 
     # draw the legend
-    ax3.legend(loc='lower center', fontsize=10, ncol=2, frameon=False)
+    ax3.legend(loc='lower center', ncol=2, frameon=False)
 
     # clear top and right axis lines
     sns.despine()
 
     # set figure size
-    fig.set_figwidth(9)
-    fig.set_figheight(3.25)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(2.35)
     plt.draw()
     plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1, right=0.99, left=0.08)
 
     # save
     for pth in dest:

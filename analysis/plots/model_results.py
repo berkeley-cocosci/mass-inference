@@ -74,7 +74,7 @@ def add_corr(ax, corr):
     ymin, ymax = ax.get_ylim()
     ax.text(
         xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.035, corrstr,
-        horizontalalignment='right', fontsize=10, backgroundcolor='white')
+        horizontalalignment='right', backgroundcolor='white')
 
 
 def plot_kappas(ax, model, human, colors, markers):
@@ -97,7 +97,7 @@ def make_legend(ax, colors, markers):
             linestyle='',
             label=r"$\kappa={}$".format(kappa)))
 
-    ax.legend(handles=handles, loc='upper left', fontsize=9, title="True mass ratio")
+    ax.legend(handles=handles, loc='upper left', title="True mass ratio")
 
 def plot(dest, results_path, version, counterfactual, query):
 
@@ -162,8 +162,8 @@ def plot(dest, results_path, version, counterfactual, query):
     sns.despine()
 
     # set figure size
-    fig.set_figheight(3.5)
-    fig.set_figwidth(7)
+    fig.set_figwidth(6.5)
+    fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
 
