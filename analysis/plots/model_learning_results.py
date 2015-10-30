@@ -171,8 +171,8 @@ def plot(dest, results_path, counterfactual, likelihood):
     make_legend(axes[0, 0], lines, colors)
 
     # set figure size
-    fig.set_figwidth(6.5)
-    fig.set_figheight(5.2)
+    fig.set_figwidth(6)
+    fig.set_figheight(4.8)
     plt.draw()
     plt.tight_layout()
 

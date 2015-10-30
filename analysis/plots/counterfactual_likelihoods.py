@@ -154,7 +154,7 @@ def plot(dest, results_path, query):
     plot_kappas(ax1, model_mass.ix[('empirical', False)], human_mass, colors, markers)
     ax1.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
     ax1.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax1.set_title("(a) Normal empirical likelihood")
+    ax1.set_title("(a) Normal empirical")
     format_mass_plot(ax1, lightgrey)
     add_corr(ax1, mass_corrs.ix[('empirical', False)])
 
@@ -162,7 +162,7 @@ def plot(dest, results_path, query):
     plot_sigmoid(ax2, model_mass.ix[('empirical', True)], human_mass, color=darkgrey)
     plot_kappas(ax2, model_mass.ix[('empirical', True)], human_mass, colors, markers)
     ax2.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
-    ax2.set_title("(b) Counterfactual empirical likelihood")
+    ax2.set_title("(b) Counterfactual empirical")
     format_mass_plot(ax2, lightgrey)
     add_corr(ax2, mass_corrs.ix[('empirical', True)])
 
@@ -172,7 +172,7 @@ def plot(dest, results_path, query):
     plot_kappas(ax3, model_mass.ix[(ipe_query, False)], human_mass, colors, markers)
     ax3.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
     ax3.set_ylabel(r"% participants choosing $\kappa=10$")
-    ax3.set_title("(c) Normal IPE likelihood")
+    ax3.set_title("(c) Normal IPE")
     format_mass_plot(ax3, lightgrey)
     add_corr(ax3, mass_corrs.ix[(ipe_query, False)])
 
@@ -180,7 +180,7 @@ def plot(dest, results_path, query):
     plot_sigmoid(ax4, model_mass.ix[(ipe_query, True)], human_mass, color=darkgrey)
     plot_kappas(ax4, model_mass.ix[(ipe_query, True)], human_mass, colors, markers)
     ax4.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
-    ax4.set_title("(d) Counterfactual IPE likelihood")
+    ax4.set_title("(d) Counterfactual IPE")
     format_mass_plot(ax4, lightgrey)
     add_corr(ax4, mass_corrs.ix[(ipe_query, True)])
 
@@ -191,12 +191,12 @@ def plot(dest, results_path, query):
     sns.despine()
 
     # set figure size
-    fig.set_figheight(6.5)
-    fig.set_figwidth(6.5)
+    fig.set_figheight(6)
+    fig.set_figwidth(6)
     plt.draw()
     plt.tight_layout()
 
-    plt.subplots_adjust(left=0.08, right=0.99)
+    plt.subplots_adjust(left=0.09, right=0.99)
 
     # save
     for pth in dest:
