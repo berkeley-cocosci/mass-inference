@@ -2,105 +2,76 @@
 
 """
 Plots model vs human responses to "will it fall?" for a particular experiment
-version and block. Each figure has three subplots:
-
-    1. human (kappa=-1.0) vs human (kappa=1.0)
-    2. model (mass-sensitive) vs human
-    3. model (mass-insensitive) vs human
+version and block.
 
 """
 
-__depends__ = ["human_fall_responses.csv", "single_model_fall_responses.csv"]
+__depends__ = [
+    "human_fall_responses.csv",
+    "single_model_fall_responses.csv",
+    "fall_response_corrs.csv"
+]
 
 import util
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 
-def errorbar(ax, x, y, ls='', ms=8, marker='o', **kwargs):
-    x_lerr = x['median'] - x['lower']
-    x_uerr = x['upper'] - x['median']
-    y_lerr = y['median'] - y['lower']
-    y_uerr = y['upper'] - y['median']
-    ax.errorbar(
-        x['median'], y['median'], 
-        xerr=[x_lerr, x_uerr], 
-        yerr=[y_lerr, y_uerr],
-        ls=ls, ms=ms, marker=marker,
-        **kwargs)
+def plot(dest, results_path, version, block, query):
 
-def plot_connected(ax, x0, x1, y0, y1, colors, labels, plot_config):
-    ax.plot(
-        [x0['median'], x1['median']], 
-        [y0['median'], y1['median']], 
-        ls='-', color=plot_config["darkgrey"])
-
-    errorbar(ax, x0, y0, color=colors[0], label=labels[0])
-    errorbar(ax, x1, y1, color=colors[1], label=labels[1])
-
-
-def plot(dest, results_path, version, block):
-
-    # various config stuff
-    config = util.load_config()
-    plot_config = config["plots"]
-    colors = [plot_config["colors"][0], plot_config["colors"][2]]
-    labels = [r"$\kappa_0=%.1f$" % 10 ** kappa0 for kappa0 in [-1.0, 1.0]]
-
-    # read in the human data
-    human = pd\
-        .read_csv(os.path.join(results_path, "human_fall_responses.csv"))\
+    human = pd.read_csv(os.path.join(results_path, "human_fall_responses.csv"))
+    human = human\
         .groupby(['version', 'block'])\
         .get_group((version, block))\
-        .set_index(['stimulus', 'kappa0'])\
-        .unstack('kappa0')\
-        .reorder_levels([1, 0], axis=1)
+        .set_index(['kappa0', 'stimulus'])\
+        .sortlevel()
 
-    # read in the model data
-    model = pd\
-        .read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))\
+    model = pd.read_csv(os.path.join(results_path, "single_model_fall_responses.csv"))
+    model = model\
         .groupby(['query', 'block'])\
-        .get_group((util.get_query(), block))\
-        .set_index(['stimulus', 'kappa0'])\
-        .unstack('kappa0')\
-        .reorder_levels([1, 0], axis=1)
+        .get_group((query, block))\
+        .set_index(['kappa0', 'stimulus'])\
+        .sortlevel()
+    model = model.ix[human.index]
 
-    # create subplots
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    fall_corrs = pd\
+        .read_csv(os.path.join(results_path, "fall_response_corrs.csv"))\
+        .set_index(['block', 'X', 'Y'])\
+        .sortlevel()\
+        .ix[(block, query, 'Human')]
 
-    # left subplot: human vs. human, for both values of the mass ratio
-    errorbar(ax1, human[-1.0], human[1.0], color=plot_config["darkgrey"])
-    ax1.set_xlabel(r"Human ($\kappa_0=0.1$)")
-    ax1.set_ylabel(r"Human ($\kappa_0=10.0$)")
+    fig, ax = plt.subplots()
 
-    # middle subplot: mass sensitive model
-    ax2.plot([0, 1], [0, 1], '--', color=plot_config["darkgrey"], alpha=0.5)
-    plot_connected(
-        ax2, model[-1.0], model[1.0], human[-1.0], human[1.0],
-        colors, labels, plot_config)
-    ax2.set_xlabel("Mass-sensitive IPE")
-    ax2.set_ylabel("Human")
+    # means
+    mlerr = model['median'] - model['lower']
+    muerr = model['upper'] - model['lower']
+    hlerr = human['median'] - human['lower']
+    huerr = human['upper'] - human['median']
+    ax.plot([-0.03, 1.03], [-0.03, 1.03], '--', color=config['plots']['darkgrey'])
+    ax.errorbar(
+        model['median'], human['median'],
+        xerr=[mlerr, muerr], yerr=[hlerr, huerr],
+        color='k', linestyle='', marker='o')
+    ax.set_xlabel(r"IPE observer model, $p(F_t|S_t)$")
+    ax.set_ylabel(r"Normalized human judgments")
+    ax.set_xlim(-0.03, 1.03)
+    ax.set_ylim(-0.03, 1.03)
 
-    # right subplot: mass-insensitive model
-    ax3.plot([0, 1], [0, 1], '--', color=plot_config["darkgrey"], alpha=0.5)
-    plot_connected(
-        ax3, model[0.0], model[0.0], human[-1.0], human[1.0],
-        colors, labels, plot_config)
-    ax3.set_xlabel("Mass-insensitive IPE")
-    ax3.set_ylabel("Human")
+    pearson = r"$r={median:.2f}$, $95\%\ \mathrm{{CI}}\ [{lower:.2f},\ {upper:.2f}]$"
+    corrstr = pearson.format(**fall_corrs)
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    ax.text(
+        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.035, corrstr,
+        horizontalalignment='right', backgroundcolor='white')
 
-    # make the legend
-    ax3.legend(loc='lower right', frameon=False)
-
-    # set axis limits
-    for ax in (ax1, ax2, ax3):
-        ax.set_xlim(0, 1)
-        ax.set_ylim(0, 1)
+    sns.despine()
 
     # adjust figure size
-    fig.set_figwidth(6.5)
-    fig.set_figheight(1.9)
+    fig.set_figwidth(3.25)
+    fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
 
@@ -120,6 +91,10 @@ if __name__ == "__main__":
         '--block',
         default='B',
         help='which block of the experiment to plot responses from')
+    parser.add_argument(
+        '--query',
+        default=config['analysis']['query'],
+        help='which ipe query to use')
 
     args = parser.parse_args()
-    plot(args.to, args.results_path, args.version, args.block)
+    plot(args.to, args.results_path, args.version, args.block, args.query)

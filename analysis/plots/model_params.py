@@ -74,7 +74,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # set titles and axis labels
     for i in range(3):
-        axes[0, i].set_title('Experiment {}'.format(i+1), weight='bold', y=1.05)
+        axes[0, i].set_title('Experiment {}'.format(i+1), y=1.05)
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:
@@ -83,9 +83,9 @@ def plot(dest, results_path, counterfactual, likelihood):
     for i, label in enumerate(['Static', 'Learning']):
         mid = sum(axes[i, 0].get_ylim()) / 2.0
         axes[i, 0].text(
-            -2.3, mid, label,
+            -2.6, mid, label,
             rotation=90,
-            weight='bold',
+            fontsize=12, # same as title font size
             verticalalignment='center')
 
     # clear top and right axis lines
@@ -96,7 +96,7 @@ def plot(dest, results_path, counterfactual, likelihood):
     fig.set_figheight(3.25)
     plt.draw()
     plt.tight_layout()
-    plt.subplots_adjust(left=0.12)
+    plt.subplots_adjust(left=0.14)
 
     # save
     for pth in dest:
