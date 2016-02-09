@@ -39,7 +39,7 @@ def run(dest, data_path, seed):
     between_subjs = human\
         .groupby('version')\
         .get_group('I')\
-        .sort(['pid', 'trial'])\
+        .sort_values(by=['pid', 'trial'])\
         .drop_duplicates('pid')
     between_subjs['num_mass_trials'] = -1
     responses = pd.concat([human, between_subjs])

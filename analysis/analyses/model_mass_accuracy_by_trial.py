@@ -58,7 +58,7 @@ def run(dest, results_path, data_path, seed, parallel):
     between_subjs = model\
         .groupby('version')\
         .get_group('I')\
-        .sort(['pid', 'trial'])\
+        .sort_values(by=['pid', 'trial'])\
         .drop_duplicates(['likelihood', 'counterfactual', 'model', 'fitted', 'pid'])
     between_subjs['num_mass_trials'] = -1
     responses = pd.concat([model, between_subjs])

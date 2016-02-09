@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from colormaps import _viridis_data as viridis
 
 
 def plot(dest, results_path, version, block, query):
@@ -41,11 +42,13 @@ def plot(dest, results_path, version, block, query):
         .set_index('k')
     best_k = fits['mse'].argmin()
 
-    colors = sns.color_palette("cubehelix", 7)
+    colors = np.array(viridis)[np.linspace(0, len(viridis) - 1, 7).astype(int)]
 
     fig, ax = plt.subplots()
 
     # variances
+    lines = []
+    labels = []
     for k, row in fits.iterrows():
         X = np.array([-0.005, 0.205])
         Y = X * row['slope'] + row['intercept']
@@ -53,14 +56,20 @@ def plot(dest, results_path, version, block, query):
             style = '-'
         else:
             style = '--'
-        ax.plot(X, Y, style, lw=2, label='$k={:d}$'.format(int(k)), color=colors[k - 1])
+        l, = ax.plot(X, Y, style, lw=1, color=colors[k - 1])
+        lines.append(l)
+        labels.append('$k={:d}$'.format(int(k)))
 
-    ax.plot(model['stddev']**2, human['stddev']**2, 'ko')
+    ax.plot(
+        model['stddev']**2, human['stddev']**2, 'ko',
+        markeredgecolor=config['plots']['darkgrey'],
+        markerfacecolor='white',
+        markeredgewidth=1)
     ax.set_xlabel(r'Model variance ($\sigma_\mathrm{sims}^2$)')
     ax.set_ylabel(r'Human variance ($\sigma_\mathrm{judgments}^2$)')
     ax.set_xlim(-0.005, 0.205)
     ax.set_ylim(-0.005, 0.205)
-    ax.legend(loc='best', ncol=2)
+    ax.legend(lines, labels, loc='best', ncol=2)
 
     sns.despine()
 

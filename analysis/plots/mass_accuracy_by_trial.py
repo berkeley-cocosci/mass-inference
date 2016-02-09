@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import numpy as np
+from colormaps import _viridis_data as viridis
 
 
 def timeseries(ax, x, color, label=None, marker='o', markersize=6, fill=True):
@@ -23,7 +24,9 @@ def timeseries(ax, x, color, label=None, marker='o', markersize=6, fill=True):
             color=color, alpha=0.3)
     ax.plot(
         x['trial'], x['median'], 
-        lw=2, marker=marker, ms=markersize, color=color, label=label)
+        lw=1, marker=marker, ms=markersize, color=color,
+        markeredgecolor=color, markerfacecolor='none',
+        markeredgewidth=1, label=label)
 
 
 def plot(dest, results_path):
@@ -38,7 +41,8 @@ def plot(dest, results_path):
     # load in colors
     plot_config = util.load_config()["plots"]
     darkgrey = plot_config["darkgrey"]
-    colors = np.ones((5, 3)) * np.linspace(0.1, 0.6, 5)[:, None]
+    #colors = np.ones((5, 3)) * np.linspace(0.1, 0.6, 5)[:, None]
+    colors = np.array(viridis)[np.linspace(0, len(viridis) - 1, 6).astype(int)[:-1]]
     markers = ['s', 'd', '*', '^', 'o']
     markersizes = [6, 7, 10, 7, 6]
 

@@ -120,7 +120,7 @@ def run(dest, results_path, data_path, parallel):
         .groupby('version')\
         .get_group('I')\
         .groupby(cols)\
-        .apply(lambda x: x.sort('trial').head(1))\
+        .apply(lambda x: x.sort_values(by='trial').head(1))\
         .set_index(cols)
     between_subjs['num_mass_trials'] = -1
 

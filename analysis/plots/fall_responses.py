@@ -17,6 +17,7 @@ import os
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
 
 
 def plot(dest, results_path, version, block, query):
@@ -49,11 +50,11 @@ def plot(dest, results_path, version, block, query):
     muerr = model['upper'] - model['lower']
     hlerr = human['median'] - human['lower']
     huerr = human['upper'] - human['median']
-    ax.plot([-0.03, 1.03], [-0.03, 1.03], '--', color=config['plots']['darkgrey'])
-    ax.errorbar(
-        model['median'], human['median'],
-        xerr=[mlerr, muerr], yerr=[hlerr, huerr],
-        color='k', linestyle='', marker='o')
+    ax.plot([-0.03, 1.03], [-0.03, 1.03], '--', color=config['plots']['darkgrey'], linewidth=1)
+    util.notfilled_errorbar(
+        ax, model['median'], human['median'],
+        xerr=np.array([mlerr, muerr]), yerr=np.array([hlerr, huerr]),
+        color=config['plots']['darkgrey'], marker='o', linewidth=1)
     ax.set_xlabel(r"IPE observer model, $p(F_t|S_t)$")
     ax.set_ylabel(r"Normalized human judgments")
     ax.set_xlim(-0.03, 1.03)
@@ -64,7 +65,7 @@ def plot(dest, results_path, version, block, query):
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
     ax.text(
-        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.035, corrstr,
+        xmax - (xmax - xmin) * 0.01, ymin + (ymax - ymin) * 0.045, corrstr,
         horizontalalignment='right', backgroundcolor='white')
 
     sns.despine()

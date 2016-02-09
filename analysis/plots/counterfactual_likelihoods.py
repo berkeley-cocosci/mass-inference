@@ -44,18 +44,17 @@ def plot_sigmoid(ax, model, human, color):
     ax.plot(x, y, color=color, lw=2, zorder=2)
 
 
-def errorbar(ax, x, y, ls='', ms=8, marker='o', **kwargs):
+def errorbar(ax, x, y, ls='', ms=6, marker='o', **kwargs):
     x_lerr = x['median'] - x['lower']
     x_uerr = x['upper'] - x['median']
     y_lerr = y['median'] - y['lower']
     y_uerr = y['upper'] - y['median']
-    ax.errorbar(
-        x['median'], y['median'], 
-        xerr=[x_lerr, x_uerr], 
+    util.notfilled_errorbar(
+        ax, x['median'], y['median'],
+        xerr=[x_lerr, x_uerr],
         yerr=[y_lerr, y_uerr],
-        ls=ls, ms=ms, marker=marker, zorder=3,
+        ls=ls, ms=ms, marker=marker, zorder=3, linewidth=1,
         **kwargs)
-
 
 def format_mass_plot(ax, color):
     xmin = -0.02
@@ -101,7 +100,9 @@ def make_legend(ax, colors, markers):
     for i, kappa in enumerate(['0.1', '10']):
         handles.append(mlines.Line2D(
             [], [],
-            color=colors[i], 
+            markeredgecolor=colors[i], 
+            markerfacecolor='white',
+            markeredgewidth=1,
             marker=markers[i],
             linestyle='',
             label=r"$\kappa={}$".format(kappa)))

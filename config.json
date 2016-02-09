@@ -41,6 +41,6 @@
         "darkgrey": ".3",
         "lightgrey": ".7",
         "report_pearson": "$r$ = {median:.2f}, 95% CI [{lower:.2f}, {upper:.2f}]",
-        "dpi": 300
+        "dpi": 150
     }
 }

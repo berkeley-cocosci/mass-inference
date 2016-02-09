@@ -36,7 +36,7 @@ def run(dest, results_path):
     between_subjs = data\
         .groupby('version')\
         .get_group('I')\
-        .sort(['pid', 'trial'])\
+        .sort_values(by=['pid', 'trial'])\
         .drop_duplicates(['likelihood', 'counterfactual', 'model', 'fitted', 'pid'])
     between_subjs['num_mass_trials'] = -1
 

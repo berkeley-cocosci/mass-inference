@@ -67,7 +67,7 @@ def run(dest, results_path):
         .get_group('experimentC')\
         .drop('mode', axis=1)\
         .set_index('stimulus')\
-        .sort('trial')
+        .sort_values(by='trial')
 
     likelihood = pd\
         .read_csv(os.path.join(results_path, 'model_likelihood.csv'))\

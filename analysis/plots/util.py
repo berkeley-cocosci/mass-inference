@@ -159,3 +159,28 @@ def save(path, fignum=None, close=True, width=None, height=None,
 
     if verbose:
         sys.stdout.write("Done\n")
+
+
+def notfilled_errorbar(ax, x, y, xerr, yerr, color, **kwargs):
+    ax.errorbar(
+        x, y,
+        xerr=xerr, yerr=yerr,
+        linestyle='',
+        color=color,
+        markerfacecolor='white',
+        markeredgecolor=color,
+        markeredgewidth=0,
+        **kwargs)
+
+    if 'zorder' in kwargs:
+        kwargs['zorder'] += 1
+
+    ax.plot(
+        x, y,
+        linestyle='',
+        color=color,
+        markerfacecolor='white',
+        markeredgecolor=color,
+        markeredgewidth=1,
+        **kwargs)
+

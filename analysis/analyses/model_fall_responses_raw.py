@@ -33,6 +33,7 @@ __ext__ = '.h5'
 
 import util
 import pandas as pd
+import os
 import model_fall_responses_queries as queries
 
 def model_fall_responses(queryname, data):
