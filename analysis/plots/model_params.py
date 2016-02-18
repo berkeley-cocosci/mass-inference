@@ -18,8 +18,12 @@ import seaborn as sns
 
 def hist(ax, x, color):
     ymax = len(x) * 1.02
-    ax.plot([0, 0], [0, ymax], '-', color='0.6', zorder=1)
-    ax.plot([1, 1], [0, ymax], ':', color='0.6', zorder=1)
+    #ax.plot([0, 0], [0, ymax], '-', color='0.6', zorder=1)
+    #ax.plot([1, 1], [0, ymax], ':', color='0.6', zorder=1)
+    ax.fill_between([0, 1], [0, 0], [ymax, ymax], color='0.8', zorder=1)
+
+    med = x.median()
+    ax.plot([med, med], [0, ymax], ':', color=color, zorder=2, lw=1)
 
     # plot the histogram
     bins = np.arange(-0.7, 2.8, 0.2)
