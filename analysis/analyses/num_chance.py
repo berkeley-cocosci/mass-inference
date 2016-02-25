@@ -26,10 +26,11 @@ def run(dest, data_path):
 
     def num_chance(df):
         groups = df.groupby(['kappa0', 'stimulus'])['mass? correct']
-        alpha = 0.05 / len(groups.groups)
+        alpha = (0.05 / len(groups.groups)) * 100
         results = groups\
-            .apply(lambda x: util.beta(x, 1, [alpha]))\
+            .apply(lambda x: util.bootstrap_mean(x, percentiles=[alpha]))\
             .unstack(-1) <= 0.5
+        results = results.rename(columns={alpha: alpha / 100})
         return results
 
     results = human['C']\

@@ -35,7 +35,7 @@ def run(dest, results_path, seed):
     human = pd.read_csv(os.path.join(results_path, "human_mass_accuracy_by_stimulus_raw.csv"))
     results = human\
         .groupby(['version', 'kappa0', 'stimulus'])['mass? correct']\
-        .apply(util.beta)\
+        .apply(util.bootstrap_mean)\
         .unstack(-1)\
         .reset_index()\
         .set_index(['version', 'kappa0', 'stimulus'])\

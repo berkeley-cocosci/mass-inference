@@ -50,7 +50,7 @@ def model_fall_responses(key, ipe):
     print key
     samps = ipe.set_index(['query', 'block', 'kappa0', 'stimulus', 'sample'])['response'].unstack('sample')
     if ((np.asarray(samps) == 0) | (np.asarray(samps) == 1)).all():
-        result = samps.apply(util.beta, axis=1)
+        result = samps.apply(util.bootstrap_mean, axis=1)
     else:
         result = samps.apply(util.bootstrap_mean, axis=1)
     result['mean'] = samps.mean(axis=1)

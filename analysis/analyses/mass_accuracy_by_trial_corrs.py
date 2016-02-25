@@ -31,7 +31,7 @@ import scipy.stats
 from IPython.parallel import require
 
 
-@require('numpy as np', 'pandas as pd')
+@require('numpy as np', 'pandas as pd', 'scipy.stats')
 def corr(df):
     name, df = df
     x = np.asarray(df['trial'])

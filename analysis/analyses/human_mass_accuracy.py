@@ -41,7 +41,7 @@ def run(dest, data_path, seed):
 
         accuracy = correct\
             .groupby('version')['mass? correct']\
-            .apply(util.beta)\
+            .apply(util.bootstrap_mean)\
             .unstack(-1)\
             .reset_index()
 
