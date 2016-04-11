@@ -1,6 +1,6 @@
 {
   "description": null, 
-  "last_modified": "2014-07-08 16:57:16.556501", 
+  "last_modified": "2016-04-11 13:04:47.406846", 
   "title": null, 
   "image": null, 
   "datapackage_version": "1.0-beta.5", 
@@ -34,20 +34,20 @@
   "homepage": null, 
   "resources": [
     {
-      "hash": "0abf4f4ecd691ca0c7e4d5444018e8ef", 
+      "hash": "461072e61f41aaedd3eb3930c2384b62", 
       "name": "events.csv", 
       "format": "csv", 
-      "bytes": 806747, 
-      "modified": "2014-07-08 16:57:16.167014", 
+      "bytes": 1499695, 
+      "modified": "2016-04-11 13:04:46.981553", 
       "mediaformat": "text/csv", 
       "path": "./events.csv"
     }, 
     {
-      "hash": "2fa28a49c1c9a05c1ac101475e82d184", 
+      "hash": "a1a12029739eea692d49279cf6b2ed24", 
       "name": "participants.csv", 
       "format": "csv", 
-      "bytes": 78874, 
-      "modified": "2014-07-08 16:57:16.208011", 
+      "bytes": 144807, 
+      "modified": "2016-04-11 13:04:47.047061", 
       "mediaformat": "text/csv", 
       "path": "./participants.csv"
     }, 
@@ -61,7 +61,7 @@
       }, 
       "name": "metadata-G", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-08 16:57:16.216423"
+      "modified": "2016-04-11 13:04:47.056711"
     }, 
     {
       "format": "json", 
@@ -73,7 +73,7 @@
       }, 
       "name": "metadata-H", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-08 16:57:16.216436"
+      "modified": "2016-04-11 13:04:47.056730"
     }, 
     {
       "format": "json", 
@@ -85,14 +85,14 @@
       }, 
       "name": "metadata-I", 
       "mediaformat": "application/json", 
-      "modified": "2014-07-08 16:57:16.216440"
+      "modified": "2016-04-11 13:04:47.056735"
     }, 
     {
-      "hash": "79cacb6338cbb5e030392481a5af9f2d", 
+      "hash": "cf132c34c8b9fbdafae8cf6525619463", 
       "name": "experiment.csv", 
       "format": "csv", 
-      "bytes": 5063127, 
-      "modified": "2014-07-08 16:57:16.216444", 
+      "bytes": 7036326, 
+      "modified": "2016-04-11 13:04:47.056739", 
       "mediaformat": "text/csv", 
       "path": "./experiment.csv"
     }

@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
 import pandas as pd
+import sys
+import os
 from mass import DATA_PATH
-from snippets import datapackage as dpkg
+
+root = os.path.join(os.path.dirname(__file__), '..', '..')
+sys.path.append(os.path.join(root, 'lib'))
+import datapackage as dpkg
 
 data_G_path = DATA_PATH.joinpath("human", "mass_inference-G.dpkg")
 data_H_path = DATA_PATH.joinpath("human", "mass_inference-H.dpkg")

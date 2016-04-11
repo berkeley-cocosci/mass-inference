@@ -4,13 +4,18 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from datetime import datetime
 from mass import DATA_PATH
 from path import path
-from snippets import datapackage as dpkg
+from hashlib import sha256
 import dbtools
 import json
 import logging
 import numpy as np
 import pandas as pd
 import sys
+import os
+
+root = os.path.join(os.path.dirname(__file__), '..', '..')
+sys.path.append(os.path.join(root, 'lib'))
+import datapackage as dpkg
 
 logger = logging.getLogger('mass.experiment')
 
@@ -36,10 +41,9 @@ def split_uniqueid(df, field):
     from the dataframe.
 
     """
-
     workerid, assignmentid = zip(*map(lambda x: x.split(":"), df[field]))
-    df['pid'] = workerid
-    df['assignment'] = assignmentid
+    df['pid'] = [sha256(bytes(x)).hexdigest() for x in workerid]
+    df['assignment'] = [sha256(bytes(x)).hexdigest() for x in assignmentid]
     df = df.drop([field], axis=1)
     return df
 
@@ -84,9 +88,9 @@ def find_bad_participants(exp, data):
 
         # get the time they started the experiment
         times = df['psiturk_time'].copy()
-        times.sort()
+        times.sort_values(inplace=True)
         start_time = pd.to_datetime(
-            datetime.fromtimestamp(times.irow(0) / 1e3))
+            datetime.fromtimestamp(times.iloc[0] / 1e3))
         info['timestamp'] = start_time
 
         # add condition/counterbalance
@@ -97,7 +101,7 @@ def find_bad_participants(exp, data):
 
         # check for duplicated entries
         if exp == 'mass_inference-G':
-            dupes = df.sort('psiturk_time')[['mode', 'trial', 'trial_phase']]\
+            dupes = df.sort_values(by='psiturk_time')[['mode', 'trial', 'trial_phase']]\
                       .duplicated().any()
             if dupes:
                 logger.warning(
@@ -350,7 +354,7 @@ def load_data(data_path, conds, fields=None):
         .DataFrame\
         .from_dict(find_bad_participants(data_path.namebase, data))
     participants = pd.merge(p_conds, p_info, on=['assignment', 'pid'])\
-                     .sort('timestamp')\
+                     .sort_values(by='timestamp')\
                      .set_index('timestamp')
 
     # drop bad participants
@@ -436,7 +440,7 @@ def load_events(data_path):
     events = events\
         .set_index(['assignment', 'pid', 'timestamp'])\
         .reset_index()\
-        .sort(['assignment', 'pid', 'timestamp'])
+        .sort_values(by=['assignment', 'pid', 'timestamp'])
 
     return events
 
