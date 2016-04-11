@@ -53,7 +53,7 @@ import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import require
+from ipyparallel import require
 
 
 @require('numpy as np', 'pandas as pd')

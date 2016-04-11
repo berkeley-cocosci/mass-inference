@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 
-from IPython.parallel import require
+from ipyparallel import require
 
 
 @require('numpy as np', 'pandas as pd', 'scipy.stats')

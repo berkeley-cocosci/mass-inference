@@ -42,7 +42,7 @@ import pandas as pd
 import numpy as np
 import os
 
-from IPython.parallel import Client, require
+from ipyparallel import Client, require
 
 
 @require('numpy as np', 'util')

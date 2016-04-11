@@ -54,7 +54,7 @@ import pandas as pd
 import numpy as np
 import scipy.optimize
 
-from IPython.parallel import require
+from ipyparallel import require
 
 
 @require('numpy as np', 'pandas as pd', 'scipy.optimize')

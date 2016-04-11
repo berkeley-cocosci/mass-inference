@@ -7,7 +7,7 @@ import scipy.special
 import scipy.stats
 
 from argparse import ArgumentParser, RawTextHelpFormatter
-from IPython.parallel import Client
+from ipyparallel import Client
 
 import datapackage as dpkg
 

@@ -40,7 +40,7 @@ import util
 import pandas as pd
 import numpy as np
 
-from IPython.parallel import require
+from ipyparallel import require
 
 
 def run(dest, results_path, data_path, seed, parallel):
