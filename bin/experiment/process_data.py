@@ -20,6 +20,12 @@ import datapackage as dpkg
 logger = logging.getLogger('mass.experiment')
 
 
+def hashids(df):
+    df['pid'] = [sha256(bytes(x)).hexdigest() for x in df['pid']]
+    df['assignment'] = [sha256(bytes(x)).hexdigest() for x in df['assignment']]
+    return df
+
+
 def str2bool(x):
     """Convert a string representation of a boolean (e.g. 'true' or
     'false') to an actual boolean.
@@ -42,8 +48,8 @@ def split_uniqueid(df, field):
 
     """
     workerid, assignmentid = zip(*map(lambda x: x.split(":"), df[field]))
-    df['pid'] = [sha256(bytes(x)).hexdigest() for x in workerid]
-    df['assignment'] = [sha256(bytes(x)).hexdigest() for x in assignmentid]
+    df['pid'] = workerid
+    df['assignment'] = assignmentid
     df = df.drop([field], axis=1)
     return df
 
@@ -516,6 +522,9 @@ if __name__ == "__main__":
     meta, conds, fields = load_meta(data_path)
     data, participants = load_data(data_path, conds, fields)
     events = load_events(data_path)
+    data = hashids(data)
+    events = hashids(events)
+    participants = hashids(participants)
 
     # save it
     save_dpkg(dest_path, data, meta, events, participants)
