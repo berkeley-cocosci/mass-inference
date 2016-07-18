@@ -24,6 +24,7 @@
         "pearson": "r={median:.2f}\\textrm{{, 95\\% CI }}[{lower:.2f}, {upper:.2f}]",
         "percent": "M={median:.1f}\\%\\textrm{{, 95\\% CI }}[{lower:.1f}\\%, {upper:.1f}\\%]",
         "mean": "M={median:.1f}\\textrm{{, 95\\% CI }}[{lower:.1f}, {upper:.1f}]",
+        "beta": "\\beta={median:.2f}\\textrm{{, 95\\% CI }}[{lower:.2f}, {upper:.2f}]",
         "gamma": "\\gamma={median:.2f}\\textrm{{, 95\\% CI }}[{lower:.2f}, {upper:.2f}]",
         "newcommand": "\\newcommand{{\\{name}}}[0]{{{action}}}\n"
     },

@@ -8,7 +8,8 @@ non-counterfactual likelihoods, and the counterfactual likelihoods.
 __depends__ = [
     "human_mass_responses_by_stimulus.csv",
     "model_mass_responses_by_stimulus.csv",
-    "mass_responses_by_stimulus_corrs.csv"
+    "mass_responses_by_stimulus_corrs.csv",
+    "fit_sigmoids.csv"
 ]
 
 import util
@@ -21,27 +22,17 @@ import seaborn as sns
 import scipy.optimize as optim
 
 
-def sigmoid(x, b, offset=0.5, scale=100.0):
+def sigmoid(x, b, offset=0.5, scale=1.0):
     return scale / (1.0 + np.exp(-(b * (x - offset))))
 
 
-def fit_sigmoid(xarr, yarr):
-    def fit(b):
-        pred = sigmoid(xarr, b)
-        diff = np.mean(np.abs(yarr - pred))
-        return diff
-
-    res = optim.minimize_scalar(fit)
-    return res['x']
-
-
-def plot_sigmoid(ax, model, human, color):
+def plot_sigmoid(ax, b, color):
     x = np.linspace(0, 1, 100)
-    b = fit_sigmoid(
-        np.asarray(model.stack(0)['median']),
-        np.asarray(human.stack(0)['median']))
-    y = sigmoid(x, b)
-    ax.plot(x, y, color=color, lw=2, zorder=2)
+    y = sigmoid(x, float(b['median']))
+    y_lower = sigmoid(x, float(b['lower']))
+    y_upper = sigmoid(x, float(b['upper']))
+    ax.plot(x, y * 100, color=color, lw=2, zorder=2)
+    ax.fill_between(x, y_lower * 100, y_upper * 100, color=color, alpha=0.3)
 
 
 def errorbar(ax, x, y, ls='', ms=6, marker='o', **kwargs):
@@ -137,6 +128,14 @@ def plot(dest, results_path, query):
         .sortlevel()\
         .ix['H']
 
+    # load fitted sigmoid values
+    b = pd\
+        .read_csv(os.path.join(results_path, "fit_sigmoids.csv"))\
+        .set_index(['likelihood', 'counterfactual', 'random'])\
+        .sortlevel()\
+        .groupby(level='random')\
+        .get_group(False)
+
     # color config
     plot_config = util.load_config()["plots"]
     #palette = plot_config["colors"]
@@ -151,7 +150,7 @@ def plot(dest, results_path, query):
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, sharex=True, sharey=True)
 
     # top left subplot: regular empirical likelihood
-    plot_sigmoid(ax1, model_mass.ix[('empirical', False)], human_mass, color=darkgrey)
+    plot_sigmoid(ax1, b.ix[('empirical', False)], color=darkgrey)
     plot_kappas(ax1, model_mass.ix[('empirical', False)], human_mass, colors, markers)
     ax1.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
     ax1.set_ylabel(r"% participants choosing $\kappa=10$")
@@ -160,7 +159,7 @@ def plot(dest, results_path, query):
     add_corr(ax1, mass_corrs.ix[('empirical', False)])
 
     # top right subplot: counterfactual empirical likelihood
-    plot_sigmoid(ax2, model_mass.ix[('empirical', True)], human_mass, color=darkgrey)
+    plot_sigmoid(ax2, b.ix[('empirical', True)], color=darkgrey)
     plot_kappas(ax2, model_mass.ix[('empirical', True)], human_mass, colors, markers)
     ax2.set_xlabel(r"Empirical observer, $p(\kappa=10|F_t,S_t)$")
     ax2.set_title("(b) Counterfactual empirical")
@@ -169,7 +168,7 @@ def plot(dest, results_path, query):
 
     # bottom left subplot: regular IPE likelihood
     ipe_query = "ipe_" + query
-    plot_sigmoid(ax3, model_mass.ix[(ipe_query, False)], human_mass, color=darkgrey)
+    plot_sigmoid(ax3, b.ix[(ipe_query, False)], color=darkgrey)
     plot_kappas(ax3, model_mass.ix[(ipe_query, False)], human_mass, colors, markers)
     ax3.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
     ax3.set_ylabel(r"% participants choosing $\kappa=10$")
@@ -178,7 +177,7 @@ def plot(dest, results_path, query):
     add_corr(ax3, mass_corrs.ix[(ipe_query, False)])
 
     # bottom right subplot: counterfactual IPE likelihood
-    plot_sigmoid(ax4, model_mass.ix[(ipe_query, True)], human_mass, color=darkgrey)
+    plot_sigmoid(ax4, b.ix[(ipe_query, True)], color=darkgrey)
     plot_kappas(ax4, model_mass.ix[(ipe_query, True)], human_mass, colors, markers)
     ax4.set_xlabel(r"IPE observer, $p(\kappa=10|F_t,S_t)$")
     ax4.set_title("(d) Counterfactual IPE")
