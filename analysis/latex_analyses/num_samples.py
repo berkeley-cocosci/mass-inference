@@ -20,7 +20,7 @@ def run(dest, results_path, version, block, query):
     omega = np.sqrt(fits['intercept'][best_k])
 
     fh = open(dest, "w")
-    fh.write(util.newcommand("BestFitK", r"$k={:d}$".format(int(best_k))))
+    fh.write(util.newcommand("BestFitK", r"$n={:d}$".format(int(best_k))))
     fh.write(util.newcommand("BestFitOmega", r"$\omega={:.2f}$".format(omega)))
     fh.close()
 

@@ -58,7 +58,7 @@ def plot(dest, results_path, version, block, query):
             style = '--'
         l, = ax.plot(X, Y, style, lw=1, color=colors[k - 1])
         lines.append(l)
-        labels.append('$k={:d}$'.format(int(k)))
+        labels.append('$n={:d}$'.format(int(k)))
 
     ax.plot(
         model['stddev']**2, human['stddev']**2, 'ko',
