@@ -78,7 +78,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # set titles and axis labels
     for i in range(3):
-        axes[0, i].set_title('Experiment {}'.format(i+1), y=1.05)
+        axes[0, i].set_title('Experiment 3.{}'.format(i+1), y=1.05)
     for ax in axes[:, 0]:
         ax.set_ylabel("% participants")
     for ax in axes[1]:
