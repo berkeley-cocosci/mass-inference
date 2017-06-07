@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import os
+import sys
+root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.append(os.path.join(root, "lib"))
+
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from mass.stimuli import get_style
 from mass.render.viewer import init
