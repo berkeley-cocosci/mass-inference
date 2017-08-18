@@ -141,7 +141,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # top right subplot: experiment 1a
     plot_all(axes[0, 1], human.ix['H'], model.ix[('H', True)], lines, colors)
-    axes[0, 1].set_title('(b) Experiment 3.1')
+    axes[0, 1].set_title('(b) Experiment 4.1')
     axes[0, 1].set_xlabel('Trial')
     axes[0, 1].set_xticks([1, 5, 10, 15, 20])
     axes[0, 1].set_xlim([1, 20])
@@ -149,7 +149,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # bottom left subplot: experiment 1b
     plot_all(axes[1, 0], human.ix['G'], model.ix[('G', True)], lines, colors)
-    axes[1, 0].set_title('(c) Experiment 3.2')
+    axes[1, 0].set_title('(c) Experiment 4.2')
     axes[1, 0].set_xlabel('Trial')
     axes[1, 0].set_ylabel('Pr(correct ratio chosen)')
     axes[1, 0].set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
@@ -158,7 +158,7 @@ def plot(dest, results_path, counterfactual, likelihood):
 
     # bottom right subplot: experiment 2 (between subjects)
     plot_all(axes[1, 1], human.ix['I'], model.ix[('I', True)], lines, colors)
-    axes[1, 1].set_title('(d) Experiment 3.3')
+    axes[1, 1].set_title('(d) Experiment 4.3')
     axes[1, 1].set_xlabel('Trial')
     axes[1, 1].set_xticks([1, 2, 3, 5, 10])
     axes[1, 1].set_xlim([1, 10])

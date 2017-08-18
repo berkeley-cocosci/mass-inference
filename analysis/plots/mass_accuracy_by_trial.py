@@ -50,7 +50,7 @@ def plot(dest, results_path):
 
     # left subplot: experiment 2
     timeseries(ax1, responses.ix['G'], darkgrey)
-    ax1.set_title('(a) Experiment 3.2')
+    ax1.set_title('(a) Experiment 4.2')
     ax1.set_xlabel('Trial')
     ax1.set_ylabel('Proportion correct')
     ax1.set_xticks([1, 2, 3, 4, 6, 9, 14, 20])
@@ -59,7 +59,7 @@ def plot(dest, results_path):
 
     # middle subplot: experiment 3 (between subjects)
     timeseries(ax2, responses.ix[('I', -1)], darkgrey)
-    ax2.set_title('(b) Exp. 3.3, between subjs.')
+    ax2.set_title('(b) Exp. 4.3, between subjs.')
     ax2.set_xlabel('Trial')
     ax2.set_xticks([1, 2, 3, 5, 10])
     ax2.set_xlim([1, 10.25])
@@ -72,7 +72,7 @@ def plot(dest, results_path):
             marker=markers[i - 1],
             markersize=markersizes[i - 1],
             fill=False)
-    ax3.set_title('(c) Exp. 3.3, within subjs.')
+    ax3.set_title('(c) Exp. 4.3, within subjs.')
     ax3.set_xlabel('Trial')
     ax3.set_xticks([1, 2, 3, 5, 10])
     ax3.set_xlim([1, 10.25])
